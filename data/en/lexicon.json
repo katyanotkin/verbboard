@@ -1,0 +1,26 @@
+{
+  "language": "en",
+  "version": 1,
+  "verbs": [
+    {
+      "id": "en_go",
+      "rank": 1,
+      "lemma": "go",
+      "forms": {
+        "base": "go",
+        "past": "went",
+        "past_participle": "gone",
+        "present_3sg": "goes",
+        "gerund": "going"
+      },
+      "examples": [
+        { "dst": "I go to work every day." },
+        { "dst": "She goes home at five." },
+        { "dst": "We went yesterday." },
+        { "dst": "Have you ever gone there?" },
+        { "dst": "They are going now." }
+      ],
+      "tags": ["irregular"]
+    }
+  ]
+}
