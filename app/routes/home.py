@@ -1,4 +1,5 @@
 from __future__ import annotations
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from pathlib import Path
 from typing import Dict, List
@@ -11,6 +12,12 @@ from core.registry import all_plugins
 
 router = APIRouter()
 
+@router.get("/set_language", response_model=None)
+def set_language(language: str, voice: str = "female"):
+    lex_path = Path("data") / language / "lexicon.json"
+    entries = load_lexicon(lex_path) if lex_path.exists() else []
+    default_verb_id = entries[0].id if entries else ""
+    return RedirectResponse(url=f"/?language={language}&voice={voice}&verb_id={default_verb_id}")
 
 @router.get("/", response_class=HTMLResponse)
 def home(
@@ -57,12 +64,13 @@ def home(
   <h1>Verb Board (MVP0)</h1>
 
   <form action="/learn" method="get">
-    <div class="row">
-      <label><b>Language</b></label><br/>
-      <select name="language" onchange="this.form.submit()">
-        {lang_options}
-      </select>
-    </div>
+  <div class="row">
+    <label><b>Language</b></label><br/>
+    <select name="language"
+          onchange="window.location='/set_language?language=' + this.value + '&voice=' + document.querySelector('select[name=voice]').value;">
+      {lang_options}
+    </select>
+  </div>
 
     <div class="row">
       <label><b>Verb</b></label><br/>

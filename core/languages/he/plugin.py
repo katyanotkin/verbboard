@@ -3,6 +3,12 @@ from __future__ import annotations
 from core.models import Board, VerbEntry
 
 
+BINYAN_HE = {
+    "paal": "פעל",
+    "piel": "פיעל",
+    "hitpael": "התפעל",
+}
+
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     forms = verb.forms
     morph = verb.morph or {}
