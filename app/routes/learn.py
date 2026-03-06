@@ -26,7 +26,10 @@ async def learn(
     by_id = index_by_id(entries)
 
     if verb_id not in by_id:
-        return HTMLResponse("Unknown verb_id", status_code=400)
+        if entries:
+            verb_id = entries[0].id
+        else:
+            return HTMLResponse("Unknown verb_id", status_code=400)
     if language not in VOICES:
         return HTMLResponse("Unknown language voices", status_code=400)
     if voice not in VOICES[language]:
