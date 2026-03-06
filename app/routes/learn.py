@@ -52,6 +52,13 @@ async def learn(
             out_path = audio_path(language, verb.id, voice, form_key)
             tasks.append(tts_to_mp3(text, out_path, voice_meta.edge_id))
 
+    for index, ex in enumerate(board.verb.examples, start=1):
+        example_text = ex.dst.strip()
+        if not example_text:
+            continue
+        out_path = audio_path(language, verb.id, voice, f"example_{index}")
+        tasks.append(tts_to_mp3(example_text, out_path, voice_meta.edge_id))
+
     # Generate with limited parallelism inside tts_to_mp3
     if tasks:
         await asyncio.gather(*tasks)

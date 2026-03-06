@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from html import escape
 from typing import Any, Dict
+from pathlib import Path
 
 from core.models import Board
 
@@ -42,32 +43,26 @@ def render_board_html(board: Board) -> str:
             "</table>"
         )
 
-    return f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>{escape(title)}</title>
-  <style>
-    body {{ font-family: system-ui, sans-serif; margin: 24px; max-width: 980px; }}
-    table {{ border-collapse: collapse; width: 100%; }}
-    th, td {{ border: 1px solid #ddd; padding: 10px; text-align: left; }}
-    th {{ background: #f6f6f6; }}
-    button {{ padding: 6px 10px; cursor: pointer; }}
-  </style>
-</head>
-<body>
-  <h1 style="margin-bottom:6px;">{escape(title)}</h1>
-  <div style="color:#555;margin-bottom:16px;">Language: <b>{escape(board.language)}</b> · Voice: <b>{escape(board.voice_label)}</b></div>
+    template = Path("templates/board.html").read_text()
 
-  <p><a href="/">Home</a></p>
+    examples_rows = []
+    for index, ex in enumerate(board.verb.examples, start=1):
+        audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/example_{index}.mp3"
+        examples_rows.append(
+            "<tr>"
+            f"<td>{escape(ex.dst)}</td>"
+            f"<td>"
+            f"<audio id='example_{index}' src='{audio_src}' preload='none'></audio>"
+            f"<button onclick=\"document.getElementById('example_{index}').play()\">▶</button>"
+            "</td>"
+            "</tr>"
+        )
 
-  {''.join(sections_html)}
+    html = template \
+        .replace("{{title}}", escape(title)) \
+        .replace("{{language}}", escape(board.language)) \
+        .replace("{{voice}}", escape(board.voice_label)) \
+        .replace("{{sections}}", "".join(sections_html)) \
+        .replace("{{examples}}", "".join(examples_rows))
 
-  <h2>Examples</h2>
-  <ol>
-    {examples_html}
-  </ol>
-</body>
-</html>
-"""
+    return html
