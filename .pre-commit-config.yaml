@@ -1,0 +1,33 @@
+repos:
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.6.9
+  hooks:
+    - id: ruff
+      args: [--fix]
+
+    - id: ruff-format
+
+
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.11.1
+  hooks:
+    - id: mypy
+      additional_dependencies: []
+      args: ["--ignore-missing-imports"]
+
+
+- repo: local
+  hooks:
+
+    - id: python-compile
+      name: Python syntax check
+      entry: python -m py_compile
+      language: system
+      types: [python]
+
+    - id: check-hebrew-lexicon
+      name: Validate Hebrew lexicon
+      entry: python tools/check_lexicon.py data/he/lexicon.json
+      language: system
+      pass_filenames: false

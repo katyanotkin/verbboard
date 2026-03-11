@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from html import escape
-from typing import Any, Dict
 from pathlib import Path
 
 from core.models import Board
@@ -15,8 +14,6 @@ def render_board_html(board: Board) -> str:
     else:
         title = str(lemma)
 
-    examples_html = "".join(f"<li>{escape(ex.dst)}</li>" for ex in board.verb.examples)
-
     sections_html = []
     for section in board.sections:
         rows = []
@@ -24,7 +21,9 @@ def render_board_html(board: Board) -> str:
             key = row["key"]
             label = escape(str(row["label"]))
             text = escape(str(row["text"]))
-            audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{key}.mp3"
+            audio_src = (
+                f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{key}.mp3"
+            )
             rows.append(
                 "<tr>"
                 f"<td>{label}</td>"
@@ -39,11 +38,11 @@ def render_board_html(board: Board) -> str:
             f"<h2>{escape(section['title'])}</h2>"
             "<table>"
             "<tr><th>Label</th><th>Form</th><th>Audio</th></tr>"
-            + "".join(rows) +
-            "</table>"
+            + "".join(rows)
+            + "</table>"
         )
 
-    template = Path("templates/board.html").read_text()
+    template = Path("templates/board.html").read_text(encoding="utf-8")
 
     examples_rows = []
     for index, ex in enumerate(board.verb.examples, start=1):
@@ -58,11 +57,12 @@ def render_board_html(board: Board) -> str:
             "</tr>"
         )
 
-    html = template \
-        .replace("{{title}}", escape(title)) \
-        .replace("{{language}}", escape(board.language)) \
-        .replace("{{voice}}", escape(board.voice_label)) \
-        .replace("{{sections}}", "".join(sections_html)) \
+    html = (
+        template.replace("{{title}}", escape(title))
+        .replace("{{language}}", escape(board.language))
+        .replace("{{voice}}", escape(board.voice_label))
+        .replace("{{sections}}", "".join(sections_html))
         .replace("{{examples}}", "".join(examples_rows))
+    )
 
     return html

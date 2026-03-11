@@ -3,8 +3,124 @@
   "version": 1,
   "verbs": [
     {
-      "id": "en_go",
+      "id": "en_be",
       "rank": 1,
+      "lemma": "be",
+      "forms": {
+        "base": "be",
+        "past": "was",
+        "past_participle": "been",
+        "present_3sg": "is",
+        "gerund": "being"
+      },
+      "examples": [
+        {
+          "dst": "I am at home."
+        },
+        {
+          "dst": "She is at work."
+        },
+        {
+          "dst": "They were late yesterday."
+        },
+        {
+          "dst": "He has been there already."
+        },
+        {
+          "dst": "We are being careful now."
+        }
+      ]
+    },
+    {
+      "id": "en_have",
+      "rank": 2,
+      "lemma": "have",
+      "forms": {
+        "base": "have",
+        "past": "had",
+        "past_participle": "had",
+        "present_3sg": "has",
+        "gerund": "having"
+      },
+      "examples": [
+        {
+          "dst": "I have a car."
+        },
+        {
+          "dst": "She has a new book."
+        },
+        {
+          "dst": "They had a meeting yesterday."
+        },
+        {
+          "dst": "He has had enough coffee."
+        },
+        {
+          "dst": "We are having dinner now."
+        }
+      ]
+    },
+    {
+      "id": "en_do",
+      "rank": 3,
+      "lemma": "do",
+      "forms": {
+        "base": "do",
+        "past": "did",
+        "past_participle": "done",
+        "present_3sg": "does",
+        "gerund": "doing"
+      },
+      "examples": [
+        {
+          "dst": "I do my homework every evening."
+        },
+        {
+          "dst": "She does the dishes after dinner."
+        },
+        {
+          "dst": "They did the laundry yesterday."
+        },
+        {
+          "dst": "He has done the task already."
+        },
+        {
+          "dst": "We are doing our best now."
+        }
+      ]
+    },
+    {
+      "id": "en_say",
+      "rank": 4,
+      "lemma": "say",
+      "forms": {
+        "base": "say",
+        "past": "said",
+        "past_participle": "said",
+        "present_3sg": "says",
+        "gerund": "saying"
+      },
+      "examples": [
+        {
+          "dst": "I say hello every morning."
+        },
+        {
+          "dst": "She says the right words."
+        },
+        {
+          "dst": "They said goodbye yesterday."
+        },
+        {
+          "dst": "He has said too much already."
+        },
+        {
+          "dst": "We are saying the same thing now."
+        }
+      ]
+    },
+    {
+      "id": "en_go",
+      "rank": 5,
       "lemma": "go",
       "forms": {
         "base": "go",
@@ -14,13 +130,1617 @@
         "gerund": "going"
       },
       "examples": [
-        { "dst": "I go to work every day." },
-        { "dst": "She goes home at five." },
-        { "dst": "We went yesterday." },
-        { "dst": "Have you ever gone there?" },
-        { "dst": "They are going now." }
-      ],
-      "tags": ["irregular"]
+        {
+          "dst": "I go to work by bus."
+        },
+        {
+          "dst": "She goes to school early."
+        },
+        {
+          "dst": "They went home after lunch."
+        },
+        {
+          "dst": "He has gone to the store."
+        },
+        {
+          "dst": "We are going to the station now."
+        }
+      ]
+    },
+    {
+      "id": "en_get",
+      "rank": 6,
+      "lemma": "get",
+      "forms": {
+        "base": "get",
+        "past": "got",
+        "past_participle": "gotten",
+        "present_3sg": "gets",
+        "gerund": "getting"
+      },
+      "examples": [
+        {
+          "dst": "I get good ideas at night."
+        },
+        {
+          "dst": "She gets email from her boss."
+        },
+        {
+          "dst": "They got a new table yesterday."
+        },
+        {
+          "dst": "He has gotten much better."
+        },
+        {
+          "dst": "We are getting ready now."
+        }
+      ]
+    },
+    {
+      "id": "en_make",
+      "rank": 7,
+      "lemma": "make",
+      "forms": {
+        "base": "make",
+        "past": "made",
+        "past_participle": "made",
+        "present_3sg": "makes",
+        "gerund": "making"
+      },
+      "examples": [
+        {
+          "dst": "I make coffee every morning."
+        },
+        {
+          "dst": "She makes soup for dinner."
+        },
+        {
+          "dst": "They made a plan yesterday."
+        },
+        {
+          "dst": "He has made a big mistake."
+        },
+        {
+          "dst": "We are making lunch now."
+        }
+      ]
+    },
+    {
+      "id": "en_know",
+      "rank": 8,
+      "lemma": "know",
+      "forms": {
+        "base": "know",
+        "past": "knew",
+        "past_participle": "known",
+        "present_3sg": "knows",
+        "gerund": "knowing"
+      },
+      "examples": [
+        {
+          "dst": "I know the answer."
+        },
+        {
+          "dst": "She knows my sister well."
+        },
+        {
+          "dst": "They knew the address yesterday."
+        },
+        {
+          "dst": "He has known her for years."
+        },
+        {
+          "dst": "We know the problem well."
+        }
+      ]
+    },
+    {
+      "id": "en_think",
+      "rank": 9,
+      "lemma": "think",
+      "forms": {
+        "base": "think",
+        "past": "thought",
+        "past_participle": "thought",
+        "present_3sg": "thinks",
+        "gerund": "thinking"
+      },
+      "examples": [
+        {
+          "dst": "I think about my future often."
+        },
+        {
+          "dst": "She thinks the idea is good."
+        },
+        {
+          "dst": "They thought about the trip yesterday."
+        },
+        {
+          "dst": "He has thought about that before."
+        },
+        {
+          "dst": "We are thinking about dinner now."
+        }
+      ]
+    },
+    {
+      "id": "en_take",
+      "rank": 10,
+      "lemma": "take",
+      "forms": {
+        "base": "take",
+        "past": "took",
+        "past_participle": "taken",
+        "present_3sg": "takes",
+        "gerund": "taking"
+      },
+      "examples": [
+        {
+          "dst": "I take the bus every morning."
+        },
+        {
+          "dst": "She takes her laptop to work."
+        },
+        {
+          "dst": "They took the wrong train yesterday."
+        },
+        {
+          "dst": "He has taken my seat again."
+        },
+        {
+          "dst": "We are taking notes now."
+        }
+      ]
+    },
+    {
+      "id": "en_see",
+      "rank": 11,
+      "lemma": "see",
+      "forms": {
+        "base": "see",
+        "past": "saw",
+        "past_participle": "seen",
+        "present_3sg": "sees",
+        "gerund": "seeing"
+      },
+      "examples": [
+        {
+          "dst": "I see the mountains from here."
+        },
+        {
+          "dst": "She sees her friends every weekend."
+        },
+        {
+          "dst": "They saw a good film yesterday."
+        },
+        {
+          "dst": "He has seen that movie before."
+        },
+        {
+          "dst": "We are seeing a doctor tomorrow."
+        }
+      ]
+    },
+    {
+      "id": "en_come",
+      "rank": 12,
+      "lemma": "come",
+      "forms": {
+        "base": "come",
+        "past": "came",
+        "past_participle": "come",
+        "present_3sg": "comes",
+        "gerund": "coming"
+      },
+      "examples": [
+        {
+          "dst": "I come home at six."
+        },
+        {
+          "dst": "She comes to class on time."
+        },
+        {
+          "dst": "They came by train yesterday."
+        },
+        {
+          "dst": "He has come back already."
+        },
+        {
+          "dst": "We are coming to the party."
+        }
+      ]
+    },
+    {
+      "id": "en_want",
+      "rank": 13,
+      "lemma": "want",
+      "forms": {
+        "base": "want",
+        "past": "wanted",
+        "past_participle": "wanted",
+        "present_3sg": "wants",
+        "gerund": "wanting"
+      },
+      "examples": [
+        {
+          "dst": "I want a cup of tea."
+        },
+        {
+          "dst": "She wants a better job."
+        },
+        {
+          "dst": "They wanted more time yesterday."
+        },
+        {
+          "dst": "He has wanted this for years."
+        },
+        {
+          "dst": "We want a quiet evening."
+        }
+      ]
+    },
+    {
+      "id": "en_look",
+      "rank": 14,
+      "lemma": "look",
+      "forms": {
+        "base": "look",
+        "past": "looked",
+        "past_participle": "looked",
+        "present_3sg": "looks",
+        "gerund": "looking"
+      },
+      "examples": [
+        {
+          "dst": "I look at the screen all day."
+        },
+        {
+          "dst": "She looks tired this morning."
+        },
+        {
+          "dst": "They looked for the key yesterday."
+        },
+        {
+          "dst": "He has looked everywhere already."
+        },
+        {
+          "dst": "We are looking at the map now."
+        }
+      ]
+    },
+    {
+      "id": "en_use",
+      "rank": 15,
+      "lemma": "use",
+      "forms": {
+        "base": "use",
+        "past": "used",
+        "past_participle": "used",
+        "present_3sg": "uses",
+        "gerund": "using"
+      },
+      "examples": [
+        {
+          "dst": "I use this notebook every day."
+        },
+        {
+          "dst": "She uses her phone for work."
+        },
+        {
+          "dst": "They used the back door yesterday."
+        },
+        {
+          "dst": "He has used all the paper already."
+        },
+        {
+          "dst": "We are using the new system now."
+        }
+      ]
+    },
+    {
+      "id": "en_find",
+      "rank": 16,
+      "lemma": "find",
+      "forms": {
+        "base": "find",
+        "past": "found",
+        "past_participle": "found",
+        "present_3sg": "finds",
+        "gerund": "finding"
+      },
+      "examples": [
+        {
+          "dst": "I find this book very useful."
+        },
+        {
+          "dst": "She finds small errors quickly."
+        },
+        {
+          "dst": "They found the receipt yesterday."
+        },
+        {
+          "dst": "He has found a better solution."
+        },
+        {
+          "dst": "We are finding new clients now."
+        }
+      ]
+    },
+    {
+      "id": "en_give",
+      "rank": 17,
+      "lemma": "give",
+      "forms": {
+        "base": "give",
+        "past": "gave",
+        "past_participle": "given",
+        "present_3sg": "gives",
+        "gerund": "giving"
+      },
+      "examples": [
+        {
+          "dst": "I give my plants water every morning."
+        },
+        {
+          "dst": "She gives good advice."
+        },
+        {
+          "dst": "They gave us a ride yesterday."
+        },
+        {
+          "dst": "He has given me the file already."
+        },
+        {
+          "dst": "We are giving the children snacks now."
+        }
+      ]
+    },
+    {
+      "id": "en_tell",
+      "rank": 18,
+      "lemma": "tell",
+      "forms": {
+        "base": "tell",
+        "past": "told",
+        "past_participle": "told",
+        "present_3sg": "tells",
+        "gerund": "telling"
+      },
+      "examples": [
+        {
+          "dst": "I tell my son a story every night."
+        },
+        {
+          "dst": "She tells the truth."
+        },
+        {
+          "dst": "They told us the news yesterday."
+        },
+        {
+          "dst": "He has told that joke before."
+        },
+        {
+          "dst": "We are telling the driver our address now."
+        }
+      ]
+    },
+    {
+      "id": "en_work",
+      "rank": 19,
+      "lemma": "work",
+      "forms": {
+        "base": "work",
+        "past": "worked",
+        "past_participle": "worked",
+        "present_3sg": "works",
+        "gerund": "working"
+      },
+      "examples": [
+        {
+          "dst": "I work in an office downtown."
+        },
+        {
+          "dst": "She works at a small hospital."
+        },
+        {
+          "dst": "They worked late yesterday."
+        },
+        {
+          "dst": "He has worked here for years."
+        },
+        {
+          "dst": "We are working on a new project now."
+        }
+      ]
+    },
+    {
+      "id": "en_call",
+      "rank": 20,
+      "lemma": "call",
+      "forms": {
+        "base": "call",
+        "past": "called",
+        "past_participle": "called",
+        "present_3sg": "calls",
+        "gerund": "calling"
+      },
+      "examples": [
+        {
+          "dst": "I call my mother every Sunday."
+        },
+        {
+          "dst": "She calls a taxi after work."
+        },
+        {
+          "dst": "They called the doctor yesterday."
+        },
+        {
+          "dst": "He has called twice already."
+        },
+        {
+          "dst": "We are calling the hotel now."
+        }
+      ]
+    },
+    {
+      "id": "en_try",
+      "rank": 21,
+      "lemma": "try",
+      "forms": {
+        "base": "try",
+        "past": "tried",
+        "past_participle": "tried",
+        "present_3sg": "tries",
+        "gerund": "trying"
+      },
+      "examples": [
+        {
+          "dst": "I try my work every day."
+        },
+        {
+          "dst": "She tries a new task at work."
+        },
+        {
+          "dst": "They tried the job yesterday."
+        },
+        {
+          "dst": "He has tried the report already."
+        },
+        {
+          "dst": "We are trying the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_ask",
+      "rank": 22,
+      "lemma": "ask",
+      "forms": {
+        "base": "ask",
+        "past": "asked",
+        "past_participle": "asked",
+        "present_3sg": "asks",
+        "gerund": "asking"
+      },
+      "examples": [
+        {
+          "dst": "I ask my work every day."
+        },
+        {
+          "dst": "She asks a new task at work."
+        },
+        {
+          "dst": "They asked the job yesterday."
+        },
+        {
+          "dst": "He has asked the report already."
+        },
+        {
+          "dst": "We are asking the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_need",
+      "rank": 23,
+      "lemma": "need",
+      "forms": {
+        "base": "need",
+        "past": "needed",
+        "past_participle": "needed",
+        "present_3sg": "needs",
+        "gerund": "needing"
+      },
+      "examples": [
+        {
+          "dst": "I need my work every day."
+        },
+        {
+          "dst": "She needs a new task at work."
+        },
+        {
+          "dst": "They needed the job yesterday."
+        },
+        {
+          "dst": "He has needed the report already."
+        },
+        {
+          "dst": "We are needing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_feel",
+      "rank": 24,
+      "lemma": "feel",
+      "forms": {
+        "base": "feel",
+        "past": "felt",
+        "past_participle": "felt",
+        "present_3sg": "feels",
+        "gerund": "feeling"
+      },
+      "examples": [
+        {
+          "dst": "I feel my work every day."
+        },
+        {
+          "dst": "She feels a new task at work."
+        },
+        {
+          "dst": "They felt the job yesterday."
+        },
+        {
+          "dst": "He has felt the report already."
+        },
+        {
+          "dst": "We are feeling the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_become",
+      "rank": 25,
+      "lemma": "become",
+      "forms": {
+        "base": "become",
+        "past": "became",
+        "past_participle": "become",
+        "present_3sg": "becomes",
+        "gerund": "becoming"
+      },
+      "examples": [
+        {
+          "dst": "I become my work every day."
+        },
+        {
+          "dst": "She becomes a new task at work."
+        },
+        {
+          "dst": "They became the job yesterday."
+        },
+        {
+          "dst": "He has become the report already."
+        },
+        {
+          "dst": "We are becoming the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_leave",
+      "rank": 26,
+      "lemma": "leave",
+      "forms": {
+        "base": "leave",
+        "past": "left",
+        "past_participle": "left",
+        "present_3sg": "leaves",
+        "gerund": "leaving"
+      },
+      "examples": [
+        {
+          "dst": "I leave my work every day."
+        },
+        {
+          "dst": "She leaves a new task at work."
+        },
+        {
+          "dst": "They left the job yesterday."
+        },
+        {
+          "dst": "He has left the report already."
+        },
+        {
+          "dst": "We are leaving the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_put",
+      "rank": 27,
+      "lemma": "put",
+      "forms": {
+        "base": "put",
+        "past": "put",
+        "past_participle": "put",
+        "present_3sg": "puts",
+        "gerund": "putting"
+      },
+      "examples": [
+        {
+          "dst": "I put my work every day."
+        },
+        {
+          "dst": "She puts a new task at work."
+        },
+        {
+          "dst": "They put the job yesterday."
+        },
+        {
+          "dst": "He has put the report already."
+        },
+        {
+          "dst": "We are putting the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_mean",
+      "rank": 28,
+      "lemma": "mean",
+      "forms": {
+        "base": "mean",
+        "past": "meant",
+        "past_participle": "meant",
+        "present_3sg": "means",
+        "gerund": "meaning"
+      },
+      "examples": [
+        {
+          "dst": "I mean my work every day."
+        },
+        {
+          "dst": "She means a new task at work."
+        },
+        {
+          "dst": "They meant the job yesterday."
+        },
+        {
+          "dst": "He has meant the report already."
+        },
+        {
+          "dst": "We are meaning the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_keep",
+      "rank": 29,
+      "lemma": "keep",
+      "forms": {
+        "base": "keep",
+        "past": "kept",
+        "past_participle": "kept",
+        "present_3sg": "keeps",
+        "gerund": "keeping"
+      },
+      "examples": [
+        {
+          "dst": "I keep my work every day."
+        },
+        {
+          "dst": "She keeps a new task at work."
+        },
+        {
+          "dst": "They kept the job yesterday."
+        },
+        {
+          "dst": "He has kept the report already."
+        },
+        {
+          "dst": "We are keeping the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_let",
+      "rank": 30,
+      "lemma": "let",
+      "forms": {
+        "base": "let",
+        "past": "let",
+        "past_participle": "let",
+        "present_3sg": "lets",
+        "gerund": "letting"
+      },
+      "examples": [
+        {
+          "dst": "I let my work every day."
+        },
+        {
+          "dst": "She lets a new task at work."
+        },
+        {
+          "dst": "They let the job yesterday."
+        },
+        {
+          "dst": "He has let the report already."
+        },
+        {
+          "dst": "We are letting the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_begin",
+      "rank": 31,
+      "lemma": "begin",
+      "forms": {
+        "base": "begin",
+        "past": "began",
+        "past_participle": "begun",
+        "present_3sg": "begins",
+        "gerund": "begining"
+      },
+      "examples": [
+        {
+          "dst": "I begin my work every day."
+        },
+        {
+          "dst": "She begins a new task at work."
+        },
+        {
+          "dst": "They began the job yesterday."
+        },
+        {
+          "dst": "He has begun the report already."
+        },
+        {
+          "dst": "We are begining the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_seem",
+      "rank": 32,
+      "lemma": "seem",
+      "forms": {
+        "base": "seem",
+        "past": "seemed",
+        "past_participle": "seemed",
+        "present_3sg": "seems",
+        "gerund": "seeming"
+      },
+      "examples": [
+        {
+          "dst": "I seem my work every day."
+        },
+        {
+          "dst": "She seems a new task at work."
+        },
+        {
+          "dst": "They seemed the job yesterday."
+        },
+        {
+          "dst": "He has seemed the report already."
+        },
+        {
+          "dst": "We are seeming the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_help",
+      "rank": 33,
+      "lemma": "help",
+      "forms": {
+        "base": "help",
+        "past": "helped",
+        "past_participle": "helped",
+        "present_3sg": "helps",
+        "gerund": "helping"
+      },
+      "examples": [
+        {
+          "dst": "I help my work every day."
+        },
+        {
+          "dst": "She helps a new task at work."
+        },
+        {
+          "dst": "They helped the job yesterday."
+        },
+        {
+          "dst": "He has helped the report already."
+        },
+        {
+          "dst": "We are helping the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_talk",
+      "rank": 34,
+      "lemma": "talk",
+      "forms": {
+        "base": "talk",
+        "past": "talked",
+        "past_participle": "talked",
+        "present_3sg": "talks",
+        "gerund": "talking"
+      },
+      "examples": [
+        {
+          "dst": "I talk my work every day."
+        },
+        {
+          "dst": "She talks a new task at work."
+        },
+        {
+          "dst": "They talked the job yesterday."
+        },
+        {
+          "dst": "He has talked the report already."
+        },
+        {
+          "dst": "We are talking the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_turn",
+      "rank": 35,
+      "lemma": "turn",
+      "forms": {
+        "base": "turn",
+        "past": "turned",
+        "past_participle": "turned",
+        "present_3sg": "turns",
+        "gerund": "turning"
+      },
+      "examples": [
+        {
+          "dst": "I turn my work every day."
+        },
+        {
+          "dst": "She turns a new task at work."
+        },
+        {
+          "dst": "They turned the job yesterday."
+        },
+        {
+          "dst": "He has turned the report already."
+        },
+        {
+          "dst": "We are turning the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_start",
+      "rank": 36,
+      "lemma": "start",
+      "forms": {
+        "base": "start",
+        "past": "started",
+        "past_participle": "started",
+        "present_3sg": "starts",
+        "gerund": "starting"
+      },
+      "examples": [
+        {
+          "dst": "I start my work every day."
+        },
+        {
+          "dst": "She starts a new task at work."
+        },
+        {
+          "dst": "They started the job yesterday."
+        },
+        {
+          "dst": "He has started the report already."
+        },
+        {
+          "dst": "We are starting the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_show",
+      "rank": 37,
+      "lemma": "show",
+      "forms": {
+        "base": "show",
+        "past": "showed",
+        "past_participle": "shown",
+        "present_3sg": "shows",
+        "gerund": "showing"
+      },
+      "examples": [
+        {
+          "dst": "I show my work every day."
+        },
+        {
+          "dst": "She shows a new task at work."
+        },
+        {
+          "dst": "They showed the job yesterday."
+        },
+        {
+          "dst": "He has shown the report already."
+        },
+        {
+          "dst": "We are showing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_hear",
+      "rank": 38,
+      "lemma": "hear",
+      "forms": {
+        "base": "hear",
+        "past": "heard",
+        "past_participle": "heard",
+        "present_3sg": "hears",
+        "gerund": "hearing"
+      },
+      "examples": [
+        {
+          "dst": "I hear my work every day."
+        },
+        {
+          "dst": "She hears a new task at work."
+        },
+        {
+          "dst": "They heard the job yesterday."
+        },
+        {
+          "dst": "He has heard the report already."
+        },
+        {
+          "dst": "We are hearing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_play",
+      "rank": 39,
+      "lemma": "play",
+      "forms": {
+        "base": "play",
+        "past": "played",
+        "past_participle": "played",
+        "present_3sg": "plays",
+        "gerund": "playing"
+      },
+      "examples": [
+        {
+          "dst": "I play my work every day."
+        },
+        {
+          "dst": "She plays a new task at work."
+        },
+        {
+          "dst": "They played the job yesterday."
+        },
+        {
+          "dst": "He has played the report already."
+        },
+        {
+          "dst": "We are playing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_run",
+      "rank": 40,
+      "lemma": "run",
+      "forms": {
+        "base": "run",
+        "past": "ran",
+        "past_participle": "run",
+        "present_3sg": "runs",
+        "gerund": "running"
+      },
+      "examples": [
+        {
+          "dst": "I run my work every day."
+        },
+        {
+          "dst": "She runs a new task at work."
+        },
+        {
+          "dst": "They ran the job yesterday."
+        },
+        {
+          "dst": "He has run the report already."
+        },
+        {
+          "dst": "We are running the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_move",
+      "rank": 41,
+      "lemma": "move",
+      "forms": {
+        "base": "move",
+        "past": "moved",
+        "past_participle": "moved",
+        "present_3sg": "moves",
+        "gerund": "moving"
+      },
+      "examples": [
+        {
+          "dst": "I move my work every day."
+        },
+        {
+          "dst": "She moves a new task at work."
+        },
+        {
+          "dst": "They moved the job yesterday."
+        },
+        {
+          "dst": "He has moved the report already."
+        },
+        {
+          "dst": "We are moving the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_live",
+      "rank": 42,
+      "lemma": "live",
+      "forms": {
+        "base": "live",
+        "past": "lived",
+        "past_participle": "lived",
+        "present_3sg": "lives",
+        "gerund": "living"
+      },
+      "examples": [
+        {
+          "dst": "I live my work every day."
+        },
+        {
+          "dst": "She lives a new task at work."
+        },
+        {
+          "dst": "They lived the job yesterday."
+        },
+        {
+          "dst": "He has lived the report already."
+        },
+        {
+          "dst": "We are living the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_believe",
+      "rank": 43,
+      "lemma": "believe",
+      "forms": {
+        "base": "believe",
+        "past": "believed",
+        "past_participle": "believed",
+        "present_3sg": "believes",
+        "gerund": "believing"
+      },
+      "examples": [
+        {
+          "dst": "I believe my work every day."
+        },
+        {
+          "dst": "She believes a new task at work."
+        },
+        {
+          "dst": "They believed the job yesterday."
+        },
+        {
+          "dst": "He has believed the report already."
+        },
+        {
+          "dst": "We are believing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_bring",
+      "rank": 44,
+      "lemma": "bring",
+      "forms": {
+        "base": "bring",
+        "past": "brought",
+        "past_participle": "brought",
+        "present_3sg": "brings",
+        "gerund": "bringing"
+      },
+      "examples": [
+        {
+          "dst": "I bring my work every day."
+        },
+        {
+          "dst": "She brings a new task at work."
+        },
+        {
+          "dst": "They brought the job yesterday."
+        },
+        {
+          "dst": "He has brought the report already."
+        },
+        {
+          "dst": "We are bringing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_happen",
+      "rank": 45,
+      "lemma": "happen",
+      "forms": {
+        "base": "happen",
+        "past": "happened",
+        "past_participle": "happened",
+        "present_3sg": "happens",
+        "gerund": "happening"
+      },
+      "examples": [
+        {
+          "dst": "I happen my work every day."
+        },
+        {
+          "dst": "She happens a new task at work."
+        },
+        {
+          "dst": "They happened the job yesterday."
+        },
+        {
+          "dst": "He has happened the report already."
+        },
+        {
+          "dst": "We are happening the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_write",
+      "rank": 46,
+      "lemma": "write",
+      "forms": {
+        "base": "write",
+        "past": "wrote",
+        "past_participle": "written",
+        "present_3sg": "writes",
+        "gerund": "writing"
+      },
+      "examples": [
+        {
+          "dst": "I write my work every day."
+        },
+        {
+          "dst": "She writes a new task at work."
+        },
+        {
+          "dst": "They wrote the job yesterday."
+        },
+        {
+          "dst": "He has written the report already."
+        },
+        {
+          "dst": "We are writing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_provide",
+      "rank": 47,
+      "lemma": "provide",
+      "forms": {
+        "base": "provide",
+        "past": "provided",
+        "past_participle": "provided",
+        "present_3sg": "provides",
+        "gerund": "providing"
+      },
+      "examples": [
+        {
+          "dst": "I provide my work every day."
+        },
+        {
+          "dst": "She provides a new task at work."
+        },
+        {
+          "dst": "They provided the job yesterday."
+        },
+        {
+          "dst": "He has provided the report already."
+        },
+        {
+          "dst": "We are providing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_sit",
+      "rank": 48,
+      "lemma": "sit",
+      "forms": {
+        "base": "sit",
+        "past": "sat",
+        "past_participle": "sat",
+        "present_3sg": "sits",
+        "gerund": "sitting"
+      },
+      "examples": [
+        {
+          "dst": "I sit my work every day."
+        },
+        {
+          "dst": "She sits a new task at work."
+        },
+        {
+          "dst": "They sat the job yesterday."
+        },
+        {
+          "dst": "He has sat the report already."
+        },
+        {
+          "dst": "We are sitting the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_stand",
+      "rank": 49,
+      "lemma": "stand",
+      "forms": {
+        "base": "stand",
+        "past": "stood",
+        "past_participle": "stood",
+        "present_3sg": "stands",
+        "gerund": "standing"
+      },
+      "examples": [
+        {
+          "dst": "I stand my work every day."
+        },
+        {
+          "dst": "She stands a new task at work."
+        },
+        {
+          "dst": "They stood the job yesterday."
+        },
+        {
+          "dst": "He has stood the report already."
+        },
+        {
+          "dst": "We are standing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_lose",
+      "rank": 50,
+      "lemma": "lose",
+      "forms": {
+        "base": "lose",
+        "past": "lost",
+        "past_participle": "lost",
+        "present_3sg": "loses",
+        "gerund": "losing"
+      },
+      "examples": [
+        {
+          "dst": "I lose my work every day."
+        },
+        {
+          "dst": "She loses a new task at work."
+        },
+        {
+          "dst": "They lost the job yesterday."
+        },
+        {
+          "dst": "He has lost the report already."
+        },
+        {
+          "dst": "We are losing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_pay",
+      "rank": 51,
+      "lemma": "pay",
+      "forms": {
+        "base": "pay",
+        "past": "paid",
+        "past_participle": "paid",
+        "present_3sg": "pays",
+        "gerund": "paying"
+      },
+      "examples": [
+        {
+          "dst": "I pay my work every day."
+        },
+        {
+          "dst": "She pays a new task at work."
+        },
+        {
+          "dst": "They paid the job yesterday."
+        },
+        {
+          "dst": "He has paid the report already."
+        },
+        {
+          "dst": "We are paying the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_meet",
+      "rank": 52,
+      "lemma": "meet",
+      "forms": {
+        "base": "meet",
+        "past": "met",
+        "past_participle": "met",
+        "present_3sg": "meets",
+        "gerund": "meeting"
+      },
+      "examples": [
+        {
+          "dst": "I meet my work every day."
+        },
+        {
+          "dst": "She meets a new task at work."
+        },
+        {
+          "dst": "They met the job yesterday."
+        },
+        {
+          "dst": "He has met the report already."
+        },
+        {
+          "dst": "We are meeting the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_include",
+      "rank": 53,
+      "lemma": "include",
+      "forms": {
+        "base": "include",
+        "past": "included",
+        "past_participle": "included",
+        "present_3sg": "includes",
+        "gerund": "including"
+      },
+      "examples": [
+        {
+          "dst": "I include my work every day."
+        },
+        {
+          "dst": "She includes a new task at work."
+        },
+        {
+          "dst": "They included the job yesterday."
+        },
+        {
+          "dst": "He has included the report already."
+        },
+        {
+          "dst": "We are including the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_continue",
+      "rank": 54,
+      "lemma": "continue",
+      "forms": {
+        "base": "continue",
+        "past": "continued",
+        "past_participle": "continued",
+        "present_3sg": "continues",
+        "gerund": "continuing"
+      },
+      "examples": [
+        {
+          "dst": "I continue my work every day."
+        },
+        {
+          "dst": "She continues a new task at work."
+        },
+        {
+          "dst": "They continued the job yesterday."
+        },
+        {
+          "dst": "He has continued the report already."
+        },
+        {
+          "dst": "We are continuing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_set",
+      "rank": 55,
+      "lemma": "set",
+      "forms": {
+        "base": "set",
+        "past": "set",
+        "past_participle": "set",
+        "present_3sg": "sets",
+        "gerund": "setting"
+      },
+      "examples": [
+        {
+          "dst": "I set my work every day."
+        },
+        {
+          "dst": "She sets a new task at work."
+        },
+        {
+          "dst": "They set the job yesterday."
+        },
+        {
+          "dst": "He has set the report already."
+        },
+        {
+          "dst": "We are setting the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_learn",
+      "rank": 56,
+      "lemma": "learn",
+      "forms": {
+        "base": "learn",
+        "past": "learned",
+        "past_participle": "learned",
+        "present_3sg": "learns",
+        "gerund": "learning"
+      },
+      "examples": [
+        {
+          "dst": "I learn my work every day."
+        },
+        {
+          "dst": "She learns a new task at work."
+        },
+        {
+          "dst": "They learned the job yesterday."
+        },
+        {
+          "dst": "He has learned the report already."
+        },
+        {
+          "dst": "We are learning the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_change",
+      "rank": 57,
+      "lemma": "change",
+      "forms": {
+        "base": "change",
+        "past": "changed",
+        "past_participle": "changed",
+        "present_3sg": "changes",
+        "gerund": "changing"
+      },
+      "examples": [
+        {
+          "dst": "I change my work every day."
+        },
+        {
+          "dst": "She changes a new task at work."
+        },
+        {
+          "dst": "They changed the job yesterday."
+        },
+        {
+          "dst": "He has changed the report already."
+        },
+        {
+          "dst": "We are changing the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_lead",
+      "rank": 58,
+      "lemma": "lead",
+      "forms": {
+        "base": "lead",
+        "past": "led",
+        "past_participle": "led",
+        "present_3sg": "leads",
+        "gerund": "leading"
+      },
+      "examples": [
+        {
+          "dst": "I lead my work every day."
+        },
+        {
+          "dst": "She leads a new task at work."
+        },
+        {
+          "dst": "They led the job yesterday."
+        },
+        {
+          "dst": "He has led the report already."
+        },
+        {
+          "dst": "We are leading the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_understand",
+      "rank": 59,
+      "lemma": "understand",
+      "forms": {
+        "base": "understand",
+        "past": "understood",
+        "past_participle": "understood",
+        "present_3sg": "understands",
+        "gerund": "understanding"
+      },
+      "examples": [
+        {
+          "dst": "I understand my work every day."
+        },
+        {
+          "dst": "She understands a new task at work."
+        },
+        {
+          "dst": "They understood the job yesterday."
+        },
+        {
+          "dst": "He has understood the report already."
+        },
+        {
+          "dst": "We are understanding the project now."
+        }
+      ]
+    },
+    {
+      "id": "en_watch",
+      "rank": 60,
+      "lemma": "watch",
+      "forms": {
+        "base": "watch",
+        "past": "watched",
+        "past_participle": "watched",
+        "present_3sg": "watches",
+        "gerund": "watching"
+      },
+      "examples": [
+        {
+          "dst": "I watch my work every day."
+        },
+        {
+          "dst": "She watches a new task at work."
+        },
+        {
+          "dst": "They watched the job yesterday."
+        },
+        {
+          "dst": "He has watched the report already."
+        },
+        {
+          "dst": "We are watching the project now."
+        }
+      ]
     }
   ]
 }

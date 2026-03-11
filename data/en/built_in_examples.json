@@ -1,0 +1,142 @@
+{
+  "be": [
+    "I am at home.",
+    "She is at work.",
+    "They were late yesterday.",
+    "He has been there already.",
+    "We are being careful now."
+  ],
+  "have": [
+    "I have a car.",
+    "She has a new book.",
+    "They had a meeting yesterday.",
+    "He has had enough coffee.",
+    "We are having dinner now."
+  ],
+  "do": [
+    "I do my homework every evening.",
+    "She does the dishes after dinner.",
+    "They did the laundry yesterday.",
+    "He has done the task already.",
+    "We are doing our best now."
+  ],
+  "say": [
+    "I say hello every morning.",
+    "She says the right words.",
+    "They said goodbye yesterday.",
+    "He has said too much already.",
+    "We are saying the same thing now."
+  ],
+  "go": [
+    "I go to work by bus.",
+    "She goes to school early.",
+    "They went home after lunch.",
+    "He has gone to the store.",
+    "We are going to the station now."
+  ],
+  "get": [
+    "I get good ideas at night.",
+    "She gets email from her boss.",
+    "They got a new table yesterday.",
+    "He has gotten much better.",
+    "We are getting ready now."
+  ],
+  "make": [
+    "I make coffee every morning.",
+    "She makes soup for dinner.",
+    "They made a plan yesterday.",
+    "He has made a big mistake.",
+    "We are making lunch now."
+  ],
+  "know": [
+    "I know the answer.",
+    "She knows my sister well.",
+    "They knew the address yesterday.",
+    "He has known her for years.",
+    "We know the problem well."
+  ],
+  "think": [
+    "I think about my future often.",
+    "She thinks the idea is good.",
+    "They thought about the trip yesterday.",
+    "He has thought about that before.",
+    "We are thinking about dinner now."
+  ],
+  "take": [
+    "I take the bus every morning.",
+    "She takes her laptop to work.",
+    "They took the wrong train yesterday.",
+    "He has taken my seat again.",
+    "We are taking notes now."
+  ],
+  "see": [
+    "I see the mountains from here.",
+    "She sees her friends every weekend.",
+    "They saw a good film yesterday.",
+    "He has seen that movie before.",
+    "We are seeing a doctor tomorrow."
+  ],
+  "come": [
+    "I come home at six.",
+    "She comes to class on time.",
+    "They came by train yesterday.",
+    "He has come back already.",
+    "We are coming to the party."
+  ],
+  "want": [
+    "I want a cup of tea.",
+    "She wants a better job.",
+    "They wanted more time yesterday.",
+    "He has wanted this for years.",
+    "We want a quiet evening."
+  ],
+  "look": [
+    "I look at the screen all day.",
+    "She looks tired this morning.",
+    "They looked for the key yesterday.",
+    "He has looked everywhere already.",
+    "We are looking at the map now."
+  ],
+  "use": [
+    "I use this notebook every day.",
+    "She uses her phone for work.",
+    "They used the back door yesterday.",
+    "He has used all the paper already.",
+    "We are using the new system now."
+  ],
+  "find": [
+    "I find this book very useful.",
+    "She finds small errors quickly.",
+    "They found the receipt yesterday.",
+    "He has found a better solution.",
+    "We are finding new clients now."
+  ],
+  "give": [
+    "I give my plants water every morning.",
+    "She gives good advice.",
+    "They gave us a ride yesterday.",
+    "He has given me the file already.",
+    "We are giving the children snacks now."
+  ],
+  "tell": [
+    "I tell my son a story every night.",
+    "She tells the truth.",
+    "They told us the news yesterday.",
+    "He has told that joke before.",
+    "We are telling the driver our address now."
+  ],
+  "work": [
+    "I work in an office downtown.",
+    "She works at a small hospital.",
+    "They worked late yesterday.",
+    "He has worked here for years.",
+    "We are working on a new project now."
+  ],
+  "call": [
+    "I call my mother every Sunday.",
+    "She calls a taxi after work.",
+    "They called the doctor yesterday.",
+    "He has called twice already.",
+    "We are calling the hotel now."
+  ]
+}

@@ -4,23 +4,29 @@ from core.models import Board, VerbEntry
 
 
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
-    lemma = verb.lemma  # dict: {imperfective, perfective}
-    forms = verb.forms
+    lemma = str(verb.lemma)
+    forms = verb.forms or {}
+    morph = verb.morph or {}
 
-    present = forms.get("imperfective_present", {})
-    past = forms.get("imperfective_past", {})
+    aspect = str(morph.get("aspect", ""))
+    pair = str(morph.get("pair", ""))
+
+    # Runtime RU schema from generate_lexicon.py
+    present = forms.get("present", {})
+    past = forms.get("past", {})
     imp = forms.get("imperative", {})
 
     sections = [
         {
-            "title": "Aspect",
+            "title": "Metadata",
             "rows": [
-                {"key": "lemma_imperf", "label": "imperfective", "text": lemma.get("imperfective", "")},
-                {"key": "lemma_perf", "label": "perfective", "text": lemma.get("perfective", "")},
+                {"key": "lemma", "label": "verb", "text": lemma},
+                {"key": "aspect", "label": "aspect", "text": aspect},
+                {"key": "pair", "label": "pair", "text": pair},
             ],
         },
         {
-            "title": "Present (imperfective)",
+            "title": "Present",
             "rows": [
                 {"key": "pres_1sg", "label": "я", "text": present.get("1sg", "")},
                 {"key": "pres_2sg", "label": "ты", "text": present.get("2sg", "")},
@@ -31,7 +37,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
         {
-            "title": "Past (imperfective)",
+            "title": "Past",
             "rows": [
                 {"key": "past_m", "label": "m", "text": past.get("m", "")},
                 {"key": "past_f", "label": "f", "text": past.get("f", "")},
@@ -47,4 +53,11 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
     ]
-    return Board(language="ru", verb=verb, voice_key=voice_key, voice_label=voice_label, sections=sections)
+
+    return Board(
+        language="ru",
+        verb=verb,
+        voice_key=voice_key,
+        voice_label=voice_label,
+        sections=sections,
+    )

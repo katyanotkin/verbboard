@@ -15,7 +15,11 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
         {
             "title": "Metadata",
             "rows": [
-                {"key": "binyan", "label": "בניין", "text": str(morph.get("binyan", ""))},
+                {
+                    "key": "binyan",
+                    "label": "בניין",
+                    "text": str(morph.get("binyan", "")),
+                },
                 {"key": "root", "label": "שורש", "text": str(morph.get("root", ""))},
             ],
         },
@@ -34,13 +38,11 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
                 # 1st person
                 {"key": "past_1sg", "label": "1st sg", "text": past.get("1sg", "")},
                 {"key": "past_1pl", "label": "1st pl", "text": past.get("1pl", "")},
-
                 # 2nd person
                 {"key": "past_2msg", "label": "2nd m.sg", "text": past.get("2msg", "")},
                 {"key": "past_2fsg", "label": "2nd f.sg", "text": past.get("2fsg", "")},
                 {"key": "past_2mpl", "label": "2nd m.pl", "text": past.get("2mpl", "")},
                 {"key": "past_2fpl", "label": "2nd f.pl", "text": past.get("2fpl", "")},
-
                 # 3rd person
                 {"key": "past_3msg", "label": "3rd m.sg", "text": past.get("3msg", "")},
                 {"key": "past_3fsg", "label": "3rd f.sg", "text": past.get("3fsg", "")},
@@ -53,16 +55,38 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
                 # 1st person
                 {"key": "fut_1sg", "label": "1st sg", "text": future.get("1sg", "")},
                 {"key": "fut_1pl", "label": "1st pl", "text": future.get("1pl", "")},
-
                 # 2nd person (split plural by gender)
-                {"key": "fut_2msg", "label": "2nd m.sg", "text": future.get("2msg", "")},
-                {"key": "fut_2fsg", "label": "2nd f.sg", "text": future.get("2fsg", "")},
-                {"key": "fut_2mpl", "label": "2nd m.pl", "text": future.get("2mpl", "")},
-                {"key": "fut_2fpl", "label": "2nd f.pl", "text": future.get("2fpl", "")},
-
+                {
+                    "key": "fut_2msg",
+                    "label": "2nd m.sg",
+                    "text": future.get("2msg", ""),
+                },
+                {
+                    "key": "fut_2fsg",
+                    "label": "2nd f.sg",
+                    "text": future.get("2fsg", ""),
+                },
+                {
+                    "key": "fut_2mpl",
+                    "label": "2nd m.pl",
+                    "text": future.get("2mpl", ""),
+                },
+                {
+                    "key": "fut_2fpl",
+                    "label": "2nd f.pl",
+                    "text": future.get("2fpl", ""),
+                },
                 # 3rd person
-                {"key": "fut_3msg", "label": "3rd m.sg", "text": future.get("3msg", "")},
-                {"key": "fut_3fsg", "label": "3rd f.sg", "text": future.get("3fsg", "")},
+                {
+                    "key": "fut_3msg",
+                    "label": "3rd m.sg",
+                    "text": future.get("3msg", ""),
+                },
+                {
+                    "key": "fut_3fsg",
+                    "label": "3rd f.sg",
+                    "text": future.get("3fsg", ""),
+                },
                 {"key": "fut_3pl", "label": "3rd pl", "text": future.get("3pl", "")},
             ],
         },

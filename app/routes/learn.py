@@ -39,7 +39,7 @@ async def learn(
     plugin = get_plugin(language)
 
     voice_meta = VOICES[language][voice]
-    board = plugin.build_board(verb, voice_key=voice, voice_label=voice_meta.label)
+    board = plugin.build_board(verb, voice, voice_meta.label)
 
     # Ensure audio is cached for all rows
     tasks = []

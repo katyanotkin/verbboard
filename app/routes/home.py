@@ -2,22 +2,24 @@ from __future__ import annotations
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from pathlib import Path
-from typing import Dict, List
 
 from fastapi import APIRouter, Query
-from fastapi.responses import HTMLResponse
 
 from core.lexicon import load_lexicon
 from core.registry import all_plugins
 
 router = APIRouter()
 
+
 @router.get("/set_language", response_model=None)
 def set_language(language: str, voice: str = "female"):
     lex_path = Path("data") / language / "lexicon.json"
     entries = load_lexicon(lex_path) if lex_path.exists() else []
     default_verb_id = entries[0].id if entries else ""
-    return RedirectResponse(url=f"/?language={language}&voice={voice}&verb_id={default_verb_id}")
+    return RedirectResponse(
+        url=f"/?language={language}&voice={voice}&verb_id={default_verb_id}"
+    )
+
 
 @router.get("/", response_class=HTMLResponse)
 def home(

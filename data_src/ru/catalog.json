@@ -6,12 +6,10 @@
       "id": "ru_govorit",
       "rank": 1,
       "lemma": "говорить",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_skazat",
-        "sem": "speech"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_skazat",
+      "sem": "speech",
+      "seed_forms": {
         "present": {
           "1sg": "говорю",
           "2sg": "говоришь",
@@ -30,35 +28,16 @@
           "sg": "говори",
           "pl": "говорите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я говорю тихо."
-        },
-        {
-          "dst": "Он говорит по-русски."
-        },
-        {
-          "dst": "Мы говорили об этом вчера."
-        },
-        {
-          "dst": "Говори громче."
-        },
-        {
-          "dst": "Радио говорило всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_skazat",
       "rank": 2,
       "lemma": "сказать",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_govorit",
-        "sem": "speech"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_govorit",
+      "sem": "speech",
+      "seed_forms": {
         "present": {
           "1sg": "скажу",
           "2sg": "скажешь",
@@ -77,35 +56,16 @@
           "sg": "скажи",
           "pl": "скажите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я скажу правду."
-        },
-        {
-          "dst": "Он скажет это завтра."
-        },
-        {
-          "dst": "Мы сказали об этом вчера."
-        },
-        {
-          "dst": "Скажи это громче."
-        },
-        {
-          "dst": "Привидение сказало одно слово."
-        }
-      ]
+      }
     },
     {
       "id": "ru_delat",
       "rank": 3,
       "lemma": "делать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_sdelat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_sdelat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "делаю",
           "2sg": "делаешь",
@@ -124,35 +84,16 @@
           "sg": "делай",
           "pl": "делайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я делаю домашнее задание."
-        },
-        {
-          "dst": "Он делает всё быстро."
-        },
-        {
-          "dst": "Мы делали это вчера."
-        },
-        {
-          "dst": "Делай аккуратно."
-        },
-        {
-          "dst": "Одеяло делало комнату уютнее."
-        }
-      ]
+      }
     },
     {
       "id": "ru_sdelat",
       "rank": 4,
       "lemma": "сделать",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_delat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_delat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "сделаю",
           "2sg": "сделаешь",
@@ -171,35 +112,16 @@
           "sg": "сделай",
           "pl": "сделайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я сделаю это вечером."
-        },
-        {
-          "dst": "Он сделает работу завтра."
-        },
-        {
-          "dst": "Мы сделали это вчера."
-        },
-        {
-          "dst": "Сделай это аккуратно."
-        },
-        {
-          "dst": "Привидение сделало шаг вперёд."
-        }
-      ]
+      }
     },
     {
       "id": "ru_idti",
       "rank": 5,
       "lemma": "идти",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_poyti",
-        "sem": "motion"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_poyti",
+      "sem": "motion",
+      "seed_forms": {
         "present": {
           "1sg": "иду",
           "2sg": "идёшь",
@@ -218,35 +140,16 @@
           "sg": "иди",
           "pl": "идите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я иду домой."
-        },
-        {
-          "dst": "Он идёт в школу."
-        },
-        {
-          "dst": "Мы шли медленно вчера."
-        },
-        {
-          "dst": "Иди быстрее."
-        },
-        {
-          "dst": "Привидение шло по комнате."
-        }
-      ]
+      }
     },
     {
       "id": "ru_poyti",
       "rank": 6,
       "lemma": "пойти",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_idti",
-        "sem": "motion"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_idti",
+      "sem": "motion",
+      "seed_forms": {
         "present": {
           "1sg": "пойду",
           "2sg": "пойдёшь",
@@ -265,35 +168,16 @@
           "sg": "пойди",
           "pl": "пойдите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я пойду домой вечером."
-        },
-        {
-          "dst": "Он пойдёт туда завтра."
-        },
-        {
-          "dst": "Мы пошли домой вчера."
-        },
-        {
-          "dst": "Пойди скорее."
-        },
-        {
-          "dst": "Привидение пошло к двери."
-        }
-      ]
+      }
     },
     {
       "id": "ru_videt",
       "rank": 7,
       "lemma": "видеть",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_uvidet",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_uvidet",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "вижу",
           "2sg": "видишь",
@@ -312,35 +196,16 @@
           "sg": "видь",
           "pl": "видьте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я вижу."
-        },
-        {
-          "dst": "Он видит."
-        },
-        {
-          "dst": "Мы видели вчера."
-        },
-        {
-          "dst": "видь внимательно."
-        },
-        {
-          "dst": "Радио видело всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_uvidet",
       "rank": 8,
       "lemma": "увидеть",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_videt",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_videt",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "увижу",
           "2sg": "увидишь",
@@ -359,35 +224,16 @@
           "sg": "увидь",
           "pl": "увидьте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я увижу."
-        },
-        {
-          "dst": "Он увидит."
-        },
-        {
-          "dst": "Мы увидели вчера."
-        },
-        {
-          "dst": "увидь внимательно."
-        },
-        {
-          "dst": "Радио увидело всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_znat",
       "rank": 9,
       "lemma": "знать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_uznat",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_uznat",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "знаю",
           "2sg": "знаешь",
@@ -406,35 +252,16 @@
           "sg": "знай",
           "pl": "знайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я знаю."
-        },
-        {
-          "dst": "Он знает."
-        },
-        {
-          "dst": "Мы знали вчера."
-        },
-        {
-          "dst": "знай внимательно."
-        },
-        {
-          "dst": "Радио знало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_uznat",
       "rank": 10,
       "lemma": "узнать",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_znat",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_znat",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "узнаю",
           "2sg": "узнаешь",
@@ -453,35 +280,16 @@
           "sg": "узнай",
           "pl": "узнайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я узнаю."
-        },
-        {
-          "dst": "Он узнает."
-        },
-        {
-          "dst": "Мы узнали вчера."
-        },
-        {
-          "dst": "узнай внимательно."
-        },
-        {
-          "dst": "Радио узнало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_dumat",
       "rank": 11,
       "lemma": "думать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_podumat",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_podumat",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "думаю",
           "2sg": "думаешь",
@@ -500,35 +308,16 @@
           "sg": "думай",
           "pl": "думайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я думаю."
-        },
-        {
-          "dst": "Он думает."
-        },
-        {
-          "dst": "Мы думали вчера."
-        },
-        {
-          "dst": "думай внимательно."
-        },
-        {
-          "dst": "Радио думало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_podumat",
       "rank": 12,
       "lemma": "подумать",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_dumat",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_dumat",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "подумаю",
           "2sg": "подумаешь",
@@ -547,35 +336,16 @@
           "sg": "подумай",
           "pl": "подумайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я подумаю."
-        },
-        {
-          "dst": "Он подумает."
-        },
-        {
-          "dst": "Мы подумали вчера."
-        },
-        {
-          "dst": "подумай внимательно."
-        },
-        {
-          "dst": "Радио подумало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_brat",
       "rank": 13,
       "lemma": "брать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_vzyat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_vzyat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "беру",
           "2sg": "берёшь",
@@ -594,35 +364,16 @@
           "sg": "бери",
           "pl": "берите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я беру."
-        },
-        {
-          "dst": "Он берёт."
-        },
-        {
-          "dst": "Мы брали вчера."
-        },
-        {
-          "dst": "бери внимательно."
-        },
-        {
-          "dst": "Радио брало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_vzyat",
       "rank": 14,
       "lemma": "взять",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_brat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_brat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "возьму",
           "2sg": "возьмёшь",
@@ -641,35 +392,16 @@
           "sg": "возьми",
           "pl": "возьмите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я возьму."
-        },
-        {
-          "dst": "Он возьмёт."
-        },
-        {
-          "dst": "Мы взяли вчера."
-        },
-        {
-          "dst": "возьми внимательно."
-        },
-        {
-          "dst": "Радио взяло всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_davat",
       "rank": 15,
       "lemma": "давать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_dat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_dat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "даю",
           "2sg": "даёшь",
@@ -688,35 +420,16 @@
           "sg": "давай",
           "pl": "давайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я даю."
-        },
-        {
-          "dst": "Он даёт."
-        },
-        {
-          "dst": "Мы давали вчера."
-        },
-        {
-          "dst": "давай внимательно."
-        },
-        {
-          "dst": "Радио давало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_dat",
       "rank": 16,
       "lemma": "дать",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_davat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_davat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "дам",
           "2sg": "дашь",
@@ -735,35 +448,16 @@
           "sg": "дай",
           "pl": "дайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я дам."
-        },
-        {
-          "dst": "Он даст."
-        },
-        {
-          "dst": "Мы дали вчера."
-        },
-        {
-          "dst": "дай внимательно."
-        },
-        {
-          "dst": "Радио дало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_pisat",
       "rank": 17,
       "lemma": "писать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_napisat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_napisat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "пишу",
           "2sg": "пишешь",
@@ -782,35 +476,16 @@
           "sg": "пиши",
           "pl": "пишите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я пишу."
-        },
-        {
-          "dst": "Он пишет."
-        },
-        {
-          "dst": "Мы писали вчера."
-        },
-        {
-          "dst": "пиши внимательно."
-        },
-        {
-          "dst": "Радио писало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_napisat",
       "rank": 18,
       "lemma": "написать",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_pisat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_pisat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "напишу",
           "2sg": "напишешь",
@@ -829,35 +504,16 @@
           "sg": "напиши",
           "pl": "напишите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я напишу."
-        },
-        {
-          "dst": "Он напишет."
-        },
-        {
-          "dst": "Мы написали вчера."
-        },
-        {
-          "dst": "напиши внимательно."
-        },
-        {
-          "dst": "Радио написало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_chitat",
       "rank": 19,
       "lemma": "читать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_prochitat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_prochitat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "читаю",
           "2sg": "читаешь",
@@ -876,35 +532,16 @@
           "sg": "читай",
           "pl": "читайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я читаю книгу."
-        },
-        {
-          "dst": "Он читает письмо."
-        },
-        {
-          "dst": "Мы читали это вчера."
-        },
-        {
-          "dst": "Читай внимательно."
-        },
-        {
-          "dst": "Радио читало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_prochitat",
       "rank": 20,
       "lemma": "прочитать",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_chitat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_chitat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "прочитаю",
           "2sg": "прочитаешь",
@@ -923,35 +560,16 @@
           "sg": "прочитай",
           "pl": "прочитайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я прочитаю статью вечером."
-        },
-        {
-          "dst": "Он прочитает письмо дома."
-        },
-        {
-          "dst": "Мы прочитали книгу вчера."
-        },
-        {
-          "dst": "Прочитай текст внимательно."
-        },
-        {
-          "dst": "Привидение прочитало письмо."
-        }
-      ]
+      }
     },
     {
       "id": "ru_smotret",
       "rank": 21,
       "lemma": "смотреть",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_posmotret",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_posmotret",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "смотрю",
           "2sg": "смотришь",
@@ -970,35 +588,16 @@
           "sg": "смотри",
           "pl": "смотрите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я смотрю."
-        },
-        {
-          "dst": "Он смотрит."
-        },
-        {
-          "dst": "Мы смотрели вчера."
-        },
-        {
-          "dst": "смотри внимательно."
-        },
-        {
-          "dst": "Радио смотрело всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_posmotret",
       "rank": 22,
       "lemma": "посмотреть",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_smotret",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_smotret",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "посмотрю",
           "2sg": "посмотришь",
@@ -1017,35 +616,16 @@
           "sg": "посмотри",
           "pl": "посмотрите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я посмотрю."
-        },
-        {
-          "dst": "Он посмотрит."
-        },
-        {
-          "dst": "Мы посмотрели вчера."
-        },
-        {
-          "dst": "посмотри внимательно."
-        },
-        {
-          "dst": "Радио посмотрело всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_otkryvat",
       "rank": 23,
       "lemma": "открывать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_otkryt",
-        "sem": "change"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_otkryt",
+      "sem": "change",
+      "seed_forms": {
         "present": {
           "1sg": "открываю",
           "2sg": "открываешь",
@@ -1064,35 +644,16 @@
           "sg": "открывай",
           "pl": "открывайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я открываю."
-        },
-        {
-          "dst": "Он открывает."
-        },
-        {
-          "dst": "Мы открывали вчера."
-        },
-        {
-          "dst": "открывай внимательно."
-        },
-        {
-          "dst": "Радио открывало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_otkryt",
       "rank": 24,
       "lemma": "открыть",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_otkryvat",
-        "sem": "change"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_otkryvat",
+      "sem": "change",
+      "seed_forms": {
         "present": {
           "1sg": "открою",
           "2sg": "откроешь",
@@ -1111,35 +672,16 @@
           "sg": "открой",
           "pl": "откройте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я открою."
-        },
-        {
-          "dst": "Он откроет."
-        },
-        {
-          "dst": "Мы открыли вчера."
-        },
-        {
-          "dst": "открой внимательно."
-        },
-        {
-          "dst": "Радио открыло всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_zakryvat",
       "rank": 25,
       "lemma": "закрывать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_zakryt",
-        "sem": "change"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_zakryt",
+      "sem": "change",
+      "seed_forms": {
         "present": {
           "1sg": "закрываю",
           "2sg": "закрываешь",
@@ -1158,35 +700,16 @@
           "sg": "закрывай",
           "pl": "закрывайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я закрываю."
-        },
-        {
-          "dst": "Он закрывает."
-        },
-        {
-          "dst": "Мы закрывали вчера."
-        },
-        {
-          "dst": "закрывай внимательно."
-        },
-        {
-          "dst": "Радио закрывало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_zakryt",
       "rank": 26,
       "lemma": "закрыть",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_zakryvat",
-        "sem": "change"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_zakryvat",
+      "sem": "change",
+      "seed_forms": {
         "present": {
           "1sg": "закрою",
           "2sg": "закроешь",
@@ -1205,35 +728,16 @@
           "sg": "закрой",
           "pl": "закройте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я закрою."
-        },
-        {
-          "dst": "Он закроет."
-        },
-        {
-          "dst": "Мы закрыли вчера."
-        },
-        {
-          "dst": "закрой внимательно."
-        },
-        {
-          "dst": "Радио закрыло всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_pokupat",
       "rank": 27,
       "lemma": "покупать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_kupit",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_kupit",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "покупаю",
           "2sg": "покупаешь",
@@ -1252,35 +756,16 @@
           "sg": "покупай",
           "pl": "покупайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я покупаю."
-        },
-        {
-          "dst": "Он покупает."
-        },
-        {
-          "dst": "Мы покупали вчера."
-        },
-        {
-          "dst": "покупай внимательно."
-        },
-        {
-          "dst": "Радио покупало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_kupit",
       "rank": 28,
       "lemma": "купить",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_pokupat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_pokupat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "куплю",
           "2sg": "купишь",
@@ -1299,35 +784,16 @@
           "sg": "купи",
           "pl": "купите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я куплю."
-        },
-        {
-          "dst": "Он купит."
-        },
-        {
-          "dst": "Мы купили вчера."
-        },
-        {
-          "dst": "купи внимательно."
-        },
-        {
-          "dst": "Радио купило всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_prodavat",
       "rank": 29,
       "lemma": "продавать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_prodat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_prodat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "продаю",
           "2sg": "продаёшь",
@@ -1346,35 +812,16 @@
           "sg": "продавай",
           "pl": "продавайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я продаю."
-        },
-        {
-          "dst": "Он продаёт."
-        },
-        {
-          "dst": "Мы продавали вчера."
-        },
-        {
-          "dst": "продавай внимательно."
-        },
-        {
-          "dst": "Радио продавало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_prodat",
       "rank": 30,
       "lemma": "продать",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_prodavat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_prodavat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "продам",
           "2sg": "продашь",
@@ -1393,35 +840,16 @@
           "sg": "продай",
           "pl": "продайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я продам."
-        },
-        {
-          "dst": "Он продаст."
-        },
-        {
-          "dst": "Мы продали вчера."
-        },
-        {
-          "dst": "продай внимательно."
-        },
-        {
-          "dst": "Радио продало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_sprashivat",
       "rank": 31,
       "lemma": "спрашивать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_sprosit",
-        "sem": "speech"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_sprosit",
+      "sem": "speech",
+      "seed_forms": {
         "present": {
           "1sg": "спрашиваю",
           "2sg": "спрашиваешь",
@@ -1440,35 +868,16 @@
           "sg": "спрашивай",
           "pl": "спрашивайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я спрашиваю об этом часто."
-        },
-        {
-          "dst": "Он спрашивает учителя."
-        },
-        {
-          "dst": "Мы спрашивали об этом вчера."
-        },
-        {
-          "dst": "Спрашивай смелее."
-        },
-        {
-          "dst": "Привидение спрашивало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_sprosit",
       "rank": 32,
       "lemma": "спросить",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_sprashivat",
-        "sem": "speech"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_sprashivat",
+      "sem": "speech",
+      "seed_forms": {
         "present": {
           "1sg": "спрошу",
           "2sg": "спросишь",
@@ -1487,35 +896,16 @@
           "sg": "спроси",
           "pl": "спросите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я спрошу об этом завтра."
-        },
-        {
-          "dst": "Он спросит учителя позже."
-        },
-        {
-          "dst": "Мы спросили об этом вчера."
-        },
-        {
-          "dst": "Спроси его прямо."
-        },
-        {
-          "dst": "Привидение спросило одно слово."
-        }
-      ]
+      }
     },
     {
       "id": "ru_poluchat",
       "rank": 33,
       "lemma": "получать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_poluchit",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_poluchit",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "получаю",
           "2sg": "получаешь",
@@ -1534,35 +924,16 @@
           "sg": "получай",
           "pl": "получайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я получаю."
-        },
-        {
-          "dst": "Он получает."
-        },
-        {
-          "dst": "Мы получали вчера."
-        },
-        {
-          "dst": "получай внимательно."
-        },
-        {
-          "dst": "Радио получало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_poluchit",
       "rank": 34,
       "lemma": "получить",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_poluchat",
-        "sem": "action"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_poluchat",
+      "sem": "action",
+      "seed_forms": {
         "present": {
           "1sg": "получу",
           "2sg": "получишь",
@@ -1581,35 +952,16 @@
           "sg": "получи",
           "pl": "получите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я получу."
-        },
-        {
-          "dst": "Он получит."
-        },
-        {
-          "dst": "Мы получили вчера."
-        },
-        {
-          "dst": "получи внимательно."
-        },
-        {
-          "dst": "Радио получило всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_prihodit",
       "rank": 35,
       "lemma": "приходить",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_priyti",
-        "sem": "motion"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_priyti",
+      "sem": "motion",
+      "seed_forms": {
         "present": {
           "1sg": "прихожу",
           "2sg": "приходишь",
@@ -1628,35 +980,16 @@
           "sg": "приходи",
           "pl": "приходите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я прихожу."
-        },
-        {
-          "dst": "Он приходит."
-        },
-        {
-          "dst": "Мы приходили вчера."
-        },
-        {
-          "dst": "приходи внимательно."
-        },
-        {
-          "dst": "Радио приходило всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_priyti",
       "rank": 36,
       "lemma": "прийти",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_prihodit",
-        "sem": "motion"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_prihodit",
+      "sem": "motion",
+      "seed_forms": {
         "present": {
           "1sg": "приду",
           "2sg": "придёшь",
@@ -1675,35 +1008,16 @@
           "sg": "приди",
           "pl": "придите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я приду."
-        },
-        {
-          "dst": "Он придёт."
-        },
-        {
-          "dst": "Мы пришли вчера."
-        },
-        {
-          "dst": "приди внимательно."
-        },
-        {
-          "dst": "Радио пришло всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_nachinat",
       "rank": 37,
       "lemma": "начинать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_nachat",
-        "sem": "change"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_nachat",
+      "sem": "change",
+      "seed_forms": {
         "present": {
           "1sg": "начинаю",
           "2sg": "начинаешь",
@@ -1722,35 +1036,16 @@
           "sg": "начинай",
           "pl": "начинайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я начинаю."
-        },
-        {
-          "dst": "Он начинает."
-        },
-        {
-          "dst": "Мы начинали вчера."
-        },
-        {
-          "dst": "начинай внимательно."
-        },
-        {
-          "dst": "Радио начинало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_nachat",
       "rank": 38,
       "lemma": "начать",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_nachinat",
-        "sem": "change"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_nachinat",
+      "sem": "change",
+      "seed_forms": {
         "present": {
           "1sg": "начну",
           "2sg": "начнёшь",
@@ -1769,35 +1064,16 @@
           "sg": "начни",
           "pl": "начните"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я начну."
-        },
-        {
-          "dst": "Он начнёт."
-        },
-        {
-          "dst": "Мы начали вчера."
-        },
-        {
-          "dst": "начни внимательно."
-        },
-        {
-          "dst": "Радио начало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_ponimat",
       "rank": 39,
       "lemma": "понимать",
-      "morph": {
-        "aspect": "imperfective",
-        "pair": "ru_ponyat",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "imperfective",
+      "pair": "ru_ponyat",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "понимаю",
           "2sg": "понимаешь",
@@ -1816,35 +1092,16 @@
           "sg": "понимай",
           "pl": "понимайте"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я понимаю."
-        },
-        {
-          "dst": "Он понимает."
-        },
-        {
-          "dst": "Мы понимали вчера."
-        },
-        {
-          "dst": "понимай внимательно."
-        },
-        {
-          "dst": "Радио понимало всю ночь."
-        }
-      ]
+      }
     },
     {
       "id": "ru_ponyat",
       "rank": 40,
       "lemma": "понять",
-      "morph": {
-        "aspect": "perfective",
-        "pair": "ru_ponimat",
-        "sem": "mental"
-      },
-      "forms": {
+      "aspect": "perfective",
+      "pair": "ru_ponimat",
+      "sem": "mental",
+      "seed_forms": {
         "present": {
           "1sg": "пойму",
           "2sg": "поймёшь",
@@ -1863,24 +1120,7 @@
           "sg": "пойми",
           "pl": "поймите"
         }
-      },
-      "examples": [
-        {
-          "dst": "Я пойму."
-        },
-        {
-          "dst": "Он поймёт."
-        },
-        {
-          "dst": "Мы поняли вчера."
-        },
-        {
-          "dst": "пойми внимательно."
-        },
-        {
-          "dst": "Радио поняло всю ночь."
-        }
-      ]
+      }
     }
   ]
 }
