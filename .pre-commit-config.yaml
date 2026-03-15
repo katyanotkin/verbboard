@@ -26,8 +26,26 @@ repos:
       language: system
       types: [python]
 
-    - id: check-hebrew-lexicon
-      name: Validate Hebrew lexicon
-      entry: python tools/check_lexicon.py runtime/data/he/lexicon.json
+    - id: regenerate-lexicons
+      name: Generate runtime lexicons
+      entry: bash -c "python -m tools.generate_lexicon --language en && python -m tools.generate_lexicon --language ru && python -m tools.generate_lexicon --language he && git diff --exit-code runtime/data"  
+      language: system
+      pass_filenames: false  
+
+    - id: check-lexicons
+      name: Validate all lexicons
+      entry: python tools/check_all_lexicons.py
       language: system
       pass_filenames: false
+
+    - id: check-template
+      name: Validate board template
+      entry: python tools/check_template.py
+      language: system
+      pass_filenames: false   
+
+    - id: check-plugins
+      name: Validate language plugins
+      entry: python tools/check_plugins.py
+      language: system
+      pass_filenames: false    

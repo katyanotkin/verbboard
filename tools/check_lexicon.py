@@ -97,7 +97,7 @@ def check_hebrew_entry(entry: dict[str, Any], index: int) -> None:
 
 def main() -> None:
     if len(sys.argv) != 2:
-        fail("usage: python tools/check_lexicon.py runtime/data/he/lexicon.json")
+        fail("usage: python tools/check_lexicon.py runtime/data/<lang>/lexicon.json")
 
     path = Path(sys.argv[1])
     if not path.exists():
@@ -107,8 +107,13 @@ def main() -> None:
 
     require_keys(payload, ["language", "version", "verbs"], "top-level")
 
-    if payload["language"] != "he":
-        fail(f"top-level: expected language='he', got '{payload['language']}'")
+    expected_language = path.parent.name
+    actual_language = payload["language"]
+    if actual_language != expected_language:
+        fail(
+            f"top-level: expected language='{expected_language}', "
+            f"got '{actual_language}'"
+        )
 
     if not isinstance(payload["version"], int):
         fail("top-level: version must be int")
@@ -124,21 +129,52 @@ def main() -> None:
     for index, entry in enumerate(verbs, start=1):
         if not isinstance(entry, dict):
             fail(f"verb #{index}: must be object")
-        check_hebrew_entry(entry, index)
+
+        # Keep full Hebrew-specific validation exactly as before.
+        if actual_language == "he":
+            check_hebrew_entry(entry, index)
+        else:
+            # Minimal generic validation for non-Hebrew lexicons.
+            require_keys(
+                entry, ["id", "rank", "lemma", "forms", "examples"], f"verb #{index}"
+            )
+
+            if not isinstance(entry["id"], str) or not entry["id"].strip():
+                fail(f"verb #{index}: id must be non-empty string")
+            if not isinstance(entry["rank"], int):
+                fail(f"verb #{index}: rank must be int")
+
+            lemma = entry["lemma"]
+            if isinstance(lemma, dict):
+                if not lemma:
+                    fail(f"verb #{index}: lemma dict must not be empty")
+            elif not isinstance(lemma, str) or not lemma.strip():
+                fail(f"verb #{index}: lemma must be non-empty string or non-empty dict")
+
+            if not isinstance(entry["forms"], dict):
+                fail(f"verb #{index}: forms must be object")
+            if not isinstance(entry["examples"], list):
+                fail(f"verb #{index}: examples must be list")
 
         verb_id = entry["id"]
         lemma = entry["lemma"]
         rank = entry["rank"]
 
+        lemma_key = (
+            json.dumps(lemma, ensure_ascii=False, sort_keys=True)
+            if isinstance(lemma, dict)
+            else lemma
+        )
+
         if verb_id in seen_ids:
             fail(f"duplicate id: {verb_id}")
-        if lemma in seen_lemmas:
+        if lemma_key in seen_lemmas:
             fail(f"duplicate lemma: {lemma}")
         if rank in seen_ranks:
             fail(f"duplicate rank: {rank}")
 
         seen_ids.add(verb_id)
-        seen_lemmas.add(lemma)
+        seen_lemmas.add(lemma_key)
         seen_ranks.add(rank)
 
     print(f"OK: {path} ({len(verbs)} verbs)")
