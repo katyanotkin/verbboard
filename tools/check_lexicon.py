@@ -97,7 +97,7 @@ def check_hebrew_entry(entry: dict[str, Any], index: int) -> None:
 
 def main() -> None:
     if len(sys.argv) != 2:
-        fail("usage: python tools/check_lexicon.py data/he/lexicon.json")
+        fail("usage: python tools/check_lexicon.py runtime/data/he/lexicon.json")
 
     path = Path(sys.argv[1])
     if not path.exists():

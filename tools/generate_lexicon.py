@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import Any, Callable, NoReturn
 
+from core.paths import DATA_DIR, DATA_SRC_DIR
+
 
 SUPPORTED_LANGUAGES = {"en", "ru", "he"}
 
@@ -448,15 +450,15 @@ def main() -> None:
     arguments = parse_args()
     language = arguments.language
 
-    source_path = Path("data_src") / language / "catalog.json"
-    output_path = Path("data") / language / "lexicon.json"
+    source_path = DATA_SRC_DIR / language / "catalog.json"
+    output_path = DATA_DIR / language / "lexicon.json"
 
     source_payload = load_json(source_path)
 
     built_in_examples: dict[str, list[str]] = {}
     if language in {"en", "ru"}:
         built_in_examples = load_optional_json_map(
-            Path("data") / language / "built_in_examples.json"
+            DATA_DIR / language / "built_in_examples.json"
         )
 
     runtime_payload = build_runtime_payload(

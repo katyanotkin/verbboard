@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
 
 from fastapi import APIRouter, Query
 from fastapi.responses import HTMLResponse
@@ -11,6 +10,7 @@ from core.lexicon import load_lexicon, index_by_id
 from core.registry import get as get_plugin
 from core.render import render_board_html
 from core.tts import VOICES, tts_to_mp3
+from core.paths import DATA_DIR
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ async def learn(
     verb_id: str = Query(...),
     voice: str = Query("female"),
 ) -> str:
-    lex_path = Path("data") / language / "lexicon.json"
+    lex_path = DATA_DIR / language / "lexicon.json"
     entries = load_lexicon(lex_path)
     by_id = index_by_id(entries)
 

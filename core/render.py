@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from html import escape
-from pathlib import Path
 
 from core.models import Board
+from core.paths import TEMPLATES_DIR
 
 
 def render_board_html(board: Board) -> str:
@@ -42,7 +42,7 @@ def render_board_html(board: Board) -> str:
             + "</table>"
         )
 
-    template = Path("templates/board.html").read_text(encoding="utf-8")
+    template = (TEMPLATES_DIR / "board.html").read_text(encoding="utf-8")
 
     examples_rows = []
     for index, ex in enumerate(board.verb.examples, start=1):

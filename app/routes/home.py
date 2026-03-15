@@ -1,19 +1,19 @@
 from __future__ import annotations
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from pathlib import Path
 
 from fastapi import APIRouter, Query
 
 from core.lexicon import load_lexicon
 from core.registry import all_plugins
+from core.paths import DATA_DIR
 
 router = APIRouter()
 
 
 @router.get("/set_language", response_model=None)
 def set_language(language: str, voice: str = "female"):
-    lex_path = Path("data") / language / "lexicon.json"
+    lex_path = DATA_DIR / language / "lexicon.json"
     entries = load_lexicon(lex_path) if lex_path.exists() else []
     default_verb_id = entries[0].id if entries else ""
     return RedirectResponse(
@@ -31,7 +31,7 @@ def home(
     if language not in plugins:
         language = "he"
 
-    lex_path = Path("data") / language / "lexicon.json"
+    lex_path = DATA_DIR / language / "lexicon.json"
     entries = load_lexicon(lex_path)
 
     if verb_id is None and entries:

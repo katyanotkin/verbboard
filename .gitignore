@@ -19,7 +19,8 @@ Thumbs.db
 .idea/
 
 # Runtime data
-audio_cache/
+runtime/audio_cache/
+!runtime/audio_cache/.gitkeep
 
 # Temporary
 *.tmp

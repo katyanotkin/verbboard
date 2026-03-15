@@ -28,6 +28,6 @@ repos:
 
     - id: check-hebrew-lexicon
       name: Validate Hebrew lexicon
-      entry: python tools/check_lexicon.py data/he/lexicon.json
+      entry: python tools/check_lexicon.py runtime/data/he/lexicon.json
       language: system
       pass_filenames: false
