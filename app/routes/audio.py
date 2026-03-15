@@ -1,17 +1,31 @@
 from __future__ import annotations
 
+from fastapi import APIRouter, Request
+from fastapi.responses import PlainTextResponse, Response
 
-from fastapi import APIRouter
-from fastapi.responses import FileResponse, PlainTextResponse
-
-from core.paths import AUDIO_CACHE_DIR
+from core.audio_service import read_audio_bytes
 
 router = APIRouter()
 
 
 @router.get("/audio/{language}/{verb_id}/{voice}/{form_key}.mp3")
-def get_audio(language: str, verb_id: str, voice: str, form_key: str):
-    path = AUDIO_CACHE_DIR / language / verb_id / voice / f"{form_key}.mp3"
-    if not path.exists():
+def get_audio(
+    request: Request,
+    language: str,
+    verb_id: str,
+    voice: str,
+    form_key: str,
+):
+    audio_backend = request.app.state.audio_backend
+    audio_bytes = read_audio_bytes(
+        audio_backend=audio_backend,
+        language=language,
+        verb_id=verb_id,
+        voice=voice,
+        form_key=form_key,
+    )
+
+    if audio_bytes is None:
         return PlainTextResponse("Audio not found", status_code=404)
-    return FileResponse(path, media_type="audio/mpeg")
+
+    return Response(content=audio_bytes, media_type="audio/mpeg")

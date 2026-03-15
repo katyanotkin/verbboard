@@ -6,3 +6,4 @@ uvicorn[standard]
 edge-tts
 ruff
 pre-commit	
+google-cloud-storage
