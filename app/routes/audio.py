@@ -28,4 +28,8 @@ def get_audio(
     if audio_bytes is None:
         return PlainTextResponse("Audio not found", status_code=404)
 
-    return Response(content=audio_bytes, media_type="audio/mpeg")
+    return Response(
+        content=audio_bytes,
+        media_type="audio/mpeg",
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
