@@ -1,66 +1,118 @@
 PYTHON=python
 IMAGE_NAME=verbboard
-GCP_REGION=us-central1
+CONTAINER_NAME=verbboard
+HOST_PORT?=8001
+CONTAINER_PORT=8080
+
+GCP_REGION=us-east1
 GCP_SERVICE=verbboard
 GCP_REPOSITORY=verbboard
-GCP_PROJECT?=your-gcp-project-id
+GCP_PROJECT?=knotmem26
+
+IMAGE_TAG=latest
+GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 .DEFAULT_GOAL := help
+
+.PHONY: help lexicon \
+	local-run local-refresh local-dev \
+	docker-build docker-run docker-stop docker-rm docker-dev \
+	gcp-check gcp-auth gcp-build gcp-push gcp-deploy gcp-release
 
 ## Show available commands
 help:
 	@echo ""
 	@echo "VerbBoard commands"
 	@echo ""
-	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-22s %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
+	@echo ""
+	@echo "Examples:"
+	@echo "  make local-dev"
+	@echo "  make docker-dev"
+	@echo "  make docker-run HOST_PORT=8001"
+	@echo "  make gcp-release GCP_PROJECT=my-project"
 	@echo ""
 
 ## LOCAL: regenerate lexicons for all languages
-lexicon:
+lexicon: ## LOCAL: regenerate lexicons
 	$(PYTHON) -m tools.generate_lexicon --language en
 	$(PYTHON) -m tools.generate_lexicon --language ru
 	$(PYTHON) -m tools.generate_lexicon --language he
 
-## LOCAL: run uvicorn directly
-local-run: ## LOCAL: run app without Docker
+## LOCAL: run app without Docker
+local-run: ## LOCAL: run uvicorn with reload
 	$(PYTHON) -m uvicorn app.main:app --reload
 
-## LOCAL: regenerate lexicons only
-local-refresh: lexicon ## LOCAL: refresh runtime lexicons
+## LOCAL: refresh runtime lexicons
+local-refresh: lexicon ## LOCAL: refresh lexicons only
 
-## LOCAL: regenerate lexicons and run app
-local-dev: lexicon local-run ## LOCAL: full local dev loop
+## LOCAL: full local dev loop
+local-dev: lexicon local-run ## LOCAL: regenerate lexicons and run app
 
-## DOCKER LOCAL: build image on this machine
+## LOCAL DOCKER: build image
 docker-build: lexicon ## LOCAL DOCKER: build image
 	docker build -t $(IMAGE_NAME) .
 
-## DOCKER LOCAL: run image on this machine
-docker-run: ## LOCAL DOCKER: run local image
-	docker run --rm -p 8000:8080 $(IMAGE_NAME)
+## LOCAL DOCKER: run local image
+docker-run: ## LOCAL DOCKER: run container on HOST_PORT -> CONTAINER_PORT
+	docker run --rm --name $(CONTAINER_NAME) -p $(HOST_PORT):$(CONTAINER_PORT) $(IMAGE_NAME)
 
-## DOCKER LOCAL: rebuild then run
-docker-dev: docker-build docker-run ## LOCAL DOCKER: rebuild and run
+## LOCAL DOCKER: stop running container
+docker-stop: ## LOCAL DOCKER: stop named container
+	-docker stop $(CONTAINER_NAME)
 
-## GCP: configure docker auth for Artifact Registry
-gcp-auth: ## GCP: configure Docker auth for Artifact Registry
+## LOCAL DOCKER: remove stopped container
+docker-rm: ## LOCAL DOCKER: remove named container if present
+	-docker rm -f $(CONTAINER_NAME)
+
+## LOCAL DOCKER: rebuild and run
+docker-dev: docker-rm docker-build docker-run ## LOCAL DOCKER: rebuild image and run container
+
+## LOCAL DOCKER: print local docker URL
+docker-url: ## LOCAL DOCKER: show browser URL
+	@echo http://localhost:$(HOST_PORT)
+
+## GCP: print resolved image URL
+gcp-image: ## GCP: show image reference
+	@echo $(GCP_IMAGE)
+
+## GCP: show deployed service URL
+gcp-open: gcp-check ## GCP: print Cloud Run service URL
+	gcloud run services describe $(GCP_SERVICE) \
+		--region $(GCP_REGION) \
+		--format='value(status.url)'
+
+## GCP: login to gcloud
+gcp-login: ## GCP: login with gcloud
+	gcloud auth login
+	gcloud config set project $(GCP_PROJECT)
+
+
+## GCP: ensure GCP_PROJECT is set
+gcp-check: ## GCP: validate required variables
+	@test -n "$(GCP_PROJECT)" || (echo "ERROR: set GCP_PROJECT, e.g. make gcp-release GCP_PROJECT=my-project" && exit 1)
+
+## GCP: configure Docker auth for Artifact Registry
+gcp-auth: gcp-check ## GCP: configure docker auth
 	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev
 
-## GCP: build image tagged for Artifact Registry
-gcp-build: lexicon ## GCP: build image tagged for Artifact Registry
-	docker build -t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):latest .
+## GCP: build container using Cloud Build
+gcp-build: lexicon gcp-check ## GCP: build image in Cloud Build
+	gcloud builds submit \
+		--tag $(GCP_IMAGE)
 
 ## GCP: push image to Artifact Registry
-gcp-push: ## GCP: push image to Artifact Registry
-	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):latest
+gcp-push: gcp-check ## GCP: push image
+	docker push $(GCP_IMAGE)
 
-## GCP: deploy pushed image to Cloud Run
-gcp-deploy: ## GCP: deploy image to Cloud Run
+## GCP: deploy image to Cloud Run
+gcp-deploy: gcp-check ## GCP: deploy to Cloud Run
 	gcloud run deploy $(GCP_SERVICE) \
-		--image $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):latest \
+		--image $(GCP_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
 		--allow-unauthenticated
 
 ## GCP: build + push + deploy
-gcp-release: gcp-build gcp-push gcp-deploy ## GCP: release to Cloud Run
+gcp-release: gcp-build gcp-deploy ## GCP: release to Cloud Run

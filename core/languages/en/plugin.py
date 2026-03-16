@@ -16,7 +16,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
                 {
                     "key": "past_participle",
                     "label": "past participle",
-                    "text": forms.get("past_participle", ""),
+                    "text": forms["past_participle"],
                 },
                 {
                     "key": "present_3sg",

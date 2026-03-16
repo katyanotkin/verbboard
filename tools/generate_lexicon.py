@@ -151,11 +151,30 @@ def build_en_examples(
     present_3sg: str,
     past: str,
     gerund: str,
+    strategy: str,
     built_in_examples: dict[str, list[str]],
 ) -> list[dict[str, str]]:
     custom_examples = built_in_examples.get(lemma)
     if custom_examples:
         return [{"dst": sentence} for sentence in custom_examples]
+
+    if strategy == "become_state":
+        return [
+            {"dst": "I become tired in the evening."},
+            {"dst": f"She {present_3sg} more confident every year."},
+            {"dst": f"They {past} friends quickly."},
+            {"dst": f"He is {gerund} stronger."},
+            {"dst": "Become stronger every day."},
+        ]
+
+    if strategy == "meet_person_or_meet_with_group":
+        return [
+            {"dst": "I meet my tutor every Friday."},
+            {"dst": f"She {present_3sg} the client today."},
+            {"dst": f"They {past} at the station."},
+            {"dst": f"We are {gerund} with the team now."},
+            {"dst": "Meet me at the entrance."},
+        ]
 
     return [
         {"dst": f"I {lemma} my work every day."},
@@ -172,6 +191,7 @@ def expand_english_entry(
     built_in_examples: dict[str, list[str]],
 ) -> dict[str, Any]:
     context = f"English seed #{rank}"
+    strategy = seed_entry.get("example_strategy", "generic")
 
     validate_required_keys(seed_entry, ["id", "lemma"], context)
 
@@ -195,6 +215,7 @@ def expand_english_entry(
 
     base = lemma
     past = str(irregular.get("past") or derive_en_regular_past(lemma))
+    past_participle = str(irregular.get("past_participle") or past)
     present_3sg = str(irregular.get("present_3sg") or derive_en_present_3sg(lemma))
     gerund = str(irregular.get("gerund") or derive_en_gerund(lemma))
 
@@ -214,6 +235,7 @@ def expand_english_entry(
             present_3sg=present_3sg,
             past=past,
             gerund=gerund,
+            strategy=strategy,
             built_in_examples=built_in_examples,
         )
 
@@ -224,6 +246,7 @@ def expand_english_entry(
         "forms": {
             "base": base,
             "past": past,
+            "past_participle": past_participle,
             "present_3sg": present_3sg,
             "gerund": gerund,
         },

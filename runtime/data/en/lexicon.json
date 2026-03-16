@@ -9,6 +9,7 @@
       "forms": {
         "base": "be",
         "past": "was",
+        "past_participle": "been",
         "present_3sg": "is",
         "gerund": "being"
       },
@@ -40,6 +41,7 @@
       "forms": {
         "base": "have",
         "past": "had",
+        "past_participle": "had",
         "present_3sg": "has",
         "gerund": "having"
       },
@@ -71,6 +73,7 @@
       "forms": {
         "base": "do",
         "past": "did",
+        "past_participle": "done",
         "present_3sg": "does",
         "gerund": "doing"
       },
@@ -99,6 +102,7 @@
       "forms": {
         "base": "say",
         "past": "said",
+        "past_participle": "said",
         "present_3sg": "says",
         "gerund": "saying"
       },
@@ -130,6 +134,7 @@
       "forms": {
         "base": "go",
         "past": "went",
+        "past_participle": "gone",
         "present_3sg": "goes",
         "gerund": "going"
       },
@@ -158,6 +163,7 @@
       "forms": {
         "base": "get",
         "past": "got",
+        "past_participle": "gotten",
         "present_3sg": "gets",
         "gerund": "getting"
       },
@@ -186,6 +192,7 @@
       "forms": {
         "base": "make",
         "past": "made",
+        "past_participle": "made",
         "present_3sg": "makes",
         "gerund": "making"
       },
@@ -214,6 +221,7 @@
       "forms": {
         "base": "know",
         "past": "knew",
+        "past_participle": "known",
         "present_3sg": "knows",
         "gerund": "knowing"
       },
@@ -242,6 +250,7 @@
       "forms": {
         "base": "think",
         "past": "thought",
+        "past_participle": "thought",
         "present_3sg": "thinks",
         "gerund": "thinking"
       },
@@ -270,6 +279,7 @@
       "forms": {
         "base": "take",
         "past": "took",
+        "past_participle": "taken",
         "present_3sg": "takes",
         "gerund": "taking"
       },
@@ -298,6 +308,7 @@
       "forms": {
         "base": "see",
         "past": "saw",
+        "past_participle": "seen",
         "present_3sg": "sees",
         "gerund": "seeing"
       },
@@ -326,6 +337,7 @@
       "forms": {
         "base": "come",
         "past": "came",
+        "past_participle": "come",
         "present_3sg": "comes",
         "gerund": "coming"
       },
@@ -354,6 +366,7 @@
       "forms": {
         "base": "want",
         "past": "wanted",
+        "past_participle": "wanted",
         "present_3sg": "wants",
         "gerund": "wanting"
       },
@@ -385,6 +398,7 @@
       "forms": {
         "base": "look",
         "past": "looked",
+        "past_participle": "looked",
         "present_3sg": "looks",
         "gerund": "looking"
       },
@@ -413,6 +427,7 @@
       "forms": {
         "base": "use",
         "past": "used",
+        "past_participle": "used",
         "present_3sg": "uses",
         "gerund": "using"
       },
@@ -441,6 +456,7 @@
       "forms": {
         "base": "find",
         "past": "found",
+        "past_participle": "found",
         "present_3sg": "finds",
         "gerund": "finding"
       },
@@ -469,6 +485,7 @@
       "forms": {
         "base": "give",
         "past": "gave",
+        "past_participle": "given",
         "present_3sg": "gives",
         "gerund": "giving"
       },
@@ -497,6 +514,7 @@
       "forms": {
         "base": "tell",
         "past": "told",
+        "past_participle": "told",
         "present_3sg": "tells",
         "gerund": "telling"
       },
@@ -525,6 +543,7 @@
       "forms": {
         "base": "work",
         "past": "worked",
+        "past_participle": "worked",
         "present_3sg": "works",
         "gerund": "working"
       },
@@ -553,6 +572,7 @@
       "forms": {
         "base": "call",
         "past": "called",
+        "past_participle": "called",
         "present_3sg": "calls",
         "gerund": "calling"
       },
@@ -581,6 +601,7 @@
       "forms": {
         "base": "try",
         "past": "tried",
+        "past_participle": "tried",
         "present_3sg": "tries",
         "gerund": "trying"
       },
@@ -609,6 +630,7 @@
       "forms": {
         "base": "ask",
         "past": "asked",
+        "past_participle": "asked",
         "present_3sg": "asks",
         "gerund": "asking"
       },
@@ -637,6 +659,7 @@
       "forms": {
         "base": "need",
         "past": "needed",
+        "past_participle": "needed",
         "present_3sg": "needs",
         "gerund": "needing"
       },
@@ -665,6 +688,7 @@
       "forms": {
         "base": "feel",
         "past": "felt",
+        "past_participle": "felt",
         "present_3sg": "feels",
         "gerund": "feeling"
       },
@@ -693,24 +717,25 @@
       "forms": {
         "base": "become",
         "past": "became",
+        "past_participle": "become",
         "present_3sg": "becomes",
         "gerund": "becoming"
       },
       "examples": [
         {
-          "dst": "I become my work every day."
+          "dst": "I become tired in the evening."
         },
         {
-          "dst": "She becomes a new task at work."
+          "dst": "She becomes more confident every year."
         },
         {
-          "dst": "They became the job yesterday."
+          "dst": "They became friends quickly."
         },
         {
-          "dst": "We are becoming the project now."
+          "dst": "He is becoming stronger."
         },
         {
-          "dst": "Become carefully."
+          "dst": "Become stronger every day."
         }
       ]
     },
@@ -721,6 +746,7 @@
       "forms": {
         "base": "leave",
         "past": "left",
+        "past_participle": "left",
         "present_3sg": "leaves",
         "gerund": "leaving"
       },
@@ -749,6 +775,7 @@
       "forms": {
         "base": "put",
         "past": "put",
+        "past_participle": "put",
         "present_3sg": "puts",
         "gerund": "putting"
       },
@@ -777,6 +804,7 @@
       "forms": {
         "base": "mean",
         "past": "meant",
+        "past_participle": "meant",
         "present_3sg": "means",
         "gerund": "meaning"
       },
@@ -805,6 +833,7 @@
       "forms": {
         "base": "keep",
         "past": "kept",
+        "past_participle": "kept",
         "present_3sg": "keeps",
         "gerund": "keeping"
       },
@@ -833,6 +862,7 @@
       "forms": {
         "base": "let",
         "past": "let",
+        "past_participle": "let",
         "present_3sg": "lets",
         "gerund": "letting"
       },
@@ -861,6 +891,7 @@
       "forms": {
         "base": "begin",
         "past": "began",
+        "past_participle": "begun",
         "present_3sg": "begins",
         "gerund": "begining"
       },
@@ -889,6 +920,7 @@
       "forms": {
         "base": "seem",
         "past": "seemed",
+        "past_participle": "seemed",
         "present_3sg": "seems",
         "gerund": "seeming"
       },
@@ -917,6 +949,7 @@
       "forms": {
         "base": "help",
         "past": "helped",
+        "past_participle": "helped",
         "present_3sg": "helps",
         "gerund": "helping"
       },
@@ -945,6 +978,7 @@
       "forms": {
         "base": "talk",
         "past": "talked",
+        "past_participle": "talked",
         "present_3sg": "talks",
         "gerund": "talking"
       },
@@ -973,6 +1007,7 @@
       "forms": {
         "base": "turn",
         "past": "turned",
+        "past_participle": "turned",
         "present_3sg": "turns",
         "gerund": "turning"
       },
@@ -1001,6 +1036,7 @@
       "forms": {
         "base": "start",
         "past": "started",
+        "past_participle": "started",
         "present_3sg": "starts",
         "gerund": "starting"
       },
@@ -1029,6 +1065,7 @@
       "forms": {
         "base": "show",
         "past": "showed",
+        "past_participle": "shown",
         "present_3sg": "shows",
         "gerund": "showing"
       },
@@ -1057,6 +1094,7 @@
       "forms": {
         "base": "hear",
         "past": "heard",
+        "past_participle": "heard",
         "present_3sg": "hears",
         "gerund": "hearing"
       },
@@ -1085,6 +1123,7 @@
       "forms": {
         "base": "play",
         "past": "played",
+        "past_participle": "played",
         "present_3sg": "plays",
         "gerund": "playing"
       },
@@ -1113,6 +1152,7 @@
       "forms": {
         "base": "run",
         "past": "ran",
+        "past_participle": "run",
         "present_3sg": "runs",
         "gerund": "running"
       },
@@ -1141,6 +1181,7 @@
       "forms": {
         "base": "move",
         "past": "moved",
+        "past_participle": "moved",
         "present_3sg": "moves",
         "gerund": "moving"
       },
@@ -1169,6 +1210,7 @@
       "forms": {
         "base": "live",
         "past": "lived",
+        "past_participle": "lived",
         "present_3sg": "lives",
         "gerund": "living"
       },
@@ -1197,6 +1239,7 @@
       "forms": {
         "base": "believe",
         "past": "believed",
+        "past_participle": "believed",
         "present_3sg": "believes",
         "gerund": "believing"
       },
@@ -1225,6 +1268,7 @@
       "forms": {
         "base": "bring",
         "past": "brought",
+        "past_participle": "brought",
         "present_3sg": "brings",
         "gerund": "bringing"
       },
@@ -1253,6 +1297,7 @@
       "forms": {
         "base": "happen",
         "past": "happened",
+        "past_participle": "happened",
         "present_3sg": "happens",
         "gerund": "happening"
       },
@@ -1281,6 +1326,7 @@
       "forms": {
         "base": "write",
         "past": "wrote",
+        "past_participle": "written",
         "present_3sg": "writes",
         "gerund": "writing"
       },
@@ -1309,6 +1355,7 @@
       "forms": {
         "base": "provide",
         "past": "provided",
+        "past_participle": "provided",
         "present_3sg": "provides",
         "gerund": "providing"
       },
@@ -1337,6 +1384,7 @@
       "forms": {
         "base": "sit",
         "past": "sat",
+        "past_participle": "sat",
         "present_3sg": "sits",
         "gerund": "sitting"
       },
@@ -1365,6 +1413,7 @@
       "forms": {
         "base": "stand",
         "past": "stood",
+        "past_participle": "stood",
         "present_3sg": "stands",
         "gerund": "standing"
       },
@@ -1393,6 +1442,7 @@
       "forms": {
         "base": "lose",
         "past": "lost",
+        "past_participle": "lost",
         "present_3sg": "loses",
         "gerund": "losing"
       },
@@ -1421,6 +1471,7 @@
       "forms": {
         "base": "pay",
         "past": "paid",
+        "past_participle": "paid",
         "present_3sg": "pays",
         "gerund": "paying"
       },
@@ -1449,24 +1500,25 @@
       "forms": {
         "base": "meet",
         "past": "met",
+        "past_participle": "met",
         "present_3sg": "meets",
         "gerund": "meeting"
       },
       "examples": [
         {
-          "dst": "I meet my work every day."
+          "dst": "I meet my tutor every Friday."
         },
         {
-          "dst": "She meets a new task at work."
+          "dst": "She meets the client today."
         },
         {
-          "dst": "They met the job yesterday."
+          "dst": "They met at the station."
         },
         {
-          "dst": "We are meeting the project now."
+          "dst": "We are meeting with the team now."
         },
         {
-          "dst": "Meet carefully."
+          "dst": "Meet me at the entrance."
         }
       ]
     },
@@ -1477,6 +1529,7 @@
       "forms": {
         "base": "include",
         "past": "included",
+        "past_participle": "included",
         "present_3sg": "includes",
         "gerund": "including"
       },
@@ -1505,6 +1558,7 @@
       "forms": {
         "base": "continue",
         "past": "continued",
+        "past_participle": "continued",
         "present_3sg": "continues",
         "gerund": "continuing"
       },
@@ -1533,6 +1587,7 @@
       "forms": {
         "base": "set",
         "past": "set",
+        "past_participle": "set",
         "present_3sg": "sets",
         "gerund": "setting"
       },
@@ -1561,6 +1616,7 @@
       "forms": {
         "base": "learn",
         "past": "learned",
+        "past_participle": "learned",
         "present_3sg": "learns",
         "gerund": "learning"
       },
@@ -1589,6 +1645,7 @@
       "forms": {
         "base": "change",
         "past": "changed",
+        "past_participle": "changed",
         "present_3sg": "changes",
         "gerund": "changing"
       },
@@ -1617,6 +1674,7 @@
       "forms": {
         "base": "lead",
         "past": "led",
+        "past_participle": "led",
         "present_3sg": "leads",
         "gerund": "leading"
       },
@@ -1645,6 +1703,7 @@
       "forms": {
         "base": "understand",
         "past": "understood",
+        "past_participle": "understood",
         "present_3sg": "understands",
         "gerund": "understanding"
       },
@@ -1673,6 +1732,7 @@
       "forms": {
         "base": "watch",
         "past": "watched",
+        "past_participle": "watched",
         "present_3sg": "watches",
         "gerund": "watching"
       },
