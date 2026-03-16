@@ -150,7 +150,6 @@ def build_en_examples(
     lemma: str,
     present_3sg: str,
     past: str,
-    past_participle: str,
     gerund: str,
     built_in_examples: dict[str, list[str]],
 ) -> list[dict[str, str]]:
@@ -162,8 +161,8 @@ def build_en_examples(
         {"dst": f"I {lemma} my work every day."},
         {"dst": f"She {present_3sg} a new task at work."},
         {"dst": f"They {past} the job yesterday."},
-        {"dst": f"He has {past_participle} the report already."},
         {"dst": f"We are {gerund} the project now."},
+        {"dst": f"{lemma.capitalize()} carefully."},
     ]
 
 
@@ -196,7 +195,6 @@ def expand_english_entry(
 
     base = lemma
     past = str(irregular.get("past") or derive_en_regular_past(lemma))
-    past_participle = str(irregular.get("past_participle") or past)
     present_3sg = str(irregular.get("present_3sg") or derive_en_present_3sg(lemma))
     gerund = str(irregular.get("gerund") or derive_en_gerund(lemma))
 
@@ -215,7 +213,6 @@ def expand_english_entry(
             lemma=lemma,
             present_3sg=present_3sg,
             past=past,
-            past_participle=past_participle,
             gerund=gerund,
             built_in_examples=built_in_examples,
         )
@@ -227,7 +224,6 @@ def expand_english_entry(
         "forms": {
             "base": base,
             "past": past,
-            "past_participle": past_participle,
             "present_3sg": present_3sg,
             "gerund": gerund,
         },
@@ -252,15 +248,18 @@ def build_ru_examples(
     aspect: str,
     present: dict[str, str],
     past: dict[str, str],
-    imperative: dict[str, str],
+    imperative: dict[str, str] | None,
 ) -> list[dict[str, str]]:
-    return [
+    examples = [
         {"dst": f"Я {present.get('1sg', '')}."},
         {"dst": f"Он {present.get('3sg', '')}."},
         {"dst": f"Мы {past.get('pl', '')} вчера."},
-        {"dst": f"{imperative.get('sg', '')} внимательно."},
-        {"dst": f"Радио {past.get('n', '')} всю ночь."},
+        {"dst": f"Привидение {past.get('n', '')} всю ночь."},
     ]
+    imperative_sg = (imperative or {}).get("sg", "").strip()
+    if imperative_sg:
+        examples.append({"dst": f"{imperative_sg} внимательно."})
+    return examples
 
 
 def expand_russian_entry(
@@ -300,20 +299,17 @@ def expand_russian_entry(
 
     validate_required_keys(
         seed_forms_object,
-        ["present", "past", "imperative"],
+        ["present", "past"],
         f"{context} seed_forms",
     )
 
     present_object = seed_forms_object["present"]
     past_object = seed_forms_object["past"]
-    imperative_object = seed_forms_object["imperative"]
 
     if not isinstance(present_object, dict):
         fail(f"{context}: seed_forms.present must be an object")
     if not isinstance(past_object, dict):
         fail(f"{context}: seed_forms.past must be an object")
-    if not isinstance(imperative_object, dict):
-        fail(f"{context}: seed_forms.imperative must be an object")
 
     present: dict[str, str] = {}
     for key in ["1sg", "2sg", "3sg", "1pl", "2pl", "3pl"]:
@@ -329,12 +325,20 @@ def expand_russian_entry(
             fail(f"{context}: missing or empty seed_forms.past.{key}")
         past[key] = value
 
+    imperative_object = seed_forms_object.get("imperative")
     imperative: dict[str, str] = {}
-    for key in ["sg", "pl"]:
-        value = imperative_object.get(key)
-        if not isinstance(value, str) or not value.strip():
-            fail(f"{context}: missing or empty seed_forms.imperative.{key}")
-        imperative[key] = value
+    if imperative_object is not None:
+        if not isinstance(imperative_object, dict):
+            fail(f"{context}: seed_forms.imperative must be an object if present")
+        for key in ["sg", "pl"]:
+            value = imperative_object.get(key)
+            if value is None:
+                continue
+            if not isinstance(value, str) or not value.strip():
+                fail(
+                    f"{context}: seed_forms.imperative.{key} must be non-empty if present"
+                )
+            imperative[key] = value
 
     runtime_examples: list[dict[str, str]]
     if examples_object:

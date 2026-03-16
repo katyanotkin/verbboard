@@ -5,6 +5,8 @@ from html import escape
 from core.models import Board
 from core.paths import TEMPLATES_DIR
 
+NO_AUDIO_ROW_KEYS = {"aspect", "pair"}
+
 
 def render_board_html(board: Board) -> str:
     # lemma display
@@ -21,19 +23,24 @@ def render_board_html(board: Board) -> str:
             key = row["key"]
             label = escape(str(row["label"]))
             text = escape(str(row["text"]))
-            audio_src = (
-                f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{key}.mp3"
-            )
+
+            if key not in NO_AUDIO_ROW_KEYS:
+                audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{key}.mp3"
+                audio_html = (
+                    f"<audio id='{key}' src='{audio_src}' preload='none'></audio>"
+                    f"<button onclick=\"document.getElementById('{key}').play()\">▶ Play</button>"
+                )
+            else:
+                audio_html = ""
+
             rows.append(
                 "<tr>"
                 f"<td>{label}</td>"
                 f"<td style='font-size: 26px'>{text}</td>"
-                f"<td>"
-                f"<audio id='{key}' src='{audio_src}' preload='none'></audio>"
-                f"<button onclick=\"document.getElementById('{key}').play()\">▶ Play</button>"
-                f"</td>"
+                f"<td>{audio_html}</td>"
                 "</tr>"
             )
+
         sections_html.append(
             f"<h2>{escape(section['title'])}</h2>"
             "<table>"
@@ -52,7 +59,7 @@ def render_board_html(board: Board) -> str:
             f"<td>{escape(ex.dst)}</td>"
             f"<td>"
             f"<audio id='example_{index}' src='{audio_src}' preload='none'></audio>"
-            f"<button onclick=\"document.getElementById('example_{index}').play()\">▶</button>"
+            f"<button onclick=\"document.getElementById('example_{index}').play()\">▶ Play </button>"
             "</td>"
             "</tr>"
         )

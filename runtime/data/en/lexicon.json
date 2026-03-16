@@ -1,6 +1,6 @@
 {
   "language": "en",
-  "version": 1,
+  "version": 2,
   "verbs": [
     {
       "id": "en_be",
@@ -9,7 +9,6 @@
       "forms": {
         "base": "be",
         "past": "was",
-        "past_participle": "been",
         "present_3sg": "is",
         "gerund": "being"
       },
@@ -28,6 +27,9 @@
         },
         {
           "dst": "We are being careful now."
+        },
+        {
+          "dst": "Be careful."
         }
       ]
     },
@@ -38,7 +40,6 @@
       "forms": {
         "base": "have",
         "past": "had",
-        "past_participle": "had",
         "present_3sg": "has",
         "gerund": "having"
       },
@@ -47,7 +48,7 @@
           "dst": "I have a car."
         },
         {
-          "dst": "She has a new book."
+          "dst": "She has a new brother."
         },
         {
           "dst": "They had a meeting yesterday."
@@ -57,6 +58,9 @@
         },
         {
           "dst": "We are having dinner now."
+        },
+        {
+          "dst": "Have a seat."
         }
       ]
     },
@@ -67,7 +71,6 @@
       "forms": {
         "base": "do",
         "past": "did",
-        "past_participle": "done",
         "present_3sg": "does",
         "gerund": "doing"
       },
@@ -96,7 +99,6 @@
       "forms": {
         "base": "say",
         "past": "said",
-        "past_participle": "said",
         "present_3sg": "says",
         "gerund": "saying"
       },
@@ -115,6 +117,9 @@
         },
         {
           "dst": "We are saying the same thing now."
+        },
+        {
+          "dst": "Say that again."
         }
       ]
     },
@@ -125,7 +130,6 @@
       "forms": {
         "base": "go",
         "past": "went",
-        "past_participle": "gone",
         "present_3sg": "goes",
         "gerund": "going"
       },
@@ -154,16 +158,15 @@
       "forms": {
         "base": "get",
         "past": "got",
-        "past_participle": "gotten",
         "present_3sg": "gets",
         "gerund": "getting"
       },
       "examples": [
         {
-          "dst": "I get good ideas at night."
+          "dst": "I get my best ideas at night."
         },
         {
-          "dst": "She gets email from her boss."
+          "dst": "She gets email from her boss daily."
         },
         {
           "dst": "They got a new table yesterday."
@@ -183,7 +186,6 @@
       "forms": {
         "base": "make",
         "past": "made",
-        "past_participle": "made",
         "present_3sg": "makes",
         "gerund": "making"
       },
@@ -212,7 +214,6 @@
       "forms": {
         "base": "know",
         "past": "knew",
-        "past_participle": "known",
         "present_3sg": "knows",
         "gerund": "knowing"
       },
@@ -241,7 +242,6 @@
       "forms": {
         "base": "think",
         "past": "thought",
-        "past_participle": "thought",
         "present_3sg": "thinks",
         "gerund": "thinking"
       },
@@ -270,7 +270,6 @@
       "forms": {
         "base": "take",
         "past": "took",
-        "past_participle": "taken",
         "present_3sg": "takes",
         "gerund": "taking"
       },
@@ -299,7 +298,6 @@
       "forms": {
         "base": "see",
         "past": "saw",
-        "past_participle": "seen",
         "present_3sg": "sees",
         "gerund": "seeing"
       },
@@ -328,7 +326,6 @@
       "forms": {
         "base": "come",
         "past": "came",
-        "past_participle": "come",
         "present_3sg": "comes",
         "gerund": "coming"
       },
@@ -357,7 +354,6 @@
       "forms": {
         "base": "want",
         "past": "wanted",
-        "past_participle": "wanted",
         "present_3sg": "wants",
         "gerund": "wanting"
       },
@@ -376,6 +372,9 @@
         },
         {
           "dst": "We want a quiet evening."
+        },
+        {
+          "dst": "Want less, live more."
         }
       ]
     },
@@ -386,7 +385,6 @@
       "forms": {
         "base": "look",
         "past": "looked",
-        "past_participle": "looked",
         "present_3sg": "looks",
         "gerund": "looking"
       },
@@ -415,7 +413,6 @@
       "forms": {
         "base": "use",
         "past": "used",
-        "past_participle": "used",
         "present_3sg": "uses",
         "gerund": "using"
       },
@@ -444,7 +441,6 @@
       "forms": {
         "base": "find",
         "past": "found",
-        "past_participle": "found",
         "present_3sg": "finds",
         "gerund": "finding"
       },
@@ -473,7 +469,6 @@
       "forms": {
         "base": "give",
         "past": "gave",
-        "past_participle": "given",
         "present_3sg": "gives",
         "gerund": "giving"
       },
@@ -502,7 +497,6 @@
       "forms": {
         "base": "tell",
         "past": "told",
-        "past_participle": "told",
         "present_3sg": "tells",
         "gerund": "telling"
       },
@@ -531,7 +525,6 @@
       "forms": {
         "base": "work",
         "past": "worked",
-        "past_participle": "worked",
         "present_3sg": "works",
         "gerund": "working"
       },
@@ -560,7 +553,6 @@
       "forms": {
         "base": "call",
         "past": "called",
-        "past_participle": "called",
         "present_3sg": "calls",
         "gerund": "calling"
       },
@@ -589,7 +581,6 @@
       "forms": {
         "base": "try",
         "past": "tried",
-        "past_participle": "tried",
         "present_3sg": "tries",
         "gerund": "trying"
       },
@@ -604,10 +595,10 @@
           "dst": "They tried the job yesterday."
         },
         {
-          "dst": "He has tried the report already."
+          "dst": "We are trying the project now."
         },
         {
-          "dst": "We are trying the project now."
+          "dst": "Try carefully."
         }
       ]
     },
@@ -618,7 +609,6 @@
       "forms": {
         "base": "ask",
         "past": "asked",
-        "past_participle": "asked",
         "present_3sg": "asks",
         "gerund": "asking"
       },
@@ -633,10 +623,10 @@
           "dst": "They asked the job yesterday."
         },
         {
-          "dst": "He has asked the report already."
+          "dst": "We are asking the project now."
         },
         {
-          "dst": "We are asking the project now."
+          "dst": "Ask carefully."
         }
       ]
     },
@@ -647,7 +637,6 @@
       "forms": {
         "base": "need",
         "past": "needed",
-        "past_participle": "needed",
         "present_3sg": "needs",
         "gerund": "needing"
       },
@@ -662,10 +651,10 @@
           "dst": "They needed the job yesterday."
         },
         {
-          "dst": "He has needed the report already."
+          "dst": "We are needing the project now."
         },
         {
-          "dst": "We are needing the project now."
+          "dst": "Need carefully."
         }
       ]
     },
@@ -676,7 +665,6 @@
       "forms": {
         "base": "feel",
         "past": "felt",
-        "past_participle": "felt",
         "present_3sg": "feels",
         "gerund": "feeling"
       },
@@ -691,10 +679,10 @@
           "dst": "They felt the job yesterday."
         },
         {
-          "dst": "He has felt the report already."
+          "dst": "We are feeling the project now."
         },
         {
-          "dst": "We are feeling the project now."
+          "dst": "Feel carefully."
         }
       ]
     },
@@ -705,7 +693,6 @@
       "forms": {
         "base": "become",
         "past": "became",
-        "past_participle": "become",
         "present_3sg": "becomes",
         "gerund": "becoming"
       },
@@ -720,10 +707,10 @@
           "dst": "They became the job yesterday."
         },
         {
-          "dst": "He has become the report already."
+          "dst": "We are becoming the project now."
         },
         {
-          "dst": "We are becoming the project now."
+          "dst": "Become carefully."
         }
       ]
     },
@@ -734,7 +721,6 @@
       "forms": {
         "base": "leave",
         "past": "left",
-        "past_participle": "left",
         "present_3sg": "leaves",
         "gerund": "leaving"
       },
@@ -749,10 +735,10 @@
           "dst": "They left the job yesterday."
         },
         {
-          "dst": "He has left the report already."
+          "dst": "We are leaving the project now."
         },
         {
-          "dst": "We are leaving the project now."
+          "dst": "Leave carefully."
         }
       ]
     },
@@ -763,7 +749,6 @@
       "forms": {
         "base": "put",
         "past": "put",
-        "past_participle": "put",
         "present_3sg": "puts",
         "gerund": "putting"
       },
@@ -778,10 +763,10 @@
           "dst": "They put the job yesterday."
         },
         {
-          "dst": "He has put the report already."
+          "dst": "We are putting the project now."
         },
         {
-          "dst": "We are putting the project now."
+          "dst": "Put carefully."
         }
       ]
     },
@@ -792,7 +777,6 @@
       "forms": {
         "base": "mean",
         "past": "meant",
-        "past_participle": "meant",
         "present_3sg": "means",
         "gerund": "meaning"
       },
@@ -807,10 +791,10 @@
           "dst": "They meant the job yesterday."
         },
         {
-          "dst": "He has meant the report already."
+          "dst": "We are meaning the project now."
         },
         {
-          "dst": "We are meaning the project now."
+          "dst": "Mean carefully."
         }
       ]
     },
@@ -821,7 +805,6 @@
       "forms": {
         "base": "keep",
         "past": "kept",
-        "past_participle": "kept",
         "present_3sg": "keeps",
         "gerund": "keeping"
       },
@@ -836,10 +819,10 @@
           "dst": "They kept the job yesterday."
         },
         {
-          "dst": "He has kept the report already."
+          "dst": "We are keeping the project now."
         },
         {
-          "dst": "We are keeping the project now."
+          "dst": "Keep carefully."
         }
       ]
     },
@@ -850,7 +833,6 @@
       "forms": {
         "base": "let",
         "past": "let",
-        "past_participle": "let",
         "present_3sg": "lets",
         "gerund": "letting"
       },
@@ -865,10 +847,10 @@
           "dst": "They let the job yesterday."
         },
         {
-          "dst": "He has let the report already."
+          "dst": "We are letting the project now."
         },
         {
-          "dst": "We are letting the project now."
+          "dst": "Let carefully."
         }
       ]
     },
@@ -879,7 +861,6 @@
       "forms": {
         "base": "begin",
         "past": "began",
-        "past_participle": "begun",
         "present_3sg": "begins",
         "gerund": "begining"
       },
@@ -894,10 +875,10 @@
           "dst": "They began the job yesterday."
         },
         {
-          "dst": "He has begun the report already."
+          "dst": "We are begining the project now."
         },
         {
-          "dst": "We are begining the project now."
+          "dst": "Begin carefully."
         }
       ]
     },
@@ -908,7 +889,6 @@
       "forms": {
         "base": "seem",
         "past": "seemed",
-        "past_participle": "seemed",
         "present_3sg": "seems",
         "gerund": "seeming"
       },
@@ -923,10 +903,10 @@
           "dst": "They seemed the job yesterday."
         },
         {
-          "dst": "He has seemed the report already."
+          "dst": "We are seeming the project now."
         },
         {
-          "dst": "We are seeming the project now."
+          "dst": "Seem carefully."
         }
       ]
     },
@@ -937,7 +917,6 @@
       "forms": {
         "base": "help",
         "past": "helped",
-        "past_participle": "helped",
         "present_3sg": "helps",
         "gerund": "helping"
       },
@@ -952,10 +931,10 @@
           "dst": "They helped the job yesterday."
         },
         {
-          "dst": "He has helped the report already."
+          "dst": "We are helping the project now."
         },
         {
-          "dst": "We are helping the project now."
+          "dst": "Help carefully."
         }
       ]
     },
@@ -966,7 +945,6 @@
       "forms": {
         "base": "talk",
         "past": "talked",
-        "past_participle": "talked",
         "present_3sg": "talks",
         "gerund": "talking"
       },
@@ -981,10 +959,10 @@
           "dst": "They talked the job yesterday."
         },
         {
-          "dst": "He has talked the report already."
+          "dst": "We are talking the project now."
         },
         {
-          "dst": "We are talking the project now."
+          "dst": "Talk carefully."
         }
       ]
     },
@@ -995,7 +973,6 @@
       "forms": {
         "base": "turn",
         "past": "turned",
-        "past_participle": "turned",
         "present_3sg": "turns",
         "gerund": "turning"
       },
@@ -1010,10 +987,10 @@
           "dst": "They turned the job yesterday."
         },
         {
-          "dst": "He has turned the report already."
+          "dst": "We are turning the project now."
         },
         {
-          "dst": "We are turning the project now."
+          "dst": "Turn carefully."
         }
       ]
     },
@@ -1024,7 +1001,6 @@
       "forms": {
         "base": "start",
         "past": "started",
-        "past_participle": "started",
         "present_3sg": "starts",
         "gerund": "starting"
       },
@@ -1039,10 +1015,10 @@
           "dst": "They started the job yesterday."
         },
         {
-          "dst": "He has started the report already."
+          "dst": "We are starting the project now."
         },
         {
-          "dst": "We are starting the project now."
+          "dst": "Start carefully."
         }
       ]
     },
@@ -1053,7 +1029,6 @@
       "forms": {
         "base": "show",
         "past": "showed",
-        "past_participle": "shown",
         "present_3sg": "shows",
         "gerund": "showing"
       },
@@ -1068,10 +1043,10 @@
           "dst": "They showed the job yesterday."
         },
         {
-          "dst": "He has shown the report already."
+          "dst": "We are showing the project now."
         },
         {
-          "dst": "We are showing the project now."
+          "dst": "Show carefully."
         }
       ]
     },
@@ -1082,7 +1057,6 @@
       "forms": {
         "base": "hear",
         "past": "heard",
-        "past_participle": "heard",
         "present_3sg": "hears",
         "gerund": "hearing"
       },
@@ -1097,10 +1071,10 @@
           "dst": "They heard the job yesterday."
         },
         {
-          "dst": "He has heard the report already."
+          "dst": "We are hearing the project now."
         },
         {
-          "dst": "We are hearing the project now."
+          "dst": "Hear carefully."
         }
       ]
     },
@@ -1111,7 +1085,6 @@
       "forms": {
         "base": "play",
         "past": "played",
-        "past_participle": "played",
         "present_3sg": "plays",
         "gerund": "playing"
       },
@@ -1126,10 +1099,10 @@
           "dst": "They played the job yesterday."
         },
         {
-          "dst": "He has played the report already."
+          "dst": "We are playing the project now."
         },
         {
-          "dst": "We are playing the project now."
+          "dst": "Play carefully."
         }
       ]
     },
@@ -1140,7 +1113,6 @@
       "forms": {
         "base": "run",
         "past": "ran",
-        "past_participle": "run",
         "present_3sg": "runs",
         "gerund": "running"
       },
@@ -1155,10 +1127,10 @@
           "dst": "They ran the job yesterday."
         },
         {
-          "dst": "He has run the report already."
+          "dst": "We are running the project now."
         },
         {
-          "dst": "We are running the project now."
+          "dst": "Run carefully."
         }
       ]
     },
@@ -1169,7 +1141,6 @@
       "forms": {
         "base": "move",
         "past": "moved",
-        "past_participle": "moved",
         "present_3sg": "moves",
         "gerund": "moving"
       },
@@ -1184,10 +1155,10 @@
           "dst": "They moved the job yesterday."
         },
         {
-          "dst": "He has moved the report already."
+          "dst": "We are moving the project now."
         },
         {
-          "dst": "We are moving the project now."
+          "dst": "Move carefully."
         }
       ]
     },
@@ -1198,7 +1169,6 @@
       "forms": {
         "base": "live",
         "past": "lived",
-        "past_participle": "lived",
         "present_3sg": "lives",
         "gerund": "living"
       },
@@ -1213,10 +1183,10 @@
           "dst": "They lived the job yesterday."
         },
         {
-          "dst": "He has lived the report already."
+          "dst": "We are living the project now."
         },
         {
-          "dst": "We are living the project now."
+          "dst": "Live carefully."
         }
       ]
     },
@@ -1227,7 +1197,6 @@
       "forms": {
         "base": "believe",
         "past": "believed",
-        "past_participle": "believed",
         "present_3sg": "believes",
         "gerund": "believing"
       },
@@ -1242,10 +1211,10 @@
           "dst": "They believed the job yesterday."
         },
         {
-          "dst": "He has believed the report already."
+          "dst": "We are believing the project now."
         },
         {
-          "dst": "We are believing the project now."
+          "dst": "Believe carefully."
         }
       ]
     },
@@ -1256,7 +1225,6 @@
       "forms": {
         "base": "bring",
         "past": "brought",
-        "past_participle": "brought",
         "present_3sg": "brings",
         "gerund": "bringing"
       },
@@ -1271,10 +1239,10 @@
           "dst": "They brought the job yesterday."
         },
         {
-          "dst": "He has brought the report already."
+          "dst": "We are bringing the project now."
         },
         {
-          "dst": "We are bringing the project now."
+          "dst": "Bring carefully."
         }
       ]
     },
@@ -1285,7 +1253,6 @@
       "forms": {
         "base": "happen",
         "past": "happened",
-        "past_participle": "happened",
         "present_3sg": "happens",
         "gerund": "happening"
       },
@@ -1300,10 +1267,10 @@
           "dst": "They happened the job yesterday."
         },
         {
-          "dst": "He has happened the report already."
+          "dst": "We are happening the project now."
         },
         {
-          "dst": "We are happening the project now."
+          "dst": "Happen carefully."
         }
       ]
     },
@@ -1314,7 +1281,6 @@
       "forms": {
         "base": "write",
         "past": "wrote",
-        "past_participle": "written",
         "present_3sg": "writes",
         "gerund": "writing"
       },
@@ -1329,10 +1295,10 @@
           "dst": "They wrote the job yesterday."
         },
         {
-          "dst": "He has written the report already."
+          "dst": "We are writing the project now."
         },
         {
-          "dst": "We are writing the project now."
+          "dst": "Write carefully."
         }
       ]
     },
@@ -1343,7 +1309,6 @@
       "forms": {
         "base": "provide",
         "past": "provided",
-        "past_participle": "provided",
         "present_3sg": "provides",
         "gerund": "providing"
       },
@@ -1358,10 +1323,10 @@
           "dst": "They provided the job yesterday."
         },
         {
-          "dst": "He has provided the report already."
+          "dst": "We are providing the project now."
         },
         {
-          "dst": "We are providing the project now."
+          "dst": "Provide carefully."
         }
       ]
     },
@@ -1372,7 +1337,6 @@
       "forms": {
         "base": "sit",
         "past": "sat",
-        "past_participle": "sat",
         "present_3sg": "sits",
         "gerund": "sitting"
       },
@@ -1387,10 +1351,10 @@
           "dst": "They sat the job yesterday."
         },
         {
-          "dst": "He has sat the report already."
+          "dst": "We are sitting the project now."
         },
         {
-          "dst": "We are sitting the project now."
+          "dst": "Sit carefully."
         }
       ]
     },
@@ -1401,7 +1365,6 @@
       "forms": {
         "base": "stand",
         "past": "stood",
-        "past_participle": "stood",
         "present_3sg": "stands",
         "gerund": "standing"
       },
@@ -1416,10 +1379,10 @@
           "dst": "They stood the job yesterday."
         },
         {
-          "dst": "He has stood the report already."
+          "dst": "We are standing the project now."
         },
         {
-          "dst": "We are standing the project now."
+          "dst": "Stand carefully."
         }
       ]
     },
@@ -1430,7 +1393,6 @@
       "forms": {
         "base": "lose",
         "past": "lost",
-        "past_participle": "lost",
         "present_3sg": "loses",
         "gerund": "losing"
       },
@@ -1445,10 +1407,10 @@
           "dst": "They lost the job yesterday."
         },
         {
-          "dst": "He has lost the report already."
+          "dst": "We are losing the project now."
         },
         {
-          "dst": "We are losing the project now."
+          "dst": "Lose carefully."
         }
       ]
     },
@@ -1459,7 +1421,6 @@
       "forms": {
         "base": "pay",
         "past": "paid",
-        "past_participle": "paid",
         "present_3sg": "pays",
         "gerund": "paying"
       },
@@ -1474,10 +1435,10 @@
           "dst": "They paid the job yesterday."
         },
         {
-          "dst": "He has paid the report already."
+          "dst": "We are paying the project now."
         },
         {
-          "dst": "We are paying the project now."
+          "dst": "Pay carefully."
         }
       ]
     },
@@ -1488,7 +1449,6 @@
       "forms": {
         "base": "meet",
         "past": "met",
-        "past_participle": "met",
         "present_3sg": "meets",
         "gerund": "meeting"
       },
@@ -1503,10 +1463,10 @@
           "dst": "They met the job yesterday."
         },
         {
-          "dst": "He has met the report already."
+          "dst": "We are meeting the project now."
         },
         {
-          "dst": "We are meeting the project now."
+          "dst": "Meet carefully."
         }
       ]
     },
@@ -1517,7 +1477,6 @@
       "forms": {
         "base": "include",
         "past": "included",
-        "past_participle": "included",
         "present_3sg": "includes",
         "gerund": "including"
       },
@@ -1532,10 +1491,10 @@
           "dst": "They included the job yesterday."
         },
         {
-          "dst": "He has included the report already."
+          "dst": "We are including the project now."
         },
         {
-          "dst": "We are including the project now."
+          "dst": "Include carefully."
         }
       ]
     },
@@ -1546,7 +1505,6 @@
       "forms": {
         "base": "continue",
         "past": "continued",
-        "past_participle": "continued",
         "present_3sg": "continues",
         "gerund": "continuing"
       },
@@ -1561,10 +1519,10 @@
           "dst": "They continued the job yesterday."
         },
         {
-          "dst": "He has continued the report already."
+          "dst": "We are continuing the project now."
         },
         {
-          "dst": "We are continuing the project now."
+          "dst": "Continue carefully."
         }
       ]
     },
@@ -1575,7 +1533,6 @@
       "forms": {
         "base": "set",
         "past": "set",
-        "past_participle": "set",
         "present_3sg": "sets",
         "gerund": "setting"
       },
@@ -1590,10 +1547,10 @@
           "dst": "They set the job yesterday."
         },
         {
-          "dst": "He has set the report already."
+          "dst": "We are setting the project now."
         },
         {
-          "dst": "We are setting the project now."
+          "dst": "Set carefully."
         }
       ]
     },
@@ -1604,7 +1561,6 @@
       "forms": {
         "base": "learn",
         "past": "learned",
-        "past_participle": "learned",
         "present_3sg": "learns",
         "gerund": "learning"
       },
@@ -1619,10 +1575,10 @@
           "dst": "They learned the job yesterday."
         },
         {
-          "dst": "He has learned the report already."
+          "dst": "We are learning the project now."
         },
         {
-          "dst": "We are learning the project now."
+          "dst": "Learn carefully."
         }
       ]
     },
@@ -1633,7 +1589,6 @@
       "forms": {
         "base": "change",
         "past": "changed",
-        "past_participle": "changed",
         "present_3sg": "changes",
         "gerund": "changing"
       },
@@ -1648,10 +1603,10 @@
           "dst": "They changed the job yesterday."
         },
         {
-          "dst": "He has changed the report already."
+          "dst": "We are changing the project now."
         },
         {
-          "dst": "We are changing the project now."
+          "dst": "Change carefully."
         }
       ]
     },
@@ -1662,7 +1617,6 @@
       "forms": {
         "base": "lead",
         "past": "led",
-        "past_participle": "led",
         "present_3sg": "leads",
         "gerund": "leading"
       },
@@ -1677,10 +1631,10 @@
           "dst": "They led the job yesterday."
         },
         {
-          "dst": "He has led the report already."
+          "dst": "We are leading the project now."
         },
         {
-          "dst": "We are leading the project now."
+          "dst": "Lead carefully."
         }
       ]
     },
@@ -1691,7 +1645,6 @@
       "forms": {
         "base": "understand",
         "past": "understood",
-        "past_participle": "understood",
         "present_3sg": "understands",
         "gerund": "understanding"
       },
@@ -1706,10 +1659,10 @@
           "dst": "They understood the job yesterday."
         },
         {
-          "dst": "He has understood the report already."
+          "dst": "We are understanding the project now."
         },
         {
-          "dst": "We are understanding the project now."
+          "dst": "Understand carefully."
         }
       ]
     },
@@ -1720,7 +1673,6 @@
       "forms": {
         "base": "watch",
         "past": "watched",
-        "past_participle": "watched",
         "present_3sg": "watches",
         "gerund": "watching"
       },
@@ -1735,10 +1687,10 @@
           "dst": "They watched the job yesterday."
         },
         {
-          "dst": "He has watched the report already."
+          "dst": "We are watching the project now."
         },
         {
-          "dst": "We are watching the project now."
+          "dst": "Watch carefully."
         }
       ]
     }

@@ -1,76 +1,552 @@
 {
   "language": "en",
-  "version": 1,
+  "version": 2,
   "verbs": [
-	  {
-  "id": "en_be",
-  "rank": 1,
-  "lemma": "be",
-  "irregular": {
-    "past": "was",
-    "past_participle": "been",
-    "present_3sg": "is",
-    "gerund": "being"
-  }
-},
-    { "id": "en_have", "rank": 2, "lemma": "have", "irregular": { "past": "had", "past_participle": "had", "present_3sg": "has", "gerund": "having" } },
-    { "id": "en_do", "rank": 3, "lemma": "do", "irregular": { "past": "did", "past_participle": "done", "present_3sg": "does", "gerund": "doing" } },
-    { "id": "en_say", "rank": 4, "lemma": "say", "irregular": { "past": "said", "past_participle": "said" } },
-    { "id": "en_go", "rank": 5, "lemma": "go", "irregular": { "past": "went", "past_participle": "gone", "present_3sg": "goes", "gerund": "going" } },
-    { "id": "en_get", "rank": 6, "lemma": "get", "irregular": { "past": "got", "past_participle": "gotten" } },
-    { "id": "en_make", "rank": 7, "lemma": "make", "irregular": { "past": "made", "past_participle": "made", "present_3sg": "makes", "gerund": "making" } },
-    { "id": "en_know", "rank": 8, "lemma": "know", "irregular": { "past": "knew", "past_participle": "known" } },
-    { "id": "en_think", "rank": 9, "lemma": "think", "irregular": { "past": "thought", "past_participle": "thought" } },
-    { "id": "en_take", "rank": 10, "lemma": "take", "irregular": { "past": "took", "past_participle": "taken" } },
-    { "id": "en_see", "rank": 11, "lemma": "see", "irregular": { "past": "saw", "past_participle": "seen" } },
-    { "id": "en_come", "rank": 12, "lemma": "come", "irregular": { "past": "came", "past_participle": "come" } },
-    { "id": "en_want", "rank": 13, "lemma": "want" },
-    { "id": "en_look", "rank": 14, "lemma": "look" },
-    { "id": "en_use", "rank": 15, "lemma": "use", "irregular": { "present_3sg": "uses" } },
-    { "id": "en_find", "rank": 16, "lemma": "find", "irregular": { "past": "found", "past_participle": "found" } },
-    { "id": "en_give", "rank": 17, "lemma": "give", "irregular": { "past": "gave", "past_participle": "given" } },
-    { "id": "en_tell", "rank": 18, "lemma": "tell", "irregular": { "past": "told", "past_participle": "told" } },
-    { "id": "en_work", "rank": 19, "lemma": "work" },
-    { "id": "en_call", "rank": 20, "lemma": "call" },
-    { "id": "en_try", "rank": 21, "lemma": "try", "irregular": { "present_3sg": "tries", "past": "tried", "past_participle": "tried" } },
-    { "id": "en_ask", "rank": 22, "lemma": "ask" },
-    { "id": "en_need", "rank": 23, "lemma": "need" },
-    { "id": "en_feel", "rank": 24, "lemma": "feel", "irregular": { "past": "felt", "past_participle": "felt" } },
-    { "id": "en_become", "rank": 25, "lemma": "become", "irregular": { "past": "became", "past_participle": "become" } },
-    { "id": "en_leave", "rank": 26, "lemma": "leave", "irregular": { "past": "left", "past_participle": "left" } },
-    { "id": "en_put", "rank": 27, "lemma": "put", "irregular": { "past": "put", "past_participle": "put" } },
-    { "id": "en_mean", "rank": 28, "lemma": "mean", "irregular": { "past": "meant", "past_participle": "meant" } },
-    { "id": "en_keep", "rank": 29, "lemma": "keep", "irregular": { "past": "kept", "past_participle": "kept" } },
-    { "id": "en_let", "rank": 30, "lemma": "let", "irregular": { "past": "let", "past_participle": "let" } },
-    { "id": "en_begin", "rank": 31, "lemma": "begin", "irregular": { "past": "began", "past_participle": "begun" } },
-    { "id": "en_seem", "rank": 32, "lemma": "seem" },
-    { "id": "en_help", "rank": 33, "lemma": "help" },
-    { "id": "en_talk", "rank": 34, "lemma": "talk" },
-    { "id": "en_turn", "rank": 35, "lemma": "turn" },
-    { "id": "en_start", "rank": 36, "lemma": "start" },
-    { "id": "en_show", "rank": 37, "lemma": "show", "irregular": { "past": "showed", "past_participle": "shown" } },
-    { "id": "en_hear", "rank": 38, "lemma": "hear", "irregular": { "past": "heard", "past_participle": "heard" } },
-    { "id": "en_play", "rank": 39, "lemma": "play" },
-    { "id": "en_run", "rank": 40, "lemma": "run", "irregular": { "past": "ran", "past_participle": "run", "gerund": "running" } },
-    { "id": "en_move", "rank": 41, "lemma": "move", "irregular": { "gerund": "moving" } },
-    { "id": "en_live", "rank": 42, "lemma": "live", "irregular": { "gerund": "living" } },
-    { "id": "en_believe", "rank": 43, "lemma": "believe", "irregular": { "gerund": "believing" } },
-    { "id": "en_bring", "rank": 44, "lemma": "bring", "irregular": { "past": "brought", "past_participle": "brought" } },
-    { "id": "en_happen", "rank": 45, "lemma": "happen" },
-    { "id": "en_write", "rank": 46, "lemma": "write", "irregular": { "past": "wrote", "past_participle": "written" } },
-    { "id": "en_provide", "rank": 47, "lemma": "provide", "irregular": { "gerund": "providing" } },
-    { "id": "en_sit", "rank": 48, "lemma": "sit", "irregular": { "past": "sat", "past_participle": "sat", "gerund": "sitting" } },
-    { "id": "en_stand", "rank": 49, "lemma": "stand", "irregular": { "past": "stood", "past_participle": "stood" } },
-    { "id": "en_lose", "rank": 50, "lemma": "lose", "irregular": { "past": "lost", "past_participle": "lost" } },
-    { "id": "en_pay", "rank": 51, "lemma": "pay", "irregular": { "past": "paid", "past_participle": "paid" } },
-    { "id": "en_meet", "rank": 52, "lemma": "meet", "irregular": { "past": "met", "past_participle": "met" } },
-    { "id": "en_include", "rank": 53, "lemma": "include", "irregular": { "gerund": "including" } },
-    { "id": "en_continue", "rank": 54, "lemma": "continue", "irregular": { "gerund": "continuing" } },
-    { "id": "en_set", "rank": 55, "lemma": "set", "irregular": { "past": "set", "past_participle": "set" } },
-    { "id": "en_learn", "rank": 56, "lemma": "learn", "irregular": { "past": "learned", "past_participle": "learned" } },
-    { "id": "en_change", "rank": 57, "lemma": "change" },
-    { "id": "en_lead", "rank": 58, "lemma": "lead", "irregular": { "past": "led", "past_participle": "led" } },
-    { "id": "en_understand", "rank": 59, "lemma": "understand", "irregular": { "past": "understood", "past_participle": "understood" } },
-    { "id": "en_watch", "rank": 60, "lemma": "watch" }
+    {
+      "id": "en_be",
+      "rank": 1,
+      "lemma": "be",
+      "example_strategy": "be",
+      "irregular": {
+        "past": "was",
+        "past_participle": "been",
+        "present_3sg": "is",
+        "gerund": "being"
+      }
+    },
+    {
+      "id": "en_have",
+      "rank": 2,
+      "lemma": "have",
+      "example_strategy": "have_object",
+      "irregular": {
+        "past": "had",
+        "past_participle": "had",
+        "present_3sg": "has",
+        "gerund": "having"
+      }
+    },
+    {
+      "id": "en_do",
+      "rank": 3,
+      "lemma": "do",
+      "example_strategy": "do_activity",
+      "irregular": {
+        "past": "did",
+        "past_participle": "done",
+        "present_3sg": "does",
+        "gerund": "doing"
+      }
+    },
+    {
+      "id": "en_say",
+      "rank": 4,
+      "lemma": "say",
+      "example_strategy": "say_content",
+      "irregular": {
+        "past": "said",
+        "past_participle": "said"
+      }
+    },
+    {
+      "id": "en_go",
+      "rank": 5,
+      "lemma": "go",
+      "example_strategy": "go_place",
+      "irregular": {
+        "past": "went",
+        "past_participle": "gone",
+        "present_3sg": "goes",
+        "gerund": "going"
+      }
+    },
+    {
+      "id": "en_get",
+      "rank": 6,
+      "lemma": "get",
+      "example_strategy": "get_object",
+      "irregular": {
+        "past": "got",
+        "past_participle": "gotten"
+      }
+    },
+    {
+      "id": "en_make",
+      "rank": 7,
+      "lemma": "make",
+      "example_strategy": "make_object",
+      "irregular": {
+        "past": "made",
+        "past_participle": "made",
+        "present_3sg": "makes",
+        "gerund": "making"
+      }
+    },
+    {
+      "id": "en_know",
+      "rank": 8,
+      "lemma": "know",
+      "example_strategy": "know_fact",
+      "irregular": {
+        "past": "knew",
+        "past_participle": "known"
+      }
+    },
+    {
+      "id": "en_think",
+      "rank": 9,
+      "lemma": "think",
+      "example_strategy": "think_about_topic",
+      "irregular": {
+        "past": "thought",
+        "past_participle": "thought"
+      }
+    },
+    {
+      "id": "en_take",
+      "rank": 10,
+      "lemma": "take",
+      "example_strategy": "take_object",
+      "irregular": {
+        "past": "took",
+        "past_participle": "taken"
+      }
+    },
+    {
+      "id": "en_see",
+      "rank": 11,
+      "lemma": "see",
+      "example_strategy": "see_object",
+      "irregular": {
+        "past": "saw",
+        "past_participle": "seen"
+      }
+    },
+    {
+      "id": "en_come",
+      "rank": 12,
+      "lemma": "come",
+      "example_strategy": "come_place",
+      "irregular": {
+        "past": "came",
+        "past_participle": "come"
+      }
+    },
+    {
+      "id": "en_want",
+      "rank": 13,
+      "lemma": "want",
+      "example_strategy": "want_object_or_infinitive"
+    },
+    {
+      "id": "en_look",
+      "rank": 14,
+      "lemma": "look",
+      "example_strategy": "look_at_or_for"
+    },
+    {
+      "id": "en_use",
+      "rank": 15,
+      "lemma": "use",
+      "example_strategy": "use_object",
+      "irregular": {
+        "present_3sg": "uses"
+      }
+    },
+    {
+      "id": "en_find",
+      "rank": 16,
+      "lemma": "find",
+      "example_strategy": "find_object",
+      "irregular": {
+        "past": "found",
+        "past_participle": "found"
+      }
+    },
+    {
+      "id": "en_give",
+      "rank": 17,
+      "lemma": "give",
+      "example_strategy": "give_person_object",
+      "irregular": {
+        "past": "gave",
+        "past_participle": "given"
+      }
+    },
+    {
+      "id": "en_tell",
+      "rank": 18,
+      "lemma": "tell",
+      "example_strategy": "tell_person_content",
+      "irregular": {
+        "past": "told",
+        "past_participle": "told"
+      }
+    },
+    {
+      "id": "en_work",
+      "rank": 19,
+      "lemma": "work",
+      "example_strategy": "work_general"
+    },
+    {
+      "id": "en_call",
+      "rank": 20,
+      "lemma": "call",
+      "example_strategy": "call_person"
+    },
+    {
+      "id": "en_try",
+      "rank": 21,
+      "lemma": "try",
+      "example_strategy": "try_infinitive",
+      "irregular": {
+        "present_3sg": "tries",
+        "past": "tried",
+        "past_participle": "tried"
+      }
+    },
+    {
+      "id": "en_ask",
+      "rank": 22,
+      "lemma": "ask",
+      "example_strategy": "ask_person_question"
+    },
+    {
+      "id": "en_need",
+      "rank": 23,
+      "lemma": "need",
+      "example_strategy": "need_object"
+    },
+    {
+      "id": "en_feel",
+      "rank": 24,
+      "lemma": "feel",
+      "example_strategy": "feel_state",
+      "irregular": {
+        "past": "felt",
+        "past_participle": "felt"
+      }
+    },
+    {
+      "id": "en_become",
+      "rank": 25,
+      "lemma": "become",
+      "example_strategy": "become_state",
+      "irregular": {
+        "past": "became",
+        "past_participle": "become"
+      }
+    },
+    {
+      "id": "en_leave",
+      "rank": 26,
+      "lemma": "leave",
+      "example_strategy": "leave_place",
+      "irregular": {
+        "past": "left",
+        "past_participle": "left"
+      }
+    },
+    {
+      "id": "en_put",
+      "rank": 27,
+      "lemma": "put",
+      "example_strategy": "put_object_place",
+      "irregular": {
+        "past": "put",
+        "past_participle": "put"
+      }
+    },
+    {
+      "id": "en_mean",
+      "rank": 28,
+      "lemma": "mean",
+      "example_strategy": "mean_content",
+      "irregular": {
+        "past": "meant",
+        "past_participle": "meant"
+      }
+    },
+    {
+      "id": "en_keep",
+      "rank": 29,
+      "lemma": "keep",
+      "example_strategy": "keep_object",
+      "irregular": {
+        "past": "kept",
+        "past_participle": "kept"
+      }
+    },
+    {
+      "id": "en_let",
+      "rank": 30,
+      "lemma": "let",
+      "example_strategy": "let_person_infinitive",
+      "irregular": {
+        "past": "let",
+        "past_participle": "let"
+      }
+    },
+    {
+      "id": "en_begin",
+      "rank": 31,
+      "lemma": "begin",
+      "example_strategy": "begin_activity",
+      "irregular": {
+        "past": "began",
+        "past_participle": "begun"
+      }
+    },
+    {
+      "id": "en_seem",
+      "rank": 32,
+      "lemma": "seem",
+      "example_strategy": "seem_state"
+    },
+    {
+      "id": "en_help",
+      "rank": 33,
+      "lemma": "help",
+      "example_strategy": "help_person_infinitive"
+    },
+    {
+      "id": "en_talk",
+      "rank": 34,
+      "lemma": "talk",
+      "example_strategy": "talk_about_topic"
+    },
+    {
+      "id": "en_turn",
+      "rank": 35,
+      "lemma": "turn",
+      "example_strategy": "turn_direction_or_object"
+    },
+    {
+      "id": "en_start",
+      "rank": 36,
+      "lemma": "start",
+      "example_strategy": "start_activity"
+    },
+    {
+      "id": "en_show",
+      "rank": 37,
+      "lemma": "show",
+      "example_strategy": "show_person_object",
+      "irregular": {
+        "past": "showed",
+        "past_participle": "shown"
+      }
+    },
+    {
+      "id": "en_hear",
+      "rank": 38,
+      "lemma": "hear",
+      "example_strategy": "hear_sound",
+      "irregular": {
+        "past": "heard",
+        "past_participle": "heard"
+      }
+    },
+    {
+      "id": "en_play",
+      "rank": 39,
+      "lemma": "play",
+      "example_strategy": "play_game_or_music"
+    },
+    {
+      "id": "en_run",
+      "rank": 40,
+      "lemma": "run",
+      "example_strategy": "run_motion",
+      "irregular": {
+        "past": "ran",
+        "past_participle": "run",
+        "gerund": "running"
+      }
+    },
+    {
+      "id": "en_move",
+      "rank": 41,
+      "lemma": "move",
+      "example_strategy": "move_object_or_self",
+      "irregular": {
+        "gerund": "moving"
+      }
+    },
+    {
+      "id": "en_live",
+      "rank": 42,
+      "lemma": "live",
+      "example_strategy": "live_place",
+      "irregular": {
+        "gerund": "living"
+      }
+    },
+    {
+      "id": "en_believe",
+      "rank": 43,
+      "lemma": "believe",
+      "example_strategy": "believe_fact",
+      "irregular": {
+        "gerund": "believing"
+      }
+    },
+    {
+      "id": "en_bring",
+      "rank": 44,
+      "lemma": "bring",
+      "example_strategy": "bring_object",
+      "irregular": {
+        "past": "brought",
+        "past_participle": "brought"
+      }
+    },
+    {
+      "id": "en_happen",
+      "rank": 45,
+      "lemma": "happen",
+      "example_strategy": "happen_general"
+    },
+    {
+      "id": "en_write",
+      "rank": 46,
+      "lemma": "write",
+      "example_strategy": "write_object",
+      "irregular": {
+        "past": "wrote",
+        "past_participle": "written"
+      }
+    },
+    {
+      "id": "en_provide",
+      "rank": 47,
+      "lemma": "provide",
+      "example_strategy": "provide_object",
+      "irregular": {
+        "gerund": "providing"
+      }
+    },
+    {
+      "id": "en_sit",
+      "rank": 48,
+      "lemma": "sit",
+      "example_strategy": "sit_place",
+      "irregular": {
+        "past": "sat",
+        "past_participle": "sat",
+        "gerund": "sitting"
+      }
+    },
+    {
+      "id": "en_stand",
+      "rank": 49,
+      "lemma": "stand",
+      "example_strategy": "stand_place",
+      "irregular": {
+        "past": "stood",
+        "past_participle": "stood"
+      }
+    },
+    {
+      "id": "en_lose",
+      "rank": 50,
+      "lemma": "lose",
+      "example_strategy": "lose_object",
+      "irregular": {
+        "past": "lost",
+        "past_participle": "lost"
+      }
+    },
+    {
+      "id": "en_pay",
+      "rank": 51,
+      "lemma": "pay",
+      "example_strategy": "pay_amount_or_bill",
+      "irregular": {
+        "past": "paid",
+        "past_participle": "paid"
+      }
+    },
+    {
+      "id": "en_meet",
+      "rank": 52,
+      "lemma": "meet",
+      "example_strategy": "meet_person_or_meet_with_group",
+      "irregular": {
+        "past": "met",
+        "past_participle": "met"
+      }
+    },
+    {
+      "id": "en_include",
+      "rank": 53,
+      "lemma": "include",
+      "example_strategy": "include_object",
+      "irregular": {
+        "gerund": "including"
+      }
+    },
+    {
+      "id": "en_continue",
+      "rank": 54,
+      "lemma": "continue",
+      "example_strategy": "continue_activity",
+      "irregular": {
+        "gerund": "continuing"
+      }
+    },
+    {
+      "id": "en_set",
+      "rank": 55,
+      "lemma": "set",
+      "example_strategy": "set_object",
+      "irregular": {
+        "past": "set",
+        "past_participle": "set"
+      }
+    },
+    {
+      "id": "en_learn",
+      "rank": 56,
+      "lemma": "learn",
+      "example_strategy": "learn_object",
+      "irregular": {
+        "past": "learned",
+        "past_participle": "learned"
+      }
+    },
+    {
+      "id": "en_change",
+      "rank": 57,
+      "lemma": "change",
+      "example_strategy": "change_object_or_state"
+    },
+    {
+      "id": "en_lead",
+      "rank": 58,
+      "lemma": "lead",
+      "example_strategy": "lead_group",
+      "irregular": {
+        "past": "led",
+        "past_participle": "led"
+      }
+    },
+    {
+      "id": "en_understand",
+      "rank": 59,
+      "lemma": "understand",
+      "example_strategy": "understand_fact",
+      "irregular": {
+        "past": "understood",
+        "past_participle": "understood"
+      }
+    },
+    {
+      "id": "en_watch",
+      "rank": 60,
+      "lemma": "watch",
+      "example_strategy": "watch_object"
+    }
   ]
 }
