@@ -25,6 +25,11 @@ def render_board_html(board: Board) -> str:
             key = row["key"]
             label = escape(str(row["label"]))
             text = escape(str(row["text"]))
+            href = str(row.get("href", ""))
+            if href:
+                value_html = f"<a href='{escape(href)}'>{text}</a>"
+            else:
+                value_html = text
 
             if key not in NO_AUDIO_ROW_KEYS:
                 audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{key}.mp3"
@@ -35,7 +40,7 @@ def render_board_html(board: Board) -> str:
                 audio_html = (
                     f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
                     f"<button class='{button_class}' "
-                    f"onclick=\"document.getElementById('{audio_id}').play()\">▶ Play</button>"
+                    f"onclick=\"document.getElementById('{audio_id}').play()\">▶</button>"
                 )
             else:
                 audio_html = ""
@@ -43,7 +48,7 @@ def render_board_html(board: Board) -> str:
             rows.append(
                 "<tr>"
                 f"<td>{label}</td>"
-                f"<td style='font-size: 26px'>{text}</td>"
+                f"<td style='font-size: 26px'>{value_html}</td>"
                 f"<td>{audio_html}</td>"
                 "</tr>"
             )
@@ -69,8 +74,12 @@ def render_board_html(board: Board) -> str:
             f"<td>{escape(ex.dst)}</td>"
             f"<td>"
             f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
-            f"<button class='{button_class}' "
-            f"onclick=\"document.getElementById('{audio_id}').play()\">▶ Play</button>"
+            f"<button class='{button_class}' title='Play' "
+            f"onclick=\"const audio=document.getElementById('{audio_id}'); "
+            f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
+            f"<button class='slow-btn' title='Slow' "
+            f"onclick=\"const audio=document.getElementById('{audio_id}'); "
+            f'audio.pause(); audio.currentTime=0; audio.playbackRate=0.65; audio.play()">🐌</button>'
             "</td>"
             "</tr>"
         )

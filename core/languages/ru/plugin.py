@@ -1,7 +1,33 @@
 from __future__ import annotations
 
+from core.lexicon import load_lexicon
 from core.models import Board, VerbEntry
+from core.paths import DATA_DIR
 from core.registry import LanguagePlugin, register
+
+
+def _format_aspect(aspect_value: str) -> str:
+    if aspect_value == "imperfective":
+        return "несовершенный"
+    if aspect_value == "perfective":
+        return "совершенный"
+    return aspect_value
+
+
+def _lookup_pair_lemma_and_href(pair_id: str) -> tuple[str, str]:
+    if not pair_id:
+        return "", ""
+
+    lexicon_path = DATA_DIR / "ru" / "lexicon.json"
+    entries = load_lexicon(lexicon_path) if lexicon_path.exists() else []
+
+    pair_entry = next((entry for entry in entries if entry.id == pair_id), None)
+    if pair_entry is None:
+        return pair_id, ""
+
+    pair_lemma = str(pair_entry.lemma)
+    pair_href = f"/learn?language=ru&verb_id={pair_id}"
+    return pair_lemma, pair_href
 
 
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
@@ -9,22 +35,37 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     forms = verb.forms or {}
     morph = verb.morph or {}
 
-    aspect = str(morph.get("aspect", ""))
-    pair = str(morph.get("pair", ""))
+    raw_aspect = str(morph.get("aspect", ""))
+    aspect = _format_aspect(raw_aspect)
 
-    # Runtime RU schema from generate_lexicon.py
+    pair_id = str(morph.get("pair", ""))
+    pair_lemma, pair_href = _lookup_pair_lemma_and_href(pair_id)
+
     present = forms.get("present", {})
     past = forms.get("past", {})
-    imp = forms.get("imperative", {})
+    imperative = forms.get("imperative", {})
+
+    metadata_rows = [
+        {"key": "lemma", "label": "глагол", "text": lemma},
+    ]
+
+    if aspect:
+        metadata_rows.append({"key": "aspect", "label": "вид", "text": aspect})
+
+    if pair_lemma:
+        metadata_rows.append(
+            {
+                "key": "pair",
+                "label": "пара",
+                "text": pair_lemma,
+                "href": pair_href,
+            }
+        )
 
     sections = [
         {
             "title": "Metadata",
-            "rows": [
-                {"key": "lemma", "label": "verb", "text": lemma},
-                {"key": "aspect", "label": "aspect", "text": aspect},
-                {"key": "pair", "label": "pair", "text": pair},
-            ],
+            "rows": metadata_rows,
         },
         {
             "title": "Present",
@@ -40,17 +81,17 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
         {
             "title": "Past",
             "rows": [
-                {"key": "past_m", "label": "m", "text": past.get("m", "")},
-                {"key": "past_f", "label": "f", "text": past.get("f", "")},
-                {"key": "past_n", "label": "n", "text": past.get("n", "")},
-                {"key": "past_pl", "label": "pl", "text": past.get("pl", "")},
+                {"key": "past_m", "label": "м", "text": past.get("m", "")},
+                {"key": "past_f", "label": "ж", "text": past.get("f", "")},
+                {"key": "past_n", "label": "ср", "text": past.get("n", "")},
+                {"key": "past_pl", "label": "мн", "text": past.get("pl", "")},
             ],
         },
         {
             "title": "Imperative",
             "rows": [
-                {"key": "imp_sg", "label": "sg", "text": imp.get("sg", "")},
-                {"key": "imp_pl", "label": "pl", "text": imp.get("pl", "")},
+                {"key": "imp_sg", "label": "ед", "text": imperative.get("sg", "")},
+                {"key": "imp_pl", "label": "мн", "text": imperative.get("pl", "")},
             ],
         },
     ]
