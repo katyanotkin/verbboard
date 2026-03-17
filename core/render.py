@@ -9,10 +9,9 @@ NO_AUDIO_ROW_KEYS = {"aspect", "pair"}
 
 
 def render_board_html(board: Board) -> str:
-    # lemma display
     lemma = board.verb.lemma
     if isinstance(lemma, dict):
-        title = f"{lemma.get('imperfective','')} / {lemma.get('perfective','')}"
+        title = f"{lemma.get('imperfective', '')} / {lemma.get('perfective', '')}"
     else:
         title = str(lemma)
 
@@ -26,6 +25,7 @@ def render_board_html(board: Board) -> str:
             label = escape(str(row["label"]))
             text = escape(str(row["text"]))
             href = str(row.get("href", ""))
+
             if href:
                 value_html = f"<a href='{escape(href)}'>{text}</a>"
             else:
@@ -39,8 +39,9 @@ def render_board_html(board: Board) -> str:
                 )
                 audio_html = (
                     f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
-                    f"<button class='{button_class}' "
-                    f"onclick=\"document.getElementById('{audio_id}').play()\">▶</button>"
+                    f"<button class='{button_class}' title='Play' "
+                    f"onclick=\"const audio=document.getElementById('{audio_id}'); "
+                    f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
                 )
             else:
                 audio_html = ""
@@ -69,17 +70,23 @@ def render_board_html(board: Board) -> str:
         audio_id = (
             f"audio_{board.language}_{board.verb.id}_{board.voice_key}_example_{index}"
         )
+
+        example_direction = "rtl" if board.language == "he" else "ltr"
+        example_align = "right" if board.language == "he" else "left"
+
         examples_rows.append(
             "<tr>"
-            f"<td>{escape(ex.dst)}</td>"
+            f"<td dir='{example_direction}' style='text-align:{example_align}'>{escape(ex.dst)}</td>"
             f"<td>"
             f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
             f"<button class='{button_class}' title='Play' "
             f"onclick=\"const audio=document.getElementById('{audio_id}'); "
             f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
-            f"<button class='slow-btn' title='Slow' "
+            f"<button class='slow-btn' title='Slow playback' "
             f"onclick=\"const audio=document.getElementById('{audio_id}'); "
-            f'audio.pause(); audio.currentTime=0; audio.playbackRate=0.65; audio.play()">🐌</button>'
+            f'audio.pause(); audio.currentTime=0; audio.playbackRate=0.65; audio.play()">'
+            f"<img src='/static/snail.svg' class='slow-icon' />"
+            f"</button>"
             "</td>"
             "</tr>"
         )

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
 
 from app.routes.audio import router as audio_router
 from app.routes.home import router as home_router
@@ -18,8 +20,10 @@ settings = load_settings()
 audio_backend = create_audio_backend(settings)
 
 app = FastAPI(title="VerbBoard")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.state.settings = settings
 app.state.audio_backend = audio_backend
+
 
 app.include_router(home_router)
 app.include_router(learn_router)
