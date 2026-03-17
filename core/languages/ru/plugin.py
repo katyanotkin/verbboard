@@ -20,7 +20,6 @@ def _lookup_pair_lemma_and_href(pair_id: str) -> tuple[str, str]:
 
     lexicon_path = DATA_DIR / "ru" / "lexicon.json"
     entries = load_lexicon(lexicon_path) if lexicon_path.exists() else []
-
     pair_entry = next((entry for entry in entries if entry.id == pair_id), None)
     if pair_entry is None:
         return pair_id, ""
@@ -37,6 +36,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
 
     raw_aspect = str(morph.get("aspect", ""))
     aspect = _format_aspect(raw_aspect)
+    is_perfective = raw_aspect == "perfective"
 
     pair_id = str(morph.get("pair", ""))
     pair_lemma, pair_href = _lookup_pair_lemma_and_href(pair_id)
@@ -48,10 +48,8 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     metadata_rows = [
         {"key": "lemma", "label": "глагол", "text": lemma},
     ]
-
     if aspect:
         metadata_rows.append({"key": "aspect", "label": "вид", "text": aspect})
-
     if pair_lemma:
         metadata_rows.append(
             {
@@ -62,36 +60,32 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             }
         )
 
+    finite_rows = [
+        {"key": "pres_1sg", "label": "я", "text": present.get("1sg", "")},
+        {"key": "pres_2sg", "label": "ты", "text": present.get("2sg", "")},
+        {"key": "pres_3sg", "label": "он/она/оно", "text": present.get("3sg", "")},
+        {"key": "pres_1pl", "label": "мы", "text": present.get("1pl", "")},
+        {"key": "pres_2pl", "label": "вы", "text": present.get("2pl", "")},
+        {"key": "pres_3pl", "label": "они", "text": present.get("3pl", "")},
+    ]
+
     sections = [
+        {"title": "Основное", "rows": metadata_rows},
+        {"title": "Будущее" if is_perfective else "Настоящее", "rows": finite_rows},
         {
-            "title": "Metadata",
-            "rows": metadata_rows,
-        },
-        {
-            "title": "Present",
+            "title": "Прошедшее",
             "rows": [
-                {"key": "pres_1sg", "label": "я", "text": present.get("1sg", "")},
-                {"key": "pres_2sg", "label": "ты", "text": present.get("2sg", "")},
-                {"key": "pres_3sg", "label": "он/она", "text": present.get("3sg", "")},
-                {"key": "pres_1pl", "label": "мы", "text": present.get("1pl", "")},
-                {"key": "pres_2pl", "label": "вы", "text": present.get("2pl", "")},
-                {"key": "pres_3pl", "label": "они", "text": present.get("3pl", "")},
+                {"key": "past_m", "label": "он", "text": past.get("m", "")},
+                {"key": "past_f", "label": "она", "text": past.get("f", "")},
+                {"key": "past_n", "label": "оно", "text": past.get("n", "")},
+                {"key": "past_pl", "label": "они", "text": past.get("pl", "")},
             ],
         },
         {
-            "title": "Past",
+            "title": "Повелительное",
             "rows": [
-                {"key": "past_m", "label": "м", "text": past.get("m", "")},
-                {"key": "past_f", "label": "ж", "text": past.get("f", "")},
-                {"key": "past_n", "label": "ср", "text": past.get("n", "")},
-                {"key": "past_pl", "label": "мн", "text": past.get("pl", "")},
-            ],
-        },
-        {
-            "title": "Imperative",
-            "rows": [
-                {"key": "imp_sg", "label": "ед", "text": imperative.get("sg", "")},
-                {"key": "imp_pl", "label": "мн", "text": imperative.get("pl", "")},
+                {"key": "imp_sg", "label": "ты", "text": imperative.get("sg", "")},
+                {"key": "imp_pl", "label": "вы", "text": imperative.get("pl", "")},
             ],
         },
     ]

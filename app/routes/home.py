@@ -163,12 +163,32 @@ def home(
       font-size: 16px;
       line-height: 1;
     }}
+
+    .learn-btn:disabled {{
+      cursor: wait;
+      opacity: 0.85;
+    }}
+
+    .learn-btn.loading {{
+      filter: saturate(0.9);
+    }}
   </style>
 </head>
 <body>
   <h1>Verb Board (MVP0)</h1>
 
-  <form action="/learn" method="get" class="controls">
+  <form
+      action="/learn"
+      method="get"
+      class="controls"
+      onsubmit="
+        const btn = this.querySelector('.learn-btn');
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.querySelector('.learn-label').textContent = 'Loading…';
+        btn.querySelector('.learn-icon').textContent = '⏳';
+      "
+    >
     <div class="row">
       <label><b>Language</b></label><br/>
       <select
@@ -195,7 +215,7 @@ def home(
 
     <div class="row center">
       <button type="submit" class="learn-btn" title="Learn">
-        <span>Learn</span>
+        <span class="learn-label">Learn</span>
         <span class="learn-icon">▶</span>
       </button>
     </div>
