@@ -40,6 +40,7 @@ def home(
         f"<option value='{key}' {'selected' if key == language else ''}>{plugin.display_name}</option>"
         for key, plugin in plugins.items()
     )
+
     verb_options = "\n".join(
         f"<option value='{entry.id}' {'selected' if entry.id == verb_id else ''}>"
         f"{entry.rank}. "
@@ -47,6 +48,7 @@ def home(
         f"</option>"
         for entry in entries
     )
+
     voice_options = "\n".join(
         f"<option value='{voice_key}' {'selected' if voice_key == voice else ''}>{voice_key.title()}</option>"
         for voice_key in ("female", "male")
@@ -58,15 +60,8 @@ def home(
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Verb Board (MVP0)</title>
+
   <style>
-    :root {{
-      color-scheme: light;
-    }}
-
-    * {{
-      box-sizing: border-box;
-    }}
-
     body {{
       font-family: system-ui, sans-serif;
       margin: 24px auto;
@@ -77,16 +72,14 @@ def home(
     }}
 
     h1 {{
-      margin: 0 0 20px 0;
-      font-size: 32px;
-      line-height: 1.15;
+      margin-bottom: 20px;
     }}
 
     form.controls {{
       max-width: 360px;
       margin: 0 auto;
       padding: 24px;
-      background: #ffffff;
+      background: #fff;
       border: 1px solid #e5e7eb;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
@@ -102,95 +95,73 @@ def home(
     }}
 
     label {{
-      display: inline-block;
+      display: block;
       margin-bottom: 6px;
-      font-size: 14px;
       font-weight: 700;
-      color: #374151;
     }}
 
     select {{
       width: 100%;
-      font-size: 16px;
-      padding: 11px 12px;
+      padding: 10px;
+      border-radius: 8px;
       border: 1px solid #d1d5db;
-      border-radius: 10px;
-      background: #fff;
-      color: #111827;
-      outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }}
-
-    select:focus {{
-      border-color: #2563eb;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }}
 
     .learn-btn {{
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      min-width: 170px;
+      gap: 8px;
       padding: 12px 20px;
-      border: none;
       border-radius: 999px;
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      color: #ffffff;
-      font-size: 15px;
+      border: none;
+      background: #2563eb;
+      color: white;
       font-weight: 700;
-      letter-spacing: 0.02em;
       cursor: pointer;
-      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
-      transition:
-        transform 0.12s ease,
-        box-shadow 0.12s ease,
-        filter 0.12s ease;
+      transition: all 0.12s ease;
     }}
 
     .learn-btn:hover {{
       transform: translateY(-1px);
-      box-shadow: 0 14px 26px rgba(37, 99, 235, 0.34);
-      filter: brightness(1.03);
-    }}
-
-    .learn-btn:active {{
-      transform: translateY(0);
-      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.24);
-    }}
-
-    .learn-icon {{
-      font-size: 16px;
-      line-height: 1;
+      filter: brightness(1.05);
     }}
 
     .learn-btn:disabled {{
       cursor: wait;
-      opacity: 0.85;
+      pointer-events: none;
     }}
 
     .learn-btn.loading {{
-      filter: saturate(0.9);
+      opacity: 0.7;
+      filter: grayscale(0.4);
+      transform: none;
+    }}
+
+    .learn-btn.loading .learn-label {{
+      content: "Loading…";
     }}
   </style>
 </head>
+
 <body>
   <h1>Verb Board (MVP0)</h1>
 
   <form
-      action="/learn"
-      method="get"
-      class="controls"
-      onsubmit="
-        const btn = this.querySelector('.learn-btn');
-        btn.disabled = true;
-        btn.classList.add('loading');
-        btn.querySelector('.learn-label').textContent = 'Loading…';
-        btn.querySelector('.learn-icon').textContent = '⏳';
-      "
-    >
+    action="/learn"
+    method="get"
+    class="controls"
+    onsubmit="
+      const btn = this.querySelector('.learn-btn');
+      btn.disabled = true;
+      btn.classList.add('loading');
+      btn.querySelector('.learn-label').textContent = 'Loading…';
+      btn.querySelector('.learn-icon').textContent = '•••';
+    "
+  >
+
     <div class="row">
-      <label><b>Language</b></label><br/>
+      <label>Language</label>
       <select
         name="language"
         onchange="window.location='/set_language?language=' + this.value + '&voice=' + document.querySelector('select[name=voice]').value;"
@@ -200,25 +171,26 @@ def home(
     </div>
 
     <div class="row">
-      <label><b>Verb</b></label><br/>
+      <label>Verb</label>
       <select name="verb_id">
         {verb_options}
       </select>
     </div>
 
     <div class="row">
-      <label><b>Voice</b></label><br/>
+      <label>Voice</label>
       <select name="voice">
         {voice_options}
       </select>
     </div>
 
     <div class="row center">
-      <button type="submit" class="learn-btn" title="Learn">
+      <button type="submit" class="learn-btn">
         <span class="learn-label">Learn</span>
         <span class="learn-icon">▶</span>
       </button>
     </div>
+
   </form>
 </body>
 </html>

@@ -1,0 +1,1486 @@
+{
+  "language": "es",
+  "version": 1,
+  "verbs": [
+    {
+      "id": "es_ser",
+      "rank": 1,
+      "lemma": "ser",
+      "forms": {
+        "present": {
+          "yo": "soy",
+          "tu": "eres",
+          "el": "es",
+          "nos": "somos",
+          "ellos": "son"
+        },
+        "preterite": {
+          "yo": "fui",
+          "tu": "fuiste",
+          "el": "fue",
+          "nos": "fuimos",
+          "ellos": "fueron"
+        },
+        "gerund": "siendo",
+        "participle": "sido"
+      },
+      "examples": [
+        {
+          "dst": "Yo soy estudiante."
+        },
+        {
+          "dst": "Ella es muy amable."
+        },
+        {
+          "dst": "Nosotros fuimos amigos por años."
+        },
+        {
+          "dst": "Sé amable con todos."
+        }
+      ]
+    },
+    {
+      "id": "es_estar",
+      "rank": 2,
+      "lemma": "estar",
+      "forms": {
+        "present": {
+          "yo": "estoy",
+          "tu": "estás",
+          "el": "está",
+          "nos": "estamos",
+          "ellos": "están"
+        },
+        "preterite": {
+          "yo": "estuve",
+          "tu": "estuviste",
+          "el": "estuvo",
+          "nos": "estuvimos",
+          "ellos": "estuvieron"
+        },
+        "gerund": "estando",
+        "participle": "estado"
+      },
+      "examples": [
+        {
+          "dst": "Yo estoy en casa."
+        },
+        {
+          "dst": "Él está cansado hoy."
+        },
+        {
+          "dst": "Ayer estuvo aquí."
+        },
+        {
+          "dst": "Está tranquilo ahora."
+        }
+      ]
+    },
+    {
+      "id": "es_tener",
+      "rank": 3,
+      "lemma": "tener",
+      "forms": {
+        "present": {
+          "yo": "tengo",
+          "tu": "tienes",
+          "el": "tiene",
+          "nos": "tenemos",
+          "ellos": "tienen"
+        },
+        "preterite": {
+          "yo": "tuve",
+          "tu": "tuviste",
+          "el": "tuvo",
+          "nos": "tuvimos",
+          "ellos": "tuvieron"
+        },
+        "gerund": "teniendo",
+        "participle": "tenido"
+      },
+      "examples": [
+        {
+          "dst": "Yo tengo cada día."
+        },
+        {
+          "dst": "Él tiene ahora."
+        },
+        {
+          "dst": "Ayer nosotros tuvimos juntos."
+        },
+        {
+          "dst": "Estamos teniendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_hacer",
+      "rank": 4,
+      "lemma": "hacer",
+      "forms": {
+        "present": {
+          "yo": "hago",
+          "tu": "haces",
+          "el": "hace",
+          "nos": "hacemos",
+          "ellos": "hacen"
+        },
+        "preterite": {
+          "yo": "hice",
+          "tu": "hiciste",
+          "el": "hizo",
+          "nos": "hicimos",
+          "ellos": "hicieron"
+        },
+        "gerund": "haciendo",
+        "participle": "hecho"
+      },
+      "examples": [
+        {
+          "dst": "Yo hago cada día."
+        },
+        {
+          "dst": "Él hace ahora."
+        },
+        {
+          "dst": "Ayer nosotros hicimos juntos."
+        },
+        {
+          "dst": "Estamos haciendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_decir",
+      "rank": 5,
+      "lemma": "decir",
+      "forms": {
+        "present": {
+          "yo": "digo",
+          "tu": "dices",
+          "el": "dice",
+          "nos": "decimos",
+          "ellos": "dicen"
+        },
+        "preterite": {
+          "yo": "dije",
+          "tu": "dijiste",
+          "el": "dijo",
+          "nos": "dijimos",
+          "ellos": "dijeron"
+        },
+        "gerund": "diciendo",
+        "participle": "dicho"
+      },
+      "examples": [
+        {
+          "dst": "Yo digo cada día."
+        },
+        {
+          "dst": "Él dice ahora."
+        },
+        {
+          "dst": "Ayer nosotros dijimos juntos."
+        },
+        {
+          "dst": "Estamos diciendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_ir",
+      "rank": 6,
+      "lemma": "ir",
+      "forms": {
+        "present": {
+          "yo": "voy",
+          "tu": "vas",
+          "el": "va",
+          "nos": "vamos",
+          "ellos": "van"
+        },
+        "preterite": {
+          "yo": "fui",
+          "tu": "fuiste",
+          "el": "fue",
+          "nos": "fuimos",
+          "ellos": "fueron"
+        },
+        "gerund": "yendo",
+        "participle": "ido"
+      },
+      "examples": [
+        {
+          "dst": "Yo voy cada día."
+        },
+        {
+          "dst": "Él va ahora."
+        },
+        {
+          "dst": "Ayer nosotros fuimos juntos."
+        },
+        {
+          "dst": "Estamos yendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_ver",
+      "rank": 7,
+      "lemma": "ver",
+      "forms": {
+        "present": {
+          "yo": "veo",
+          "tu": "ves",
+          "el": "ve",
+          "nos": "vemos",
+          "ellos": "ven"
+        },
+        "preterite": {
+          "yo": "vi",
+          "tu": "viste",
+          "el": "vio",
+          "nos": "vimos",
+          "ellos": "vieron"
+        },
+        "gerund": "viendo",
+        "participle": "visto"
+      },
+      "examples": [
+        {
+          "dst": "Yo veo cada día."
+        },
+        {
+          "dst": "Él ve ahora."
+        },
+        {
+          "dst": "Ayer nosotros vimos juntos."
+        },
+        {
+          "dst": "Estamos viendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_dar",
+      "rank": 8,
+      "lemma": "dar",
+      "forms": {
+        "present": {
+          "yo": "doy",
+          "tu": "das",
+          "el": "da",
+          "nos": "damos",
+          "ellos": "dan"
+        },
+        "preterite": {
+          "yo": "di",
+          "tu": "diste",
+          "el": "dio",
+          "nos": "dimos",
+          "ellos": "dieron"
+        },
+        "gerund": "dando",
+        "participle": "dado"
+      },
+      "examples": [
+        {
+          "dst": "Yo doy cada día."
+        },
+        {
+          "dst": "Él da ahora."
+        },
+        {
+          "dst": "Ayer nosotros dimos juntos."
+        },
+        {
+          "dst": "Estamos dando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_poder",
+      "rank": 9,
+      "lemma": "poder",
+      "forms": {
+        "present": {
+          "yo": "puedo",
+          "tu": "puedes",
+          "el": "puede",
+          "nos": "podemos",
+          "ellos": "pueden"
+        },
+        "preterite": {
+          "yo": "pude",
+          "tu": "pudiste",
+          "el": "pudo",
+          "nos": "pudimos",
+          "ellos": "pudieron"
+        },
+        "gerund": "podiendo",
+        "participle": "podido"
+      },
+      "examples": [
+        {
+          "dst": "Yo puedo cada día."
+        },
+        {
+          "dst": "Él puede ahora."
+        },
+        {
+          "dst": "Ayer nosotros pudimos juntos."
+        },
+        {
+          "dst": "Estamos podiendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_querer",
+      "rank": 10,
+      "lemma": "querer",
+      "forms": {
+        "present": {
+          "yo": "quiero",
+          "tu": "quieres",
+          "el": "quiere",
+          "nos": "queremos",
+          "ellos": "quieren"
+        },
+        "preterite": {
+          "yo": "quise",
+          "tu": "quisiste",
+          "el": "quiso",
+          "nos": "quisimos",
+          "ellos": "quisieron"
+        },
+        "gerund": "queriendo",
+        "participle": "querido"
+      },
+      "examples": [
+        {
+          "dst": "Yo quiero cada día."
+        },
+        {
+          "dst": "Él quiere ahora."
+        },
+        {
+          "dst": "Ayer nosotros quisimos juntos."
+        },
+        {
+          "dst": "Estamos queriendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_saber",
+      "rank": 11,
+      "lemma": "saber",
+      "forms": {
+        "present": {
+          "yo": "sé",
+          "tu": "sabes",
+          "el": "sabe",
+          "nos": "sabemos",
+          "ellos": "saben"
+        },
+        "preterite": {
+          "yo": "supe",
+          "tu": "supiste",
+          "el": "supo",
+          "nos": "supimos",
+          "ellos": "supieron"
+        },
+        "gerund": "sabiendo",
+        "participle": "sabido"
+      },
+      "examples": [
+        {
+          "dst": "Yo sé cada día."
+        },
+        {
+          "dst": "Él sabe ahora."
+        },
+        {
+          "dst": "Ayer nosotros supimos juntos."
+        },
+        {
+          "dst": "Estamos sabiendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_venir",
+      "rank": 12,
+      "lemma": "venir",
+      "forms": {
+        "present": {
+          "yo": "vengo",
+          "tu": "vienes",
+          "el": "viene",
+          "nos": "venimos",
+          "ellos": "vienen"
+        },
+        "preterite": {
+          "yo": "vine",
+          "tu": "viniste",
+          "el": "vino",
+          "nos": "vinimos",
+          "ellos": "vinieron"
+        },
+        "gerund": "viniendo",
+        "participle": "venido"
+      },
+      "examples": [
+        {
+          "dst": "Yo vengo cada día."
+        },
+        {
+          "dst": "Él viene ahora."
+        },
+        {
+          "dst": "Ayer nosotros vinimos juntos."
+        },
+        {
+          "dst": "Estamos viniendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_poner",
+      "rank": 13,
+      "lemma": "poner",
+      "forms": {
+        "present": {
+          "yo": "pongo",
+          "tu": "pones",
+          "el": "pone",
+          "nos": "ponemos",
+          "ellos": "ponen"
+        },
+        "preterite": {
+          "yo": "puse",
+          "tu": "pusiste",
+          "el": "puso",
+          "nos": "pusimos",
+          "ellos": "pusieron"
+        },
+        "gerund": "poniendo",
+        "participle": "puesto"
+      },
+      "examples": [
+        {
+          "dst": "Yo pongo cada día."
+        },
+        {
+          "dst": "Él pone ahora."
+        },
+        {
+          "dst": "Ayer nosotros pusimos juntos."
+        },
+        {
+          "dst": "Estamos poniendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_salir",
+      "rank": 14,
+      "lemma": "salir",
+      "forms": {
+        "present": {
+          "yo": "salgo",
+          "tu": "sales",
+          "el": "sale",
+          "nos": "salimos",
+          "ellos": "salen"
+        },
+        "preterite": {
+          "yo": "salí",
+          "tu": "saliste",
+          "el": "salió",
+          "nos": "salimos",
+          "ellos": "salieron"
+        },
+        "gerund": "saliendo",
+        "participle": "salido"
+      },
+      "examples": [
+        {
+          "dst": "Yo salgo cada día."
+        },
+        {
+          "dst": "Él sale ahora."
+        },
+        {
+          "dst": "Ayer nosotros salimos juntos."
+        },
+        {
+          "dst": "Estamos saliendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_hablar",
+      "rank": 15,
+      "lemma": "hablar",
+      "forms": {
+        "present": {
+          "yo": "hablo",
+          "tu": "hablas",
+          "el": "habla",
+          "nos": "hablamos",
+          "ellos": "hablan"
+        },
+        "preterite": {
+          "yo": "hablé",
+          "tu": "hablaste",
+          "el": "habló",
+          "nos": "hablamos",
+          "ellos": "hablaron"
+        },
+        "gerund": "hablando",
+        "participle": "hablado"
+      },
+      "examples": [
+        {
+          "dst": "Yo hablo cada día."
+        },
+        {
+          "dst": "Él habla ahora."
+        },
+        {
+          "dst": "Ayer nosotros hablamos juntos."
+        },
+        {
+          "dst": "Estamos hablando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_comer",
+      "rank": 16,
+      "lemma": "comer",
+      "forms": {
+        "present": {
+          "yo": "como",
+          "tu": "comes",
+          "el": "come",
+          "nos": "comemos",
+          "ellos": "comen"
+        },
+        "preterite": {
+          "yo": "comí",
+          "tu": "comiste",
+          "el": "comió",
+          "nos": "comimos",
+          "ellos": "comieron"
+        },
+        "gerund": "comiendo",
+        "participle": "comido"
+      },
+      "examples": [
+        {
+          "dst": "Yo como cada día."
+        },
+        {
+          "dst": "Él come ahora."
+        },
+        {
+          "dst": "Ayer nosotros comimos juntos."
+        },
+        {
+          "dst": "Estamos comiendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_vivir",
+      "rank": 17,
+      "lemma": "vivir",
+      "forms": {
+        "present": {
+          "yo": "vivo",
+          "tu": "vives",
+          "el": "vive",
+          "nos": "vivimos",
+          "ellos": "viven"
+        },
+        "preterite": {
+          "yo": "viví",
+          "tu": "viviste",
+          "el": "vivió",
+          "nos": "vivimos",
+          "ellos": "vivieron"
+        },
+        "gerund": "viviendo",
+        "participle": "vivido"
+      },
+      "examples": [
+        {
+          "dst": "Yo vivo cada día."
+        },
+        {
+          "dst": "Él vive ahora."
+        },
+        {
+          "dst": "Ayer nosotros vivimos juntos."
+        },
+        {
+          "dst": "Estamos viviendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_trabajar",
+      "rank": 18,
+      "lemma": "trabajar",
+      "forms": {
+        "present": {
+          "yo": "trabajo",
+          "tu": "trabajas",
+          "el": "trabaja",
+          "nos": "trabajamos",
+          "ellos": "trabajan"
+        },
+        "preterite": {
+          "yo": "trabajé",
+          "tu": "trabajaste",
+          "el": "trabajó",
+          "nos": "trabajamos",
+          "ellos": "trabajaron"
+        },
+        "gerund": "trabajando",
+        "participle": "trabajado"
+      },
+      "examples": [
+        {
+          "dst": "Yo trabajo cada día."
+        },
+        {
+          "dst": "Él trabaja ahora."
+        },
+        {
+          "dst": "Ayer nosotros trabajamos juntos."
+        },
+        {
+          "dst": "Estamos trabajando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_estudiar",
+      "rank": 19,
+      "lemma": "estudiar",
+      "forms": {
+        "present": {
+          "yo": "estudio",
+          "tu": "estudias",
+          "el": "estudia",
+          "nos": "estudiamos",
+          "ellos": "estudian"
+        },
+        "preterite": {
+          "yo": "estudié",
+          "tu": "estudiaste",
+          "el": "estudió",
+          "nos": "estudiamos",
+          "ellos": "estudiaron"
+        },
+        "gerund": "estudiando",
+        "participle": "estudiado"
+      },
+      "examples": [
+        {
+          "dst": "Yo estudio cada día."
+        },
+        {
+          "dst": "Él estudia ahora."
+        },
+        {
+          "dst": "Ayer nosotros estudiamos juntos."
+        },
+        {
+          "dst": "Estamos estudiando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_abrir",
+      "rank": 20,
+      "lemma": "abrir",
+      "forms": {
+        "present": {
+          "yo": "abro",
+          "tu": "abres",
+          "el": "abre",
+          "nos": "abrimos",
+          "ellos": "abren"
+        },
+        "preterite": {
+          "yo": "abrí",
+          "tu": "abriste",
+          "el": "abrió",
+          "nos": "abrimos",
+          "ellos": "abrieron"
+        },
+        "gerund": "abriendo",
+        "participle": "abierto"
+      },
+      "examples": [
+        {
+          "dst": "Yo abro cada día."
+        },
+        {
+          "dst": "Él abre ahora."
+        },
+        {
+          "dst": "Ayer nosotros abrimos juntos."
+        },
+        {
+          "dst": "Estamos abriendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_tomar",
+      "rank": 21,
+      "lemma": "tomar",
+      "forms": {
+        "present": {
+          "yo": "tomo",
+          "tu": "tomas",
+          "el": "toma",
+          "nos": "tomamos",
+          "ellos": "toman"
+        },
+        "preterite": {
+          "yo": "tomé",
+          "tu": "tomaste",
+          "el": "tomó",
+          "nos": "tomamos",
+          "ellos": "tomaron"
+        },
+        "gerund": "tomando",
+        "participle": "tomado"
+      },
+      "examples": [
+        {
+          "dst": "Yo tomo cada día."
+        },
+        {
+          "dst": "Él toma ahora."
+        },
+        {
+          "dst": "Ayer nosotros tomamos juntos."
+        },
+        {
+          "dst": "Estamos tomando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_llevar",
+      "rank": 22,
+      "lemma": "llevar",
+      "forms": {
+        "present": {
+          "yo": "llevo",
+          "tu": "llevas",
+          "el": "lleva",
+          "nos": "llevamos",
+          "ellos": "llevan"
+        },
+        "preterite": {
+          "yo": "llevé",
+          "tu": "llevaste",
+          "el": "llevó",
+          "nos": "llevamos",
+          "ellos": "llevaron"
+        },
+        "gerund": "llevando",
+        "participle": "llevado"
+      },
+      "examples": [
+        {
+          "dst": "Yo llevo cada día."
+        },
+        {
+          "dst": "Él lleva ahora."
+        },
+        {
+          "dst": "Ayer nosotros llevamos juntos."
+        },
+        {
+          "dst": "Estamos llevando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_mirar",
+      "rank": 23,
+      "lemma": "mirar",
+      "forms": {
+        "present": {
+          "yo": "miro",
+          "tu": "miras",
+          "el": "mira",
+          "nos": "miramos",
+          "ellos": "miran"
+        },
+        "preterite": {
+          "yo": "miré",
+          "tu": "miraste",
+          "el": "miró",
+          "nos": "miramos",
+          "ellos": "miraron"
+        },
+        "gerund": "mirando",
+        "participle": "mirado"
+      },
+      "examples": [
+        {
+          "dst": "Yo miro cada día."
+        },
+        {
+          "dst": "Él mira ahora."
+        },
+        {
+          "dst": "Ayer nosotros miramos juntos."
+        },
+        {
+          "dst": "Estamos mirando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_pensar",
+      "rank": 24,
+      "lemma": "pensar",
+      "forms": {
+        "present": {
+          "yo": "pienso",
+          "tu": "piensas",
+          "el": "piensa",
+          "nos": "pensamos",
+          "ellos": "piensan"
+        },
+        "preterite": {
+          "yo": "pensé",
+          "tu": "pensaste",
+          "el": "pensó",
+          "nos": "pensamos",
+          "ellos": "pensaron"
+        },
+        "gerund": "pensando",
+        "participle": "pensado"
+      },
+      "examples": [
+        {
+          "dst": "Yo pienso cada día."
+        },
+        {
+          "dst": "Él piensa ahora."
+        },
+        {
+          "dst": "Ayer nosotros pensamos juntos."
+        },
+        {
+          "dst": "Estamos pensando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_usar",
+      "rank": 25,
+      "lemma": "usar",
+      "forms": {
+        "present": {
+          "yo": "uso",
+          "tu": "usas",
+          "el": "usa",
+          "nos": "usamos",
+          "ellos": "usan"
+        },
+        "preterite": {
+          "yo": "usé",
+          "tu": "usaste",
+          "el": "usó",
+          "nos": "usamos",
+          "ellos": "usaron"
+        },
+        "gerund": "usando",
+        "participle": "usado"
+      },
+      "examples": [
+        {
+          "dst": "Yo uso cada día."
+        },
+        {
+          "dst": "Él usa ahora."
+        },
+        {
+          "dst": "Ayer nosotros usamos juntos."
+        },
+        {
+          "dst": "Estamos usando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_encontrar",
+      "rank": 26,
+      "lemma": "encontrar",
+      "forms": {
+        "present": {
+          "yo": "encuentro",
+          "tu": "encuentras",
+          "el": "encuentra",
+          "nos": "encontramos",
+          "ellos": "encuentran"
+        },
+        "preterite": {
+          "yo": "encontré",
+          "tu": "encontraste",
+          "el": "encontró",
+          "nos": "encontramos",
+          "ellos": "encontraron"
+        },
+        "gerund": "encontrando",
+        "participle": "encontrado"
+      },
+      "examples": [
+        {
+          "dst": "Yo encuentro cada día."
+        },
+        {
+          "dst": "Él encuentra ahora."
+        },
+        {
+          "dst": "Ayer nosotros encontramos juntos."
+        },
+        {
+          "dst": "Estamos encontrando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_llegar",
+      "rank": 27,
+      "lemma": "llegar",
+      "forms": {
+        "present": {
+          "yo": "llego",
+          "tu": "llegas",
+          "el": "llega",
+          "nos": "llegamos",
+          "ellos": "llegan"
+        },
+        "preterite": {
+          "yo": "llegué",
+          "tu": "llegaste",
+          "el": "llegó",
+          "nos": "llegamos",
+          "ellos": "llegaron"
+        },
+        "gerund": "llegando",
+        "participle": "llegado"
+      },
+      "examples": [
+        {
+          "dst": "Yo llego cada día."
+        },
+        {
+          "dst": "Él llega ahora."
+        },
+        {
+          "dst": "Ayer nosotros llegamos juntos."
+        },
+        {
+          "dst": "Estamos llegando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_dejar",
+      "rank": 28,
+      "lemma": "dejar",
+      "forms": {
+        "present": {
+          "yo": "dejo",
+          "tu": "dejas",
+          "el": "deja",
+          "nos": "dejamos",
+          "ellos": "dejan"
+        },
+        "preterite": {
+          "yo": "dejé",
+          "tu": "dejaste",
+          "el": "dejó",
+          "nos": "dejamos",
+          "ellos": "dejaron"
+        },
+        "gerund": "dejando",
+        "participle": "dejado"
+      },
+      "examples": [
+        {
+          "dst": "Yo dejo cada día."
+        },
+        {
+          "dst": "Él deja ahora."
+        },
+        {
+          "dst": "Ayer nosotros dejamos juntos."
+        },
+        {
+          "dst": "Estamos dejando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_empezar",
+      "rank": 29,
+      "lemma": "empezar",
+      "forms": {
+        "present": {
+          "yo": "empiezo",
+          "tu": "empiezas",
+          "el": "empieza",
+          "nos": "empezamos",
+          "ellos": "empiezan"
+        },
+        "preterite": {
+          "yo": "empecé",
+          "tu": "empezaste",
+          "el": "empezó",
+          "nos": "empezamos",
+          "ellos": "empezaron"
+        },
+        "gerund": "empezando",
+        "participle": "empezado"
+      },
+      "examples": [
+        {
+          "dst": "Yo empiezo cada día."
+        },
+        {
+          "dst": "Él empieza ahora."
+        },
+        {
+          "dst": "Ayer nosotros empezamos juntos."
+        },
+        {
+          "dst": "Estamos empezando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_buscar",
+      "rank": 30,
+      "lemma": "buscar",
+      "forms": {
+        "present": {
+          "yo": "busco",
+          "tu": "buscas",
+          "el": "busca",
+          "nos": "buscamos",
+          "ellos": "buscan"
+        },
+        "preterite": {
+          "yo": "busqué",
+          "tu": "buscaste",
+          "el": "buscó",
+          "nos": "buscamos",
+          "ellos": "buscaron"
+        },
+        "gerund": "buscando",
+        "participle": "buscado"
+      },
+      "examples": [
+        {
+          "dst": "Yo busco cada día."
+        },
+        {
+          "dst": "Él busca ahora."
+        },
+        {
+          "dst": "Ayer nosotros buscamos juntos."
+        },
+        {
+          "dst": "Estamos buscando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_leer",
+      "rank": 31,
+      "lemma": "leer",
+      "forms": {
+        "present": {
+          "yo": "leo",
+          "tu": "lees",
+          "el": "lee",
+          "nos": "leemos",
+          "ellos": "leen"
+        },
+        "preterite": {
+          "yo": "leí",
+          "tu": "leíste",
+          "el": "leyó",
+          "nos": "leímos",
+          "ellos": "leyeron"
+        },
+        "gerund": "leyendo",
+        "participle": "leído"
+      },
+      "examples": [
+        {
+          "dst": "Yo leo cada día."
+        },
+        {
+          "dst": "Él lee ahora."
+        },
+        {
+          "dst": "Ayer nosotros leímos juntos."
+        },
+        {
+          "dst": "Estamos leyendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_escribir",
+      "rank": 32,
+      "lemma": "escribir",
+      "forms": {
+        "present": {
+          "yo": "escribo",
+          "tu": "escribes",
+          "el": "escribe",
+          "nos": "escribimos",
+          "ellos": "escriben"
+        },
+        "preterite": {
+          "yo": "escribí",
+          "tu": "escribiste",
+          "el": "escribió",
+          "nos": "escribimos",
+          "ellos": "escribieron"
+        },
+        "gerund": "escribiendo",
+        "participle": "escrito"
+      },
+      "examples": [
+        {
+          "dst": "Yo escribo cada día."
+        },
+        {
+          "dst": "Él escribe ahora."
+        },
+        {
+          "dst": "Ayer nosotros escribimos juntos."
+        },
+        {
+          "dst": "Estamos escribiendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_oir",
+      "rank": 33,
+      "lemma": "oír",
+      "forms": {
+        "present": {
+          "yo": "oigo",
+          "tu": "oyes",
+          "el": "oye",
+          "nos": "oímos",
+          "ellos": "oyen"
+        },
+        "preterite": {
+          "yo": "oí",
+          "tu": "oíste",
+          "el": "oyó",
+          "nos": "oímos",
+          "ellos": "oyeron"
+        },
+        "gerund": "oyendo",
+        "participle": "oído"
+      },
+      "examples": [
+        {
+          "dst": "Yo oigo cada día."
+        },
+        {
+          "dst": "Él oye ahora."
+        },
+        {
+          "dst": "Ayer nosotros oímos juntos."
+        },
+        {
+          "dst": "Estamos oyendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_comprar",
+      "rank": 34,
+      "lemma": "comprar",
+      "forms": {
+        "present": {
+          "yo": "compro",
+          "tu": "compras",
+          "el": "compra",
+          "nos": "compramos",
+          "ellos": "compran"
+        },
+        "preterite": {
+          "yo": "compré",
+          "tu": "compraste",
+          "el": "compró",
+          "nos": "compramos",
+          "ellos": "compraron"
+        },
+        "gerund": "comprando",
+        "participle": "comprado"
+      },
+      "examples": [
+        {
+          "dst": "Yo compro cada día."
+        },
+        {
+          "dst": "Él compra ahora."
+        },
+        {
+          "dst": "Ayer nosotros compramos juntos."
+        },
+        {
+          "dst": "Estamos comprando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_vender",
+      "rank": 35,
+      "lemma": "vender",
+      "forms": {
+        "present": {
+          "yo": "vendo",
+          "tu": "vendes",
+          "el": "vende",
+          "nos": "vendemos",
+          "ellos": "venden"
+        },
+        "preterite": {
+          "yo": "vendí",
+          "tu": "vendiste",
+          "el": "vendió",
+          "nos": "vendimos",
+          "ellos": "vendieron"
+        },
+        "gerund": "vendiendo",
+        "participle": "vendido"
+      },
+      "examples": [
+        {
+          "dst": "Yo vendo cada día."
+        },
+        {
+          "dst": "Él vende ahora."
+        },
+        {
+          "dst": "Ayer nosotros vendimos juntos."
+        },
+        {
+          "dst": "Estamos vendiendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_cerrar",
+      "rank": 36,
+      "lemma": "cerrar",
+      "forms": {
+        "present": {
+          "yo": "cierro",
+          "tu": "cierras",
+          "el": "cierra",
+          "nos": "cerramos",
+          "ellos": "cierran"
+        },
+        "preterite": {
+          "yo": "cerré",
+          "tu": "cerraste",
+          "el": "cerró",
+          "nos": "cerramos",
+          "ellos": "cerraron"
+        },
+        "gerund": "cerrando",
+        "participle": "cerrado"
+      },
+      "examples": [
+        {
+          "dst": "Yo cierro cada día."
+        },
+        {
+          "dst": "Él cierra ahora."
+        },
+        {
+          "dst": "Ayer nosotros cerramos juntos."
+        },
+        {
+          "dst": "Estamos cerrando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_subir",
+      "rank": 37,
+      "lemma": "subir",
+      "forms": {
+        "present": {
+          "yo": "subo",
+          "tu": "subes",
+          "el": "sube",
+          "nos": "subimos",
+          "ellos": "suben"
+        },
+        "preterite": {
+          "yo": "subí",
+          "tu": "subiste",
+          "el": "subió",
+          "nos": "subimos",
+          "ellos": "subieron"
+        },
+        "gerund": "subiendo",
+        "participle": "subido"
+      },
+      "examples": [
+        {
+          "dst": "Yo subo cada día."
+        },
+        {
+          "dst": "Él sube ahora."
+        },
+        {
+          "dst": "Ayer nosotros subimos juntos."
+        },
+        {
+          "dst": "Estamos subiendo hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_bajar",
+      "rank": 38,
+      "lemma": "bajar",
+      "forms": {
+        "present": {
+          "yo": "bajo",
+          "tu": "bajas",
+          "el": "baja",
+          "nos": "bajamos",
+          "ellos": "bajan"
+        },
+        "preterite": {
+          "yo": "bajé",
+          "tu": "bajaste",
+          "el": "bajó",
+          "nos": "bajamos",
+          "ellos": "bajaron"
+        },
+        "gerund": "bajando",
+        "participle": "bajado"
+      },
+      "examples": [
+        {
+          "dst": "Yo bajo cada día."
+        },
+        {
+          "dst": "Él baja ahora."
+        },
+        {
+          "dst": "Ayer nosotros bajamos juntos."
+        },
+        {
+          "dst": "Estamos bajando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_caminar",
+      "rank": 39,
+      "lemma": "caminar",
+      "forms": {
+        "present": {
+          "yo": "camino",
+          "tu": "caminas",
+          "el": "camina",
+          "nos": "caminamos",
+          "ellos": "caminan"
+        },
+        "preterite": {
+          "yo": "caminé",
+          "tu": "caminaste",
+          "el": "caminó",
+          "nos": "caminamos",
+          "ellos": "caminaron"
+        },
+        "gerund": "caminando",
+        "participle": "caminado"
+      },
+      "examples": [
+        {
+          "dst": "Yo camino cada día."
+        },
+        {
+          "dst": "Él camina ahora."
+        },
+        {
+          "dst": "Ayer nosotros caminamos juntos."
+        },
+        {
+          "dst": "Estamos caminando hoy."
+        }
+      ]
+    },
+    {
+      "id": "es_esperar",
+      "rank": 40,
+      "lemma": "esperar",
+      "forms": {
+        "present": {
+          "yo": "espero",
+          "tu": "esperas",
+          "el": "espera",
+          "nos": "esperamos",
+          "ellos": "esperan"
+        },
+        "preterite": {
+          "yo": "esperé",
+          "tu": "esperaste",
+          "el": "esperó",
+          "nos": "esperamos",
+          "ellos": "esperaron"
+        },
+        "gerund": "esperando",
+        "participle": "esperado"
+      },
+      "examples": [
+        {
+          "dst": "Yo espero cada día."
+        },
+        {
+          "dst": "Él espera ahora."
+        },
+        {
+          "dst": "Ayer nosotros esperamos juntos."
+        },
+        {
+          "dst": "Estamos esperando hoy."
+        }
+      ]
+    }
+  ]
+}

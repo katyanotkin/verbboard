@@ -1,0 +1,966 @@
+{
+  "language": "es",
+  "version": 1,
+  "verbs": [
+    {
+      "id": "es_ser",
+      "rank": 1,
+      "lemma": "ser",
+      "example_strategy": "be_identity_or_quality",
+      "seed_forms": {
+        "present": {
+          "yo": "soy",
+          "tu": "eres",
+          "el": "es",
+          "nos": "somos",
+          "ellos": "son"
+        },
+        "preterite": {
+          "yo": "fui",
+          "tu": "fuiste",
+          "el": "fue",
+          "nos": "fuimos",
+          "ellos": "fueron"
+        },
+        "gerund": "siendo",
+        "participle": "sido"
+      }
+    },
+    {
+      "id": "es_estar",
+      "rank": 2,
+      "lemma": "estar",
+      "example_strategy": "be_state_or_location",
+      "seed_forms": {
+        "present": {
+          "yo": "estoy",
+          "tu": "estás",
+          "el": "está",
+          "nos": "estamos",
+          "ellos": "están"
+        },
+        "preterite": {
+          "yo": "estuve",
+          "tu": "estuviste",
+          "el": "estuvo",
+          "nos": "estuvimos",
+          "ellos": "estuvieron"
+        },
+        "gerund": "estando",
+        "participle": "estado"
+      }
+    },
+    {
+      "id": "es_tener",
+      "rank": 3,
+      "lemma": "tener",
+      "example_strategy": "have_object",
+      "seed_forms": {
+        "present": {
+          "yo": "tengo",
+          "tu": "tienes",
+          "el": "tiene",
+          "nos": "tenemos",
+          "ellos": "tienen"
+        },
+        "preterite": {
+          "yo": "tuve",
+          "tu": "tuviste",
+          "el": "tuvo",
+          "nos": "tuvimos",
+          "ellos": "tuvieron"
+        },
+        "gerund": "teniendo",
+        "participle": "tenido"
+      }
+    },
+    {
+      "id": "es_hacer",
+      "rank": 4,
+      "lemma": "hacer",
+      "example_strategy": "do_or_make",
+      "seed_forms": {
+        "present": {
+          "yo": "hago",
+          "tu": "haces",
+          "el": "hace",
+          "nos": "hacemos",
+          "ellos": "hacen"
+        },
+        "preterite": {
+          "yo": "hice",
+          "tu": "hiciste",
+          "el": "hizo",
+          "nos": "hicimos",
+          "ellos": "hicieron"
+        },
+        "gerund": "haciendo",
+        "participle": "hecho"
+      }
+    },
+    {
+      "id": "es_decir",
+      "rank": 5,
+      "lemma": "decir",
+      "example_strategy": "say_content",
+      "seed_forms": {
+        "present": {
+          "yo": "digo",
+          "tu": "dices",
+          "el": "dice",
+          "nos": "decimos",
+          "ellos": "dicen"
+        },
+        "preterite": {
+          "yo": "dije",
+          "tu": "dijiste",
+          "el": "dijo",
+          "nos": "dijimos",
+          "ellos": "dijeron"
+        },
+        "gerund": "diciendo",
+        "participle": "dicho"
+      }
+    },
+    {
+      "id": "es_ir",
+      "rank": 6,
+      "lemma": "ir",
+      "example_strategy": "go_place",
+      "seed_forms": {
+        "present": {
+          "yo": "voy",
+          "tu": "vas",
+          "el": "va",
+          "nos": "vamos",
+          "ellos": "van"
+        },
+        "preterite": {
+          "yo": "fui",
+          "tu": "fuiste",
+          "el": "fue",
+          "nos": "fuimos",
+          "ellos": "fueron"
+        },
+        "gerund": "yendo",
+        "participle": "ido"
+      }
+    },
+    {
+      "id": "es_ver",
+      "rank": 7,
+      "lemma": "ver",
+      "example_strategy": "see_object",
+      "seed_forms": {
+        "present": {
+          "yo": "veo",
+          "tu": "ves",
+          "el": "ve",
+          "nos": "vemos",
+          "ellos": "ven"
+        },
+        "preterite": {
+          "yo": "vi",
+          "tu": "viste",
+          "el": "vio",
+          "nos": "vimos",
+          "ellos": "vieron"
+        },
+        "gerund": "viendo",
+        "participle": "visto"
+      }
+    },
+    {
+      "id": "es_dar",
+      "rank": 8,
+      "lemma": "dar",
+      "example_strategy": "give_person_object",
+      "seed_forms": {
+        "present": {
+          "yo": "doy",
+          "tu": "das",
+          "el": "da",
+          "nos": "damos",
+          "ellos": "dan"
+        },
+        "preterite": {
+          "yo": "di",
+          "tu": "diste",
+          "el": "dio",
+          "nos": "dimos",
+          "ellos": "dieron"
+        },
+        "gerund": "dando",
+        "participle": "dado"
+      }
+    },
+    {
+      "id": "es_poder",
+      "rank": 9,
+      "lemma": "poder",
+      "example_strategy": "can_infinitive",
+      "seed_forms": {
+        "present": {
+          "yo": "puedo",
+          "tu": "puedes",
+          "el": "puede",
+          "nos": "podemos",
+          "ellos": "pueden"
+        },
+        "preterite": {
+          "yo": "pude",
+          "tu": "pudiste",
+          "el": "pudo",
+          "nos": "pudimos",
+          "ellos": "pudieron"
+        },
+        "gerund": "podiendo",
+        "participle": "podido"
+      }
+    },
+    {
+      "id": "es_querer",
+      "rank": 10,
+      "lemma": "querer",
+      "example_strategy": "want_object_or_infinitive",
+      "seed_forms": {
+        "present": {
+          "yo": "quiero",
+          "tu": "quieres",
+          "el": "quiere",
+          "nos": "queremos",
+          "ellos": "quieren"
+        },
+        "preterite": {
+          "yo": "quise",
+          "tu": "quisiste",
+          "el": "quiso",
+          "nos": "quisimos",
+          "ellos": "quisieron"
+        },
+        "gerund": "queriendo",
+        "participle": "querido"
+      }
+    },
+    {
+      "id": "es_saber",
+      "rank": 11,
+      "lemma": "saber",
+      "example_strategy": "know_fact_or_how",
+      "seed_forms": {
+        "present": {
+          "yo": "sé",
+          "tu": "sabes",
+          "el": "sabe",
+          "nos": "sabemos",
+          "ellos": "saben"
+        },
+        "preterite": {
+          "yo": "supe",
+          "tu": "supiste",
+          "el": "supo",
+          "nos": "supimos",
+          "ellos": "supieron"
+        },
+        "gerund": "sabiendo",
+        "participle": "sabido"
+      }
+    },
+    {
+      "id": "es_venir",
+      "rank": 12,
+      "lemma": "venir",
+      "example_strategy": "come_place",
+      "seed_forms": {
+        "present": {
+          "yo": "vengo",
+          "tu": "vienes",
+          "el": "viene",
+          "nos": "venimos",
+          "ellos": "vienen"
+        },
+        "preterite": {
+          "yo": "vine",
+          "tu": "viniste",
+          "el": "vino",
+          "nos": "vinimos",
+          "ellos": "vinieron"
+        },
+        "gerund": "viniendo",
+        "participle": "venido"
+      }
+    },
+    {
+      "id": "es_poner",
+      "rank": 13,
+      "lemma": "poner",
+      "example_strategy": "put_object_place",
+      "seed_forms": {
+        "present": {
+          "yo": "pongo",
+          "tu": "pones",
+          "el": "pone",
+          "nos": "ponemos",
+          "ellos": "ponen"
+        },
+        "preterite": {
+          "yo": "puse",
+          "tu": "pusiste",
+          "el": "puso",
+          "nos": "pusimos",
+          "ellos": "pusieron"
+        },
+        "gerund": "poniendo",
+        "participle": "puesto"
+      }
+    },
+    {
+      "id": "es_salir",
+      "rank": 14,
+      "lemma": "salir",
+      "example_strategy": "leave_or_go_out",
+      "seed_forms": {
+        "present": {
+          "yo": "salgo",
+          "tu": "sales",
+          "el": "sale",
+          "nos": "salimos",
+          "ellos": "salen"
+        },
+        "preterite": {
+          "yo": "salí",
+          "tu": "saliste",
+          "el": "salió",
+          "nos": "salimos",
+          "ellos": "salieron"
+        },
+        "gerund": "saliendo",
+        "participle": "salido"
+      }
+    },
+    {
+      "id": "es_hablar",
+      "rank": 15,
+      "lemma": "hablar",
+      "example_strategy": "talk_about_topic",
+      "seed_forms": {
+        "present": {
+          "yo": "hablo",
+          "tu": "hablas",
+          "el": "habla",
+          "nos": "hablamos",
+          "ellos": "hablan"
+        },
+        "preterite": {
+          "yo": "hablé",
+          "tu": "hablaste",
+          "el": "habló",
+          "nos": "hablamos",
+          "ellos": "hablaron"
+        },
+        "gerund": "hablando",
+        "participle": "hablado"
+      }
+    },
+    {
+      "id": "es_comer",
+      "rank": 16,
+      "lemma": "comer",
+      "example_strategy": "eat_food",
+      "seed_forms": {
+        "present": {
+          "yo": "como",
+          "tu": "comes",
+          "el": "come",
+          "nos": "comemos",
+          "ellos": "comen"
+        },
+        "preterite": {
+          "yo": "comí",
+          "tu": "comiste",
+          "el": "comió",
+          "nos": "comimos",
+          "ellos": "comieron"
+        },
+        "gerund": "comiendo",
+        "participle": "comido"
+      }
+    },
+    {
+      "id": "es_vivir",
+      "rank": 17,
+      "lemma": "vivir",
+      "example_strategy": "live_place",
+      "seed_forms": {
+        "present": {
+          "yo": "vivo",
+          "tu": "vives",
+          "el": "vive",
+          "nos": "vivimos",
+          "ellos": "viven"
+        },
+        "preterite": {
+          "yo": "viví",
+          "tu": "viviste",
+          "el": "vivió",
+          "nos": "vivimos",
+          "ellos": "vivieron"
+        },
+        "gerund": "viviendo",
+        "participle": "vivido"
+      }
+    },
+    {
+      "id": "es_trabajar",
+      "rank": 18,
+      "lemma": "trabajar",
+      "example_strategy": "work_general",
+      "seed_forms": {
+        "present": {
+          "yo": "trabajo",
+          "tu": "trabajas",
+          "el": "trabaja",
+          "nos": "trabajamos",
+          "ellos": "trabajan"
+        },
+        "preterite": {
+          "yo": "trabajé",
+          "tu": "trabajaste",
+          "el": "trabajó",
+          "nos": "trabajamos",
+          "ellos": "trabajaron"
+        },
+        "gerund": "trabajando",
+        "participle": "trabajado"
+      }
+    },
+    {
+      "id": "es_estudiar",
+      "rank": 19,
+      "lemma": "estudiar",
+      "example_strategy": "study_subject",
+      "seed_forms": {
+        "present": {
+          "yo": "estudio",
+          "tu": "estudias",
+          "el": "estudia",
+          "nos": "estudiamos",
+          "ellos": "estudian"
+        },
+        "preterite": {
+          "yo": "estudié",
+          "tu": "estudiaste",
+          "el": "estudió",
+          "nos": "estudiamos",
+          "ellos": "estudiaron"
+        },
+        "gerund": "estudiando",
+        "participle": "estudiado"
+      }
+    },
+    {
+      "id": "es_abrir",
+      "rank": 20,
+      "lemma": "abrir",
+      "example_strategy": "open_object",
+      "seed_forms": {
+        "present": {
+          "yo": "abro",
+          "tu": "abres",
+          "el": "abre",
+          "nos": "abrimos",
+          "ellos": "abren"
+        },
+        "preterite": {
+          "yo": "abrí",
+          "tu": "abriste",
+          "el": "abrió",
+          "nos": "abrimos",
+          "ellos": "abrieron"
+        },
+        "gerund": "abriendo",
+        "participle": "abierto"
+      }
+    },
+    {
+      "id": "es_tomar",
+      "rank": 21,
+      "lemma": "tomar",
+      "example_strategy": "take_object",
+      "seed_forms": {
+        "present": {
+          "yo": "tomo",
+          "tu": "tomas",
+          "el": "toma",
+          "nos": "tomamos",
+          "ellos": "toman"
+        },
+        "preterite": {
+          "yo": "tomé",
+          "tu": "tomaste",
+          "el": "tomó",
+          "nos": "tomamos",
+          "ellos": "tomaron"
+        },
+        "gerund": "tomando",
+        "participle": "tomado"
+      }
+    },
+    {
+      "id": "es_llevar",
+      "rank": 22,
+      "lemma": "llevar",
+      "example_strategy": "carry_or_wear_object",
+      "seed_forms": {
+        "present": {
+          "yo": "llevo",
+          "tu": "llevas",
+          "el": "lleva",
+          "nos": "llevamos",
+          "ellos": "llevan"
+        },
+        "preterite": {
+          "yo": "llevé",
+          "tu": "llevaste",
+          "el": "llevó",
+          "nos": "llevamos",
+          "ellos": "llevaron"
+        },
+        "gerund": "llevando",
+        "participle": "llevado"
+      }
+    },
+    {
+      "id": "es_mirar",
+      "rank": 23,
+      "lemma": "mirar",
+      "example_strategy": "look_at_object",
+      "seed_forms": {
+        "present": {
+          "yo": "miro",
+          "tu": "miras",
+          "el": "mira",
+          "nos": "miramos",
+          "ellos": "miran"
+        },
+        "preterite": {
+          "yo": "miré",
+          "tu": "miraste",
+          "el": "miró",
+          "nos": "miramos",
+          "ellos": "miraron"
+        },
+        "gerund": "mirando",
+        "participle": "mirado"
+      }
+    },
+    {
+      "id": "es_pensar",
+      "rank": 24,
+      "lemma": "pensar",
+      "example_strategy": "think_about_topic",
+      "seed_forms": {
+        "present": {
+          "yo": "pienso",
+          "tu": "piensas",
+          "el": "piensa",
+          "nos": "pensamos",
+          "ellos": "piensan"
+        },
+        "preterite": {
+          "yo": "pensé",
+          "tu": "pensaste",
+          "el": "pensó",
+          "nos": "pensamos",
+          "ellos": "pensaron"
+        },
+        "gerund": "pensando",
+        "participle": "pensado"
+      }
+    },
+    {
+      "id": "es_usar",
+      "rank": 25,
+      "lemma": "usar",
+      "example_strategy": "use_object",
+      "seed_forms": {
+        "present": {
+          "yo": "uso",
+          "tu": "usas",
+          "el": "usa",
+          "nos": "usamos",
+          "ellos": "usan"
+        },
+        "preterite": {
+          "yo": "usé",
+          "tu": "usaste",
+          "el": "usó",
+          "nos": "usamos",
+          "ellos": "usaron"
+        },
+        "gerund": "usando",
+        "participle": "usado"
+      }
+    },
+    {
+      "id": "es_encontrar",
+      "rank": 26,
+      "lemma": "encontrar",
+      "example_strategy": "find_object",
+      "seed_forms": {
+        "present": {
+          "yo": "encuentro",
+          "tu": "encuentras",
+          "el": "encuentra",
+          "nos": "encontramos",
+          "ellos": "encuentran"
+        },
+        "preterite": {
+          "yo": "encontré",
+          "tu": "encontraste",
+          "el": "encontró",
+          "nos": "encontramos",
+          "ellos": "encontraron"
+        },
+        "gerund": "encontrando",
+        "participle": "encontrado"
+      }
+    },
+    {
+      "id": "es_llegar",
+      "rank": 27,
+      "lemma": "llegar",
+      "example_strategy": "arrive_place",
+      "seed_forms": {
+        "present": {
+          "yo": "llego",
+          "tu": "llegas",
+          "el": "llega",
+          "nos": "llegamos",
+          "ellos": "llegan"
+        },
+        "preterite": {
+          "yo": "llegué",
+          "tu": "llegaste",
+          "el": "llegó",
+          "nos": "llegamos",
+          "ellos": "llegaron"
+        },
+        "gerund": "llegando",
+        "participle": "llegado"
+      }
+    },
+    {
+      "id": "es_dejar",
+      "rank": 28,
+      "lemma": "dejar",
+      "example_strategy": "leave_object_or_allow",
+      "seed_forms": {
+        "present": {
+          "yo": "dejo",
+          "tu": "dejas",
+          "el": "deja",
+          "nos": "dejamos",
+          "ellos": "dejan"
+        },
+        "preterite": {
+          "yo": "dejé",
+          "tu": "dejaste",
+          "el": "dejó",
+          "nos": "dejamos",
+          "ellos": "dejaron"
+        },
+        "gerund": "dejando",
+        "participle": "dejado"
+      }
+    },
+    {
+      "id": "es_empezar",
+      "rank": 29,
+      "lemma": "empezar",
+      "example_strategy": "start_activity",
+      "seed_forms": {
+        "present": {
+          "yo": "empiezo",
+          "tu": "empiezas",
+          "el": "empieza",
+          "nos": "empezamos",
+          "ellos": "empiezan"
+        },
+        "preterite": {
+          "yo": "empecé",
+          "tu": "empezaste",
+          "el": "empezó",
+          "nos": "empezamos",
+          "ellos": "empezaron"
+        },
+        "gerund": "empezando",
+        "participle": "empezado"
+      }
+    },
+    {
+      "id": "es_buscar",
+      "rank": 30,
+      "lemma": "buscar",
+      "example_strategy": "look_for_object",
+      "seed_forms": {
+        "present": {
+          "yo": "busco",
+          "tu": "buscas",
+          "el": "busca",
+          "nos": "buscamos",
+          "ellos": "buscan"
+        },
+        "preterite": {
+          "yo": "busqué",
+          "tu": "buscaste",
+          "el": "buscó",
+          "nos": "buscamos",
+          "ellos": "buscaron"
+        },
+        "gerund": "buscando",
+        "participle": "buscado"
+      }
+    },
+    {
+      "id": "es_leer",
+      "rank": 31,
+      "lemma": "leer",
+      "example_strategy": "read_object",
+      "seed_forms": {
+        "present": {
+          "yo": "leo",
+          "tu": "lees",
+          "el": "lee",
+          "nos": "leemos",
+          "ellos": "leen"
+        },
+        "preterite": {
+          "yo": "leí",
+          "tu": "leíste",
+          "el": "leyó",
+          "nos": "leímos",
+          "ellos": "leyeron"
+        },
+        "gerund": "leyendo",
+        "participle": "leído"
+      }
+    },
+    {
+      "id": "es_escribir",
+      "rank": 32,
+      "lemma": "escribir",
+      "example_strategy": "write_object",
+      "seed_forms": {
+        "present": {
+          "yo": "escribo",
+          "tu": "escribes",
+          "el": "escribe",
+          "nos": "escribimos",
+          "ellos": "escriben"
+        },
+        "preterite": {
+          "yo": "escribí",
+          "tu": "escribiste",
+          "el": "escribió",
+          "nos": "escribimos",
+          "ellos": "escribieron"
+        },
+        "gerund": "escribiendo",
+        "participle": "escrito"
+      }
+    },
+    {
+      "id": "es_oir",
+      "rank": 33,
+      "lemma": "oír",
+      "example_strategy": "hear_sound",
+      "seed_forms": {
+        "present": {
+          "yo": "oigo",
+          "tu": "oyes",
+          "el": "oye",
+          "nos": "oímos",
+          "ellos": "oyen"
+        },
+        "preterite": {
+          "yo": "oí",
+          "tu": "oíste",
+          "el": "oyó",
+          "nos": "oímos",
+          "ellos": "oyeron"
+        },
+        "gerund": "oyendo",
+        "participle": "oído"
+      }
+    },
+    {
+      "id": "es_comprar",
+      "rank": 34,
+      "lemma": "comprar",
+      "example_strategy": "buy_object",
+      "seed_forms": {
+        "present": {
+          "yo": "compro",
+          "tu": "compras",
+          "el": "compra",
+          "nos": "compramos",
+          "ellos": "compran"
+        },
+        "preterite": {
+          "yo": "compré",
+          "tu": "compraste",
+          "el": "compró",
+          "nos": "compramos",
+          "ellos": "compraron"
+        },
+        "gerund": "comprando",
+        "participle": "comprado"
+      }
+    },
+    {
+      "id": "es_vender",
+      "rank": 35,
+      "lemma": "vender",
+      "example_strategy": "sell_object",
+      "seed_forms": {
+        "present": {
+          "yo": "vendo",
+          "tu": "vendes",
+          "el": "vende",
+          "nos": "vendemos",
+          "ellos": "venden"
+        },
+        "preterite": {
+          "yo": "vendí",
+          "tu": "vendiste",
+          "el": "vendió",
+          "nos": "vendimos",
+          "ellos": "vendieron"
+        },
+        "gerund": "vendiendo",
+        "participle": "vendido"
+      }
+    },
+    {
+      "id": "es_cerrar",
+      "rank": 36,
+      "lemma": "cerrar",
+      "example_strategy": "close_object",
+      "seed_forms": {
+        "present": {
+          "yo": "cierro",
+          "tu": "cierras",
+          "el": "cierra",
+          "nos": "cerramos",
+          "ellos": "cierran"
+        },
+        "preterite": {
+          "yo": "cerré",
+          "tu": "cerraste",
+          "el": "cerró",
+          "nos": "cerramos",
+          "ellos": "cerraron"
+        },
+        "gerund": "cerrando",
+        "participle": "cerrado"
+      }
+    },
+    {
+      "id": "es_subir",
+      "rank": 37,
+      "lemma": "subir",
+      "example_strategy": "go_up_or_upload",
+      "seed_forms": {
+        "present": {
+          "yo": "subo",
+          "tu": "subes",
+          "el": "sube",
+          "nos": "subimos",
+          "ellos": "suben"
+        },
+        "preterite": {
+          "yo": "subí",
+          "tu": "subiste",
+          "el": "subió",
+          "nos": "subimos",
+          "ellos": "subieron"
+        },
+        "gerund": "subiendo",
+        "participle": "subido"
+      }
+    },
+    {
+      "id": "es_bajar",
+      "rank": 38,
+      "lemma": "bajar",
+      "example_strategy": "go_down_or_download",
+      "seed_forms": {
+        "present": {
+          "yo": "bajo",
+          "tu": "bajas",
+          "el": "baja",
+          "nos": "bajamos",
+          "ellos": "bajan"
+        },
+        "preterite": {
+          "yo": "bajé",
+          "tu": "bajaste",
+          "el": "bajó",
+          "nos": "bajamos",
+          "ellos": "bajaron"
+        },
+        "gerund": "bajando",
+        "participle": "bajado"
+      }
+    },
+    {
+      "id": "es_caminar",
+      "rank": 39,
+      "lemma": "caminar",
+      "example_strategy": "walk_place",
+      "seed_forms": {
+        "present": {
+          "yo": "camino",
+          "tu": "caminas",
+          "el": "camina",
+          "nos": "caminamos",
+          "ellos": "caminan"
+        },
+        "preterite": {
+          "yo": "caminé",
+          "tu": "caminaste",
+          "el": "caminó",
+          "nos": "caminamos",
+          "ellos": "caminaron"
+        },
+        "gerund": "caminando",
+        "participle": "caminado"
+      }
+    },
+    {
+      "id": "es_esperar",
+      "rank": 40,
+      "lemma": "esperar",
+      "example_strategy": "wait_for_object_or_person",
+      "seed_forms": {
+        "present": {
+          "yo": "espero",
+          "tu": "esperas",
+          "el": "espera",
+          "nos": "esperamos",
+          "ellos": "esperan"
+        },
+        "preterite": {
+          "yo": "esperé",
+          "tu": "esperaste",
+          "el": "esperó",
+          "nos": "esperamos",
+          "ellos": "esperaron"
+        },
+        "gerund": "esperando",
+        "participle": "esperado"
+      }
+    }
+  ]
+}

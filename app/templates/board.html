@@ -12,7 +12,7 @@ th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
 th { background: #f6f6f6; }
 button { padding: 6px 10px; cursor: pointer; }
 
-.play-btn {
+.btn {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -28,22 +28,31 @@ button { padding: 6px 10px; cursor: pointer; }
   padding: 0;
 }
 
-.play-en {
-  background: #1e88e5;   /* blue */
+:root {
+  --color-default: #cccccc;
+  --color-en: #4a90e2;
+  --color-ru: #d9534f;
+  --color-he: #5cb85c;
+  --color-es: #e0b84f;
 }
 
-.play-ru {
-  background: #e53935;   /* red */
+.btn {
+  background-color: var(--color-default);
+  color: #000;
 }
 
-.play-he {
-  background: #43a047;   /* green */
-}
+.btn[data-lang="en"] { background-color: var(--color-en); }
+.btn[data-lang="ru"] { background-color: var(--color-ru); }
+.btn[data-lang="he"] { background-color: var(--color-he); }
+.btn[data-lang="es"] { background-color: var(--color-es); }
 
-.play-btn:hover {
+.btn:hover {
+  filter: brightness(0.9);
   transform: scale(1.05);
   opacity: 0.9;
+
 }
+
 
 .slow-btn {
   width: 42px;

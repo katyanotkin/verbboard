@@ -15,7 +15,7 @@ def render_board_html(board: Board) -> str:
     else:
         title = str(lemma)
 
-    button_class = f"play-btn play-{board.language}"
+    button_class = "btn"
 
     sections_html = []
     for section_index, section in enumerate(board.sections, start=1):
@@ -39,7 +39,7 @@ def render_board_html(board: Board) -> str:
                 )
                 audio_html = (
                     f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
-                    f"<button class='{button_class}' title='Play' "
+                    f"<button class='{button_class}' data-lang='{board.language}' title='Play' "
                     f"onclick=\"const audio=document.getElementById('{audio_id}'); "
                     f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
                 )
@@ -79,7 +79,7 @@ def render_board_html(board: Board) -> str:
             f"<td dir='{example_direction}' style='text-align:{example_align}'>{escape(ex.dst)}</td>"
             f"<td>"
             f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
-            f"<button class='{button_class}' title='Play' "
+            f"<button class='{button_class}' data-lang='{board.language}' title='Play' "
             f"onclick=\"const audio=document.getElementById('{audio_id}'); "
             f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
             f"<button class='slow-btn' title='Slow playback' "
