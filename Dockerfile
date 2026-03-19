@@ -2,7 +2,9 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8080
+    PORT=8080 \
+    PIP_ROOT_USER_ACTION=ignore \
+    DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 

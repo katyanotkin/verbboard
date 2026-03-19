@@ -9,6 +9,13 @@ from core.registry import all_plugins
 
 router = APIRouter()
 
+LANGUAGE_HOME_LABELS = {
+    "en": "English",
+    "ru": "Russian / Русский",
+    "he": "Hebrew / עברית",
+    "es": "Spanish / Español",
+}
+
 
 @router.get("/set_language", response_model=None)
 def set_language(language: str, voice: str = "female"):
@@ -37,7 +44,9 @@ def home(
         verb_id = entries[0].id
 
     lang_options = "\n".join(
-        f"<option value='{key}' {'selected' if key == language else ''}>{plugin.display_name}</option>"
+        f"<option value='{key}' {'selected' if key == language else ''}>"
+        f"{LANGUAGE_HOME_LABELS.get(key, plugin.display_name)}"
+        f"</option>"
         for key, plugin in plugins.items()
     )
 
