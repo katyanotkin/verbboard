@@ -9,7 +9,7 @@ NO_AUDIO_ROW_KEYS = {"aspect", "pair"}
 
 
 def render_board_html(board: Board) -> str:
-    lemma = board.verb.lemma
+    lemma = board.verb.display_lemma or board.verb.lemma
     if isinstance(lemma, dict):
         title = f"{lemma.get('imperfective', '')} / {lemma.get('perfective', '')}"
     else:

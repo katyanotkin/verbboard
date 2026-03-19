@@ -22,9 +22,11 @@ def load_lexicon(path: Path) -> List[VerbEntry]:
                 examples=examples,
                 morph=item.get("morph"),
                 tags=item.get("tags"),
+                display_lemma=item.get("display_lemma"),
+                display_forms=item.get("display_forms"),
             )
         )
-    entries.sort(key=lambda v: v.rank)
+    entries.sort(key=lambda entry: entry.rank)
     return entries
 
 

@@ -19,6 +19,8 @@ class VerbEntry:
     examples: List[Example]
     morph: Optional[Dict[str, Any]] = None
     tags: Optional[List[str]] = None
+    display_lemma: Optional[str] = None
+    display_forms: Optional[Dict[str, Any]] = None
 
 
 @dataclass(frozen=True)
