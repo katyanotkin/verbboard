@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from core.paths import DATA_DIR, DATA_SRC_DIR
+from core.supported_languages import supported_languages_list
 
 from tools.lexicon_build.common import (
     fail,
@@ -17,9 +18,6 @@ from tools.lexicon_build.common import (
 from tools.lexicon_build.english import expand_english_entry
 from tools.lexicon_build.russian import expand_russian_entry
 from tools.lexicon_build.spanish import expand_spanish_entry
-
-
-SUPPORTED_LANGUAGES = {"en", "ru", "he", "es"}
 
 
 EXPANDERS: dict[
@@ -39,7 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--language",
         required=True,
-        choices=sorted(SUPPORTED_LANGUAGES),
+        choices=supported_languages_list(),
     )
     return parser.parse_args()
 

@@ -34,11 +34,24 @@ help:
 	@echo "  make gcp-release GCP_PROJECT=my-project"
 	@echo ""
 
-## LOCAL: regenerate lexicons for all languages
-lexicon: ## LOCAL: regenerate lexicons
+## LOCAL: regenerate English lexicon
+lexicon-en: ## LOCAL: regenerate English lexicon
 	$(PYTHON) -m tools.generate_lexicon --language en
+
+## LOCAL: regenerate Russian lexicon
+lexicon-ru: ## LOCAL: regenerate Russian lexicon
 	$(PYTHON) -m tools.generate_lexicon --language ru
+
+## LOCAL: regenerate Hebrew lexicon
+lexicon-he: ## LOCAL: regenerate Hebrew lexicon
 	$(PYTHON) -m tools.generate_lexicon --language he
+
+## LOCAL: regenerate Spanish lexicon
+lexicon-es: ## LOCAL: regenerate Spanish lexicon
+	$(PYTHON) -m tools.generate_lexicon --language es
+
+## LOCAL: regenerate lexicons for all languages
+lexicon: lexicon-en lexicon-ru lexicon-he lexicon-es ## LOCAL: regenerate lexicons
 
 ## LOCAL: run app without Docker
 local-run: ## LOCAL: run uvicorn with reload
@@ -116,3 +129,23 @@ gcp-deploy: gcp-check ## GCP: deploy to Cloud Run
 
 ## GCP: build + push + deploy
 gcp-release: gcp-build gcp-deploy ## GCP: release to Cloud Run
+
+## QA: audit examples for all languages
+audit-examples: ## QA: run example audit for all languages
+	$(PYTHON) -m tools.audit_examples --language all
+
+## QA: audit English examples
+audit-en: ## QA: run example audit for English
+	$(PYTHON) -m tools.audit_examples --language en
+
+## QA: audit Russian examples
+audit-ru: ## QA: run example audit for Russian
+	$(PYTHON) -m tools.audit_examples --language ru
+
+## QA: audit Hebrew examples
+audit-he: ## QA: run example audit for Hebrew
+	$(PYTHON) -m tools.audit_examples --language he
+
+## QA: audit Spanish examples
+audit-es: ## QA: run example audit for Spanish
+	$(PYTHON) -m tools.audit_examples --language es

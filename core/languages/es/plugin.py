@@ -8,8 +8,9 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     lemma = str(verb.lemma)
     forms = verb.forms or {}
 
-    present = forms.get("present", {})
-    preterite = forms.get("preterite", {})
+    present = forms.get("present", {}) or {}
+    preterite = forms.get("preterite", {}) or {}
+    imperative = forms.get("imperative", {}) or {}
 
     sections = [
         {
@@ -54,6 +55,47 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
                 },
             ],
         },
+    ]
+
+    if imperative:
+        imperative_rows = []
+        if imperative.get("tu"):
+            imperative_rows.append(
+                {"key": "imp_tu", "label": "tú", "text": imperative.get("tu", "")}
+            )
+        if imperative.get("vosotros"):
+            imperative_rows.append(
+                {
+                    "key": "imp_vosotros",
+                    "label": "vosotros",
+                    "text": imperative.get("vosotros", ""),
+                }
+            )
+        if imperative.get("usted"):
+            imperative_rows.append(
+                {
+                    "key": "imp_usted",
+                    "label": "usted",
+                    "text": imperative.get("usted", ""),
+                }
+            )
+        if imperative.get("ustedes"):
+            imperative_rows.append(
+                {
+                    "key": "imp_ustedes",
+                    "label": "ustedes",
+                    "text": imperative.get("ustedes", ""),
+                }
+            )
+        if imperative_rows:
+            sections.append(
+                {
+                    "title": "Imperativo",
+                    "rows": imperative_rows,
+                }
+            )
+
+    sections.append(
         {
             "title": "Otros",
             "rows": [
@@ -64,8 +106,8 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
                     "text": forms.get("participle", ""),
                 },
             ],
-        },
-    ]
+        }
+    )
 
     return Board(
         language="es",

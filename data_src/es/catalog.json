@@ -8,6 +8,9 @@
       "lemma": "ser",
       "example_strategy": "be_identity_or_quality",
       "seed_forms": {
+	"imperative": {
+  	  "tu": "sé"
+	},      
         "present": {
           "yo": "soy",
           "tu": "eres",
@@ -32,6 +35,9 @@
       "lemma": "estar",
       "example_strategy": "be_state_or_location",
       "seed_forms": {
+	"imperative": {
+  	  "tu": "está"
+	},
         "present": {
           "yo": "estoy",
           "tu": "estás",

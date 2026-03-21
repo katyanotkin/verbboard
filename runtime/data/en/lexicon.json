@@ -8,10 +8,15 @@
       "lemma": "be",
       "forms": {
         "base": "be",
-        "past": "was",
+        "past": [
+          "was",
+          "were"
+        ],
         "past_participle": "been",
         "present_3sg": "is",
-        "gerund": "being"
+        "gerund": "being",
+        "present_1sg": "am",
+        "present_other": "are"
       },
       "examples": [
         {
@@ -607,19 +612,19 @@
       },
       "examples": [
         {
-          "dst": "I try my work every day."
+          "dst": "I try to stay calm."
         },
         {
-          "dst": "She tries a new task at work."
+          "dst": "She tries to help everyone."
         },
         {
-          "dst": "They tried the job yesterday."
+          "dst": "They tried to call him yesterday."
         },
         {
-          "dst": "We are trying the project now."
+          "dst": "We are trying to solve the problem now."
         },
         {
-          "dst": "Try carefully."
+          "dst": "Try again."
         }
       ]
     },
@@ -636,19 +641,19 @@
       },
       "examples": [
         {
-          "dst": "I ask my work every day."
+          "dst": "I ask a lot of questions in class."
         },
         {
-          "dst": "She asks a new task at work."
+          "dst": "She asks the teacher for help."
         },
         {
-          "dst": "They asked the job yesterday."
+          "dst": "They asked about the price."
         },
         {
-          "dst": "We are asking the project now."
+          "dst": "We are asking about the schedule now."
         },
         {
-          "dst": "Ask carefully."
+          "dst": "Ask again."
         }
       ]
     },
@@ -665,19 +670,19 @@
       },
       "examples": [
         {
-          "dst": "I need my work every day."
+          "dst": "I need more time."
         },
         {
-          "dst": "She needs a new task at work."
+          "dst": "She needs a short break."
         },
         {
-          "dst": "They needed the job yesterday."
+          "dst": "They needed help yesterday."
         },
         {
-          "dst": "We are needing the project now."
+          "dst": "We are needing more support."
         },
         {
-          "dst": "Need carefully."
+          "dst": "Need is not enough."
         }
       ]
     },
@@ -694,19 +699,19 @@
       },
       "examples": [
         {
-          "dst": "I feel my work every day."
+          "dst": "I feel tired after work."
         },
         {
-          "dst": "She feels a new task at work."
+          "dst": "She feels much better today."
         },
         {
-          "dst": "They felt the job yesterday."
+          "dst": "They felt sick yesterday."
         },
         {
-          "dst": "We are feeling the project now."
+          "dst": "We are feeling more relaxed now."
         },
         {
-          "dst": "Feel carefully."
+          "dst": "Feel free."
         }
       ]
     },
@@ -726,16 +731,16 @@
           "dst": "I become tired in the evening."
         },
         {
-          "dst": "She becomes more confident every year."
+          "dst": "She becomes more confident each year."
         },
         {
           "dst": "They became friends quickly."
         },
         {
-          "dst": "He is becoming stronger."
+          "dst": "We are becoming stronger now."
         },
         {
-          "dst": "Become stronger every day."
+          "dst": "Become stronger."
         }
       ]
     },
@@ -752,19 +757,19 @@
       },
       "examples": [
         {
-          "dst": "I leave my work every day."
+          "dst": "I leave home at eight."
         },
         {
-          "dst": "She leaves a new task at work."
+          "dst": "She leaves the office late."
         },
         {
-          "dst": "They left the job yesterday."
+          "dst": "They left for London."
         },
         {
-          "dst": "We are leaving the project now."
+          "dst": "We are leaving the building now."
         },
         {
-          "dst": "Leave carefully."
+          "dst": "Leave now."
         }
       ]
     },
@@ -781,19 +786,19 @@
       },
       "examples": [
         {
-          "dst": "I put my work every day."
+          "dst": "I put my keys on the table."
         },
         {
-          "dst": "She puts a new task at work."
+          "dst": "She puts the book on the shelf."
         },
         {
-          "dst": "They put the job yesterday."
+          "dst": "They put everything away."
         },
         {
-          "dst": "We are putting the project now."
+          "dst": "We are putting the cups in the sink now."
         },
         {
-          "dst": "Put carefully."
+          "dst": "Put it here."
         }
       ]
     },
@@ -810,19 +815,19 @@
       },
       "examples": [
         {
-          "dst": "I mean my work every day."
+          "dst": "I mean what I say."
         },
         {
-          "dst": "She means a new task at work."
+          "dst": "She means well."
         },
         {
-          "dst": "They meant the job yesterday."
+          "dst": "They meant something else."
         },
         {
-          "dst": "We are meaning the project now."
+          "dst": "We are meaning this as a joke."
         },
         {
-          "dst": "Mean carefully."
+          "dst": "Mean it."
         }
       ]
     },
@@ -839,19 +844,19 @@
       },
       "examples": [
         {
-          "dst": "I keep my work every day."
+          "dst": "I keep a journal."
         },
         {
-          "dst": "She keeps a new task at work."
+          "dst": "She keeps her promises."
         },
         {
-          "dst": "They kept the job yesterday."
+          "dst": "They kept the door closed yesterday."
         },
         {
-          "dst": "We are keeping the project now."
+          "dst": "We are keeping a record."
         },
         {
-          "dst": "Keep carefully."
+          "dst": "Keep going."
         }
       ]
     },
@@ -868,19 +873,19 @@
       },
       "examples": [
         {
-          "dst": "I let my work every day."
+          "dst": "I let my son choose his clothes."
         },
         {
-          "dst": "She lets a new task at work."
+          "dst": "She lets her team decide."
         },
         {
-          "dst": "They let the job yesterday."
+          "dst": "They let us leave early yesterday."
         },
         {
-          "dst": "We are letting the project now."
+          "dst": "We are letting me explain now."
         },
         {
-          "dst": "Let carefully."
+          "dst": "Let me speak."
         }
       ]
     },
@@ -897,19 +902,19 @@
       },
       "examples": [
         {
-          "dst": "I begin my work every day."
+          "dst": "I begin work at eight."
         },
         {
-          "dst": "She begins a new task at work."
+          "dst": "She begins with a short note."
         },
         {
-          "dst": "They began the job yesterday."
+          "dst": "They began the lesson."
         },
         {
-          "dst": "We are begining the project now."
+          "dst": "We are begining the meeting now."
         },
         {
-          "dst": "Begin carefully."
+          "dst": "Begin here."
         }
       ]
     },
@@ -926,19 +931,19 @@
       },
       "examples": [
         {
-          "dst": "I seem my work every day."
+          "dst": "I seem calm today."
         },
         {
-          "dst": "She seems a new task at work."
+          "dst": "She seems happy this morning."
         },
         {
-          "dst": "They seemed the job yesterday."
+          "dst": "They seemed different yesterday."
         },
         {
-          "dst": "We are seeming the project now."
+          "dst": "We are seeming more confident now."
         },
         {
-          "dst": "Seem carefully."
+          "dst": "Seem calm."
         }
       ]
     },
@@ -955,19 +960,19 @@
       },
       "examples": [
         {
-          "dst": "I help my work every day."
+          "dst": "I help my brother with homework."
         },
         {
-          "dst": "She helps a new task at work."
+          "dst": "She helps her neighbor often."
         },
         {
-          "dst": "They helped the job yesterday."
+          "dst": "They helped us yesterday."
         },
         {
-          "dst": "We are helping the project now."
+          "dst": "We are helping the children now."
         },
         {
-          "dst": "Help carefully."
+          "dst": "Help me."
         }
       ]
     },
@@ -984,19 +989,19 @@
       },
       "examples": [
         {
-          "dst": "I talk my work every day."
+          "dst": "I talk about work a lot."
         },
         {
-          "dst": "She talks a new task at work."
+          "dst": "She talks to her sister every day."
         },
         {
-          "dst": "They talked the job yesterday."
+          "dst": "They talked about the problem yesterday."
         },
         {
-          "dst": "We are talking the project now."
+          "dst": "We are talking with the team now."
         },
         {
-          "dst": "Talk carefully."
+          "dst": "Talk to me."
         }
       ]
     },
@@ -1013,19 +1018,19 @@
       },
       "examples": [
         {
-          "dst": "I turn my work every day."
+          "dst": "I turn left at the corner."
         },
         {
-          "dst": "She turns a new task at work."
+          "dst": "She turns the page slowly."
         },
         {
-          "dst": "They turned the job yesterday."
+          "dst": "They turned back too late."
         },
         {
-          "dst": "We are turning the project now."
+          "dst": "We are turning toward the door now."
         },
         {
-          "dst": "Turn carefully."
+          "dst": "Turn right."
         }
       ]
     },
@@ -1042,19 +1047,19 @@
       },
       "examples": [
         {
-          "dst": "I start my work every day."
+          "dst": "I start early every day."
         },
         {
-          "dst": "She starts a new task at work."
+          "dst": "She starts with coffee."
         },
         {
-          "dst": "They started the job yesterday."
+          "dst": "They started the engine."
         },
         {
-          "dst": "We are starting the project now."
+          "dst": "We are starting the lesson now."
         },
         {
-          "dst": "Start carefully."
+          "dst": "Start now."
         }
       ]
     },
@@ -1071,19 +1076,19 @@
       },
       "examples": [
         {
-          "dst": "I show my work every day."
+          "dst": "I show my notes to the class."
         },
         {
-          "dst": "She shows a new task at work."
+          "dst": "She shows the photo to her friend."
         },
         {
-          "dst": "They showed the job yesterday."
+          "dst": "They showed us the way."
         },
         {
-          "dst": "We are showing the project now."
+          "dst": "We are showing the visitors around now."
         },
         {
-          "dst": "Show carefully."
+          "dst": "Show me."
         }
       ]
     },
@@ -1100,19 +1105,19 @@
       },
       "examples": [
         {
-          "dst": "I hear my work every day."
+          "dst": "I hear music every evening."
         },
         {
-          "dst": "She hears a new task at work."
+          "dst": "She hears a strange noise."
         },
         {
-          "dst": "They heard the job yesterday."
+          "dst": "They heard the news."
         },
         {
-          "dst": "We are hearing the project now."
+          "dst": "We are hearing someone outside now."
         },
         {
-          "dst": "Hear carefully."
+          "dst": "Hear me out."
         }
       ]
     },
@@ -1129,19 +1134,19 @@
       },
       "examples": [
         {
-          "dst": "I play my work every day."
+          "dst": "I play tennis on weekends."
         },
         {
-          "dst": "She plays a new task at work."
+          "dst": "She plays the piano beautifully."
         },
         {
-          "dst": "They played the job yesterday."
+          "dst": "They played a long match."
         },
         {
-          "dst": "We are playing the project now."
+          "dst": "We are playing music now."
         },
         {
-          "dst": "Play carefully."
+          "dst": "Play on."
         }
       ]
     },
@@ -1158,19 +1163,19 @@
       },
       "examples": [
         {
-          "dst": "I run my work every day."
+          "dst": "I run in the park every morning."
         },
         {
-          "dst": "She runs a new task at work."
+          "dst": "She runs to catch the bus."
         },
         {
-          "dst": "They ran the job yesterday."
+          "dst": "They ran five miles yesterday."
         },
         {
-          "dst": "We are running the project now."
+          "dst": "We are running toward the station."
         },
         {
-          "dst": "Run carefully."
+          "dst": "Run faster."
         }
       ]
     },
@@ -1187,16 +1192,16 @@
       },
       "examples": [
         {
-          "dst": "I move my work every day."
+          "dst": "I move to a new apartment."
         },
         {
-          "dst": "She moves a new task at work."
+          "dst": "She moves the chair closer."
         },
         {
-          "dst": "They moved the job yesterday."
+          "dst": "They moved to Boston."
         },
         {
-          "dst": "We are moving the project now."
+          "dst": "We are moving the boxes now."
         },
         {
           "dst": "Move carefully."
@@ -1216,19 +1221,19 @@
       },
       "examples": [
         {
-          "dst": "I live my work every day."
+          "dst": "I live in Boston now."
         },
         {
-          "dst": "She lives a new task at work."
+          "dst": "She lives near the river."
         },
         {
-          "dst": "They lived the job yesterday."
+          "dst": "They lived there for years."
         },
         {
-          "dst": "We are living the project now."
+          "dst": "We are living with her parents now."
         },
         {
-          "dst": "Live carefully."
+          "dst": "Live well."
         }
       ]
     },
@@ -1245,19 +1250,19 @@
       },
       "examples": [
         {
-          "dst": "I believe my work every day."
+          "dst": "I believe your story."
         },
         {
-          "dst": "She believes a new task at work."
+          "dst": "She believes that the plan will work."
         },
         {
-          "dst": "They believed the job yesterday."
+          "dst": "They believed the rumor."
         },
         {
-          "dst": "We are believing the project now."
+          "dst": "We are believing in this idea."
         },
         {
-          "dst": "Believe carefully."
+          "dst": "Believe me."
         }
       ]
     },
@@ -1274,19 +1279,19 @@
       },
       "examples": [
         {
-          "dst": "I bring my work every day."
+          "dst": "I bring lunch to work."
         },
         {
-          "dst": "She brings a new task at work."
+          "dst": "She brings fresh flowers."
         },
         {
-          "dst": "They brought the job yesterday."
+          "dst": "They brought the documents yesterday."
         },
         {
-          "dst": "We are bringing the project now."
+          "dst": "We are bringing coffee for everyone."
         },
         {
-          "dst": "Bring carefully."
+          "dst": "Bring your ID."
         }
       ]
     },
@@ -1303,19 +1308,19 @@
       },
       "examples": [
         {
-          "dst": "I happen my work every day."
+          "dst": "It can happen all the time here."
         },
         {
-          "dst": "She happens a new task at work."
+          "dst": "It happens rarely by accident."
         },
         {
-          "dst": "They happened the job yesterday."
+          "dst": "It happened yesterday afternoon."
         },
         {
-          "dst": "We are happening the project now."
+          "dst": "It is happening very fast now."
         },
         {
-          "dst": "Happen carefully."
+          "dst": "Let it happen."
         }
       ]
     },
@@ -1332,19 +1337,19 @@
       },
       "examples": [
         {
-          "dst": "I write my work every day."
+          "dst": "I write in a notebook."
         },
         {
-          "dst": "She writes a new task at work."
+          "dst": "She writes emails every day."
         },
         {
-          "dst": "They wrote the job yesterday."
+          "dst": "They wrote the report yesterday."
         },
         {
-          "dst": "We are writing the project now."
+          "dst": "We are writing a new chapter."
         },
         {
-          "dst": "Write carefully."
+          "dst": "Write it down."
         }
       ]
     },
@@ -1361,19 +1366,19 @@
       },
       "examples": [
         {
-          "dst": "I provide my work every day."
+          "dst": "I provide my team with updates."
         },
         {
-          "dst": "She provides a new task at work."
+          "dst": "She provides clear instructions."
         },
         {
-          "dst": "They provided the job yesterday."
+          "dst": "They provided us support."
         },
         {
-          "dst": "We are providing the project now."
+          "dst": "We are providing the group with water now."
         },
         {
-          "dst": "Provide carefully."
+          "dst": "Provide details."
         }
       ]
     },
@@ -1390,19 +1395,19 @@
       },
       "examples": [
         {
-          "dst": "I sit my work every day."
+          "dst": "I sit by the window."
         },
         {
-          "dst": "She sits a new task at work."
+          "dst": "She sits near the door."
         },
         {
-          "dst": "They sat the job yesterday."
+          "dst": "They sat there yesterday."
         },
         {
-          "dst": "We are sitting the project now."
+          "dst": "We are sitting at the front now."
         },
         {
-          "dst": "Sit carefully."
+          "dst": "Sit down."
         }
       ]
     },
@@ -1419,19 +1424,19 @@
       },
       "examples": [
         {
-          "dst": "I stand my work every day."
+          "dst": "I stand near the wall."
         },
         {
-          "dst": "She stands a new task at work."
+          "dst": "She stands by the window."
         },
         {
-          "dst": "They stood the job yesterday."
+          "dst": "They stood outside for an hour."
         },
         {
-          "dst": "We are standing the project now."
+          "dst": "We are standing in the hall now."
         },
         {
-          "dst": "Stand carefully."
+          "dst": "Stand here."
         }
       ]
     },
@@ -1448,19 +1453,19 @@
       },
       "examples": [
         {
-          "dst": "I lose my work every day."
+          "dst": "I lose my keys often."
         },
         {
-          "dst": "She loses a new task at work."
+          "dst": "She loses her temper sometimes."
         },
         {
-          "dst": "They lost the job yesterday."
+          "dst": "They lost the receipt yesterday."
         },
         {
-          "dst": "We are losing the project now."
+          "dst": "We are losing patience."
         },
         {
-          "dst": "Lose carefully."
+          "dst": "Lose the fear."
         }
       ]
     },
@@ -1477,19 +1482,19 @@
       },
       "examples": [
         {
-          "dst": "I pay my work every day."
+          "dst": "I pay my bills online."
         },
         {
-          "dst": "She pays a new task at work."
+          "dst": "She pays for coffee by card."
         },
         {
-          "dst": "They paid the job yesterday."
+          "dst": "They paid the rent."
         },
         {
-          "dst": "We are paying the project now."
+          "dst": "We are paying for lunch now."
         },
         {
-          "dst": "Pay carefully."
+          "dst": "Pay attention."
         }
       ]
     },
@@ -1512,13 +1517,13 @@
           "dst": "She meets the client today."
         },
         {
-          "dst": "They met at the station."
+          "dst": "They met us at the station."
         },
         {
           "dst": "We are meeting with the team now."
         },
         {
-          "dst": "Meet me at the entrance."
+          "dst": "Meet me there."
         }
       ]
     },
@@ -1535,19 +1540,19 @@
       },
       "examples": [
         {
-          "dst": "I include my work every day."
+          "dst": "I include fresh fruit."
         },
         {
-          "dst": "She includes a new task at work."
+          "dst": "She includes a map."
         },
         {
-          "dst": "They included the job yesterday."
+          "dst": "They included the appendix yesterday."
         },
         {
-          "dst": "We are including the project now."
+          "dst": "We are including everyone."
         },
         {
-          "dst": "Include carefully."
+          "dst": "Include the details."
         }
       ]
     },
@@ -1564,19 +1569,19 @@
       },
       "examples": [
         {
-          "dst": "I continue my work every day."
+          "dst": "I continue after lunch."
         },
         {
-          "dst": "She continues a new task at work."
+          "dst": "She continues with the next page."
         },
         {
-          "dst": "They continued the job yesterday."
+          "dst": "They continued the course."
         },
         {
-          "dst": "We are continuing the project now."
+          "dst": "We are continuing the discussion now."
         },
         {
-          "dst": "Continue carefully."
+          "dst": "Continue."
         }
       ]
     },
@@ -1593,19 +1598,19 @@
       },
       "examples": [
         {
-          "dst": "I set my work every day."
+          "dst": "I set my phone on silent."
         },
         {
-          "dst": "She sets a new task at work."
+          "dst": "She sets the table for dinner."
         },
         {
-          "dst": "They set the job yesterday."
+          "dst": "They set the alarm."
         },
         {
-          "dst": "We are setting the project now."
+          "dst": "We are setting the chairs in place now."
         },
         {
-          "dst": "Set carefully."
+          "dst": "Set it aside."
         }
       ]
     },
@@ -1622,19 +1627,19 @@
       },
       "examples": [
         {
-          "dst": "I learn my work every day."
+          "dst": "I learn new words every day."
         },
         {
-          "dst": "She learns a new task at work."
+          "dst": "She learns fast in class."
         },
         {
-          "dst": "They learned the job yesterday."
+          "dst": "They learned a lot yesterday."
         },
         {
-          "dst": "We are learning the project now."
+          "dst": "We are learning more about the topic now."
         },
         {
-          "dst": "Learn carefully."
+          "dst": "Learn from this."
         }
       ]
     },
@@ -1651,19 +1656,19 @@
       },
       "examples": [
         {
-          "dst": "I change my work every day."
+          "dst": "I change my schedule often."
         },
         {
-          "dst": "She changes a new task at work."
+          "dst": "She changes her mind quickly."
         },
         {
-          "dst": "They changed the job yesterday."
+          "dst": "They changed the plan yesterday."
         },
         {
-          "dst": "We are changing the project now."
+          "dst": "We are changing the settings."
         },
         {
-          "dst": "Change carefully."
+          "dst": "Change the plan."
         }
       ]
     },
@@ -1680,19 +1685,19 @@
       },
       "examples": [
         {
-          "dst": "I lead my work every day."
+          "dst": "I lead a small team at work."
         },
         {
-          "dst": "She leads a new task at work."
+          "dst": "She leads the group confidently."
         },
         {
-          "dst": "They led the job yesterday."
+          "dst": "They led the meeting."
         },
         {
-          "dst": "We are leading the project now."
+          "dst": "We are leading the discussion now."
         },
         {
-          "dst": "Lead carefully."
+          "dst": "Lead the way."
         }
       ]
     },
@@ -1709,19 +1714,19 @@
       },
       "examples": [
         {
-          "dst": "I understand my work every day."
+          "dst": "I understand this question."
         },
         {
-          "dst": "She understands a new task at work."
+          "dst": "She understands the instructions."
         },
         {
-          "dst": "They understood the job yesterday."
+          "dst": "They understood the reason."
         },
         {
-          "dst": "We are understanding the project now."
+          "dst": "We are understanding what you mean now."
         },
         {
-          "dst": "Understand carefully."
+          "dst": "Understand this."
         }
       ]
     },
@@ -1738,19 +1743,19 @@
       },
       "examples": [
         {
-          "dst": "I watch my work every day."
+          "dst": "I watch the news every night."
         },
         {
-          "dst": "She watches a new task at work."
+          "dst": "She watches a short video."
         },
         {
-          "dst": "They watched the job yesterday."
+          "dst": "They watched the game yesterday."
         },
         {
-          "dst": "We are watching the project now."
+          "dst": "We are watching the screen."
         },
         {
-          "dst": "Watch carefully."
+          "dst": "Watch this."
         }
       ]
     }

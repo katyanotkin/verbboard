@@ -11,21 +11,28 @@ def build_es_examples(
     preterite: dict[str, str],
     gerund: str,
     strategy: str,
+    imperative: dict[str, str],
 ) -> list[dict[str, str]]:
     if strategy == "be_identity_or_quality":
+        imperative_tu = imperative.get("tu", "")
         return [
             {"dst": f"Yo {present.get('yo', '')} estudiante."},
             {"dst": f"Ella {present.get('el', '')} muy amable."},
             {"dst": f"Nosotros {preterite.get('nos', '')} amigos por años."},
-            {"dst": "Sé amable con todos."},
+            {"dst": f"{imperative_tu.capitalize()} amable con todos."}
+            if imperative_tu
+            else {"dst": "Sé amable con todos."},
         ]
 
     if strategy == "be_state_or_location":
+        imperative_tu = imperative.get("tu", "")
         return [
             {"dst": f"Yo {present.get('yo', '')} en casa."},
             {"dst": f"Él {present.get('el', '')} cansado hoy."},
             {"dst": f"Ayer {preterite.get('el', '')} aquí."},
-            {"dst": "Está tranquilo ahora."},
+            {"dst": f"{imperative_tu.capitalize()} tranquilo ahora."}
+            if imperative_tu
+            else {"dst": "Está tranquilo ahora."},
         ]
 
     return [
@@ -75,6 +82,7 @@ def expand_spanish_entry(
     preterite_object = seed_forms_object["preterite"]
     gerund = seed_forms_object["gerund"]
     participle = seed_forms_object["participle"]
+    imperative_object = seed_forms_object.get("imperative", {})
 
     if not isinstance(present_object, dict):
         fail(f"{context}: seed_forms.present must be an object")
@@ -84,6 +92,8 @@ def expand_spanish_entry(
         fail(f"{context}: seed_forms.gerund must be a non-empty string")
     if not isinstance(participle, str) or not participle.strip():
         fail(f"{context}: seed_forms.participle must be a non-empty string")
+    if imperative_object is not None and not isinstance(imperative_object, dict):
+        fail(f"{context}: seed_forms.imperative must be an object if present")
 
     present: dict[str, str] = {}
     for key in ["yo", "tu", "el", "nos", "ellos"]:
@@ -98,6 +108,17 @@ def expand_spanish_entry(
         if not isinstance(value, str) or not value.strip():
             fail(f"{context}: missing or empty seed_forms.preterite.{key}")
         preterite[key] = value
+
+    imperative: dict[str, str] = {}
+    if isinstance(imperative_object, dict):
+        for key, value in imperative_object.items():
+            if not isinstance(key, str) or not key.strip():
+                fail(f"{context}: imperative keys must be non-empty strings")
+            if not isinstance(value, str) or not value.strip():
+                fail(
+                    f"{context}: imperative value for '{key}' must be a non-empty string"
+                )
+            imperative[key] = value
 
     runtime_examples: list[dict[str, str]]
     if examples_object:
@@ -118,17 +139,23 @@ def expand_spanish_entry(
             preterite=preterite,
             gerund=gerund,
             strategy=strategy,
+            imperative=imperative,
         )
+
+    forms: dict[str, Any] = {
+        "present": present,
+        "preterite": preterite,
+        "gerund": gerund,
+        "participle": participle,
+    }
+
+    if imperative:
+        forms["imperative"] = imperative
 
     return {
         "id": seed_id,
         "rank": rank,
         "lemma": lemma,
-        "forms": {
-            "present": present,
-            "preterite": preterite,
-            "gerund": gerund,
-            "participle": participle,
-        },
+        "forms": forms,
         "examples": runtime_examples,
     }

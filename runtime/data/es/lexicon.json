@@ -22,7 +22,10 @@
           "ellos": "fueron"
         },
         "gerund": "siendo",
-        "participle": "sido"
+        "participle": "sido",
+        "imperative": {
+          "tu": "sé"
+        }
       },
       "examples": [
         {
@@ -59,7 +62,10 @@
           "ellos": "estuvieron"
         },
         "gerund": "estando",
-        "participle": "estado"
+        "participle": "estado",
+        "imperative": {
+          "tu": "está"
+        }
       },
       "examples": [
         {
