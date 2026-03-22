@@ -10,6 +10,7 @@ from typing import Any
 
 from core.paths import DATA_DIR, DATA_SRC_DIR
 from core.supported_languages import (
+    supported_languages_list,
     supported_languages_with_all,
 )
 
@@ -529,7 +530,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    languages = ["en", "ru", "he"] if args.language == "all" else [args.language]
+    languages = (
+        supported_languages_list() if args.language == "all" else [args.language]
+    )
 
     all_issues: list[Issue] = []
     for language in languages:

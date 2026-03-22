@@ -6,18 +6,24 @@ CONTAINER_PORT=8080
 
 GCP_REGION=us-east1
 GCP_SERVICE=verbboard
+GCP_STAGE_SERVICE=verbboard-stage
 GCP_REPOSITORY=verbboard
 GCP_PROJECT?=knotmem26
 
-IMAGE_TAG=latest
+IMAGE_TAG=$(shell git rev-parse --short HEAD)
 GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 .DEFAULT_GOAL := help
 
 .PHONY: help lexicon \
 	local-run local-refresh local-dev \
-	docker-build docker-run docker-stop docker-rm docker-dev \
-	gcp-check gcp-auth gcp-build gcp-push gcp-deploy gcp-release
+	docker-build docker-run docker-stop docker-rm docker-dev docker-url \
+	gcp-check gcp-login gcp-auth gcp-build gcp-push \
+	gcp-image gcp-open gcp-open-stage gcp-open-prod \
+	gcp-deploy-stage gcp-deploy-prod \
+	gcp-release-stage gcp-release-prod \
+	gcp-map-stage gcp-map-prod gcp-domain-status \
+	audit-examples audit-en audit-ru audit-he audit-es
 
 ## Show available commands
 help:
@@ -31,7 +37,8 @@ help:
 	@echo "  make local-dev"
 	@echo "  make docker-dev"
 	@echo "  make docker-run HOST_PORT=8001"
-	@echo "  make gcp-release GCP_PROJECT=my-project"
+	@echo "  make gcp-release-stage"
+	@echo "  make gcp-deploy-prod IMAGE_TAG=<tested_tag>"
 	@echo ""
 
 ## LOCAL: regenerate English lexicon
@@ -50,8 +57,8 @@ lexicon-he: ## LOCAL: regenerate Hebrew lexicon
 lexicon-es: ## LOCAL: regenerate Spanish lexicon
 	$(PYTHON) -m tools.generate_lexicon --language es
 
-## LOCAL: regenerate lexicons for all languages
-lexicon: lexicon-en lexicon-ru lexicon-he lexicon-es ## LOCAL: regenerate lexicons
+lexicon: ## LOCAL: regenerate lexicons for all languages
+	$(PYTHON) -m tools.generate_lexicon --language all
 
 ## LOCAL: run app without Docker
 local-run: ## LOCAL: run uvicorn with reload
@@ -90,21 +97,14 @@ docker-url: ## LOCAL DOCKER: show browser URL
 gcp-image: ## GCP: show image reference
 	@echo $(GCP_IMAGE)
 
-## GCP: show deployed service URL
-gcp-open: gcp-check ## GCP: print Cloud Run service URL
-	gcloud run services describe $(GCP_SERVICE) \
-		--region $(GCP_REGION) \
-		--format='value(status.url)'
-
-## GCP: login to gcloud
-gcp-login: ## GCP: login with gcloud
-	gcloud auth login
-	gcloud config set project $(GCP_PROJECT)
-
-
 ## GCP: ensure GCP_PROJECT is set
 gcp-check: ## GCP: validate required variables
-	@test -n "$(GCP_PROJECT)" || (echo "ERROR: set GCP_PROJECT, e.g. make gcp-release GCP_PROJECT=my-project" && exit 1)
+	@test -n "$(GCP_PROJECT)" || (echo "ERROR: set GCP_PROJECT, e.g. make gcp-release-stage GCP_PROJECT=my-project" && exit 1)
+
+## GCP: login to gcloud
+gcp-login: gcp-check ## GCP: login with gcloud
+	gcloud auth login
+	gcloud config set project $(GCP_PROJECT)
 
 ## GCP: configure Docker auth for Artifact Registry
 gcp-auth: gcp-check ## GCP: configure docker auth
@@ -112,23 +112,67 @@ gcp-auth: gcp-check ## GCP: configure docker auth
 
 ## GCP: build container using Cloud Build
 gcp-build: lexicon gcp-check ## GCP: build image in Cloud Build
-	gcloud builds submit \
-		--tag $(GCP_IMAGE)
+	gcloud builds submit --tag $(GCP_IMAGE)
 
 ## GCP: push image to Artifact Registry
-gcp-push: gcp-check ## GCP: push image
+gcp-push: gcp-check ## GCP: push local image
 	docker push $(GCP_IMAGE)
 
-## GCP: deploy image to Cloud Run
-gcp-deploy: gcp-check ## GCP: deploy to Cloud Run
+## GCP: show deployed prod service URL
+gcp-open-prod: gcp-check ## GCP: print prod Cloud Run service URL
+	gcloud run services describe $(GCP_SERVICE) \
+		--region $(GCP_REGION) \
+		--format='value(status.url)'
+
+## GCP: show deployed stage service URL
+gcp-open-stage: gcp-check ## GCP: print stage Cloud Run service URL
+	gcloud run services describe $(GCP_STAGE_SERVICE) \
+		--region $(GCP_REGION) \
+		--format='value(status.url)'
+
+## GCP: backward-compatible alias for prod URL
+gcp-open: gcp-open-prod ## GCP: print Cloud Run service URL
+
+## GCP: deploy image to stage Cloud Run service
+gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
+	gcloud run deploy $(GCP_STAGE_SERVICE) \
+		--image $(GCP_IMAGE) \
+		--region $(GCP_REGION) \
+		--platform managed \
+		--allow-unauthenticated
+
+## GCP: deploy image to prod Cloud Run service
+gcp-deploy-prod: gcp-check ## GCP: deploy current image tag to prod
 	gcloud run deploy $(GCP_SERVICE) \
 		--image $(GCP_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
 		--allow-unauthenticated
 
-## GCP: build + push + deploy
-gcp-release: gcp-build gcp-deploy ## GCP: release to Cloud Run
+## GCP: build + deploy to stage
+gcp-release-stage: gcp-build gcp-deploy-stage ## GCP: build and release to stage
+
+## GCP: build + deploy to prod
+gcp-release-prod: gcp-build gcp-deploy-prod ## GCP: build and release to prod
+
+## GCP: map stage domain to stage service
+gcp-map-stage: gcp-check ## GCP: create domain mapping for stage.verbboard.com
+	gcloud beta run domain-mappings create \
+		--service $(GCP_STAGE_SERVICE) \
+		--domain stage.verbboard.com \
+		--region $(GCP_REGION)
+
+## GCP: map prod domain to prod service
+gcp-map-prod: gcp-check ## GCP: create domain mapping for verbboard.com
+	gcloud beta run domain-mappings create \
+		--service $(GCP_SERVICE) \
+		--domain verbboard.com \
+		--region $(GCP_REGION)
+
+## GCP: list domain mappings
+gcp-domain-status: gcp-check ## GCP: list domain mappings
+	gcloud beta run domain-mappings list \
+		--region $(GCP_REGION)
 
 ## QA: audit examples for all languages
 audit-examples: ## QA: run example audit for all languages

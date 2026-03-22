@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from core.paths import DATA_DIR, DATA_SRC_DIR
-from core.supported_languages import supported_languages_list
+from core.supported_languages import supported_languages_with_all
 
 from tools.lexicon_build.common import (
     fail,
@@ -37,7 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--language",
         required=True,
-        choices=supported_languages_list(),
+        choices=supported_languages_with_all(),
     )
     return parser.parse_args()
 
@@ -90,20 +90,15 @@ def build_runtime_payload(
     }
 
 
-def main() -> None:
-    args = parse_args()
-    language = args.language
-
+def generate_for_language(language: str) -> None:
     source_path = DATA_SRC_DIR / language / "catalog.json"
     output_path = DATA_DIR / language / "lexicon.json"
 
     source_payload = load_json(source_path)
 
-    built_in_examples: dict[str, list[str]] = {}
-    if language in {"en", "ru"}:
-        built_in_examples = load_optional_json_map(
-            DATA_DIR / language / "built_in_examples.json"
-        )
+    built_in_examples = load_optional_json_map(
+        DATA_DIR / language / "built_in_examples.json"
+    )
 
     runtime_payload = build_runtime_payload(
         language=language,
@@ -118,6 +113,23 @@ def main() -> None:
         f"OK: generated {output_path} with "
         f"{len(runtime_payload['verbs'])} {language} verbs"
     )
+
+
+def main() -> None:
+    args = parse_args()
+    requested_language = args.language
+
+    if requested_language == "all":
+        languages = sorted(
+            path.name
+            for path in DATA_SRC_DIR.iterdir()
+            if path.is_dir() and (path / "catalog.json").exists()
+        )
+    else:
+        languages = [requested_language]
+
+    for language in languages:
+        generate_for_language(language)
 
 
 if __name__ == "__main__":

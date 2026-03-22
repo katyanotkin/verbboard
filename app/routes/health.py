@@ -1,33 +1,38 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
-from core.paths import DATA_DIR
+from core.lexicon import lexicon_store
 
 router = APIRouter()
 
 
 @router.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health(request: Request) -> dict[str, object]:
+    settings = request.app.state.settings
+
+    return {
+        "status": "ok",
+        "app_env": settings.app_env,
+        "audio_backend": settings.audio_backend,
+        "port": settings.port,
+        "loaded_languages": lexicon_store.loaded_languages(),
+    }
 
 
 @router.get("/health/data")
 def health_data() -> dict[str, object]:
-    languages = sorted(
-        path.name
-        for path in DATA_DIR.iterdir()
-        if path.is_dir() and (path / "lexicon.json").exists()
-    )
     return {
         "status": "ok",
-        "languages": languages,
+        "languages": lexicon_store.loaded_languages(),
     }
 
 
 @router.get("/health/audio")
-def health_audio() -> dict[str, object]:
+def health_audio(request: Request) -> dict[str, object]:
+    settings = request.app.state.settings
+
     return {
         "status": "ok",
-        "audio_enabled": True,
+        "audio_backend": settings.audio_backend,
     }

@@ -24,6 +24,9 @@ COPY runtime ./runtime
 COPY tools ./tools
 COPY README.md ./
 
+RUN python -m tools.generate_lexicon --language all
+RUN python -m tools.audit_examples --language all
+
 EXPOSE 8080
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
