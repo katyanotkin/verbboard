@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from html import escape
+
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from core.admin_logging import log_missing_verb_search
 from core.lexicon import load_lexicon
 from core.paths import DATA_DIR
 from core.registry import all_plugins
@@ -22,6 +25,46 @@ def _load_entries(language: str):
     return load_lexicon(lex_path) if lex_path.exists() else []
 
 
+def _normalize_text(value: str) -> str:
+    return value.strip().casefold()
+
+
+def _entry_search_candidates(entry) -> list[str]:
+    candidates: list[str] = [entry.id]
+
+    lemma = entry.lemma
+    if isinstance(lemma, dict):
+        candidates.extend(str(value) for value in lemma.values() if value)
+    elif lemma:
+        candidates.append(str(lemma))
+
+    display_lemma = getattr(entry, "display_lemma", None)
+    if isinstance(display_lemma, dict):
+        candidates.extend(str(value) for value in display_lemma.values() if value)
+    elif display_lemma:
+        candidates.append(str(display_lemma))
+
+    return candidates
+
+
+def _find_verb_id(entries, query: str) -> str | None:
+    normalized_query = _normalize_text(query)
+    if not normalized_query:
+        return None
+
+    for entry in entries:
+        for candidate in _entry_search_candidates(entry):
+            if _normalize_text(candidate) == normalized_query:
+                return entry.id
+
+    for entry in entries:
+        for candidate in _entry_search_candidates(entry):
+            if normalized_query in _normalize_text(candidate):
+                return entry.id
+
+    return None
+
+
 @router.get("/set_language", response_model=None)
 def set_language(language: str, voice: str = "female"):
     entries = _load_entries(language)
@@ -37,12 +80,42 @@ def set_language(language: str, voice: str = "female"):
     return response
 
 
+@router.get("/search_verb", response_model=None)
+def search_verb(
+    language: str,
+    voice: str = "female",
+    q: str = "",
+):
+    entries = _load_entries(language)
+    matched_verb_id = _find_verb_id(entries, q)
+
+    if matched_verb_id:
+        response = RedirectResponse(
+            url=f"/learn?language={language}&verb_id={matched_verb_id}&voice={voice}"
+        )
+        response.set_cookie("language", language, httponly=False, samesite="lax")
+        response.set_cookie("voice", voice, httponly=False, samesite="lax")
+        response.set_cookie("verb_id", matched_verb_id, httponly=False, samesite="lax")
+        return response
+
+    log_missing_verb_search(language=language, query=q)
+
+    response = RedirectResponse(
+        url=f"/?language={language}&voice={voice}&search={q}&not_available=1"
+    )
+    response.set_cookie("language", language, httponly=False, samesite="lax")
+    response.set_cookie("voice", voice, httponly=False, samesite="lax")
+    return response
+
+
 @router.get("/", response_class=HTMLResponse)
 def home(
     request: Request,
     language: str | None = Query(None),
     voice: str | None = Query(None),
     verb_id: str | None = Query(None),
+    search: str | None = Query(None),
+    not_available: int | None = Query(None),
 ) -> HTMLResponse:
     plugins = all_plugins()
 
@@ -68,6 +141,8 @@ def home(
     else:
         selected_verb_id = ""
 
+    search_value = search or ""
+
     lang_options = "\n".join(
         f"<option value='{key}' {'selected' if key == selected_language else ''}>"
         f"{LANGUAGE_HOME_LABELS.get(key, plugin.display_name)}"
@@ -87,6 +162,15 @@ def home(
         f"<option value='{voice_key}' {'selected' if voice_key == selected_voice else ''}>{voice_key.title()}</option>"
         for voice_key in ("female", "male")
     )
+
+    notice_html = ""
+    if str(not_available) == "1" and search_value.strip():
+        notice_html = (
+            "<div style='max-width:360px;margin:0 auto 16px auto;padding:12px 14px;"
+            "background:#fff7ed;border:1px solid #fdba74;border-radius:12px;color:#9a3412;'>"
+            f"No match in the current set: <b>{escape(search_value)}</b>"
+            "</div>"
+        )
 
     html = f"""<!doctype html>
 <html>
@@ -128,20 +212,30 @@ def home(
       margin-top: 20px;
     }}
 
+    .row.dual-actions {{
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }}
+
     label {{
       display: block;
       margin-bottom: 6px;
       font-weight: 700;
     }}
 
-    select {{
+    select,
+    input[type="text"] {{
       width: 100%;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #d1d5db;
+      box-sizing: border-box;
     }}
 
-    .learn-btn {{
+    .learn-btn,
+    .search-btn {{
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -149,16 +243,24 @@ def home(
       padding: 12px 20px;
       border-radius: 999px;
       border: none;
-      background: #2563eb;
-      color: white;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.12s ease;
+      text-decoration: none;
+      background: #e5e7eb;
+      color: #111827;
     }}
 
-    .learn-btn:hover {{
+    .learn-btn.is-primary,
+    .search-btn.is-primary {{
+      background: #2563eb;
+      color: white;
+    }}
+
+    .learn-btn:hover,
+    .search-btn:hover {{
       transform: translateY(-1px);
-      filter: brightness(1.05);
+      filter: brightness(1.02);
     }}
 
     .learn-btn:disabled {{
@@ -171,21 +273,20 @@ def home(
       filter: grayscale(0.4);
       transform: none;
     }}
-
-    .learn-btn.loading .learn-label {{
-      content: "Loading…";
-    }}
   </style>
 </head>
 
 <body>
   <h1>Verb Board (MVP0)</h1>
 
+  {notice_html}
+
   <form
     action="/learn"
     method="get"
     class="controls"
     onsubmit="
+      if (event.submitter && event.submitter.name === 'search_submit') return true;
       const btn = this.querySelector('.learn-btn');
       btn.disabled = true;
       btn.classList.add('loading');
@@ -205,6 +306,17 @@ def home(
     </div>
 
     <div class="row">
+      <label>Search verb</label>
+      <input
+        type="text"
+        name="q"
+        id="search-input"
+        value="{escape(search_value)}"
+        placeholder="Type a verb"
+      />
+    </div>
+
+    <div class="row">
       <label>Verb</label>
       <select name="verb_id">
         {verb_options}
@@ -218,14 +330,50 @@ def home(
       </select>
     </div>
 
-    <div class="row center">
-      <button type="submit" class="learn-btn">
+    <div class="row center dual-actions">
+      <button
+        type="submit"
+        formaction="/search_verb"
+        formmethod="get"
+        class="search-btn"
+        id="search-btn"
+        name="search_submit"
+        value="1"
+      >
+        Find verb
+      </button>
+
+      <button type="submit" class="learn-btn is-primary" id="learn-btn">
         <span class="learn-label">Learn</span>
         <span class="learn-icon">▶</span>
       </button>
     </div>
 
   </form>
+
+  <script>
+      const searchInput = document.getElementById('search-input');
+      const searchButton = document.getElementById('search-btn');
+      const learnButton = document.getElementById('learn-btn');
+
+      function updatePrimaryAction() {{
+        if (!searchInput || !searchButton || !learnButton) return;
+
+        const hasText = searchInput.value.trim().length > 0;
+
+        // Primary action
+        searchButton.classList.toggle('is-primary', hasText);
+        learnButton.classList.toggle('is-primary', !hasText);
+
+        // Remove ambiguity: visually de-emphasize Learn when searching
+        learnButton.style.opacity = hasText ? '0.5' : '1';
+      }}
+
+      searchInput.addEventListener('input', updatePrimaryAction);
+
+      // Run once on load
+      updatePrimaryAction();
+    </script>
 </body>
 </html>
 """

@@ -10,6 +10,11 @@ GCP_STAGE_SERVICE=verbboard-stage
 GCP_REPOSITORY=verbboard
 GCP_PROJECT?=knotmem26
 
+ADMIN_LOG_BUCKET_STAGE=verbboard-verb-signal-stage
+ADMIN_LOG_BUCKET_PROD=verbboard-verb-signal-prod
+
+GCP_RUNTIME_SERVICE_ACCOUNT?=$(shell gcloud projects describe $(GCP_PROJECT) --format='value(projectNumber)')-compute@developer.gserviceaccount.com
+
 IMAGE_TAG=$(shell git rev-parse --short HEAD)
 GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
@@ -23,6 +28,8 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 	gcp-deploy-stage \
 	gcp-release-stage gcp-release-prod \
 	gcp-map-stage gcp-map-prod gcp-domain-status \
+	gcp-ensure-bucket gcp-grant-bucket-writer \
+        gcp-setup-stage-verb-signal gcp-setup-prod-verb-signal \
 	audit-examples audit-en audit-ru audit-he audit-es
 
 ## Show available commands
@@ -138,10 +145,11 @@ gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
 		--image $(GCP_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
+		--set-env-vars ADMIN_LOG_BUCKET=$(ADMIN_LOG_BUCKET_STAGE) \
 		--allow-unauthenticated
 
 ## GCP: build + deploy to stage
-gcp-release-stage: gcp-build gcp-deploy-stage ## GCP: build and release to stage
+gcp-release-stage: gcp-build gcp-setup-stage-verb-signal gcp-deploy-stage ## GCP: build and release to stage
 
 ## GCP: map stage domain to stage service
 gcp-map-stage: gcp-check ## GCP: create domain mapping for stage.verbboard.com
@@ -169,7 +177,7 @@ gcp-stage-image: gcp-check ## GCP: print stage image reference
 		--format='value(spec.template.spec.containers[0].image)'
 
 ## GCP: promote currently deployed stage image to prod
-gcp-promote-stage-to-prod: gcp-check ## GCP: promote deployed stage image to prod
+gcp-promote-stage-to-prod: gcp-check gcp-setup-prod-verb-signal ## GCP: promote deployed stage image to prod
 	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
 	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
 	@echo "Promoting stage image to prod:"
@@ -178,7 +186,38 @@ gcp-promote-stage-to-prod: gcp-check ## GCP: promote deployed stage image to pro
 		--image $(STAGE_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
+		--set-env-vars ADMIN_LOG_BUCKET=$(ADMIN_LOG_BUCKET_PROD) \
 		--allow-unauthenticated
+
+## GCP: create bucket if missing
+gcp-ensure-bucket: gcp-check
+	@test -n "$(BUCKET)" || (echo "ERROR: BUCKET is required" && exit 1)
+	@if ! gcloud storage buckets describe gs://$(BUCKET) --format='value(name)' >/dev/null 2>&1; then \
+		echo "Creating bucket gs://$(BUCKET)"; \
+		gcloud storage buckets create gs://$(BUCKET) \
+			--location=$(GCP_REGION) \
+			--uniform-bucket-level-access; \
+	else \
+		echo "Bucket gs://$(BUCKET) already exists"; \
+	fi
+
+## GCP: grant runtime service account write access to bucket
+gcp-grant-bucket-writer: gcp-check
+	@test -n "$(BUCKET)" || (echo "ERROR: BUCKET is required" && exit 1)
+	@test -n "$(SERVICE_ACCOUNT)" || (echo "ERROR: SERVICE_ACCOUNT is required" && exit 1)
+	gcloud storage buckets add-iam-policy-binding gs://$(BUCKET) \
+		--member="serviceAccount:$(SERVICE_ACCOUNT)" \
+		--role="roles/storage.objectCreator"
+
+## GCP: ensure stage verb-signal bucket exists and grant access
+gcp-setup-stage-verb-signal: gcp-check
+	$(MAKE) gcp-ensure-bucket BUCKET=$(ADMIN_LOG_BUCKET_STAGE)
+	$(MAKE) gcp-grant-bucket-writer BUCKET=$(ADMIN_LOG_BUCKET_STAGE) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+
+## GCP: ensure prod verb-signal bucket exists and grant access
+gcp-setup-prod-verb-signal: gcp-check
+	$(MAKE) gcp-ensure-bucket BUCKET=$(ADMIN_LOG_BUCKET_PROD)
+	$(MAKE) gcp-grant-bucket-writer BUCKET=$(ADMIN_LOG_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
 
 ## QA: audit examples for all languages
 audit-examples: ## QA: run example audit for all languages
