@@ -20,7 +20,7 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 	docker-build docker-run docker-stop docker-rm docker-dev docker-url \
 	gcp-check gcp-login gcp-auth gcp-build gcp-push \
 	gcp-image gcp-open gcp-open-stage gcp-open-prod \
-	gcp-deploy-stage gcp-deploy-prod \
+	gcp-deploy-stage \
 	gcp-release-stage gcp-release-prod \
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	audit-examples audit-en audit-ru audit-he audit-es
@@ -38,7 +38,6 @@ help:
 	@echo "  make docker-dev"
 	@echo "  make docker-run HOST_PORT=8001"
 	@echo "  make gcp-release-stage"
-	@echo "  make gcp-deploy-prod IMAGE_TAG=<tested_tag>"
 	@echo ""
 
 ## LOCAL: regenerate English lexicon
@@ -71,7 +70,7 @@ local-refresh: lexicon ## LOCAL: refresh lexicons only
 local-dev: lexicon local-run ## LOCAL: regenerate lexicons and run app
 
 ## LOCAL DOCKER: build image
-docker-build: lexicon ## LOCAL DOCKER: build image
+docker-build: ## LOCAL DOCKER: build image
 	docker build -t $(IMAGE_NAME) .
 
 ## LOCAL DOCKER: run local image
@@ -111,7 +110,7 @@ gcp-auth: gcp-check ## GCP: configure docker auth
 	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev
 
 ## GCP: build container using Cloud Build
-gcp-build: lexicon gcp-check ## GCP: build image in Cloud Build
+gcp-build: gcp-check ## GCP: build image in Cloud Build
 	gcloud builds submit --tag $(GCP_IMAGE)
 
 ## GCP: push image to Artifact Registry
@@ -141,19 +140,8 @@ gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
 		--platform managed \
 		--allow-unauthenticated
 
-## GCP: deploy image to prod Cloud Run service
-gcp-deploy-prod: gcp-check ## GCP: deploy current image tag to prod
-	gcloud run deploy $(GCP_SERVICE) \
-		--image $(GCP_IMAGE) \
-		--region $(GCP_REGION) \
-		--platform managed \
-		--allow-unauthenticated
-
 ## GCP: build + deploy to stage
 gcp-release-stage: gcp-build gcp-deploy-stage ## GCP: build and release to stage
-
-## GCP: build + deploy to prod
-gcp-release-prod: gcp-build gcp-deploy-prod ## GCP: build and release to prod
 
 ## GCP: map stage domain to stage service
 gcp-map-stage: gcp-check ## GCP: create domain mapping for stage.verbboard.com
@@ -173,6 +161,24 @@ gcp-map-prod: gcp-check ## GCP: create domain mapping for verbboard.com
 gcp-domain-status: gcp-check ## GCP: list domain mappings
 	gcloud beta run domain-mappings list \
 		--region $(GCP_REGION)
+
+## GCP: show image currently deployed to stage
+gcp-stage-image: gcp-check ## GCP: print stage image reference
+	@gcloud run services describe $(GCP_STAGE_SERVICE) \
+		--region $(GCP_REGION) \
+		--format='value(spec.template.spec.containers[0].image)'
+
+## GCP: promote currently deployed stage image to prod
+gcp-promote-stage-to-prod: gcp-check ## GCP: promote deployed stage image to prod
+	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
+	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
+	@echo "Promoting stage image to prod:"
+	@echo "  $(STAGE_IMAGE)"
+	gcloud run deploy $(GCP_SERVICE) \
+		--image $(STAGE_IMAGE) \
+		--region $(GCP_REGION) \
+		--platform managed \
+		--allow-unauthenticated
 
 ## QA: audit examples for all languages
 audit-examples: ## QA: run example audit for all languages

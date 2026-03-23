@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from core.lexicon import load_lexicon
@@ -17,41 +17,66 @@ LANGUAGE_HOME_LABELS = {
 }
 
 
+def _load_entries(language: str):
+    lex_path = DATA_DIR / language / "lexicon.json"
+    return load_lexicon(lex_path) if lex_path.exists() else []
+
+
 @router.get("/set_language", response_model=None)
 def set_language(language: str, voice: str = "female"):
-    lex_path = DATA_DIR / language / "lexicon.json"
-    entries = load_lexicon(lex_path) if lex_path.exists() else []
+    entries = _load_entries(language)
     default_verb_id = entries[0].id if entries else ""
-    return RedirectResponse(
+
+    response = RedirectResponse(
         url=f"/?language={language}&voice={voice}&verb_id={default_verb_id}"
     )
+    response.set_cookie("language", language, httponly=False, samesite="lax")
+    response.set_cookie("voice", voice, httponly=False, samesite="lax")
+    if default_verb_id:
+        response.set_cookie("verb_id", default_verb_id, httponly=False, samesite="lax")
+    return response
 
 
 @router.get("/", response_class=HTMLResponse)
 def home(
-    language: str = Query("he"),
-    voice: str = Query("female"),
+    request: Request,
+    language: str | None = Query(None),
+    voice: str | None = Query(None),
     verb_id: str | None = Query(None),
-) -> str:
+) -> HTMLResponse:
     plugins = all_plugins()
-    if language not in plugins:
-        language = "he"
 
-    lex_path = DATA_DIR / language / "lexicon.json"
-    entries = load_lexicon(lex_path)
+    cookie_language = request.cookies.get("language")
+    cookie_voice = request.cookies.get("voice")
+    cookie_verb_id = request.cookies.get("verb_id")
 
-    if verb_id is None and entries:
-        verb_id = entries[0].id
+    selected_language = language or cookie_language or "he"
+    if selected_language not in plugins:
+        selected_language = "he"
+
+    selected_voice = voice or cookie_voice or "female"
+    if selected_voice not in ("female", "male"):
+        selected_voice = "female"
+
+    entries = _load_entries(selected_language)
+
+    selected_verb_id = verb_id or cookie_verb_id
+    if entries:
+        valid_verb_ids = {entry.id for entry in entries}
+        if selected_verb_id not in valid_verb_ids:
+            selected_verb_id = entries[0].id
+    else:
+        selected_verb_id = ""
 
     lang_options = "\n".join(
-        f"<option value='{key}' {'selected' if key == language else ''}>"
+        f"<option value='{key}' {'selected' if key == selected_language else ''}>"
         f"{LANGUAGE_HOME_LABELS.get(key, plugin.display_name)}"
         f"</option>"
         for key, plugin in plugins.items()
     )
 
     verb_options = "\n".join(
-        f"<option value='{entry.id}' {'selected' if entry.id == verb_id else ''}>"
+        f"<option value='{entry.id}' {'selected' if entry.id == selected_verb_id else ''}>"
         f"{entry.rank}. "
         f"{entry.lemma if not isinstance(entry.lemma, dict) else (entry.lemma.get('imperfective', '') + ' / ' + entry.lemma.get('perfective', ''))}"
         f"</option>"
@@ -59,11 +84,11 @@ def home(
     )
 
     voice_options = "\n".join(
-        f"<option value='{voice_key}' {'selected' if voice_key == voice else ''}>{voice_key.title()}</option>"
+        f"<option value='{voice_key}' {'selected' if voice_key == selected_voice else ''}>{voice_key.title()}</option>"
         for voice_key in ("female", "male")
     )
 
-    return f"""<!doctype html>
+    html = f"""<!doctype html>
 <html>
 <head>
   <meta charset="utf-8"/>
@@ -204,3 +229,10 @@ def home(
 </body>
 </html>
 """
+
+    response = HTMLResponse(html)
+    response.set_cookie("language", selected_language, httponly=False, samesite="lax")
+    response.set_cookie("voice", selected_voice, httponly=False, samesite="lax")
+    if selected_verb_id:
+        response.set_cookie("verb_id", selected_verb_id, httponly=False, samesite="lax")
+    return response

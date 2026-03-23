@@ -19,33 +19,34 @@ router = APIRouter()
 async def learn(
     request: Request,
     language: str = Query(...),
-    verb_id: str = Query(...),
-    voice: str = Query("female"),
-) -> str:
+    verb_id: str | None = Query(None),
+    voice: str | None = Query(None),
+) -> HTMLResponse:
     lex_path = DATA_DIR / language / "lexicon.json"
     entries = load_lexicon(lex_path)
     by_id = index_by_id(entries)
 
-    if verb_id not in by_id:
-        if entries:
-            verb_id = entries[0].id
-        else:
-            return HTMLResponse("Unknown verb_id", status_code=400)
+    if not entries:
+        return HTMLResponse("No verbs available", status_code=400)
 
     if language not in VOICES:
         return HTMLResponse("Unknown language voices", status_code=400)
 
-    if voice not in VOICES[language]:
+    selected_voice = voice or "female"
+
+    if selected_voice not in VOICES[language]:
         return HTMLResponse("Unknown voice", status_code=400)
+
+    if not verb_id or verb_id not in by_id:
+        verb_id = entries[0].id
 
     verb = by_id[verb_id]
     plugin = get_plugin(language)
 
-    voice_meta = VOICES[language][voice]
-    board = plugin.build_board(verb, voice, voice_meta.label)
+    voice_meta = VOICES[language][selected_voice]
+    board = plugin.build_board(verb, selected_voice, voice_meta.label)
 
     audio_backend = request.app.state.audio_backend
-
     tasks = []
 
     # Generate audio for board rows
@@ -62,15 +63,15 @@ async def learn(
                     text=text,
                     language=language,
                     verb_id=verb.id,
-                    voice=voice,
+                    voice=selected_voice,
                     form_key=form_key,
                     voice_edge_id=voice_meta.edge_id,
                 )
             )
 
     # Generate audio for examples
-    for index, ex in enumerate(board.verb.examples, start=1):
-        example_text = ex.dst.strip()
+    for index, example in enumerate(board.verb.examples, start=1):
+        example_text = example.dst.strip()
         if not example_text:
             continue
 
@@ -80,14 +81,14 @@ async def learn(
                 text=example_text,
                 language=language,
                 verb_id=verb.id,
-                voice=voice,
+                voice=selected_voice,
                 form_key=f"example_{index}",
                 voice_edge_id=voice_meta.edge_id,
             )
         )
 
-    # Run generation concurrently
     if tasks:
         await asyncio.gather(*tasks)
 
-    return render_board_html(board)
+    html = render_board_html(board=board)
+    return HTMLResponse(html)
