@@ -141,7 +141,8 @@ def home(
     else:
         selected_verb_id = ""
 
-    search_value = search or ""
+    raw_search_value = search or ""
+    search_value = "" if str(not_available) == "1" else raw_search_value
 
     lang_options = "\n".join(
         f"<option value='{key}' {'selected' if key == selected_language else ''}>"
@@ -152,7 +153,6 @@ def home(
 
     verb_options = "\n".join(
         f"<option value='{entry.id}' {'selected' if entry.id == selected_verb_id else ''}>"
-        f"{entry.rank}. "
         f"{entry.lemma if not isinstance(entry.lemma, dict) else (entry.lemma.get('imperfective', '') + ' / ' + entry.lemma.get('perfective', ''))}"
         f"</option>"
         for entry in entries
@@ -164,11 +164,11 @@ def home(
     )
 
     notice_html = ""
-    if str(not_available) == "1" and search_value.strip():
+    if str(not_available) == "1" and raw_search_value.strip():
         notice_html = (
             "<div style='max-width:360px;margin:0 auto 16px auto;padding:12px 14px;"
             "background:#fff7ed;border:1px solid #fdba74;border-radius:12px;color:#9a3412;'>"
-            f"No match in the current set: <b>{escape(search_value)}</b>"
+            f"No match in the current set: <b>{escape(raw_search_value)}</b>"
             "</div>"
         )
 
@@ -178,8 +178,23 @@ def home(
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Verb Board (MVP0)</title>
-
   <style>
+    .secondary-label {{
+      font-weight: 600;
+      color: #6b7280;
+    }}
+
+    .search-row {{
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #e5e7eb;
+    }}
+
+    .search-hint {{
+      margin-top: 6px;
+      font-size: 12px;
+      color: #6b7280;
+    }}
     body {{
       font-family: system-ui, sans-serif;
       margin: 24px auto;
@@ -279,7 +294,6 @@ def home(
 <body>
   <h1>Verb Board (MVP0)</h1>
 
-  {notice_html}
 
   <form
     action="/learn"
@@ -305,20 +319,10 @@ def home(
       </select>
     </div>
 
-    <div class="row">
-      <label>Search verb</label>
-      <input
-        type="text"
-        name="q"
-        id="search-input"
-        value="{escape(search_value)}"
-        placeholder="Type a verb"
-      />
-    </div>
 
     <div class="row">
       <label>Verb</label>
-      <select name="verb_id">
+      <select name="verb_id" id="verb-select">
         {verb_options}
       </select>
     </div>
@@ -330,6 +334,18 @@ def home(
       </select>
     </div>
 
+    <div class="row">
+      <label class="secondary-label">Or find a verb</label>
+      <input
+        type="text"
+        name="q"
+        id="search-input"
+        value="{escape(search_value)}"
+        placeholder="Type a verb"
+      />
+    </div>
+    {notice_html}
+
     <div class="row center dual-actions">
       <button
         type="submit"
@@ -340,7 +356,7 @@ def home(
         name="search_submit"
         value="1"
       >
-        Find verb
+        Find
       </button>
 
       <button type="submit" class="learn-btn is-primary" id="learn-btn">
@@ -350,30 +366,7 @@ def home(
     </div>
 
   </form>
-
-  <script>
-      const searchInput = document.getElementById('search-input');
-      const searchButton = document.getElementById('search-btn');
-      const learnButton = document.getElementById('learn-btn');
-
-      function updatePrimaryAction() {{
-        if (!searchInput || !searchButton || !learnButton) return;
-
-        const hasText = searchInput.value.trim().length > 0;
-
-        // Primary action
-        searchButton.classList.toggle('is-primary', hasText);
-        learnButton.classList.toggle('is-primary', !hasText);
-
-        // Remove ambiguity: visually de-emphasize Learn when searching
-        learnButton.style.opacity = hasText ? '0.5' : '1';
-      }}
-
-      searchInput.addEventListener('input', updatePrimaryAction);
-
-      // Run once on load
-      updatePrimaryAction();
-    </script>
+<script src="/static/home.js"></script>
 </body>
 </html>
 """

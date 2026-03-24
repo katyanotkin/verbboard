@@ -158,5 +158,19 @@ button { padding: 6px 10px; cursor: pointer; }
 
 </table>
 
+<script>
+  (function() {
+    const language = "{{language}}";
+    const verbId = "{{verb_id}}";
+    const storageKey = `seen:${language}`;
+
+    const seen = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    if (!seen.includes(verbId)) {
+      seen.push(verbId);
+      localStorage.setItem(storageKey, JSON.stringify(seen));
+    }
+  })();
+</script>
+
 </body>
 </html>
