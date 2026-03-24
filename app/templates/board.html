@@ -20,11 +20,9 @@ button { padding: 6px 10px; cursor: pointer; }
   color: white;
   font-size: 16px;
   cursor: pointer;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   padding: 0;
 }
 
@@ -57,15 +55,11 @@ button { padding: 6px 10px; cursor: pointer; }
   height: 42px;
   margin-left: 6px;
   padding: 0;
-
   border: 1px solid #ddd;
   border-radius: 50%;
-
   background: #f5f5f5;
   color: #333;
-
   cursor: pointer;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -102,10 +96,18 @@ button { padding: 6px 10px; cursor: pointer; }
   color: #555;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .voice-form {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 0;
 }
 
 .voice-form label {
@@ -118,59 +120,101 @@ button { padding: 6px 10px; cursor: pointer; }
   border: 1px solid #d1d5db;
 }
 
+.known-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  background: #f5f5f5;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.known-btn.pop {
+  animation: known-pop 0.22s ease-out;
+}
+
+@keyframes known-pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.16); }
+  100% { transform: scale(1); }
+}
+
+.known-btn:hover {
+  background: #ececec;
+  border-color: #ccc;
+  transform: scale(1.05);
+}
+
+.known-btn:hover .known-icon {
+  filter: saturate(1.3) brightness(1.1);
+}
+
+.known-btn.is-active {
+  background: #fff3c4;
+  border-color: #d4af37;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25);
+}
+
+.known-btn:not(.is-active) .known-icon {
+  filter: grayscale(0.4) brightness(0.9);
+}
+
+.known-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  filter: saturate(1.4) brightness(1.15);
+}
+
 .home-link {
   margin: 0 0 18px 0;
 }
 </style>
 
+<script defer src="/static/learn.js"></script>
 </head>
 
 <body>
+<div id="learn-page" data-language="{{language}}" data-verb-id="{{verb_id}}">
+  <h1 style="margin-bottom:6px;">{{title}}</h1>
 
-<h1 style="margin-bottom:6px;">{{title}}</h1>
+  <div class="topbar">
+    <div class="meta">
+      Language: <b>{{language}}</b> · Voice: <b>{{voice}}</b>
+    </div>
 
-<div class="topbar">
-  <div class="meta">
-    Language: <b>{{language}}</b> · Voice: <b>{{voice}}</b>
+    <div class="topbar-actions">
+      <form method="get" action="/learn" class="voice-form">
+        <input type="hidden" name="language" value="{{language}}">
+        <input type="hidden" name="verb_id" value="{{verb_id}}">
+        <label for="voice">Voice</label>
+        <select id="voice" name="voice" onchange="this.form.submit()">
+          <option value="female" {{female_selected}}>Female</option>
+          <option value="male" {{male_selected}}>Male</option>
+        </select>
+      </form>
+
+      <button class="known-btn" id="known-btn" title="Mark as known" aria-pressed="false">
+        <img src="/static/gold-star.svg" class="known-icon" alt="Known">
+      </button>
+    </div>
   </div>
 
-  <form method="get" action="/learn" class="voice-form" style="margin:0;">
-    <input type="hidden" name="language" value="{{language}}">
-    <input type="hidden" name="verb_id" value="{{verb_id}}">
-    <label for="voice">Voice</label>
-    <select id="voice" name="voice" onchange="this.form.submit()">
-      <option value="female" {{female_selected}}>Female</option>
-      <option value="male" {{male_selected}}>Male</option>
-    </select>
-  </form>
+  <p class="home-link"><a href="{{home_href}}">Home</a></p>
+
+  {{sections}}
+
+  <h2>Examples</h2>
+
+  <table>
+    <tr><th>Sentence</th><th>Audio</th></tr>
+    {{examples}}
+  </table>
 </div>
-
-<p class="home-link"><a href="{{home_href}}">Home</a></p>
-
-{{sections}}
-
-<h2>Examples</h2>
-
-<table>
-<tr><th>Sentence</th><th>Audio</th></tr>
-
-{{examples}}
-
-</table>
-
-<script>
-  (function() {
-    const language = "{{language}}";
-    const verbId = "{{verb_id}}";
-    const storageKey = `seen:${language}`;
-
-    const seen = JSON.parse(localStorage.getItem(storageKey) || "[]");
-    if (!seen.includes(verbId)) {
-      seen.push(verbId);
-      localStorage.setItem(storageKey, JSON.stringify(seen));
-    }
-  })();
-</script>
-
 </body>
 </html>
