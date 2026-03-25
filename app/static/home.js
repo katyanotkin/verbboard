@@ -23,6 +23,30 @@ document.addEventListener("DOMContentLoaded", function () {
     return new Set(JSON.parse(localStorage.getItem(storageKey) || "[]"));
   }
 
+  function updateProgress() {
+	  if (!verbSelect) return;
+
+	  const options = Array.from(verbSelect.options);
+	  const total = options.length;
+
+	  const count = options.filter((option) =>
+	    option.textContent.startsWith("★ ")
+	  ).length;
+
+	  const percent = total > 0 ? (count / total) * 100 : 0;
+
+	  const fill = document.querySelector(".progress-fill");
+	  const countEl = document.querySelector(".progress-count");
+
+	  if (fill) {
+	    fill.style.width = `${percent}%`;
+	  }
+
+	  if (countEl) {
+	    countEl.textContent = String(count).padStart(3,"0");
+	  }
+  }
+
   function sortAndMarkVerbs() {
     if (!verbSelect) return;
 
@@ -83,4 +107,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
   updatePrimaryAction();
   sortAndMarkVerbs();
+  updateProgress();
 });

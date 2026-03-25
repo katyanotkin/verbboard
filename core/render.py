@@ -97,18 +97,19 @@ def render_board_html(board: Board) -> str:
         f"&verb_id={escape(board.verb.id)}"
     )
 
-    female_selected = "selected" if board.voice_key == "female" else ""
-    male_selected = "selected" if board.voice_key == "male" else ""
+    voice_key = (board.voice_key or "").lower()
+
+    female_active = "active" if voice_key == "female" else ""
+    male_active = "active" if voice_key == "male" else ""
 
     html = (
         template.replace("{{title}}", escape(title))
         .replace("{{language}}", escape(board.language))
-        .replace("{{voice}}", escape(board.voice_label))
         .replace("{{voice_key}}", escape(board.voice_key))
         .replace("{{verb_id}}", escape(board.verb.id))
         .replace("{{home_href}}", home_href)
-        .replace("{{female_selected}}", female_selected)
-        .replace("{{male_selected}}", male_selected)
+        .replace("{{female_active}}", female_active)
+        .replace("{{male_active}}", male_active)
         .replace("{{sections}}", "".join(sections_html))
         .replace("{{examples}}", "".join(examples_rows))
     )

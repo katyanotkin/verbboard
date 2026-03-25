@@ -184,6 +184,49 @@ def home(
       color: #6b7280;
     }}
 
+    .progress-row {{
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }}
+
+    .progress-bar {{
+      flex: 1;
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+    }}
+
+    .progress-fill {{
+      height: 100%;
+      background: #4a90e2;
+      width: 0%;
+      transition: width 0.2s ease;
+    }}
+
+    .progress-meta {{
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 48px;
+      justify-content: flex-end;
+    }}
+
+    .progress-star {{
+      width: 14px;
+      height: 14px;
+    }}
+
+    .progress-count {{
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      font-variant-numeric: tabular-nums;
+    }}
+
     .search-row {{
       margin-top: 18px;
       padding-top: 14px;
@@ -310,7 +353,7 @@ def home(
   >
 
     <div class="row">
-      <label>Language</label>
+      <label>Language focus</label>
       <select
         name="language"
         onchange="window.location='/set_language?language=' + this.value + '&voice=' + document.querySelector('select[name=voice]').value;"
@@ -319,6 +362,15 @@ def home(
       </select>
     </div>
 
+    <div class="progress-row">
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 0%"></div>
+      </div>
+      <div class="progress-meta">
+        <img src="/static/gold-star.svg" class="progress-star" alt="Known">
+        <span class="progress-count">001</span>
+      </div>
+    </div>
 
     <div class="row">
       <label>Verb</label>
@@ -326,6 +378,7 @@ def home(
         {verb_options}
       </select>
     </div>
+     
 
     <div class="row">
       <label>Voice</label>

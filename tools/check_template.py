@@ -4,7 +4,6 @@ import sys
 required = {
     "{{title}}",
     "{{language}}",
-    "{{voice}}",
     "{{sections}}",
     "{{examples}}",
 }
