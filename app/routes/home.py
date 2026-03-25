@@ -9,6 +9,8 @@ from core.admin_logging import log_missing_verb_search
 from core.lexicon import load_lexicon
 from core.paths import DATA_DIR
 from core.registry import all_plugins
+from core.search_utils import match_entry
+
 
 router = APIRouter()
 
@@ -23,46 +25,6 @@ LANGUAGE_HOME_LABELS = {
 def _load_entries(language: str):
     lex_path = DATA_DIR / language / "lexicon.json"
     return load_lexicon(lex_path) if lex_path.exists() else []
-
-
-def _normalize_text(value: str) -> str:
-    return value.strip().casefold()
-
-
-def _entry_search_candidates(entry) -> list[str]:
-    candidates: list[str] = [entry.id]
-
-    lemma = entry.lemma
-    if isinstance(lemma, dict):
-        candidates.extend(str(value) for value in lemma.values() if value)
-    elif lemma:
-        candidates.append(str(lemma))
-
-    display_lemma = getattr(entry, "display_lemma", None)
-    if isinstance(display_lemma, dict):
-        candidates.extend(str(value) for value in display_lemma.values() if value)
-    elif display_lemma:
-        candidates.append(str(display_lemma))
-
-    return candidates
-
-
-def _find_verb_id(entries, query: str) -> str | None:
-    normalized_query = _normalize_text(query)
-    if not normalized_query:
-        return None
-
-    for entry in entries:
-        for candidate in _entry_search_candidates(entry):
-            if _normalize_text(candidate) == normalized_query:
-                return entry.id
-
-    for entry in entries:
-        for candidate in _entry_search_candidates(entry):
-            if normalized_query in _normalize_text(candidate):
-                return entry.id
-
-    return None
 
 
 @router.get("/set_language", response_model=None)
@@ -87,9 +49,20 @@ def search_verb(
     q: str = "",
 ):
     entries = _load_entries(language)
-    matched_verb_id = _find_verb_id(entries, q)
 
-    if matched_verb_id:
+    query = (q or "").strip()
+    if not query:
+        return RedirectResponse(url=f"/?language={language}&voice={voice}")
+
+    # find first matching entry
+    matched_entry = next(
+        (entry for entry in entries if match_entry(query, entry)),
+        None,
+    )
+
+    if matched_entry:
+        matched_verb_id = matched_entry.id
+
         response = RedirectResponse(
             url=f"/learn?language={language}&verb_id={matched_verb_id}&voice={voice}"
         )
@@ -98,10 +71,11 @@ def search_verb(
         response.set_cookie("verb_id", matched_verb_id, httponly=False, samesite="lax")
         return response
 
-    log_missing_verb_search(language=language, query=q)
+    # no match → log demand
+    log_missing_verb_search(language=language, query=query)
 
     response = RedirectResponse(
-        url=f"/?language={language}&voice={voice}&search={q}&not_available=1"
+        url=f"/?language={language}&voice={voice}&search={query}&not_available=1"
     )
     response.set_cookie("language", language, httponly=False, samesite="lax")
     response.set_cookie("voice", voice, httponly=False, samesite="lax")

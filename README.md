@@ -1,6 +1,8 @@
 # VerbBoard
 
 Minimal verb learning app (FastAPI + server-rendered UI).
+Focused on fast iteration and simple learning flow:
+get a verb → see it → hear it → move on.
 
 ---
 
@@ -26,17 +28,40 @@ http://127.0.0.1:8000
   - verb
   - voice (`female`, `male`)
 - Click **Learn** to open the learning view
+Or search for a verb (see below)
+Visual indicators:
+✓ seen verbs
+★ known verbs
+Progress bar shows known verbs count
+
+#### Search
+Search accepts:
+-- infinitives
+-- conjugated forms
+-- partial matches
+Behavior:
+-- first matching verb is opened directly
+-- no results list (fast resolution)
+-- If no match:
+--- shows: "No match in the current set"
+--- logs query for future expansion
 
 ### Learn page
-- Defaults to `female` voice if not specified
-- Preserves:
-  - language
-  - voice
-  - verb (when navigating back to Home)
-- Shows:
+- Displays:
   - conjugation board
   - examples with audio
-- Voice selector available on page (updates instantly)
+- Controls
+  - voice toggle (female / male; female set as default)
+  - * mark verb as known
+  - back to verb list
+- Behavior:
+  - known updates progress
+  - Preserves:
+    - language
+    - voice
+    - verb (when navigating back to Home)
+
+
 
 #### Direct verb access
 Open a specific verb:
@@ -59,6 +84,7 @@ http://127.0.0.1:8000/learn?language=es&verb_id=es_tener&voice=female
 pip install pre-commit
 pre-commit --version
 pre-commit install
+pre-commit run --all-files
 ```
 
 Hook installed at:
@@ -70,12 +96,18 @@ Hook installed at:
 ---
 
 ## Notes
-### 2026-03-23
-- No database yet (stateless + local storage direction)
+### 2026-03-25
+
+- Stateless architecture (no DB; browser `localStorage` for progress)
 - Audio generated on demand and cached via backend
-- Designed for fast iteration, not completeness
-#### Upcoming (next step)
-- Verb search from Home:
-  - direct lookup by lemma
-  - fallback: "not available yet"
-  - logging missing verbs for admin
+- Search supports conjugated forms (intent-based match, first hit wins)
+- Missing searches logged for future verb expansion
+- Learning loop introduced:
+  - `seen` (✓)
+  - `known` (★)
+- No backend personalization
+
+### Upcoming
+
+- Database-backed lexicon
+- Ingestion pipeline for adding new verbs
