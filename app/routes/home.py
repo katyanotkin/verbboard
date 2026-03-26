@@ -197,15 +197,65 @@ def home(
     }}
 
     .search-row {{
+      position: relative;
+      z-index: 100;
       margin-top: 18px;
       padding-top: 14px;
       border-top: 1px solid #e5e7eb;
     }}
 
-    .search-hint {{
-      margin-top: 6px;
-      font-size: 12px;
-      color: #6b7280;
+    .search-input-wrap {{
+      position: relative;
+      width: 100%;
+    }}
+
+    .search-suggestions {{
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      margin-top: 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+      z-index: 50;
+      box-sizing: border-box;
+    }}
+
+    .search-suggestions.is-visible {{
+      display: block;
+    }}
+
+    .search-suggestion {{
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 8px 10px;
+      border: none;
+      border-bottom: 1px solid #f3f4f6;
+      background: transparent;
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+      color: #111827;
+    }}
+
+    .search-suggestion:last-child {{
+      border-bottom: none;
+    }}
+
+    .search-suggestion:hover,
+    .search-suggestion:focus {{
+      background: #f3f4f6;
+      outline: none;
+    }}
+
+    .search-suggestion-main {{
+      font-size: 1rem;
     }}
     body {{
       font-family: system-ui, sans-serif;
@@ -228,6 +278,7 @@ def home(
       border: 1px solid #e5e7eb;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      overflow: visible;
     }}
 
     .row {{
@@ -356,17 +407,21 @@ def home(
       </select>
     </div>
 
-    <div class="row">
+    <div class="row search-row">
       <label class="secondary-label">Or find a verb</label>
-      <input
-        type="text"
-        name="q"
-        id="search-input"
-        value="{escape(search_value)}"
-        placeholder="Type a verb"
-      />
+      <div class="search-input-wrap">
+        <input
+          type="text"
+          name="q"
+          id="search-input"
+          value="{escape(search_value)}"
+          placeholder="Type using the same spelling as in the verb list"
+          autocomplete="off"
+        />
+        <div id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Verb suggestions"></div>
+      </div>
+      {notice_html}
     </div>
-    {notice_html}
 
     <div class="row center dual-actions">
       <button
