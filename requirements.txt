@@ -4,3 +4,4 @@ edge-tts
 ruff
 pre-commit	
 google-cloud-storage
+google-cloud-firestore
