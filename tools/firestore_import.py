@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,22 @@ from core.storage.verb_repository import upsert_verb
 from core.supported_languages import supported_languages_list
 
 VERBS_COLLECTION = "verbs"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--clear",
+        action="store_true",
+        help="Delete all existing verbs before import",
+    )
+    parser.add_argument(
+        "--limit-per-language",
+        type=int,
+        default=None,
+        help="Import only the first N verbs per language",
+    )
+    return parser.parse_args()
 
 
 def clear_verbs_collection() -> None:
@@ -33,8 +50,9 @@ def lexicon_path_for_language(language: str) -> Path:
     return Path("runtime") / "data" / language / "lexicon.json"
 
 
-def run() -> None:
-    clear_verbs_collection()
+def run(*, clear: bool, limit_per_language: int | None) -> None:
+    if clear:
+        clear_verbs_collection()
 
     total_verbs_imported = 0
 
@@ -71,8 +89,18 @@ def run() -> None:
                 f"({imported_for_language})"
             )
 
+            if (
+                limit_per_language is not None
+                and imported_for_language >= limit_per_language
+            ):
+                break
+
     print(f"Import done. Total verbs: {total_verbs_imported}")
 
 
 if __name__ == "__main__":
-    run()
+    args = parse_args()
+    run(
+        clear=args.clear,
+        limit_per_language=args.limit_per_language,
+    )
