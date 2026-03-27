@@ -22,6 +22,7 @@ COPY core ./core
 COPY data_src ./data_src
 COPY runtime ./runtime
 COPY tools ./tools
+copy tests ./tests
 COPY README.md ./
 
 RUN python -m tools.generate_lexicon --language all

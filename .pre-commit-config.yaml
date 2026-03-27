@@ -13,7 +13,8 @@ repos:
   rev: v1.11.1
   hooks:
     - id: mypy
-      additional_dependencies: []
+      additional_dependencies:
+        - types-requests
       args: ["--ignore-missing-imports"]
 
 
@@ -49,3 +50,9 @@ repos:
       entry: python tools/check_plugins.py
       language: system
       pass_filenames: false    
+
+    - id: pytest-demand
+      name: pytest demand regression tests
+      entry: bash -c 'PYTHONPATH=. pytest -q tests/test_recommendation_regression.py'
+      language: system
+      pass_filenames: false

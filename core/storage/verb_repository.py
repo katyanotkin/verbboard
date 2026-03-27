@@ -18,6 +18,12 @@ def get_verb(verb_id: str) -> dict[str, Any] | None:
     return document.to_dict()
 
 
+def list_verbs(language: str) -> list[dict[str, Any]]:
+    db = get_db()
+    documents = db.collection(COLLECTION).where("language", "==", language).stream()
+    return [document.to_dict() for document in documents]
+
+
 def upsert_verb(
     verb_id: str,
     payload: dict[str, Any],
@@ -28,7 +34,6 @@ def upsert_verb(
     existing = doc_ref.get()
 
     if existing.exists:
-        # preserve created_at
         existing_data = existing.to_dict()
         payload["created_at"] = existing_data.get("created_at")
 

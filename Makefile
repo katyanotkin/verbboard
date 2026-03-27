@@ -30,7 +30,8 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
         gcp-setup-stage-verb-signal gcp-setup-prod-verb-signal \
-	audit-examples audit-en audit-ru audit-he audit-es
+	audit-examples audit-en audit-ru audit-he audit-es \
+	test test-demand
 
 ## Show available commands
 help:
@@ -46,6 +47,15 @@ help:
 	@echo "  make docker-run HOST_PORT=8001"
 	@echo "  make gcp-release-stage"
 	@echo ""
+
+## QA: run all pytest tests
+test: ## QA: run all pytest tests
+	PYTHONPATH=. pytest
+
+## QA: run demand regression tests
+test-demand: ## QA: run demand regression tests
+	PYTHONPATH=. pytest -q tests/test_recommendation_regression.py
+
 
 ## LOCAL: regenerate English lexicon
 lexicon-en: ## LOCAL: regenerate English lexicon
@@ -149,7 +159,7 @@ gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
 		--allow-unauthenticated
 
 ## GCP: build + deploy to stage
-gcp-release-stage: gcp-build gcp-setup-stage-verb-signal gcp-deploy-stage ## GCP: build and release to stage
+gcp-release-stage: test gcp-build gcp-setup-stage-verb-signal gcp-deploy-stage ## GCP: build and release to stage
 
 ## GCP: map stage domain to stage service
 gcp-map-stage: gcp-check ## GCP: create domain mapping for stage.verbboard.com

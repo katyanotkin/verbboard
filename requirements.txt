@@ -2,6 +2,8 @@ fastapi
 uvicorn[standard]
 edge-tts
 ruff
+types-requests
+pytest
 pre-commit	
 google-cloud-storage
 google-cloud-firestore
