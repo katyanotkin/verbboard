@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from datetime import datetime, timezone
 
 
 def build_verb_doc_id(verb_id: str) -> str:
@@ -16,6 +17,8 @@ def build_verb_document(
     forms: dict[str, Any],
     examples: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    now = datetime.now(timezone.utc).isoformat()
+
     return {
         "language": language,
         "verb_id": verb_id,
@@ -23,6 +26,8 @@ def build_verb_document(
         "rank": rank,
         "forms": forms,
         "examples": examples,
+        "created_at": now,
+        "updated_at": now,
     }
 
 

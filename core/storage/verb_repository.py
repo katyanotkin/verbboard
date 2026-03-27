@@ -23,4 +23,13 @@ def upsert_verb(
     payload: dict[str, Any],
 ) -> None:
     db = get_db()
-    db.collection(COLLECTION).document(build_verb_doc_id(verb_id)).set(payload)
+    doc_ref = db.collection(COLLECTION).document(build_verb_doc_id(verb_id))
+
+    existing = doc_ref.get()
+
+    if existing.exists:
+        # preserve created_at
+        existing_data = existing.to_dict()
+        payload["created_at"] = existing_data.get("created_at")
+
+    doc_ref.set(payload)
