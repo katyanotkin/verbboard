@@ -28,7 +28,8 @@ app.state.audio_backend = audio_backend
 
 @app.on_event("startup")
 def preload_runtime_data() -> None:
-    lexicon_store.preload_all()
+    if settings.verb_data_source == "local":
+        lexicon_store.preload_all()
 
 
 app.include_router(home_router)

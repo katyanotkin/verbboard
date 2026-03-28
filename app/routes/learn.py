@@ -6,11 +6,10 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 
 from core.audio_service import ensure_audio
-from core.lexicon import load_lexicon, index_by_id
 from core.registry import get as get_plugin
 from core.render import render_board_html
-from core.paths import DATA_DIR
 from core.tts import VOICES
+from core.verb_loader import load_entries_for_language, load_entry_by_id
 
 router = APIRouter()
 
@@ -22,9 +21,11 @@ async def learn(
     verb_id: str | None = Query(None),
     voice: str | None = Query(None),
 ) -> HTMLResponse:
-    lex_path = DATA_DIR / language / "lexicon.json"
-    entries = load_lexicon(lex_path)
-    by_id = index_by_id(entries)
+    settings = request.app.state.settings
+    entries = load_entries_for_language(
+        language=language,
+        source=settings.verb_data_source,
+    )
 
     if not entries:
         return HTMLResponse("No verbs available", status_code=400)
@@ -37,10 +38,16 @@ async def learn(
     if selected_voice not in VOICES[language]:
         return HTMLResponse("Unknown voice", status_code=400)
 
-    if not verb_id or verb_id not in by_id:
-        verb_id = entries[0].id
+    if not verb_id:
+        verb = entries[0]
+    else:
+        loaded_verb = load_entry_by_id(
+            language=language,
+            verb_id=verb_id,
+            source=settings.verb_data_source,
+        )
+        verb = loaded_verb or entries[0]
 
-    verb = by_id[verb_id]
     plugin = get_plugin(language)
 
     voice_meta = VOICES[language][selected_voice]
@@ -49,7 +56,6 @@ async def learn(
     audio_backend = request.app.state.audio_backend
     tasks = []
 
-    # Generate audio for board rows
     for section in board.sections:
         for row in section["rows"]:
             form_key = row["key"]
@@ -69,7 +75,6 @@ async def learn(
                 )
             )
 
-    # Generate audio for examples
     for index, example in enumerate(board.verb.examples, start=1):
         example_text = example.dst.strip()
         if not example_text:
