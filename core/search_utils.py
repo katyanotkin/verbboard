@@ -35,7 +35,9 @@ def tokenize_text(text: str) -> list[str]:
     if not normalized:
         return []
 
-    return [token for token in re.split(r"[^0-9a-zа-яё]+", normalized) if token]
+    return [
+        token for token in re.split(r"[^0-9a-zа-яё\u0590-\u05FF]+", normalized) if token
+    ]
 
 
 def build_search_candidates(entry: Any) -> list[str]:
@@ -60,6 +62,19 @@ def build_search_candidates(entry: Any) -> list[str]:
     forms = getattr(entry, "forms", None)
     if forms:
         candidates.extend(flatten_values(forms))
+
+    # Hebrew: include root as a searchable candidate
+    morph = getattr(entry, "morph", None)
+    entry_id = getattr(entry, "id", None)
+
+    if (
+        isinstance(entry_id, str)
+        and entry_id.startswith("he_")
+        and isinstance(morph, dict)
+    ):
+        root = morph.get("root")
+        if isinstance(root, str) and root.strip():
+            candidates.append(root)
 
     # de-duplicate while preserving order
     seen: set[str] = set()

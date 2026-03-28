@@ -12,6 +12,7 @@ class FirestoreEntryAdapter:
         self.lemma = document.get("lemma")
         self.forms = document.get("forms")
         self.display_lemma = document.get("display_lemma")
+        self.morph = document.get("morph")
 
 
 def resolve_query(
