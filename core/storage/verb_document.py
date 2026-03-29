@@ -63,20 +63,14 @@ def build_search_extract_from_entry(
     candidates: list[str] = []
 
     lemma = entry.get("lemma")
-    if isinstance(lemma, str) and lemma.strip():
+    if isinstance(lemma, dict):
+        candidates.extend(flatten_values(lemma))
+    elif isinstance(lemma, str) and lemma.strip():
         candidates.append(lemma)
-
-    display_lemma = entry.get("display_lemma")
-    if isinstance(display_lemma, str) and display_lemma.strip():
-        candidates.append(display_lemma)
 
     forms = entry.get("forms")
     if forms:
         candidates.extend(flatten_values(forms))
-
-    display_forms = entry.get("display_forms")
-    if display_forms:
-        candidates.extend(flatten_values(display_forms))
 
     if language == "he":
         morph = entry.get("morph")
@@ -84,6 +78,12 @@ def build_search_extract_from_entry(
             root = morph.get("root")
             if isinstance(root, str) and root.strip():
                 candidates.append(root)
+    else:
+        display_lemma = entry.get("display_lemma")
+        if isinstance(display_lemma, dict):
+            candidates.extend(flatten_values(display_lemma))
+        elif isinstance(display_lemma, str) and display_lemma.strip():
+            candidates.append(display_lemma)
 
     return _dedupe(candidates)
 

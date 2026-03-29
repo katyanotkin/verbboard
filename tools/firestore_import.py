@@ -1,112 +1,119 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import argparse
+import json
+from pathlib import Path
 from typing import Any
 
-from core.search_utils import flatten_values, normalize_text
+from core.storage.firestore_db import get_db
+from core.storage.verb_document import build_verb_document_from_lexicon_entry
+from core.storage.verb_repository import upsert_verb
+from core.supported_languages import supported_languages_list
+
+VERBS_COLLECTION = "verbs"
 
 
-def build_verb_doc_id(verb_id: str) -> str:
-    return verb_id
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--clear",
+        action="store_true",
+        help="Delete all existing verbs before import",
+    )
+    parser.add_argument(
+        "--limit-per-language",
+        type=int,
+        default=None,
+        help="Import only the first N verbs per language",
+    )
+    parser.add_argument(
+        "--language",
+        choices=supported_languages_list(),
+        default=None,
+        help="Import only one language",
+    )
+    return parser.parse_args()
 
 
-def _dedupe_search_values(values: list[str]) -> list[str]:
-    seen: set[str] = set()
-    result: list[str] = []
+def clear_verbs_collection() -> None:
+    db = get_db()
+    docs = db.collection(VERBS_COLLECTION).stream()
 
-    for value in values:
-        normalized_value = normalize_text(value)
-        if not normalized_value or normalized_value in seen:
+    deleted_count = 0
+    for document in docs:
+        document.reference.delete()
+        deleted_count += 1
+
+    print(f"Deleted {deleted_count} docs from '{VERBS_COLLECTION}'")
+
+
+def load_lexicon(path: Path) -> dict[str, Any]:
+    with path.open("r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def lexicon_path_for_language(language: str) -> Path:
+    return Path("runtime") / "data" / language / "lexicon.json"
+
+
+def run(
+    *,
+    clear: bool,
+    limit_per_language: int | None,
+    language: str | None,
+) -> None:
+    if clear:
+        clear_verbs_collection()
+
+    total_verbs_imported = 0
+
+    languages = [language] if language else supported_languages_list()
+    for language in languages:
+        lexicon_path = lexicon_path_for_language(language)
+        print(f"Loading {language} from {lexicon_path}")
+
+        if not lexicon_path.exists():
+            print(f"Skipping {language}: missing {lexicon_path}")
             continue
-        seen.add(normalized_value)
-        result.append(value)
 
-    return result
+        lexicon = load_lexicon(lexicon_path)
+        verbs = lexicon.get("verbs", [])
+        print(f"{language}: {len(verbs)} verbs available")
 
+        imported_for_language = 0
 
-def build_search_extract_from_lexicon_entry(
-    *,
-    language: str,
-    entry: dict[str, Any],
-) -> list[str]:
-    candidates: list[str] = []
+        for verb in verbs:
+            payload = build_verb_document_from_lexicon_entry(
+                language=language,
+                entry=verb,
+            )
 
-    lemma = entry.get("lemma")
-    if isinstance(lemma, str) and lemma.strip():
-        candidates.append(lemma)
+            upsert_verb(
+                verb_id=payload["verb_id"],
+                payload=payload,
+            )
 
-    display_lemma = entry.get("display_lemma")
-    if isinstance(display_lemma, str) and display_lemma.strip():
-        candidates.append(display_lemma)
+            imported_for_language += 1
+            total_verbs_imported += 1
 
-    forms = entry.get("forms")
-    if forms:
-        candidates.extend(flatten_values(forms))
+            print(
+                f"Imported {language}/{payload['verb_id']} "
+                f"({imported_for_language})"
+            )
 
-    display_forms = entry.get("display_forms")
-    if display_forms:
-        candidates.extend(flatten_values(display_forms))
+            if (
+                limit_per_language is not None
+                and imported_for_language >= limit_per_language
+            ):
+                break
 
-    if language == "he":
-        morph = entry.get("morph")
-        if isinstance(morph, dict):
-            root = morph.get("root")
-            if isinstance(root, str) and root.strip():
-                candidates.append(root)
-
-    return _dedupe_search_values(candidates)
+    print(f"Import done. Total verbs: {total_verbs_imported}")
 
 
-def build_verb_document(
-    *,
-    language: str,
-    verb_id: str,
-    lemma: str,
-    display_lemma: str | None,
-    rank: int | None,
-    forms: dict[str, Any],
-    display_forms: dict[str, Any] | None,
-    examples: list[dict[str, Any]],
-    morph: dict[str, Any] | None,
-    search_extract: list[str],
-) -> dict[str, Any]:
-    now = datetime.now(timezone.utc).isoformat()
-
-    return {
-        "language": language,
-        "verb_id": verb_id,
-        "lemma": lemma,
-        "display_lemma": display_lemma,
-        "rank": rank,
-        "forms": forms,
-        "display_forms": display_forms,
-        "examples": examples,
-        "morph": morph,
-        "search_extract": search_extract,
-        "created_at": now,
-        "updated_at": now,
-    }
-
-
-def build_verb_document_from_lexicon_entry(
-    *,
-    language: str,
-    entry: dict[str, Any],
-) -> dict[str, Any]:
-    verb_id = entry["id"]
-
-    return build_verb_document(
-        language=language,
-        verb_id=verb_id,
-        lemma=entry.get("lemma", verb_id),
-        display_lemma=entry.get("display_lemma"),
-        rank=entry.get("rank"),
-        forms=entry.get("forms", {}),
-        display_forms=entry.get("display_forms"),
-        examples=entry.get("examples", []),
-        morph=entry.get("morph"),
-        search_extract=build_search_extract_from_lexicon_entry(
-            language=language,
-            entry=entry,
-        ),
+if __name__ == "__main__":
+    args = parse_args()
+    run(
+        clear=args.clear,
+        language=args.language,
+        limit_per_language=args.limit_per_language,
     )
