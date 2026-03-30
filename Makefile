@@ -161,7 +161,7 @@ gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
 		--allow-unauthenticated
 
 ## GCP: build + deploy to stage
-gcp-release-stage: test gcp-build gcp-setup-stage-verb-signal gcp-deploy-stage ## GCP: build and release to stage
+gcp-release-stage: test gcp-build gcp-setup-stage-firestore gcp-setup-stage-verb-signal gcp-setup-stage-audio gcp-deploy-stage ## GCP: build + deploy to stage
 
 ## GCP: map stage domain to stage service
 gcp-map-stage: gcp-check ## GCP: create domain mapping for stage.verbboard.com
@@ -189,7 +189,7 @@ gcp-stage-image: gcp-check ## GCP: print stage image reference
 		--format='value(spec.template.spec.containers[0].image)'
 
 ## GCP: promote currently deployed stage image to prod
-gcp-promote-stage-to-prod: gcp-check gcp-setup-prod-verb-signal ## GCP: promote deployed stage image to prod
+gcp-promote-stage-to-prod: gcp-check gcp-setup-prod-verb-signal gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
 	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
 	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
 	@echo "Promoting stage image to prod:"
@@ -230,6 +230,39 @@ gcp-setup-stage-verb-signal: gcp-check
 gcp-setup-prod-verb-signal: gcp-check
 	$(MAKE) gcp-ensure-bucket BUCKET=$(VERB_DEMAND_BUCKET_PROD)
 	$(MAKE) gcp-grant-bucket-writer BUCKET=$(VERB_DEMAND_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+
+## GCP: grant runtime service account read/write access to bucket
+gcp-grant-bucket-audio-access: gcp-check
+	@test -n "$(BUCKET)" || (echo "ERROR: BUCKET is required" && exit 1)
+	@test -n "$(SERVICE_ACCOUNT)" || (echo "ERROR: SERVICE_ACCOUNT is required" && exit 1)
+	gcloud storage buckets add-iam-policy-binding gs://$(BUCKET) \
+		--member="serviceAccount:$(SERVICE_ACCOUNT)" \
+		--role="roles/storage.objectAdmin"
+
+## GCP: ensure stage audio bucket exists and grant access
+gcp-setup-stage-audio: gcp-check
+	$(MAKE) gcp-ensure-bucket BUCKET=$(AUDIO_BUCKET_STAGE)
+	$(MAKE) gcp-grant-bucket-audio-access BUCKET=$(AUDIO_BUCKET_STAGE) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+
+## GCP: ensure prod audio bucket exists and grant access
+gcp-setup-prod-audio: gcp-check
+	$(MAKE) gcp-ensure-bucket BUCKET=$(AUDIO_BUCKET_PROD)
+	$(MAKE) gcp-grant-bucket-audio-access BUCKET=$(AUDIO_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)	
+
+## GCP: grant runtime service account Firestore access
+gcp-grant-firestore-access: gcp-check
+	@test -n "$(SERVICE_ACCOUNT)" || (echo "ERROR: SERVICE_ACCOUNT is required" && exit 1)
+	gcloud projects add-iam-policy-binding $(GCP_PROJECT) \
+		--member="serviceAccount:$(SERVICE_ACCOUNT)" \
+		--role="roles/datastore.user"
+
+## GCP: ensure stage runtime has Firestore access
+gcp-setup-stage-firestore: gcp-check
+	$(MAKE) gcp-grant-firestore-access SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+
+## GCP: ensure prod runtime has Firestore access
+gcp-setup-prod-firestore: gcp-check
+	$(MAKE) gcp-grant-firestore-access SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
 
 ## QA: audit examples for all languages
 audit-examples: ## QA: run example audit for all languages
