@@ -54,7 +54,7 @@ def load_settings() -> Settings:
         google_cloud_project=os.getenv("GOOGLE_CLOUD_PROJECT", ""),
         audio_bucket=os.getenv("AUDIO_BUCKET", ""),
         verb_data_source=os.getenv("VERB_DATA_SOURCE", "local"),
-        verb_signal_bucket=os.getenv("VERB_SIGNAL_BUCKET", ""),
+        verb_signal_bucket=os.getenv("VERB_DEMAND_BUCKET", ""),
         verb_signal_prefix=os.getenv(
             "VERB_SIGNAL_PREFIX",
             "admin/missing-verb-searches/",

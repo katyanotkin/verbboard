@@ -10,8 +10,8 @@ GCP_STAGE_SERVICE=verbboard-stage
 GCP_REPOSITORY=verbboard
 GCP_PROJECT?=knotmem26
 
-ADMIN_LOG_BUCKET_STAGE=verbboard-verb-signal-stage
-ADMIN_LOG_BUCKET_PROD=verbboard-verb-signal-prod
+VERB_DEMAND_BUCKET_STAGE=verbboard-verb-signal-stage
+VERB_DEMAND_BUCKET_PROD=verbboard-verb-signal-prod
 
 GCP_RUNTIME_SERVICE_ACCOUNT?=$(shell gcloud projects describe $(GCP_PROJECT) --format='value(projectNumber)')-compute@developer.gserviceaccount.com
 
@@ -155,7 +155,7 @@ gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
 		--image $(GCP_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars ADMIN_LOG_BUCKET=$(ADMIN_LOG_BUCKET_STAGE) \
+		--set-env-vars APP_ENV=cloud,ENVIRONMENT=stage,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),VERB_DEMAND_BUCKET=$(VERB_DEMAND_BUCKET_STAGE) \
 		--allow-unauthenticated
 
 ## GCP: build + deploy to stage
@@ -196,7 +196,7 @@ gcp-promote-stage-to-prod: gcp-check gcp-setup-prod-verb-signal ## GCP: promote 
 		--image $(STAGE_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars ADMIN_LOG_BUCKET=$(ADMIN_LOG_BUCKET_PROD) \
+		--set-env-vars APP_ENV=cloud,ENVIRONMENT=prod,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),VERB_DEMAND_BUCKET=$(VERB_DEMAND_BUCKET_PROD) \
 		--allow-unauthenticated
 
 ## GCP: create bucket if missing
@@ -221,13 +221,13 @@ gcp-grant-bucket-writer: gcp-check
 
 ## GCP: ensure stage verb-signal bucket exists and grant access
 gcp-setup-stage-verb-signal: gcp-check
-	$(MAKE) gcp-ensure-bucket BUCKET=$(ADMIN_LOG_BUCKET_STAGE)
-	$(MAKE) gcp-grant-bucket-writer BUCKET=$(ADMIN_LOG_BUCKET_STAGE) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+	$(MAKE) gcp-ensure-bucket BUCKET=$(VERB_DEMAND_BUCKET_STAGE)
+	$(MAKE) gcp-grant-bucket-writer BUCKET=$(VERB_DEMAND_BUCKET_STAGE) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
 
 ## GCP: ensure prod verb-signal bucket exists and grant access
 gcp-setup-prod-verb-signal: gcp-check
-	$(MAKE) gcp-ensure-bucket BUCKET=$(ADMIN_LOG_BUCKET_PROD)
-	$(MAKE) gcp-grant-bucket-writer BUCKET=$(ADMIN_LOG_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+	$(MAKE) gcp-ensure-bucket BUCKET=$(VERB_DEMAND_BUCKET_PROD)
+	$(MAKE) gcp-grant-bucket-writer BUCKET=$(VERB_DEMAND_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
 
 ## QA: audit examples for all languages
 audit-examples: ## QA: run example audit for all languages

@@ -14,6 +14,9 @@ def health(request: Request) -> dict[str, object]:
     return {
         "status": "ok",
         "app_env": settings.app_env,
+        "environment": settings.environment,
+        "verb_data_source": settings.verb_data_source,
+        "verb_demand_bucket": settings.verb_demand_bucket,
         "audio_backend": settings.audio_backend,
         "port": settings.port,
         "loaded_languages": lexicon_store.loaded_languages(),
@@ -21,10 +24,13 @@ def health(request: Request) -> dict[str, object]:
 
 
 @router.get("/health/data")
-def health_data() -> dict[str, object]:
+def health_data(request: Request) -> dict[str, object]:
+    settings = request.app.state.settings
+
     return {
         "status": "ok",
-        "languages": lexicon_store.loaded_languages(),
+        "verb_data_source": settings.verb_data_source,
+        "loaded_languages": lexicon_store.loaded_languages(),
     }
 
 
