@@ -6,8 +6,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Settings:
-    app_env: str
-    environment: str  # <-- NEW
+    environment: str
 
     host: str
     port: int
@@ -27,33 +26,42 @@ class Settings:
 
 
 def _resolve_environment() -> str:
-    # 1) explicit override (preferred)
     env = os.getenv("ENVIRONMENT")
     if env:
         return env
 
-    # 2) infer from Cloud Run service name
     service_name = os.getenv("K_SERVICE", "")
     if service_name.endswith("-stage"):
         return "stage"
     if service_name:
         return "prod"
 
-    # 3) fallback
+    return "local"
+
+
+def _resolve_verb_data_source(environment: str) -> str:
+    override = os.getenv("VERB_DATA_SOURCE")
+    if override:
+        return override
+
+    if environment in {"stage", "prod"}:
+        return "firestore"
+
     return "local"
 
 
 def load_settings() -> Settings:
+    environment = _resolve_environment()
+
     settings = Settings(
-        app_env=os.getenv("APP_ENV", "local"),
-        environment=_resolve_environment(),
+        environment=environment,
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8080")),
         audio_backend=os.getenv("AUDIO_BACKEND", "local"),
         local_audio_cache_dir=os.getenv("LOCAL_AUDIO_CACHE_DIR", "runtime/audio_cache"),
         google_cloud_project=os.getenv("GOOGLE_CLOUD_PROJECT", ""),
         audio_bucket=os.getenv("AUDIO_BUCKET", ""),
-        verb_data_source=os.getenv("VERB_DATA_SOURCE", "local"),
+        verb_data_source=_resolve_verb_data_source(environment),
         verb_demand_bucket=os.getenv("VERB_DEMAND_BUCKET", ""),
         verb_signal_prefix=os.getenv(
             "VERB_SIGNAL_PREFIX",
@@ -73,11 +81,6 @@ def _validate(settings: Settings) -> None:
         raise ValueError(
             f"Unsupported AUDIO_BACKEND={settings.audio_backend}. "
             "Expected 'local' or 'gcs'."
-        )
-
-    if settings.app_env not in {"local", "cloud", "test"}:
-        raise ValueError(
-            f"Unsupported APP_ENV={settings.app_env}. Expected local|cloud|test"
         )
 
     if settings.environment not in {"local", "stage", "prod"}:
