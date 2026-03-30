@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 
 from fastapi import APIRouter, Request
 
@@ -13,8 +14,8 @@ def health(request: Request) -> dict[str, object]:
 
     return {
         "status": "ok",
-        "app_env": settings.app_env,
         "environment": settings.environment,
+        "K_SERVICE": os.getenv("K_SERVICE"),
         "verb_data_source": settings.verb_data_source,
         "verb_demand_bucket": settings.verb_demand_bucket,
         "audio_backend": settings.audio_backend,
