@@ -19,7 +19,7 @@ class Settings:
     audio_bucket: str
 
     verb_data_source: str
-    verb_signal_bucket: str
+    verb_demand_bucket: str
     verb_signal_prefix: str
     verbs_collection: str
 
@@ -54,7 +54,7 @@ def load_settings() -> Settings:
         google_cloud_project=os.getenv("GOOGLE_CLOUD_PROJECT", ""),
         audio_bucket=os.getenv("AUDIO_BUCKET", ""),
         verb_data_source=os.getenv("VERB_DATA_SOURCE", "local"),
-        verb_signal_bucket=os.getenv("VERB_DEMAND_BUCKET", ""),
+        verb_demand_bucket=os.getenv("VERB_DEMAND_BUCKET", ""),
         verb_signal_prefix=os.getenv(
             "VERB_SIGNAL_PREFIX",
             "admin/missing-verb-searches/",
@@ -105,8 +105,8 @@ def _validate(settings: Settings) -> None:
         )
 
     # --- safety guardrails ---
-    if settings.environment == "prod" and "stage" in settings.verb_signal_bucket:
-        raise ValueError("Prod cannot use stage verb signal bucket")
+    if settings.environment == "prod" and "stage" in settings.verb_demand_bucket:
+        raise ValueError("Prod cannot use stage verb demand bucket")
 
-    if settings.environment == "stage" and "prod" in settings.verb_signal_bucket:
-        raise ValueError("Stage cannot use prod verb signal bucket")
+    if settings.environment == "stage" and "prod" in settings.verb_demand_bucket:
+        raise ValueError("Stage cannot use prod verb demand bucket")
