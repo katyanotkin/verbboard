@@ -50,6 +50,17 @@ def _resolve_verb_data_source(environment: str) -> str:
     return "local"
 
 
+def _resolve_audio_backend(environment: str) -> str:
+    override = os.getenv("AUDIO_BACKEND")
+    if override:
+        return override
+
+    if environment in {"stage", "prod"}:
+        return "gcs"
+
+    return "local"
+
+
 def load_settings() -> Settings:
     environment = _resolve_environment()
 
@@ -57,7 +68,7 @@ def load_settings() -> Settings:
         environment=environment,
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8080")),
-        audio_backend=os.getenv("AUDIO_BACKEND", "local"),
+        audio_backend=_resolve_audio_backend(environment),
         local_audio_cache_dir=os.getenv("LOCAL_AUDIO_CACHE_DIR", "runtime/audio_cache"),
         google_cloud_project=os.getenv("GOOGLE_CLOUD_PROJECT", ""),
         audio_bucket=os.getenv("AUDIO_BUCKET", ""),

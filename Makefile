@@ -12,6 +12,8 @@ GCP_PROJECT?=knotmem26
 
 VERB_DEMAND_BUCKET_STAGE=verbboard-verb-signal-stage
 VERB_DEMAND_BUCKET_PROD=verbboard-verb-signal-prod
+AUDIO_BUCKET_STAGE=verbboard-audio-stage
+AUDIO_BUCKET_PROD=verbboard-audio-prod
 
 GCP_RUNTIME_SERVICE_ACCOUNT?=$(shell gcloud projects describe $(GCP_PROJECT) --format='value(projectNumber)')-compute@developer.gserviceaccount.com
 
@@ -155,7 +157,7 @@ gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
 		--image $(GCP_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars APP_ENV=cloud,ENVIRONMENT=stage,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),VERB_DEMAND_BUCKET=$(VERB_DEMAND_BUCKET_STAGE) \
+		--set-env-vars ENVIRONMENT=stage,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),VERB_DEMAND_BUCKET=$(VERB_DEMAND_BUCKET_STAGE),AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE)\
 		--allow-unauthenticated
 
 ## GCP: build + deploy to stage
@@ -196,7 +198,7 @@ gcp-promote-stage-to-prod: gcp-check gcp-setup-prod-verb-signal ## GCP: promote 
 		--image $(STAGE_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars APP_ENV=cloud,ENVIRONMENT=prod,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),VERB_DEMAND_BUCKET=$(VERB_DEMAND_BUCKET_PROD) \
+		--set-env-vars ENVIRONMENT=prod,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),VERB_DEMAND_BUCKET=$(VERB_DEMAND_BUCKET_PROD),AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
 		--allow-unauthenticated
 
 ## GCP: create bucket if missing

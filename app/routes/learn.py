@@ -93,7 +93,10 @@ async def learn(
         )
 
     if tasks:
-        await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for result in results:
+            if isinstance(result, Exception):
+                print(f"Audio generation failed: {result}")
 
     html = render_board_html(board=board)
     return HTMLResponse(html)
