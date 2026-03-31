@@ -28,15 +28,12 @@ def _load_entries(language: str):
 
 
 @router.get("/set_language", response_model=None)
-def set_language(language: str, voice: str = "female"):
+def set_language(language: str):
     entries = _load_entries(language)
     default_verb_id = entries[0].id if entries else ""
 
-    response = RedirectResponse(
-        url=f"/?language={language}&voice={voice}&verb_id={default_verb_id}"
-    )
+    response = RedirectResponse(url=f"/?language={language}&verb_id={default_verb_id}")
     response.set_cookie("language", language, httponly=False, samesite="lax")
-    response.set_cookie("voice", voice, httponly=False, samesite="lax")
     if default_verb_id:
         response.set_cookie("verb_id", default_verb_id, httponly=False, samesite="lax")
     return response
@@ -45,14 +42,13 @@ def set_language(language: str, voice: str = "female"):
 @router.get("/search_verb", response_model=None)
 def search_verb(
     language: str,
-    voice: str = "female",
     q: str = "",
 ):
     entries = _load_entries(language)
 
     query = (q or "").strip()
     if not query:
-        return RedirectResponse(url=f"/?language={language}&voice={voice}")
+        return RedirectResponse(url=f"/?language={language}")
 
     matched_entry = find_best_entry(entries, query)
 
@@ -60,20 +56,18 @@ def search_verb(
         matched_verb_id = matched_entry.id
 
         response = RedirectResponse(
-            url=f"/learn?language={language}&verb_id={matched_verb_id}&voice={voice}"
+            url=f"/learn?language={language}&verb_id={matched_verb_id}"
         )
         response.set_cookie("language", language, httponly=False, samesite="lax")
-        response.set_cookie("voice", voice, httponly=False, samesite="lax")
         response.set_cookie("verb_id", matched_verb_id, httponly=False, samesite="lax")
         return response
 
     log_missing_verb_search(language=language, query=query)
 
     response = RedirectResponse(
-        url=f"/?language={language}&voice={voice}&search={query}&not_available=1"
+        url=f"/?language={language}&search={query}&not_available=1"
     )
     response.set_cookie("language", language, httponly=False, samesite="lax")
-    response.set_cookie("voice", voice, httponly=False, samesite="lax")
     return response
 
 
@@ -81,7 +75,6 @@ def search_verb(
 def home(
     request: Request,
     language: str | None = Query(None),
-    voice: str | None = Query(None),
     verb_id: str | None = Query(None),
     search: str | None = Query(None),
     not_available: int | None = Query(None),
@@ -89,16 +82,11 @@ def home(
     plugins = all_plugins()
 
     cookie_language = request.cookies.get("language")
-    cookie_voice = request.cookies.get("voice")
     cookie_verb_id = request.cookies.get("verb_id")
 
     selected_language = language or cookie_language or "he"
     if selected_language not in plugins:
         selected_language = "he"
-
-    selected_voice = voice or cookie_voice or "female"
-    if selected_voice not in ("female", "male"):
-        selected_voice = "female"
 
     entries = _load_entries(selected_language)
 
@@ -127,16 +115,10 @@ def home(
         for entry in entries
     )
 
-    voice_options = "\n".join(
-        f"<option value='{voice_key}' {'selected' if voice_key == selected_voice else ''}>{voice_key.title()}</option>"
-        for voice_key in ("female", "male")
-    )
-
     notice_html = ""
     if str(not_available) == "1" and raw_search_value.strip():
         notice_html = (
-            "<div style='max-width:360px;margin:0 auto 16px auto;padding:12px 14px;"
-            "background:#fff7ed;border:1px solid #fdba74;border-radius:12px;color:#9a3412;'>"
+            "<div class='notice'>"
             f"No match in the current set: <b>{escape(raw_search_value)}</b>"
             "</div>"
         )
@@ -146,311 +128,105 @@ def home(
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Verb Board (MVP0)</title>
-  <style>
-    .secondary-label {{
-      font-weight: 600;
-      color: #6b7280;
-    }}
-
-    .progress-row {{
-      margin-top: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }}
-
-    .progress-bar {{
-      flex: 1;
-      height: 6px;
-      background: #e5e7eb;
-      border-radius: 999px;
-      overflow: hidden;
-      border: 1px solid #d1d5db;
-    }}
-
-    .progress-fill {{
-      height: 100%;
-      background: #4a90e2;
-      width: 0%;
-      transition: width 0.2s ease;
-    }}
-
-    .progress-meta {{
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      min-width: 48px;
-      justify-content: flex-end;
-    }}
-
-    .progress-star {{
-      width: 14px;
-      height: 14px;
-    }}
-
-    .progress-count {{
-      font-size: 12px;
-      font-weight: 600;
-      color: #374151;
-      font-variant-numeric: tabular-nums;
-    }}
-
-    .search-row {{
-      position: relative;
-      z-index: 100;
-      margin-top: 18px;
-      padding-top: 14px;
-      border-top: 1px solid #e5e7eb;
-    }}
-
-    .search-input-wrap {{
-      position: relative;
-      width: 100%;
-    }}
-
-    .search-suggestions {{
-      display: none;
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 100%;
-      margin-top: 4px;
-      max-height: 220px;
-      overflow-y: auto;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      background: #fff;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
-      z-index: 50;
-      box-sizing: border-box;
-    }}
-
-    .search-suggestions.is-visible {{
-      display: block;
-    }}
-
-    .search-suggestion {{
-      display: block;
-      width: 100%;
-      margin: 0;
-      padding: 8px 10px;
-      border: none;
-      border-bottom: 1px solid #f3f4f6;
-      background: transparent;
-      cursor: pointer;
-      font: inherit;
-      text-align: left;
-      color: #111827;
-    }}
-
-    .search-suggestion:last-child {{
-      border-bottom: none;
-    }}
-
-    .search-suggestion:hover,
-    .search-suggestion:focus {{
-      background: #f3f4f6;
-      outline: none;
-    }}
-
-    .search-suggestion-main {{
-      font-size: 1rem;
-    }}
-    body {{
-      font-family: system-ui, sans-serif;
-      margin: 24px auto;
-      max-width: 820px;
-      padding: 0 16px;
-      background: #f7f8fb;
-      color: #1f2937;
-    }}
-
-    h1 {{
-      margin-bottom: 20px;
-    }}
-
-    form.controls {{
-      max-width: 360px;
-      margin: 0 auto;
-      padding: 24px;
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-      overflow: visible;
-    }}
-
-    .row {{
-      margin: 14px 0;
-    }}
-
-    .row.center {{
-      text-align: center;
-      margin-top: 20px;
-    }}
-
-    .row.dual-actions {{
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }}
-
-    label {{
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 700;
-    }}
-
-    select,
-    input[type="text"] {{
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      box-sizing: border-box;
-    }}
-
-    .learn-btn,
-    .search-btn {{
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px 20px;
-      border-radius: 999px;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.12s ease;
-      text-decoration: none;
-      background: #e5e7eb;
-      color: #111827;
-    }}
-
-    .learn-btn.is-primary,
-    .search-btn.is-primary {{
-      background: #2563eb;
-      color: white;
-    }}
-
-    .learn-btn:hover,
-    .search-btn:hover {{
-      transform: translateY(-1px);
-      filter: brightness(1.02);
-    }}
-
-    .learn-btn:disabled {{
-      cursor: wait;
-      pointer-events: none;
-    }}
-
-    .learn-btn.loading {{
-      opacity: 0.7;
-      filter: grayscale(0.4);
-      transform: none;
-    }}
-  </style>
+  <title>Verb Board</title>
+  <link rel="stylesheet" href="/static/home.css"/>
 </head>
 
 <body>
-  <h1>Verb Board (MVP0)</h1>
+  <div class="page">
+    <h1>Verb Board</h1>
 
-
-  <form
-    action="/learn"
-    method="get"
-    class="controls"
-    onsubmit="
-      if (event.submitter && event.submitter.name === 'search_submit') return true;
-      const btn = this.querySelector('.learn-btn');
-      btn.disabled = true;
-      btn.classList.add('loading');
-      btn.querySelector('.learn-label').textContent = 'Loading…';
-      btn.querySelector('.learn-icon').textContent = '•••';
-    "
-  >
-
-    <div class="row">
-      <label>Language focus</label>
-      <select
-        name="language"
-        onchange="window.location='/set_language?language=' + this.value + '&voice=' + document.querySelector('select[name=voice]').value;"
-      >
-        {lang_options}
-      </select>
-    </div>
-
-    <div class="progress-row">
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: 0%"></div>
+    <form
+      action="/learn"
+      method="get"
+      class="controls"
+      onsubmit="
+        if (event.submitter && event.submitter.name === 'search_submit') return true;
+        const btn = this.querySelector('.learn-btn');
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.querySelector('.learn-label').textContent = 'Loading…';
+        btn.querySelector('.learn-icon').textContent = '•••';
+      "
+    >
+      <div class="intro-hint">
+        🌐 Language → 🧩 Verb → ▶ Learn
       </div>
-      <div class="progress-meta">
-        <img src="/static/gold-star.svg" class="progress-star" alt="Known">
-        <span class="progress-count">001</span>
+
+      <div class="row">
+      <label><span class="label-icon">🌐</span> Language focus</label>
+        <select
+          name="language"
+          onchange="window.location='/set_language?language=' + this.value;"
+        >
+          {lang_options}
+        </select>
       </div>
-    </div>
 
-    <div class="row">
-      <label>Verb</label>
-      <select name="verb_id" id="verb-select">
-        {verb_options}
-      </select>
-    </div>
-     
-
-    <div class="row">
-      <label>Voice</label>
-      <select name="voice">
-        {voice_options}
-      </select>
-    </div>
-
-    <div class="row search-row">
-      <label class="secondary-label">Or find a verb</label>
-      <div class="search-input-wrap">
-        <input
-          type="text"
-          name="q"
-          id="search-input"
-          value="{escape(search_value)}"
-          placeholder="Type using the same spelling as in the verb list"
-          autocomplete="off"
-        />
-        <div id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Verb suggestions"></div>
+      <div class="row">
+      <label><span class="label-icon">🧩</span> Choose a verb</label>
+        <select name="verb_id" id="verb-select">
+          {verb_options}
+        </select>
       </div>
-      {notice_html}
-    </div>
 
-    <div class="row center dual-actions">
-      <button
-        type="submit"
-        formaction="/search_verb"
-        formmethod="get"
-        class="search-btn"
-        id="search-btn"
-        name="search_submit"
-        value="1"
-      >
-        Find
-      </button>
+      <div class="progress-row">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="progress-meta">
+          <img src="/static/gold-star.svg" class="progress-star" alt="Known">
+          <span class="progress-count">001</span>
+        </div>
+      </div>
 
-      <button type="submit" class="learn-btn is-primary" id="learn-btn">
-        <span class="learn-label">Learn</span>
-        <span class="learn-icon">▶</span>
-      </button>
-    </div>
+      <div class="row search-row">
+        <label class="secondary-label">🔍 Find or request a verb</label>
+        <div class="search-input-wrap">
+          <input
+            type="text"
+            name="q"
+            id="search-input"
+            value="{escape(search_value)}"
+            placeholder="Type a verb to find it or request it"
+            autocomplete="off"
+          />
+          <div id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Verb suggestions"></div>
+        </div>
+        <div class="field-help">
+          Missing verb? We track demand for future additions.
+        </div>
+        {notice_html}
+      </div>
 
-  </form>
-<script src="/static/home.js"></script>
+      <div class="row center dual-actions">
+        <button
+          type="submit"
+          formaction="/search_verb"
+          formmethod="get"
+          class="search-btn"
+          id="search-btn"
+          name="search_submit"
+          value="1"
+        >
+          Find
+        </button>
+
+        <button type="submit" class="learn-btn is-primary" id="learn-btn">
+          <span class="learn-label">Start Learning</span>
+          <span class="learn-icon">▶</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script src="/static/home.js"></script>
 </body>
 </html>
 """
 
     response = HTMLResponse(html)
     response.set_cookie("language", selected_language, httponly=False, samesite="lax")
-    response.set_cookie("voice", selected_voice, httponly=False, samesite="lax")
     if selected_verb_id:
         response.set_cookie("verb_id", selected_verb_id, httponly=False, samesite="lax")
     return response

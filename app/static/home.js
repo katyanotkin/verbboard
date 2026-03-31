@@ -22,7 +22,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     searchButton.classList.toggle("is-primary", hasText);
     learnButton.classList.toggle("is-primary", !hasText);
-    learnButton.style.opacity = hasText ? "0.75" : "1";
+
+    learnButton.classList.toggle("is-dimmed", hasText);
+    learnButton.disabled = hasText;
+
+    searchButton.disabled = !hasText;	  
   }
 
   function getLanguage() {
@@ -192,10 +196,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function openVerb(verbId) {
     const language = getLanguage();
-    const voiceSelect = document.querySelector('select[name="voice"]');
-    const voice = voiceSelect ? voiceSelect.value : "female";
 
-    window.location = `/learn?language=${encodeURIComponent(language)}&verb_id=${encodeURIComponent(verbId)}&voice=${encodeURIComponent(voice)}`;
+    window.location = `/learn?language=${encodeURIComponent(language)}&verb_id=${encodeURIComponent(verbId)}`;
   }
 
   function renderSuggestions(query) {
@@ -258,6 +260,28 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (searchInput) {
+	searchInput.addEventListener("keydown", function (event) {
+	  if (event.key !== "Enter") return;
+
+	  const query = searchInput.value.trim();
+
+	  // suggestions visible → take first
+	  if (suggestionsBox && suggestionsBox.classList.contains("is-visible")) {
+	    const first = suggestionsBox.querySelector(".search-suggestion");
+	    if (first) {
+	      event.preventDefault();
+	      first.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+	      return;
+	    }
+	  }
+
+	  // text exists → trigger search
+	  if (query.length > 0) {
+	    event.preventDefault();
+	    searchButton.click();
+	  }
+	});
+
     searchInput.addEventListener("input", function () {
       updatePrimaryAction();
       renderSuggestions(searchInput.value);
