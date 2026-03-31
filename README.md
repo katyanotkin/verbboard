@@ -96,18 +96,25 @@ Hook installed at:
 ---
 
 ## Notes
-### 2026-03-25
+### 2026-03-30
 
-- Stateless architecture (no DB; browser `localStorage` for progress)
-- Audio generated on demand and cached via backend
+- Cloud-backed architecture:
+  - Firestore used as primary verb store (runtime reads)
+  - GCS used for audio caching (on-demand generation → persistent storage)
+- Stateless application layer (Cloud Run)
+- Audio generated on demand and cached in GCS
 - Search supports conjugated forms (intent-based match, first hit wins)
-- Missing searches logged for future verb expansion
-- Learning loop introduced:
+- Search UX:
+  - autocomplete suggestions
+- Missing searches logged to GCS for demand analysis (`VERB_DEMAND_BUCKET`)
+- Learning loop:
   - `seen` (✓)
   - `known` (★)
-- No backend personalization
+- No backend personalization (yet)
+- Stage / prod environments separated (buckets + config)
 
 ### Upcoming
 
-- Database-backed lexicon
-- Ingestion pipeline for adding new verbs
+- Admin flow for approving / rejecting demanded verbs
+- Firestore-backed ingestion pipeline (no more static lexicon dependency)
+- Optional user state / personalization (TBD)
