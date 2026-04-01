@@ -128,13 +128,16 @@ def home(
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Verb Board</title>
+  <title>VerbBoard</title>
   <link rel="stylesheet" href="/static/home.css"/>
 </head>
 
 <body>
   <div class="page">
-    <h1>Verb Board</h1>
+  <h1 class="page-title">
+    VerbBoard <span class="copyright">©</span>
+    <a href="/about" class="about-inline">About</a>
+  </h1>
 
     <form
       action="/learn"
