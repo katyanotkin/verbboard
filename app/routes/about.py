@@ -65,6 +65,10 @@ def about_page() -> str:
       display: block;
     }
 
+    .content[dir="rtl"] {
+      text-align: right;
+    }
+
     .back {
       text-align: center;
       margin-top: 20px;
@@ -82,9 +86,10 @@ def about_page() -> str:
   <h1>About VerbBoard</h1>
 
   <div class="lang-toggle">
-    <button onclick="setLang('en')" id="btn-en" class="active">EN</button>
-    <button onclick="setLang('ru')" id="btn-ru">RU</button>
-    <button onclick="setLang('es')" id="btn-es">ES</button>
+    <button onclick="setLang('en')" id="btn-en" class="active">🇺🇸 EN</button>
+    <button onclick="setLang('ru')" id="btn-ru">🇷🇺 RU</button>
+    <button onclick="setLang('es')" id="btn-es">🇪🇸 ES</button>
+    <button onclick="setLang('he')" id="btn-he">🇮🇱 HE</button>
   </div>
 
   <!-- EN -->
@@ -96,7 +101,7 @@ def about_page() -> str:
     Verbs are roughly ordered by frequency and usefulness.</p>
 
     <p><b>Progress</b><br/>
-    ★ = known<br/>
+    ★ = learned<br/>
     ✓ = seen<br/>
     Progress is saved in your browser.</p>
 
@@ -110,10 +115,10 @@ def about_page() -> str:
     Изучение глаголов через использование, а не заучивание.</p>
 
     <p><b>Порядок глаголов</b><br/>
-    Глаголы отсортированы по частоте употребления.</p>
+    Глаголы примерно отсортированы по частоте и полезности.</p>
 
     <p><b>Прогресс</b><br/>
-    ★ = знаю<br/>
+    ★ = запомнил<br/>
     ✓ = видел<br/>
     Прогресс сохраняется в браузере.</p>
 
@@ -126,16 +131,33 @@ def about_page() -> str:
     <p><b>Qué es</b><br/>
     Aprende verbos mediante uso, no memorización.</p>
 
-    <p><b>Orden de verbos</b><br/>
-    Los verbos están ordenados por frecuencia y utilidad.</p>
+    <p><b>Orden de los verbos</b><br/>
+    Los verbos están ordenados aproximadamente por frecuencia y utilidad.</p>
 
     <p><b>Progreso</b><br/>
-    ★ = conocido<br/>
+    ★ = aprendido<br/>
     ✓ = visto<br/>
     El progreso se guarda en tu navegador.</p>
 
     <p><b>Faltan verbos</b><br/>
     Escribe un verbo — registramos la demanda y añadimos más.</p>
+  </div>
+
+  <!-- HE -->
+  <div id="content-he" class="content" dir="rtl">
+    <p><b>מה זה</b><br/>
+    לומדים פעלים דרך שימוש, לא שינון.</p>
+
+    <p><b>סדר הפעלים</b><br/>
+    הפעלים מסודרים בקירוב לפי תדירות ושימושיות.</p>
+
+    <p><b>התקדמות</b><br/>
+    ★ = נלמד<br/>
+    ✓ = נראה<br/>
+    ההתקדמות נשמרת בדפדפן.</p>
+
+    <p><b>פועל חסר</b><br/>
+    הקלידו פועל — אנחנו עוקבים אחרי הביקוש ומוסיפים בהמשך.</p>
   </div>
 
   <div class="back">

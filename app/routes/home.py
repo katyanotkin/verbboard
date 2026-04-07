@@ -216,8 +216,8 @@ def home(
         </button>
 
         <button type="submit" class="learn-btn is-primary" id="learn-btn">
-          <span class="learn-label">Start Learning</span>
           <span class="learn-icon">▶</span>
+          <span class="learn-label">Learn</span>
         </button>
       </div>
     </form>
