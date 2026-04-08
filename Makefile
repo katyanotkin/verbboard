@@ -15,6 +15,8 @@ VERB_DEMAND_BUCKET_PROD=verbboard-verb-signal-prod
 AUDIO_BUCKET_STAGE=verbboard-audio-stage
 AUDIO_BUCKET_PROD=verbboard-audio-prod
 
+PREVIEW_DOMAIN=preview.verbboard.com
+
 GCP_RUNTIME_SERVICE_ACCOUNT?=$(shell gcloud projects describe $(GCP_PROJECT) --format='value(projectNumber)')-compute@developer.gserviceaccount.com
 
 IMAGE_TAG=$(shell git rev-parse --short HEAD)
@@ -33,7 +35,8 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 	gcp-ensure-bucket gcp-grant-bucket-writer \
         gcp-setup-stage-verb-signal gcp-setup-prod-verb-signal \
 	audit-examples audit-en audit-ru audit-he audit-es \
-	test test-demand
+	test test-demand \
+	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview
 
 ## Show available commands
 help:
@@ -263,6 +266,39 @@ gcp-setup-stage-firestore: gcp-check
 ## GCP: ensure prod runtime has Firestore access
 gcp-setup-prod-firestore: gcp-check
 	$(MAKE) gcp-grant-firestore-access SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+
+## GCP: map preview domain to prod service
+gcp-map-preview: gcp-check ## GCP: create domain mapping for preview.verbboard.com -> prod service
+	gcloud beta run domain-mappings create \
+		--service $(GCP_SERVICE) \
+		--domain $(PREVIEW_DOMAIN) \
+		--region $(GCP_REGION)
+
+## GCP: show preview domain mapping status
+gcp-preview-domain-status: gcp-check ## GCP: show preview domain mapping
+	gcloud beta run domain-mappings describe \
+		--domain $(PREVIEW_DOMAIN) \
+		--region $(GCP_REGION)
+
+## GCP: remove preview domain mapping
+gcp-unmap-preview: gcp-check ## GCP: delete preview domain mapping
+	gcloud beta run domain-mappings delete \
+		--domain $(PREVIEW_DOMAIN) \
+		--region $(GCP_REGION)
+
+## GCP: smoke test prod
+smoke-prod: gcp-check ## GCP: smoke test prod service
+	@BASE_URL="$$(gcloud run services describe $(GCP_SERVICE) --region $(GCP_REGION) --format='value(status.url)')"; \
+	test -n "$$BASE_URL" || (echo "ERROR: could not resolve prod service URL" && exit 1); \
+	python scripts/smoke.py "$$BASE_URL"
+
+## GCP: smoke test stage
+smoke-stage: gcp-check ## GCP: smoke test stage service
+	@BASE_URL="$$(gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(status.url)')"; \
+	test -n "$$BASE_URL" || (echo "ERROR: could not resolve stage service URL" && exit 1); \
+	python scripts/smoke.py "$$BASE_URL"
+
+smoke-preview: smoke-prod ## alias (preview == prod)
 
 ## QA: audit examples for all languages
 audit-examples: ## QA: run example audit for all languages
