@@ -8,6 +8,7 @@ from app.routes.health import router as health_router
 from app.routes.home import router as home_router
 from app.routes.learn import router as learn_router
 from app.routes.about import router as about_router
+from app.routes.feedback import router as feedback_router
 from core.audio_backend.factory import create_audio_backend
 from core.lexicon import lexicon_store
 from core.settings import load_settings
@@ -38,3 +39,4 @@ app.include_router(learn_router)
 app.include_router(audio_router)
 app.include_router(health_router)
 app.include_router(about_router)
+app.include_router(feedback_router)

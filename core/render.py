@@ -8,7 +8,7 @@ from core.paths import TEMPLATES_DIR
 NO_AUDIO_ROW_KEYS = {"aspect", "pair"}
 
 
-def render_board_html(board: Board) -> str:
+def render_board_html(board: Board, return_to: str | None = None) -> str:
     lemma = board.verb.display_lemma or board.verb.lemma
     if isinstance(lemma, dict):
         title = f"{lemma.get('imperfective', '')} / {lemma.get('perfective', '')}"
@@ -92,13 +92,16 @@ def render_board_html(board: Board) -> str:
         )
 
     home_href = (
-        f"/?language={escape(board.language)}"
-        f"&voice={escape(board.voice_key)}"
+        f"/?language={escape(board.language)}" f"&verb_id={escape(board.verb.id)}"
+    )
+
+    resolved_return_to = return_to or (
+        f"/learn?language={escape(board.language)}"
         f"&verb_id={escape(board.verb.id)}"
+        f"&voice={escape(board.voice_key)}"
     )
 
     voice_key = (board.voice_key or "").lower()
-
     female_active = "active" if voice_key == "female" else ""
     male_active = "active" if voice_key == "male" else ""
 
@@ -108,6 +111,7 @@ def render_board_html(board: Board) -> str:
         .replace("{{voice_key}}", escape(board.voice_key))
         .replace("{{verb_id}}", escape(board.verb.id))
         .replace("{{home_href}}", home_href)
+        .replace("{{return_to}}", escape(resolved_return_to))
         .replace("{{female_active}}", female_active)
         .replace("{{male_active}}", male_active)
         .replace("{{sections}}", "".join(sections_html))

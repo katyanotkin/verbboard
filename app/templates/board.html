@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>{{title}}</title>
+<link rel="stylesheet" href="/static/common.css"/>
 
 <style>
 body {
@@ -311,6 +312,14 @@ button {
 	  <button class="known-btn" id="known-btn" title="Mark as known" aria-pressed="false">
 	    <img src="/static/gold-star.svg" class="known-icon" alt="Known">
 	  </button>
+
+	  <a
+ 		href="/feedback?page=learn&language={{language}}&verb_id={{verb_id}}&return_to={{return_to}}"
+  		class="feedback-link"
+  		title="Send feedback"
+		>
+  		💬
+	  </a>
 	</div>	    
   </div>
 

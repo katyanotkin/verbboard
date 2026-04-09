@@ -129,6 +129,7 @@ def home(
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>VerbBoard</title>
+  <link rel="stylesheet" href="/static/common.css"/>
   <link rel="stylesheet" href="/static/home.css"/>
 </head>
 
@@ -220,6 +221,15 @@ def home(
           <span class="learn-label">Learn</span>
         </button>
       </div>
+
+        <div class="feedback-row">
+            <a
+                href="/feedback?page=home&language={escape(selected_language)}&return_to=/?language={escape(selected_language)}"
+                class="feedback-link"
+            >
+            💬 Feedback
+            </a>
+        </div>
     </form>
   </div>
 

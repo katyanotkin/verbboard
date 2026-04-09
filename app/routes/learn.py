@@ -98,5 +98,6 @@ async def learn(
             if isinstance(result, Exception):
                 print(f"Audio generation failed: {result}")
 
-    html = render_board_html(board=board)
+    current_url = str(request.url)
+    html = render_board_html(board=board, return_to=current_url)
     return HTMLResponse(html)

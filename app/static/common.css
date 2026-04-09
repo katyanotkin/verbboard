@@ -1,0 +1,20 @@
+.feedback-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.12s ease;
+}
+
+.feedback-link:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
