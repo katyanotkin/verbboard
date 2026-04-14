@@ -26,6 +26,7 @@ Thumbs.db
 runtime/audio_cache/
 !runtime/audio_cache/.gitkeep
 runtime/admin_logs/
+.env
 
 # Temporary
 *.tmp

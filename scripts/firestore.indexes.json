@@ -1,0 +1,22 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "demand_signal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "ts",     "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "demand_signal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "language", "order": "ASCENDING" },
+        { "fieldPath": "status",   "order": "ASCENDING" },
+        { "fieldPath": "ts",       "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

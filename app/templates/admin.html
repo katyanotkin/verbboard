@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verbboard admin</title>
+<link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="name">Verbboard</div>
+      <div class="sub">Admin</div>
+    </div>
+    <div class="nav-item active" data-panel="feedback" onclick="showPanel('feedback')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+        <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H9l-3 2v-2H3a1 1 0 01-1-1V3z" fill="currentColor" opacity="0.7"/>
+      </svg>
+      Feedback
+    </div>
+    <div class="nav-item" data-panel="signals" onclick="showPanel('signals')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+        <path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Verb demand
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- FEEDBACK PANEL -->
+    <div id="panel-feedback" class="panel active">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="fb-total">—</div></div>
+        <div class="stat"><div class="stat-label">With comment</div><div class="stat-val" id="fb-with-comment">—</div></div>
+        <div class="stat"><div class="stat-label">Languages</div><div class="stat-val" id="fb-langs">—</div></div>
+      </div>
+      <div class="toolbar">
+        <div class="toolbar-title">Feedback</div>
+        <select id="fb-filter-lang" onchange="renderFeedback()">
+          <option value="">All languages</option>
+        </select>
+        <select id="fb-filter-source" onchange="renderFeedback()">
+          <option value="">All sources</option>
+        </select>
+      </div>
+      <div class="card">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Comment</th>
+              <th>Lang</th>
+              <th>Page</th>
+              <th>Source</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="fb-body">
+            <tr><td colspan="6" class="loading">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SIGNALS PANEL -->
+    <div id="panel-signals" class="panel">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Total signals</div><div class="stat-val" id="sig-total">—</div></div>
+        <div class="stat"><div class="stat-label">Unique queries</div><div class="stat-val" id="sig-unique">—</div></div>
+        <div class="stat"><div class="stat-label">Languages</div><div class="stat-val" id="sig-langs">—</div></div>
+      </div>
+      <div class="toolbar">
+        <div class="toolbar-title">Verb demand signals</div>
+        <select id="sig-filter-lang" onchange="renderActiveSignalView()">
+          <option value="">All languages</option>
+        </select>
+        <select id="sig-filter-status" onchange="renderActiveSignalView()">
+          <option value="">All statuses</option>
+          <option value="__unclassified__">Unclassified</option>
+          <option value="candidate">Candidate</option>
+          <option value="in_set">In set</option>
+          <option value="garbage">Garbage</option>
+          <option value="processed">Processed</option>
+        </select>
+        <div class="view-toggle">
+          <button id="btn-view-aggr" class="toggle-btn active" onclick="setSigView('aggr')">Aggregated</button>
+          <button id="btn-view-raw"  class="toggle-btn"        onclick="setSigView('raw')">Raw signals</button>
+        </div>
+      </div>
+
+      <!-- aggregated view -->
+      <div id="sig-aggr-view">
+        <div class="toolbar" style="margin-bottom:10px;margin-top:0">
+          <span style="font-size:12px;color:var(--muted)">Sort by</span>
+          <select id="sig-sort" onchange="renderAggr()">
+            <option value="count">Count (high → low)</option>
+            <option value="last">Last seen (newest first)</option>
+            <option value="query">Query (A → Z)</option>
+          </select>
+        </div>
+        <div class="card">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Query</th>
+                <th>Lang</th>
+                <th>Count</th>
+                <th>Last seen</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="sig-aggr-body">
+              <tr><td colspan="5" class="loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- raw view -->
+      <div id="sig-raw-view" style="display:none">
+        <div class="toolbar" style="margin-bottom:10px">
+          <button id="btn-hide-processed" class="toggle-btn" onclick="loadOrToggleProcessed()">Load processed</button>
+        </div>
+        <div class="card">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Query</th>
+                <th>Lang</th>
+                <th>Timestamp</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="sig-body">
+              <tr><td colspan="4" class="loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  window.ADMIN_ROOT = '__ADMIN_ROOT__';
+</script>
+<script src="/static/admin.js"></script>
+</body>
+</html>

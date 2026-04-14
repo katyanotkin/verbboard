@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import json
 import logging
-import os
 from datetime import UTC, datetime
 from pathlib import Path
-from urllib.parse import quote
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -14,53 +12,33 @@ def log_missing_verb_search(language: str, query: str) -> None:
     normalized_query = query.strip().casefold()
     if not normalized_query:
         return
-
     record = {
         "ts": datetime.now(UTC).isoformat(),
         "language": language,
         "query": normalized_query,
+        "status": None,
     }
-
     _append_local(record)
-    _write_gcs_event(record)
+    _write_firestore_signal(record)
 
 
-def _append_local(record: dict[str, str]) -> None:
+def _append_local(record: dict) -> None:
     log_dir = Path("runtime/admin_logs")
     log_dir.mkdir(parents=True, exist_ok=True)
-
     log_path = log_dir / "missing_verb_searches.jsonl"
-    with log_path.open("a", encoding="utf-8") as output_file:
-        output_file.write(json.dumps(record, ensure_ascii=False) + "\n")
+    with log_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
-def _write_gcs_event(record: dict[str, str]) -> None:
-    bucket_name = os.getenv("ADMIN_LOG_BUCKET")
-    if not bucket_name:
+def _write_firestore_signal(record: dict) -> None:
+    from core.settings import load_settings
+    from core.storage.firestore_db import get_db
+
+    col = load_settings().verb_signals_collection
+    if not col:
         return
-
     try:
-        from google.cloud import storage
+        db = get_db()
+        db.collection(col).document().set(record)
     except Exception:
-        logger.exception("google-cloud-storage is not available for admin logging")
-        return
-
-    try:
-        client = storage.Client()
-        bucket = client.bucket(bucket_name)
-
-        timestamp = record["ts"].replace(":", "-")
-        safe_language = quote(record["language"], safe="")
-        safe_query = quote(record["query"], safe="")
-        blob_name = (
-            "admin/missing-verb-searches/"
-            f"{timestamp}_{safe_language}_{safe_query}.json"
-        )
-
-        blob = bucket.blob(blob_name)
-        blob.upload_from_string(
-            json.dumps(record, ensure_ascii=False, indent=2),
-            content_type="application/json",
-        )
-    except Exception:
-        logger.exception("Failed to write missing verb search to GCS")
+        logger.exception("Failed to write verb signal to Firestore")

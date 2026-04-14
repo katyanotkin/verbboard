@@ -83,7 +83,7 @@ lexicon: ## LOCAL: regenerate lexicons for all languages
 
 ## LOCAL: run app without Docker
 local-run: ## LOCAL: run uvicorn with reload
-	$(PYTHON) -m uvicorn app.main:app --reload
+	set -a && . $(PWD)/.env && set +a && $(PYTHON) -m uvicorn app.main:app --reload --port $(HOST_PORT)
 
 ## LOCAL: refresh runtime lexicons
 local-refresh: lexicon ## LOCAL: refresh lexicons only
