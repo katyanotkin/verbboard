@@ -2,6 +2,15 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from functools import lru_cache
+
+from dotenv import load_dotenv
+from google.cloud import secretmanager
+
+
+load_dotenv()
+
+_ADMIN_SECRET_NAME = "verbboard-admin-secret"
 
 
 @dataclass(frozen=True)
@@ -18,6 +27,7 @@ class Settings:
     verb_signal_labels_collection: str
     verbs_collection: str
     log_level: str
+    admin_secret: str
 
 
 def _resolve_environment() -> str:
@@ -50,6 +60,37 @@ def _resolve_audio_backend(environment: str) -> str:
     return "local"
 
 
+@lru_cache(maxsize=1)
+def _load_admin_secret() -> str:
+    env_secret = os.getenv("ADMIN_SECRET", "").strip()
+    if env_secret:
+        return env_secret
+
+    environment = _resolve_environment()
+    if environment == "local":
+        raise ValueError("ADMIN_SECRET is not set in environment or .env for local run")
+
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
+    if not project_id:
+        raise ValueError(
+            "GOOGLE_CLOUD_PROJECT must be set when ADMIN_SECRET is not provided"
+        )
+
+    client = secretmanager.SecretManagerServiceClient()
+    secret_version_name = (
+        f"projects/{project_id}/secrets/{_ADMIN_SECRET_NAME}/versions/latest"
+    )
+    response = client.access_secret_version(request={"name": secret_version_name})
+    secret_value = response.payload.data.decode("utf-8").strip()
+
+    if not secret_value:
+        raise ValueError(
+            f"Secret {_ADMIN_SECRET_NAME} resolved to an empty ADMIN_SECRET"
+        )
+
+    return secret_value
+
+
 def load_settings() -> Settings:
     environment = _resolve_environment()
     settings = Settings(
@@ -63,10 +104,12 @@ def load_settings() -> Settings:
         verb_data_source=_resolve_verb_data_source(environment),
         verb_signals_collection=os.getenv("VERB_SIGNALS_COLLECTION", "demand_signal"),
         verb_signal_labels_collection=os.getenv(
-            "VERB_SIGNAL_LABELS_COLLECTION", "demand_signal_labels"
+            "VERB_SIGNAL_LABELS_COLLECTION",
+            "demand_signal_labels",
         ),
         verbs_collection=os.getenv("VERBS_COLLECTION", "verbs"),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
+        admin_secret=_load_admin_secret(),
     )
     _validate(settings)
     return settings
@@ -97,3 +140,5 @@ def _validate(settings: Settings) -> None:
         raise ValueError(
             "GOOGLE_CLOUD_PROJECT must be set when VERB_DATA_SOURCE=firestore"
         )
+    if not settings.admin_secret:
+        raise ValueError("ADMIN_SECRET must not be empty")

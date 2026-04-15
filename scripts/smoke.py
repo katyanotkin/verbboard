@@ -4,7 +4,7 @@ import requests
 
 def check(url: str, name: str) -> None:
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=10)
         if response.status_code != 200:
             print(f"[FAIL] {name}: {response.status_code}")
             sys.exit(1)

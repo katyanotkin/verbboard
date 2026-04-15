@@ -16,6 +16,8 @@ AUDIO_BUCKET_STAGE=verbboard-audio-stage
 AUDIO_BUCKET_PROD=verbboard-audio-prod
 
 PREVIEW_DOMAIN=preview.verbboard.com
+STAGE_URL="https://stage.verbboard.com"
+PROD_URL="https://verbboard.com"
 
 GCP_RUNTIME_SERVICE_ACCOUNT?=$(shell gcloud projects describe $(GCP_PROJECT) --format='value(projectNumber)')-compute@developer.gserviceaccount.com
 
@@ -288,13 +290,13 @@ gcp-unmap-preview: gcp-check ## GCP: delete preview domain mapping
 
 ## GCP: smoke test prod
 smoke-prod: gcp-check ## GCP: smoke test prod service
-	@BASE_URL="$$(gcloud run services describe $(GCP_SERVICE) --region $(GCP_REGION) --format='value(status.url)')"; \
+	@BASE_URL=${PROD_URL}; \
 	test -n "$$BASE_URL" || (echo "ERROR: could not resolve prod service URL" && exit 1); \
 	python scripts/smoke.py "$$BASE_URL"
 
 ## GCP: smoke test stage
 smoke-stage: gcp-check ## GCP: smoke test stage service
-	@BASE_URL="$$(gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(status.url)')"; \
+	@BASE_URL="${STAGE_URL}"; \
 	test -n "$$BASE_URL" || (echo "ERROR: could not resolve stage service URL" && exit 1); \
 	python scripts/smoke.py "$$BASE_URL"
 
