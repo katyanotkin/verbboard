@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -8,13 +7,14 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
+from core.settings import load_settings
 from core.storage.firestore_db import get_db
 
-_ADMIN_SECRET = os.getenv("ADMIN_SECRET", "admin-change-me")
+_SETTINGS = load_settings()
+_ADMIN_SECRET = _SETTINGS.admin_secret
 _TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 
 router = APIRouter(prefix=f"/{_ADMIN_SECRET}")
-
 
 # ---------------------------------------------------------------------------
 # HTML shell
