@@ -10,8 +10,6 @@ GCP_STAGE_SERVICE=verbboard-stage
 GCP_REPOSITORY=verbboard
 GCP_PROJECT?=knotmem26
 
-VERB_DEMAND_BUCKET_STAGE=verbboard-verb-signal-stage
-VERB_DEMAND_BUCKET_PROD=verbboard-verb-signal-prod
 AUDIO_BUCKET_STAGE=verbboard-audio-stage
 AUDIO_BUCKET_PROD=verbboard-audio-prod
 
@@ -162,7 +160,7 @@ gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
 		--image $(GCP_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars ENVIRONMENT=stage,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),VERB_DEMAND_BUCKET=$(VERB_DEMAND_BUCKET_STAGE),AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE)\
+		--set-env-vars ENVIRONMENT=stage,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE)\
 		--allow-unauthenticated
 
 ## GCP: build + deploy to stage
@@ -203,7 +201,7 @@ gcp-promote-stage-to-prod: gcp-check gcp-setup-prod-verb-signal gcp-setup-prod-a
 		--image $(STAGE_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars ENVIRONMENT=prod,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),VERB_DEMAND_BUCKET=$(VERB_DEMAND_BUCKET_PROD),AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
+		--set-env-vars ENVIRONMENT=prod,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
 		--allow-unauthenticated
 
 ## GCP: create bucket if missing
@@ -225,16 +223,6 @@ gcp-grant-bucket-writer: gcp-check
 	gcloud storage buckets add-iam-policy-binding gs://$(BUCKET) \
 		--member="serviceAccount:$(SERVICE_ACCOUNT)" \
 		--role="roles/storage.objectCreator"
-
-## GCP: ensure stage verb-signal bucket exists and grant access
-gcp-setup-stage-verb-signal: gcp-check
-	$(MAKE) gcp-ensure-bucket BUCKET=$(VERB_DEMAND_BUCKET_STAGE)
-	$(MAKE) gcp-grant-bucket-writer BUCKET=$(VERB_DEMAND_BUCKET_STAGE) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
-
-## GCP: ensure prod verb-signal bucket exists and grant access
-gcp-setup-prod-verb-signal: gcp-check
-	$(MAKE) gcp-ensure-bucket BUCKET=$(VERB_DEMAND_BUCKET_PROD)
-	$(MAKE) gcp-grant-bucket-writer BUCKET=$(VERB_DEMAND_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
 
 ## GCP: grant runtime service account read/write access to bucket
 gcp-grant-bucket-audio-access: gcp-check

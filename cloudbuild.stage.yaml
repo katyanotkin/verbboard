@@ -1,0 +1,27 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - us-east1-docker.pkg.dev/$PROJECT_ID/verbboard/verbboard:$COMMIT_SHA
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - us-east1-docker.pkg.dev/$PROJECT_ID/verbboard/verbboard:$COMMIT_SHA
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - verbboard-stage
+      - --image=us-east1-docker.pkg.dev/$PROJECT_ID/verbboard/verbboard:$COMMIT_SHA
+      - --region=us-east1
+      - --platform=managed
+      - --allow-unauthenticated
+      - --set-env-vars=ENVIRONMENT=stage,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,AUDIO_BUCKET=verbboard-audio-stage,VERB_SIGNALS_COLLECTION=demand_signal,VERB_SIGNAL_LABELS_COLLECTION=demand_signal_labels,VERBS_COLLECTION=verbs,LOG_LEVEL=INFO
+
+images:
+  - us-east1-docker.pkg.dev/$PROJECT_ID/verbboard/verbboard:$COMMIT_SHA
