@@ -15,6 +15,15 @@ let processedLoaded     = false;
 // search extracts per language: { "en": Set([...]) }
 const extractsCache = {};
 
+// status order
+const statusOrder = {
+  candidate: 0,
+  in_set: 1,
+  __unclassified__: 2,
+  garbage: 3,
+};
+
+
 // ── nav ────────────────────────────────────────────────────────────────────
 function showPanel(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -294,9 +303,22 @@ function renderAggr() {
   const sortBy = document.getElementById('sig-sort').value;
   let rows = aggrRows();
 
-  if      (sortBy === 'count') rows.sort((a, b) => b.count - a.count);
-  else if (sortBy === 'last')  rows.sort((a, b) => b.last_ts.localeCompare(a.last_ts));
-  else                         rows.sort((a, b) => a.query.localeCompare(b.query));
+  if (sortBy === 'count') {
+    rows.sort((a, b) => b.count - a.count);
+  } else if (sortBy === 'last') {
+    rows.sort((a, b) => b.last_ts.localeCompare(a.last_ts));
+  } else if (sortBy === 'status') {
+    rows.sort((a, b) => {
+      const aStatus = statusOrder[a.status ?? "__unclassified__"] ?? 999;
+      const bStatus = statusOrder[b.status ?? "__unclassified__"] ?? 999;
+      if (aStatus !== bStatus) return aStatus - bStatus;
+      if (a.count !== b.count) return b.count - a.count;
+      if (a.last_ts !== b.last_ts) return b.last_ts.localeCompare(a.last_ts);
+      return a.query.localeCompare(b.query);
+    });
+  } else {
+    rows.sort((a, b) => a.query.localeCompare(b.query));
+  }	
 
   const tbody = document.getElementById('sig-aggr-body');
   if (!rows.length) { tbody.innerHTML = '<tr class="empty"><td colspan="6">No signals</td></tr>'; return; }

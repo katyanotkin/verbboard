@@ -78,27 +78,38 @@ async def delete_feedback(doc_id: str) -> JSONResponse:
 
 
 def _cols() -> tuple[str, str]:
-    """Return (signals_collection, labels_collection)."""
-    from core.settings import load_settings
-
-    s = load_settings()
-    return s.verb_signals_collection, s.verb_signal_labels_collection
+    return _SETTINGS.verb_signals_collection, _SETTINGS.verb_signal_labels_collection
 
 
 @router.get("/api/signals")
 async def list_signals(
     language: str | None = None,
     include_processed: bool = False,
+    status: str | None = None,
+    sort_by: str = "ts",
+    sort_dir: str = "desc",
 ) -> JSONResponse:
     db = get_db()
     sig_col, _ = _cols()
-    q = db.collection(sig_col).order_by("ts", direction="DESCENDING").limit(2000)
-    if not include_processed:
-        q = q.where("status", "==", None)
+
+    query_ref = db.collection(sig_col)
+
     if language:
-        q = q.where("language", "==", language)
+        query_ref = query_ref.where("language", "==", language)
+
+    if status is not None:
+        normalized_status = status.strip().lower()
+        if normalized_status in {"", "none", "unprocessed", "raw"}:
+            query_ref = query_ref.where("status", "==", None)
+        else:
+            query_ref = query_ref.where("status", "==", normalized_status)
+    elif not include_processed:
+        query_ref = query_ref.where("status", "==", None)
+
+    docs = query_ref.limit(2000).stream()
+
     results: list[dict[str, Any]] = []
-    for doc in q.stream():
+    for doc in docs:
         data = doc.to_dict()
         results.append(
             {
@@ -109,6 +120,27 @@ async def list_signals(
                 "status": data.get("status", None),
             }
         )
+
+    allowed_sort_fields = {"ts", "language", "query", "status"}
+    if sort_by not in allowed_sort_fields:
+        raise HTTPException(
+            status_code=400,
+            detail=f"sort_by must be one of {sorted(allowed_sort_fields)}",
+        )
+
+    if sort_dir not in {"asc", "desc"}:
+        raise HTTPException(status_code=400, detail="sort_dir must be 'asc' or 'desc'")
+
+    reverse_sort = sort_dir == "desc"
+
+    def sort_key(item: dict[str, Any]) -> tuple[int, str]:
+        value = item.get(sort_by)
+        if value is None:
+            return (1, "")
+        return (0, str(value).casefold())
+
+    results.sort(key=sort_key, reverse=reverse_sort)
+
     return JSONResponse({"signals": results})
 
 
@@ -195,7 +227,7 @@ async def classify_signal_group(request: Request) -> JSONResponse:
     batch = db.batch()
     batch_size = 0
     for doc in raw_docs:
-        batch.update(doc.reference, {"status": "processed"})
+        batch.update(doc.reference, {"status": status})
         batch_size += 1
         if batch_size == 500:  # Firestore batch limit
             batch.commit()
@@ -223,15 +255,15 @@ async def delete_signal_label(label_id: str) -> JSONResponse:
     data = doc.to_dict()
     query = data.get("query", "")
     language = data.get("language", "")
+    label_status = data.get("status")
 
     ref.delete()
 
-    # restore raw signals to unclassified
     raw_docs = (
         db.collection(sig_col)
         .where("language", "==", language)
         .where("query", "==", query)
-        .where("status", "==", "processed")
+        .where("status", "==", label_status)
         .stream()
     )
     batch = db.batch()
