@@ -219,8 +219,8 @@ async def delete_signal_label(label_id: str) -> JSONResponse:
 
     batch = db.batch()
     batch_size = 0
-    for doc in raw_docs:
-        batch.update(doc.reference, {"status": None})
+    for raw_doc in raw_docs:
+        batch.update(raw_doc.reference, {"status": None})
         batch_size += 1
         if batch_size == 500:
             batch.commit()
@@ -230,7 +230,24 @@ async def delete_signal_label(label_id: str) -> JSONResponse:
     if batch_size:
         batch.commit()
 
-    return JSONResponse({"deleted": label_id, "restored": batch_size})
+    deleted_candidate = False
+    if label_status == "candidate":
+        candidate_id = f"{language}_{query}"
+        candidate_ref = db.collection(CANDIDATES_COLLECTION).document(candidate_id)
+        candidate_doc = candidate_ref.get()
+        if candidate_doc.exists:
+            candidate_data = candidate_doc.to_dict()
+            if candidate_data.get("status") == "needs_generation":
+                candidate_ref.delete()
+                deleted_candidate = True
+
+    return JSONResponse(
+        {
+            "deleted": label_id,
+            "restored": batch_size,
+            "deleted_candidate": deleted_candidate,
+        }
+    )
 
 
 @router.get("/api/verbs/search_extracts")
