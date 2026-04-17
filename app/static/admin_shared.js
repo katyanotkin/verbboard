@@ -19,8 +19,8 @@ const extractsCache = {};
 
 const statusOrder = {
   candidate: 0,
-  in_set: 1,
-  __unclassified__: 2,
+  in_set: 2,
+  __unclassified__: 1,
   garbage: 3,
 };
 

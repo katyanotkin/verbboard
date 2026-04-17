@@ -257,22 +257,27 @@ function renderAggr() {
     const isTrash = !item.labelId && !item.status && item.trashReason;
 
     let actionCell;
-    if (item.labelId) {
-      actionCell = `<span style="display:flex;align-items:center;gap:6px">
-          ${statusPill(item.status)}
-          <button class="btn-del" title="Undo classification"
-            onclick="undoLabel('${esc(item.labelId)}',this)">↩</button>
-        </span>`;
-    } else if (isTrash) {
-      actionCell = `<span style="display:flex;align-items:center;gap:6px">
-          <span class="trash-hint" title="${esc(item.trashReason)}">${esc(item.trashReason)}</span>
-          <button class="btn-confirm-trash" onclick="quickTrash('${esc(item.query)}','${esc(item.language)}',this)">Mark garbage</button>
-        </span>`;
-    } else if (canClassify) {
-      actionCell = aggrClassifySelect(item.query, item.language, item.status);
-    } else {
-      actionCell = statusPill(item.status);
-    }
+	if (item.labelId) {
+	  if (item.status === 'in_set') {
+	    // final state → no undo allowed
+	    actionCell = statusPill(item.status);
+	  } else {
+	    actionCell = `<span style="display:flex;align-items:center;gap:6px">
+		${statusPill(item.status)}
+		<button class="btn-del" title="Undo classification"
+		  onclick="undoLabel('${esc(item.labelId)}',this)">↩</button>
+	      </span>`;
+	  }
+	} else if (isTrash) {
+	  actionCell = `<span style="display:flex;align-items:center;gap:6px">
+	      <span class="trash-hint" title="${esc(item.trashReason)}">${esc(item.trashReason)}</span>
+	      <button class="btn-confirm-trash" onclick="quickTrash('${esc(item.query)}','${esc(item.language)}',this)">Mark garbage</button>
+	    </span>`;
+	} else if (canClassify) {
+	  actionCell = aggrClassifySelect(item.query, item.language, item.status);
+	} else {
+	  actionCell = statusPill(item.status);
+	}	  
 
     const rowClass = isTrash ? 'trash-candidate' : '';
     return `<tr class="${rowClass}">

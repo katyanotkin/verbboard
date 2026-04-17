@@ -10,6 +10,7 @@ from core.lexicon import load_lexicon
 from core.paths import DATA_DIR
 from core.registry import all_plugins
 from core.search_utils import find_best_entry
+from core.storage.verb_repository import find_verb_by_search_extract
 
 
 router = APIRouter()
@@ -44,12 +45,25 @@ def search_verb(
     language: str,
     q: str = "",
 ):
-    entries = _load_entries(language)
-
     query = (q or "").strip()
     if not query:
         return RedirectResponse(url=f"/?language={language}")
 
+    # 1. Try Firestore first
+    doc = find_verb_by_search_extract(language, query)
+
+    if doc:
+        matched_verb_id = doc.get("verb_id")
+
+        response = RedirectResponse(
+            url=f"/learn?language={language}&verb_id={matched_verb_id}"
+        )
+        response.set_cookie("language", language, httponly=False, samesite="lax")
+        response.set_cookie("verb_id", matched_verb_id, httponly=False, samesite="lax")
+        return response
+
+    # 2. Fallback to local lexicon
+    entries = _load_entries(language)
     matched_entry = find_best_entry(entries, query)
 
     if matched_entry:
