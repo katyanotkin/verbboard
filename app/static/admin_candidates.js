@@ -196,38 +196,32 @@ async function regenSingle(verbId, button) {
     );
 
     if (response.status === 409) {
-	  const conflict = await response.json().catch(() => ({}));
-	  const candidate = candidatesData.find(item => item.verb_id === verbId);
+      const conflict = await response.json().catch(() => ({}));
+      const candidate = candidatesData.find(item => item.verb_id === verbId);
 
-	  if (candidate) {
-	    candidate.status = 'duplicate';
-	    if (conflict.duplicate_of) {
-	      candidate.duplicate_of = conflict.duplicate_of;
-	    }
-	  }
+      if (candidate) {
+        candidate.status = 'duplicate';
+        if (conflict.duplicate_of) {
+          candidate.duplicate_of = conflict.duplicate_of;
+        }
+      }
 
-	  // if we're in "Active" filter, switch to "All" so row doesn't disappear
-	  const statusFilter = document.getElementById('cand-filter-status');
-	  if (statusFilter && statusFilter.value === 'needs_generation,pending,to_be_fixed') {
-	    statusFilter.value = '';
-	  }
+      const statusFilter = document.getElementById('cand-filter-status');
+      if (statusFilter && statusFilter.value === 'needs_generation,pending,to_be_fixed') {
+        statusFilter.value = '';
+      }
 
-	  updateCandidateStats();
-	  renderCandidates();
+      updateCandidateStats();
+      renderCandidates();
 
-	  alert(
-	    conflict.detail ||
-	    conflict.message ||
-	    'Duplicate detected. Candidate marked as duplicate.'
-	  );
+      alert(
+        conflict.detail ||
+        conflict.message ||
+        'Duplicate detected. Candidate marked as duplicate.',
+      );
 
-	  return;
-	}
-
-  updateCandidateStats();
-  renderCandidates();
-  return;
-}
+      return;
+    }
 
     if (!response.ok) {
       const errorPayload = await response.json().catch(() => ({ detail: response.statusText }));
@@ -264,36 +258,30 @@ async function promoteCandidate(verbId, button) {
     );
 
     if (response.status === 409) {
-	  const conflict = await response.json().catch(() => ({}));
-	  const candidate = candidatesData.find(item => item.verb_id === verbId);
+      const conflict = await response.json().catch(() => ({}));
+      const candidate = candidatesData.find(item => item.verb_id === verbId);
 
-	  if (candidate) {
-	    candidate.status = 'duplicate';
-	    if (conflict.duplicate_of) {
-	      candidate.duplicate_of = conflict.duplicate_of;
-	    }
-	  }
+      if (candidate) {
+        candidate.status = 'duplicate';
+        if (conflict.duplicate_of) {
+          candidate.duplicate_of = conflict.duplicate_of;
+        }
+      }
 
-	  // if we're in "Active" filter, switch to "All" so row doesn't disappear
-	  const statusFilter = document.getElementById('cand-filter-status');
-	  if (statusFilter && statusFilter.value === 'needs_generation,pending,to_be_fixed') {
-	    statusFilter.value = '';
-	  }
-
-	  updateCandidateStats();
-	  renderCandidates();
-
-	  alert(
-	    conflict.detail ||
-	    conflict.message ||
-	    'Duplicate detected. Candidate marked as duplicate.'
-	  );
-
-	  return;
-	}
+      const statusFilter = document.getElementById('cand-filter-status');
+      if (statusFilter && statusFilter.value === 'needs_generation,pending,to_be_fixed') {
+        statusFilter.value = '';
+      }
 
       updateCandidateStats();
       renderCandidates();
+
+      alert(
+        conflict.detail ||
+        conflict.message ||
+        'Duplicate detected. Candidate marked as duplicate.',
+      );
+
       return;
     }
 
