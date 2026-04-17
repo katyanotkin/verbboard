@@ -3,38 +3,40 @@
 
 const ROOT = window.ADMIN_ROOT;
 
-// ── state ──────────────────────────────────────────────────────────────────
+// ── state ────────────────────────────────────────────────────────────────────
 let feedbackData  = [];
-let signalsData   = [];   // raw signal docs (unprocessed + processed)
-let labelsData    = [];   // label docs: { id, query, language, status, count, last_ts }
-let signalsLoaded = false;
-let sigView          = 'aggr';
-let hideProcessed       = false;
-let processedLoaded     = false;
+let signalsData   = [];   // raw signal docs
+let labelsData    = [];   // label docs
+let candidatesData = [];  // verb_candidates docs
 
-// search extracts per language: { "en": Set([...]) }
+let signalsLoaded    = false;
+let candidatesLoaded = false;
+let sigView          = 'aggr';
+let hideProcessed    = false;
+let processedLoaded  = false;
+
 const extractsCache = {};
 
-// status order
 const statusOrder = {
-  candidate: 0,
-  in_set: 1,
+  candidate:       0,
+  in_set:          1,
   __unclassified__: 2,
-  garbage: 3,
+  garbage:         3,
 };
 
 
-// ── nav ────────────────────────────────────────────────────────────────────
+// ── nav ───────────────────────────────────────────────────────────────────────
 function showPanel(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
   document.querySelector(`[data-panel="${name}"]`).classList.add('active');
   location.hash = name;
-  if (name === 'signals' && !signalsLoaded) loadSignals();
+  if (name === 'signals'    && !signalsLoaded)    loadSignals();
+  if (name === 'candidates' && !candidatesLoaded) loadCandidates();
 }
 
-// ── view toggle ────────────────────────────────────────────────────────────
+// ── view toggle ───────────────────────────────────────────────────────────────
 function setSigView(v) {
   sigView = v;
   document.getElementById('sig-aggr-view').style.display = v === 'aggr' ? '' : 'none';
@@ -49,7 +51,7 @@ function renderActiveSignalView() {
   else renderRaw();
 }
 
-// ── feedback ───────────────────────────────────────────────────────────────
+// ── feedback ──────────────────────────────────────────────────────────────────
 async function loadFeedback() {
   try {
     const res = await fetch(`${ROOT}/api/feedback`);
@@ -110,7 +112,7 @@ async function deleteFeedback(id, btn) {
   }
 }
 
-// ── signals — load ─────────────────────────────────────────────────────────
+// ── signals — load ────────────────────────────────────────────────────────────
 async function loadSignals() {
   signalsLoaded = true;
   try {
@@ -147,7 +149,7 @@ async function loadExtracts(language) {
   }
 }
 
-// ── signals — classify (effective status for a raw signal) ─────────────────
+// ── signals — classify ────────────────────────────────────────────────────────
 function classifyRaw(signal) {
   const extracts = extractsCache[signal.language];
   if (extracts && extracts.has(signal.query.toLowerCase())) return 'in_set';
@@ -156,7 +158,6 @@ function classifyRaw(signal) {
   return null;
 }
 
-// effective status for an aggregated row (checks label first, then extracts)
 function classifyAggr(query, language) {
   const extracts = extractsCache[language];
   if (extracts && extracts.has(query.toLowerCase())) return 'in_set';
@@ -164,13 +165,12 @@ function classifyAggr(query, language) {
   return label ? label.status : null;
 }
 
-// ── signals — trash heuristic ─────────────────────────────────────────────
-// Expected scripts per language
+// ── signals — trash heuristic ─────────────────────────────────────────────────
 const LANG_SCRIPTS = {
-  en: /^[a-zA-Z\u00C0-\u024F\s\'\-]+$/,
-  es: /^[a-zA-Z\u00C0-\u024F\s\'\-]+$/,
-  ru: /^[\u0400-\u04FF\s\'\-]+$/,
-  he: /^[\u05B0-\u05EA\s\'\-]+$/,
+  en: /^[a-zA-Z\u00C0-\u024F\s'\-]+$/,
+  es: /^[a-zA-Z\u00C0-\u024F\s'\-]+$/,
+  ru: /^[\u0400-\u04FF\s'\-]+$/,
+  he: /^[\u05B0-\u05EA\s'\-]+$/,
 };
 
 function trashScore(query, language) {
@@ -184,9 +184,8 @@ function trashScore(query, language) {
   return null;
 }
 
-// ── signals — stats ────────────────────────────────────────────────────────
+// ── signals — stats ───────────────────────────────────────────────────────────
 function updateSignalStats() {
-  // unprocessed raw signals + label rows = total unique demand
   const unprocessed = signalsData.filter(s => s.status !== 'processed');
   document.getElementById('sig-total').textContent  = unprocessed.length + labelsData.length;
   document.getElementById('sig-unique').textContent =
@@ -201,21 +200,19 @@ function updateSignalStats() {
     ].filter(Boolean)).size;
 }
 
-// ── signals — helpers ──────────────────────────────────────────────────────
+// ── signals — helpers ─────────────────────────────────────────────────────────
 function statusPill(status) {
   const map = {
-    garbage:   ['Likely garbage',  'garbage'],
-    candidate: ['Candidate verb',  'candidate'],
-    in_set:    ['Already in set',  'in_set'],
+    garbage:   ['Likely garbage', 'garbage'],
+    candidate: ['Candidate verb', 'candidate'],
+    in_set:    ['Already in set', 'in_set'],
   };
   if (!status || !map[status]) return `<span class="status-pill unset">Unclassified</span>`;
   const [label, cls] = map[status];
   return `<span class="status-pill ${cls}">${label}</span>`;
 }
 
-// classify select for aggregated row (candidate / garbage only, no in_set)
 function aggrClassifySelect(query, language, currentStatus) {
-  const labelId = `${language}_${query}`;
   const opts = [
     ['', currentStatus ? '— change —' : '— classify —'],
     ['candidate', 'Candidate verb'],
@@ -225,12 +222,11 @@ function aggrClassifySelect(query, language, currentStatus) {
     onchange="classifyGroup('${esc(query)}','${esc(language)}',this)">${opts}</select>`;
 }
 
-// ── signals — aggregated view ──────────────────────────────────────────────
+// ── signals — aggregated view ─────────────────────────────────────────────────
 function aggrRows() {
   const langFilter   = document.getElementById('sig-filter-lang').value;
   const statusFilter = document.getElementById('sig-filter-status').value;
 
-  // start from label docs (already classified)
   const labeled = new Map();
   for (const l of labelsData) {
     if (langFilter && l.language !== langFilter) continue;
@@ -247,7 +243,6 @@ function aggrRows() {
     });
   }
 
-  // aggregate unprocessed raw signals
   const raw = new Map();
   for (const s of signalsData) {
     if (s.status === 'processed') continue;
@@ -258,7 +253,7 @@ function aggrRows() {
       if (statusFilter !== '__unclassified__' && status !== statusFilter) continue;
     }
     const key = `${s.language}\x00${s.query}`;
-    if (labeled.has(key)) continue;   // already in labeled map
+    if (labeled.has(key)) continue;
     if (!raw.has(key)) raw.set(key, { query: s.query, language: s.language, count: 0, last_ts: '', status, labelId: null, trashReason: trashScore(s.query, s.language) });
     const entry = raw.get(key);
     entry.count++;
@@ -277,7 +272,6 @@ async function loadOrToggleProcessed() {
       const res = await fetch(`${ROOT}/api/signals?include_processed=true`);
       if (!res.ok) throw new Error(await res.text());
       const all = (await res.json()).signals;
-      // merge processed into signalsData without duplicating existing
       const existingIds = new Set(signalsData.map(s => s.id));
       for (const s of all) {
         if (!existingIds.has(s.id)) signalsData.push(s);
@@ -309,19 +303,19 @@ function renderAggr() {
     rows.sort((a, b) => b.last_ts.localeCompare(a.last_ts));
   } else if (sortBy === 'status') {
     rows.sort((a, b) => {
-      const aStatus = statusOrder[a.status ?? "__unclassified__"] ?? 999;
-      const bStatus = statusOrder[b.status ?? "__unclassified__"] ?? 999;
-      if (aStatus !== bStatus) return aStatus - bStatus;
+      const aS = statusOrder[a.status ?? '__unclassified__'] ?? 999;
+      const bS = statusOrder[b.status ?? '__unclassified__'] ?? 999;
+      if (aS !== bS) return aS - bS;
       if (a.count !== b.count) return b.count - a.count;
       if (a.last_ts !== b.last_ts) return b.last_ts.localeCompare(a.last_ts);
       return a.query.localeCompare(b.query);
     });
   } else {
     rows.sort((a, b) => a.query.localeCompare(b.query));
-  }	
+  }
 
   const tbody = document.getElementById('sig-aggr-body');
-  if (!rows.length) { tbody.innerHTML = '<tr class="empty"><td colspan="6">No signals</td></tr>'; return; }
+  if (!rows.length) { tbody.innerHTML = '<tr class="empty"><td colspan="5">No signals</td></tr>'; return; }
 
   tbody.innerHTML = rows.map(a => {
     const last        = a.last_ts ? a.last_ts.slice(0, 10) : '';
@@ -330,15 +324,15 @@ function renderAggr() {
     let actionCell;
     if (a.labelId) {
       actionCell = `<span style="display:flex;align-items:center;gap:6px">
-           ${statusPill(a.status)}
-           <button class="btn-del" title="Undo classification"
-             onclick="undoLabel('${esc(a.labelId)}',this)">↩</button>
-         </span>`;
+          ${statusPill(a.status)}
+          <button class="btn-del" title="Undo classification"
+            onclick="undoLabel('${esc(a.labelId)}',this)">↩</button>
+        </span>`;
     } else if (isTrash) {
       actionCell = `<span style="display:flex;align-items:center;gap:6px">
-           <span class="trash-hint" title="${esc(a.trashReason)}">${esc(a.trashReason)}</span>
-           <button class="btn-confirm-trash" onclick="quickTrash('${esc(a.query)}','${esc(a.language)}',this)">Mark garbage</button>
-         </span>`;
+          <span class="trash-hint" title="${esc(a.trashReason)}">${esc(a.trashReason)}</span>
+          <button class="btn-confirm-trash" onclick="quickTrash('${esc(a.query)}','${esc(a.language)}',this)">Mark garbage</button>
+        </span>`;
     } else if (canClassify) {
       actionCell = aggrClassifySelect(a.query, a.language, a.status);
     } else {
@@ -355,15 +349,20 @@ function renderAggr() {
   }).join('');
 }
 
+
 async function classifyGroup(query, language, selectEl) {
   const status = selectEl.value;
   if (!status) return;
   selectEl.disabled = true;
 
-  // compute count + last_ts from current raw signals
-  const matching = signalsData.filter(s => s.query === query && s.language === language && s.status !== 'processed');
-  const count   = matching.length;
-  const last_ts = matching.reduce((best, s) => (!best || s.ts > best ? s.ts : best), '');
+  const matching = signalsData.filter(
+    s => s.query === query && s.language === language && s.status == null
+  );
+  const count = matching.length;
+  const last_ts = matching.reduce(
+    (best, s) => (!best || s.ts > best ? s.ts : best),
+    '',
+  );
 
   try {
     const res = await fetch(`${ROOT}/api/signal_labels`, {
@@ -373,10 +372,13 @@ async function classifyGroup(query, language, selectEl) {
     });
     if (!res.ok) throw new Error(await res.text());
 
-    // update in-memory: mark raw signals as processed, add label
-    signalsData.filter(s => s.query === query && s.language === language)
-      .forEach(s => s.status = 'processed');
-    const existing = labelsData.findIndex(l => l.query === query && l.language === language);
+    signalsData
+      .filter(s => s.query === query && s.language === language && s.status == null)
+      .forEach(s => { s.status = status; });
+
+    const existing = labelsData.findIndex(
+      l => l.query === query && l.language === language,
+    );
     const labelDoc = { id: `${language}_${query}`, query, language, status, count, last_ts };
     if (existing >= 0) labelsData[existing] = labelDoc;
     else labelsData.push(labelDoc);
@@ -391,9 +393,16 @@ async function classifyGroup(query, language, selectEl) {
 
 async function quickTrash(query, language, btn) {
   btn.disabled = true;
-  const matching = signalsData.filter(s => s.query === query && s.language === language && s.status !== 'processed');
-  const count   = matching.length;
-  const last_ts = matching.reduce((best, s) => (!best || s.ts > best ? s.ts : best), '');
+
+  const matching = signalsData.filter(
+    s => s.query === query && s.language === language && s.status == null
+  );
+  const count = matching.length;
+  const last_ts = matching.reduce(
+    (best, s) => (!best || s.ts > best ? s.ts : best),
+    '',
+  );
+
   try {
     const res = await fetch(`${ROOT}/api/signal_labels`, {
       method: 'POST',
@@ -401,19 +410,32 @@ async function quickTrash(query, language, btn) {
       body: JSON.stringify({ query, language, status: 'garbage', count, last_ts }),
     });
     if (!res.ok) throw new Error(await res.text());
-    signalsData.filter(s => s.query === query && s.language === language)
-      .forEach(s => s.status = 'processed');
-    const existing = labelsData.findIndex(l => l.query === query && l.language === language);
-    const labelDoc = { id: `${language}_${query}`, query, language, status: 'garbage', count, last_ts };
+
+    signalsData
+      .filter(s => s.query === query && s.language === language && s.status == null)
+      .forEach(s => { s.status = 'garbage'; });
+
+    const existing = labelsData.findIndex(
+      l => l.query === query && l.language === language,
+    );
+    const labelDoc = {
+      id: `${language}_${query}`,
+      query,
+      language,
+      status: 'garbage',
+      count,
+      last_ts,
+    };
     if (existing >= 0) labelsData[existing] = labelDoc;
     else labelsData.push(labelDoc);
+
     updateSignalStats();
     renderAggr();
   } catch (e) {
     btn.disabled = false;
     alert('Failed: ' + e.message);
   }
-}
+}	
 
 async function undoLabel(labelId, btn) {
   btn.disabled = true;
@@ -421,7 +443,6 @@ async function undoLabel(labelId, btn) {
     const res = await fetch(`${ROOT}/api/signal_labels/${encodeURIComponent(labelId)}`, { method: 'DELETE' });
     if (!res.ok) throw new Error(await res.text());
 
-    // restore in-memory
     const label = labelsData.find(l => l.id === labelId);
     if (label) {
       signalsData.filter(s => s.query === label.query && s.language === label.language && s.status === 'processed')
@@ -437,7 +458,7 @@ async function undoLabel(labelId, btn) {
   }
 }
 
-// ── signals — raw view ─────────────────────────────────────────────────────
+// ── signals — raw view ────────────────────────────────────────────────────────
 function rawRows() {
   const langFilter   = document.getElementById('sig-filter-lang').value;
   const statusFilter = document.getElementById('sig-filter-status').value;
@@ -454,7 +475,7 @@ function rawRows() {
 function renderRaw() {
   const rows  = rawRows();
   const tbody = document.getElementById('sig-body');
-  if (!rows.length) { tbody.innerHTML = '<tr class="empty"><td colspan="5">No signals</td></tr>'; return; }
+  if (!rows.length) { tbody.innerHTML = '<tr class="empty"><td colspan="4">No signals</td></tr>'; return; }
 
   tbody.innerHTML = rows.map(s => {
     const ts     = s.ts ? s.ts.slice(0, 19).replace('T', ' ') : '';
@@ -468,26 +489,333 @@ function renderRaw() {
   }).join('');
 }
 
-// ── helpers ────────────────────────────────────────────────────────────────
+// ── candidates ────────────────────────────────────────────────────────────────
+
+const candStatusOrder = {
+  needs_generation: 0,
+  pending: 1,
+  to_be_fixed: 2,
+  duplicate: 3,
+  promoted: 4,
+};
+
+async function loadCandidates() {
+  candidatesLoaded = true;
+  try {
+    const res = await fetch(`${ROOT}/api/candidates`);
+    if (!res.ok) throw new Error(await res.text());
+    candidatesData = (await res.json()).candidates;
+    const langs = [...new Set(candidatesData.map(c => c.language).filter(Boolean))].sort();
+    populateFilter('cand-filter-lang', langs);
+    updateCandidateStats();
+    renderCandidates();
+  } catch (e) {
+    document.getElementById('cand-body').innerHTML =
+      `<tr><td colspan="8" class="error-msg">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function updateCandidateStats() {
+  document.getElementById('cand-stat-pending').textContent =
+    candidatesData.filter(c => c.status === 'pending' || c.status === 'needs_generation').length;
+  document.getElementById('cand-stat-promoted').textContent =
+    candidatesData.filter(c => c.status === 'promoted').length;
+  document.getElementById('cand-stat-fix').textContent =
+    candidatesData.filter(c => c.status === 'to_be_fixed').length;
+}
+
+function candStatusPill(status) {
+  const map = {
+    needs_generation: ['Needs generation', 'unset'],
+    pending: ['Pending', 'candidate'],
+    to_be_fixed: ['Needs fix', 'garbage'],
+    duplicate: ['Duplicate', 'garbage'],
+    promoted: ['Promoted', 'in_set'],
+  };
+  const [label, cls] = map[status] ?? [status, 'unset'];
+  return `<span class="status-pill ${cls}">${label}</span>`;
+}
+
+function renderFormsTable(forms) {
+  if (!forms || !Object.keys(forms).length) return '<em style="color:var(--muted)">—</em>';
+  const rows = Object.entries(forms)
+    .map(([k, v]) => `<tr>
+      <td style="color:var(--muted);padding-right:8px;white-space:nowrap;font-size:11px">${esc(k)}</td>
+      <td class="mono" style="font-size:11px">${esc(Array.isArray(v) ? v.join(', ') : String(v))}</td>
+    </tr>`)
+    .join('');
+  return `<table style="border-collapse:collapse">${rows}</table>`;
+}
+
+function renderExamplesList(examples) {
+  if (!examples || !examples.length) return '<em style="color:var(--muted)">—</em>';
+  return examples
+    .map((ex, i) => `<div style="font-size:12px;padding:2px 0">
+      <span style="color:var(--muted);margin-right:4px">${i + 1}.</span>${esc(ex.dst ?? ex)}
+    </div>`)
+    .join('');
+}
+
+function renderCandidates() {
+  const langFilter = document.getElementById('cand-filter-lang').value;
+  const statusFilter = document.getElementById('cand-filter-status').value;
+  const sortBy = document.getElementById('cand-sort').value;
+
+  let rows = candidatesData.filter(c => {
+    if (langFilter && c.language !== langFilter) return false;
+    if (statusFilter) {
+      const allowed = statusFilter.split(',');
+      if (!allowed.includes(c.status)) return false;
+    }
+    return true;
+  });
+
+  if (sortBy === 'created') {
+    rows = [...rows].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
+  } else if (sortBy === 'status') {
+    rows = [...rows].sort((a, b) => {
+      const aS = candStatusOrder[a.status] ?? 99;
+      const bS = candStatusOrder[b.status] ?? 99;
+      if (aS !== bS) return aS - bS;
+      if (a.language !== b.language) return a.language.localeCompare(b.language);
+      return a.query.localeCompare(b.query);
+    });
+  } else {
+    rows = [...rows].sort((a, b) => {
+      if (a.language !== b.language) return a.language.localeCompare(b.language);
+      return a.query.localeCompare(b.query);
+    });
+  }
+
+  const tbody = document.getElementById('cand-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr class="empty"><td colspan="8">No candidates</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(c => {
+    const isPromoted = c.status === 'promoted';
+    const needsGen = c.status === 'needs_generation';
+    const isDuplicate = c.status === 'duplicate';
+    const canPromote = c.status === 'pending' || c.status === 'to_be_fixed';
+    const canNeedsFix = c.status === 'pending';
+    const canReopen = c.status === 'to_be_fixed' || c.status === 'duplicate';
+    const canGenerate =
+      c.status === 'needs_generation' ||
+      c.status === 'pending' ||
+      c.status === 'to_be_fixed';
+
+    const actionBtns = [];
+
+    if (canPromote) {
+      actionBtns.push(
+        `<button class="btn-promote" onclick="promoteCandidate('${esc(c.verb_id)}',this)">▲ Promote</button>`
+      );
+    }
+
+    if (canNeedsFix) {
+      actionBtns.push(
+        `<button class="btn-needs-fix" onclick="setCandidateStatus('${esc(c.verb_id)}','to_be_fixed',this)">⚑ Needs fix</button>`
+      );
+    }
+
+    if (canReopen) {
+      actionBtns.push(
+        `<button class="btn-reopen" onclick="setCandidateStatus('${esc(c.verb_id)}','pending',this)">↩ Reopen</button>`
+      );
+    }
+
+    if (canGenerate) {
+      const label = needsGen ? '⚡ Generate' : '⟳ Regen';
+      actionBtns.push(
+        `<button class="btn-regen" onclick="regenSingle('${esc(c.verb_id)}',this)">${label}</button>`
+      );
+    }
+
+    if (isDuplicate) {
+      actionBtns.push(
+        `<button class="btn-del" onclick="deleteCandidate('${esc(c.verb_id)}',this)">🗑 Delete</button>`
+      );
+    }
+
+    const formsCell = needsGen
+      ? '<em style="color:var(--muted);font-size:12px">—</em>'
+      : `<details><summary class="expand-summary">Forms</summary>
+           <div class="expand-body">${renderFormsTable(c.forms)}</div>
+         </details>`;
+
+    const examplesCell = needsGen
+      ? '<em style="color:var(--muted);font-size:12px">—</em>'
+      : `<details><summary class="expand-summary">Examples</summary>
+           <div class="expand-body">${renderExamplesList(c.examples)}</div>
+         </details>`;
+
+    return `<tr id="cand-row-${esc(c.verb_id)}" class="${isPromoted ? 'row-promoted' : ''}">
+      <td><span class="mono">${esc(c.query)}</span></td>
+      <td><span class="mono" style="color:var(--muted)">${c.lemma ? esc(c.lemma) : '—'}</span></td>
+      <td><span class="pill pill-lang">${esc(c.language)}</span></td>
+      <td style="color:var(--muted);font-size:12px">${c.rank ?? '—'}</td>
+      <td>${candStatusPill(c.status)}</td>
+      <td class="cell-expand">${formsCell}</td>
+      <td class="cell-expand">${examplesCell}</td>
+      <td>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+          ${actionBtns.join('')}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function regenSingle(verbId, btn) {
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${ROOT}/api/candidates/${encodeURIComponent(verbId)}/generate`, {
+      method: 'POST',
+    });
+
+    if (res.status === 409) {
+      const conflict = await res.json().catch(() => ({}));
+      const cand = candidatesData.find(c => c.verb_id === verbId);
+      if (cand) {
+        cand.status = 'duplicate';
+        if (conflict.duplicate_of) cand.duplicate_of = conflict.duplicate_of;
+      }
+      updateCandidateStats();
+      renderCandidates();
+      return;
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail ?? res.statusText);
+    }
+
+    const doc = await res.json();
+    const oldIdx = candidatesData.findIndex(
+      c => c.verb_id === verbId || c.verb_id === doc.verb_id
+    );
+    if (oldIdx >= 0) candidatesData[oldIdx] = doc;
+    else candidatesData.push(doc);
+
+    if (doc.verb_id !== verbId) {
+      candidatesData = candidatesData.filter(c => c.verb_id !== verbId);
+    }
+
+    updateCandidateStats();
+    renderCandidates();
+  } catch (e) {
+    btn.disabled = false;
+    alert('Generate failed: ' + e.message);
+  }
+}
+
+async function promoteCandidate(verbId, btn) {
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${ROOT}/api/candidates/${encodeURIComponent(verbId)}/promote`, {
+      method: 'POST',
+    });
+
+    if (res.status === 409) {
+      const conflict = await res.json().catch(() => ({}));
+      const cand = candidatesData.find(c => c.verb_id === verbId);
+      if (cand) {
+        cand.status = 'duplicate';
+        if (conflict.duplicate_of) cand.duplicate_of = conflict.duplicate_of;
+      }
+      updateCandidateStats();
+      renderCandidates();
+      return;
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail ?? res.statusText);
+    }
+
+    const cand = candidatesData.find(c => c.verb_id === verbId);
+    if (cand) cand.status = 'promoted';
+    updateCandidateStats();
+    renderCandidates();
+  } catch (e) {
+    btn.disabled = false;
+    alert('Promote failed: ' + e.message);
+  }
+}
+
+async function setCandidateStatus(verbId, newStatus, btn) {
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${ROOT}/api/candidates/${encodeURIComponent(verbId)}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail ?? res.statusText);
+    }
+    const cand = candidatesData.find(c => c.verb_id === verbId);
+    if (cand) cand.status = newStatus;
+    updateCandidateStats();
+    renderCandidates();
+  } catch (e) {
+    btn.disabled = false;
+    alert('Status update failed: ' + e.message);
+  }
+}
+
+async function deleteCandidate(verbId, btn) {
+  if (!confirm(`Delete candidate ${verbId}?`)) return;
+
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${ROOT}/api/candidates/${encodeURIComponent(verbId)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail ?? res.statusText);
+    }
+
+    candidatesData = candidatesData.filter(c => c.verb_id !== verbId);
+    updateCandidateStats();
+    renderCandidates();
+  } catch (e) {
+    btn.disabled = false;
+    alert('Delete failed: ' + e.message);
+  }
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
 function esc(str) {
   return String(str ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function populateFilter(selectId, values) {
-  const sel   = document.getElementById(selectId);
+  const sel = document.getElementById(selectId);
   const first = sel.options[0];
   sel.innerHTML = '';
   sel.appendChild(first);
   values.forEach(v => {
     const opt = document.createElement('option');
-    opt.value = v; opt.textContent = v;
+    opt.value = v;
+    opt.textContent = v;
     sel.appendChild(opt);
   });
 }
 
-// ── init ───────────────────────────────────────────────────────────────────
-const _initPanel = ['feedback', 'signals'].includes(location.hash.slice(1))
-  ? location.hash.slice(1) : 'feedback';
+// ── init ──────────────────────────────────────────────────────────────────────
+
+const _initPanel = ['feedback', 'signals', 'candidates'].includes(location.hash.slice(1))
+  ? location.hash.slice(1)
+  : 'feedback';
+
 showPanel(_initPanel);
 loadFeedback();

@@ -11,6 +11,7 @@ from google.cloud import secretmanager
 load_dotenv()
 
 _ADMIN_SECRET_NAME = "verbboard-admin-secret"
+_ANTHROPIC_SECRET_NAME = "verbboard-anthropic-api-key"
 
 
 @dataclass(frozen=True)
@@ -77,17 +78,38 @@ def _load_admin_secret() -> str:
         )
 
     client = secretmanager.SecretManagerServiceClient()
-    secret_version_name = (
-        f"projects/{project_id}/secrets/{_ADMIN_SECRET_NAME}/versions/latest"
-    )
-    response = client.access_secret_version(request={"name": secret_version_name})
+    name = f"projects/{project_id}/secrets/{_ADMIN_SECRET_NAME}/versions/latest"
+    response = client.access_secret_version(request={"name": name})
     secret_value = response.payload.data.decode("utf-8").strip()
-
     if not secret_value:
+        raise ValueError(f"Secret {_ADMIN_SECRET_NAME} resolved to an empty value")
+    return secret_value
+
+
+@lru_cache(maxsize=1)
+def _load_anthropic_api_key() -> str:
+    env_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+    if env_key:
+        return env_key
+
+    environment = _resolve_environment()
+    if environment == "local":
         raise ValueError(
-            f"Secret {_ADMIN_SECRET_NAME} resolved to an empty ADMIN_SECRET"
+            "ANTHROPIC_API_KEY is not set in environment or .env for local run"
         )
 
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
+    if not project_id:
+        raise ValueError(
+            "GOOGLE_CLOUD_PROJECT must be set when ANTHROPIC_API_KEY is not provided"
+        )
+
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{project_id}/secrets/{_ANTHROPIC_SECRET_NAME}/versions/latest"
+    response = client.access_secret_version(request={"name": name})
+    secret_value = response.payload.data.decode("utf-8").strip()
+    if not secret_value:
+        raise ValueError(f"Secret {_ANTHROPIC_SECRET_NAME} resolved to an empty value")
     return secret_value
 
 

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import anthropic
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
@@ -13,6 +15,11 @@ from core.storage.firestore_db import get_db
 _SETTINGS = load_settings()
 _ADMIN_SECRET = _SETTINGS.admin_secret
 _TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
+
+VERBS_COLLECTION = "verbs"
+CANDIDATES_COLLECTION = "verb_candidates"
+
+CANDIDATE_STATUSES = {"needs_generation", "pending", "to_be_fixed", "promoted"}
 
 router = APIRouter(prefix=f"/{_ADMIN_SECRET}")
 
@@ -183,10 +190,6 @@ async def list_signal_labels() -> JSONResponse:
 
 @router.post("/api/signal_labels")
 async def classify_signal_group(request: Request) -> JSONResponse:
-    """
-    Write a label doc for query+language, then mark all matching raw
-    signal docs as status='processed' in a batch.
-    """
     body = await request.json()
     query = body.get("query", "").strip()
     language = body.get("language", "").strip()
@@ -201,10 +204,35 @@ async def classify_signal_group(request: Request) -> JSONResponse:
             status_code=400, detail="status must be 'candidate' or 'garbage'"
         )
 
+    # When marked as candidate, create a stub in verb_candidates (needs_generation)
+    if status == "candidate":
+        db_ref = get_db()
+        stub_id = f"{language}_{query}"
+        existing = db_ref.collection(CANDIDATES_COLLECTION).document(stub_id).get()
+        if not existing.exists:
+            now = datetime.now(UTC).isoformat()
+            db_ref.collection(CANDIDATES_COLLECTION).document(stub_id).set(
+                {
+                    "verb_id": stub_id,
+                    "language": language,
+                    "query": query,
+                    "lemma": None,
+                    "display_lemma": None,
+                    "display_forms": None,
+                    "morph": None,
+                    "rank": None,
+                    "status": "needs_generation",
+                    "forms": {},
+                    "examples": [],
+                    "search_extract": [],
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+
     db = get_db()
     sig_col, lbl_col = _cols()
 
-    # upsert label doc
     label_id = f"{language}_{query}"
     db.collection(lbl_col).document(label_id).set(
         {
@@ -217,7 +245,6 @@ async def classify_signal_group(request: Request) -> JSONResponse:
         }
     )
 
-    # batch-mark matching raw signals as processed
     raw_docs = (
         db.collection(sig_col)
         .where("language", "==", language)
@@ -229,7 +256,7 @@ async def classify_signal_group(request: Request) -> JSONResponse:
     for doc in raw_docs:
         batch.update(doc.reference, {"status": status})
         batch_size += 1
-        if batch_size == 500:  # Firestore batch limit
+        if batch_size == 500:
             batch.commit()
             batch = db.batch()
             batch_size = 0
@@ -241,9 +268,6 @@ async def classify_signal_group(request: Request) -> JSONResponse:
 
 @router.delete("/api/signal_labels/{label_id}")
 async def delete_signal_label(label_id: str) -> JSONResponse:
-    """
-    Remove a label and un-mark the corresponding raw signals (restore to null).
-    """
     db = get_db()
     sig_col, lbl_col = _cols()
 
@@ -297,3 +321,256 @@ async def get_search_extracts(language: str) -> JSONResponse:
             if isinstance(term, str):
                 extracts.add(term.casefold())
     return JSONResponse({"language": language, "extracts": sorted(extracts)})
+
+
+# ---------------------------------------------------------------------------
+# Verb candidates
+# ---------------------------------------------------------------------------
+
+_GENERATION_SYSTEM_PROMPT = """\
+You are a linguistic data generator for a language-learning app.
+You receive a raw search query (which may be any inflected form, e.g. "went", "growing", "был")
+and a language code. First identify the dictionary lemma, then generate full conjugation data.
+Output ONLY a valid JSON object — no markdown, no backticks, no explanation.
+
+Output shape:
+{
+  "lemma": "<dictionary base form>",
+  "forms": { <conjugated forms — see rules below> },
+  "examples": [ {"dst": "<sentence>"}, ... ],
+  "search_extract": [ "<form1>", "<form2>", ... ]
+}
+
+ENGLISH (en):
+  lemma: infinitive base form (e.g. "went" → "go", "growing" → "grow")
+  forms keys: base, past, past_participle, present_3sg, gerund
+  examples: exactly 5 sentences:
+    1. simple present first person  e.g. "I grow vegetables at home."
+    2. simple present third person  e.g. "She grows tomatoes every year."
+    3. simple past                  e.g. "They grew up in a small town."
+    4. present perfect              e.g. "He has grown a lot this year."
+    5. present continuous           e.g. "We are growing herbs on the balcony."
+
+RUSSIAN (ru):
+  lemma: infinitive form (e.g. "шёл" → "идти")
+  forms keys: infinitive, present_1sg, present_2sg, present_3sg,
+              present_1pl, present_2pl, present_3pl,
+              past_m, past_f, past_n, past_pl,
+              imperative_sg, imperative_pl, aspect, pair
+  examples: 5 sentences in Russian covering same tenses
+
+SPANISH (es):
+  lemma: infinitive form (e.g. "fui" → "ir")
+  forms keys: infinitive, present_yo, present_tu, present_el,
+              present_nosotros, present_vosotros, present_ellos,
+              preterite_yo, preterite_el, preterite_nosotros,
+              imperfect_yo, future_yo, gerund, past_participle
+  examples: 5 sentences in Spanish covering same tenses
+
+HEBREW (he):
+  lemma: infinitive form
+  forms keys: infinitive, present_ms, present_fs, present_mp, present_fp,
+              past_1sg, past_3ms, past_3fs, past_3pl,
+              future_1sg, future_3ms, future_3fs, future_3pl,
+              imperative_ms, imperative_fs, binyan
+  examples: 5 sentences in Hebrew script covering same tenses
+
+search_extract: deduplicated flat list of all unique surface form strings.
+"""
+
+
+def _get_max_rank(language: str) -> int:
+    db = get_db()
+    docs = db.collection(VERBS_COLLECTION).where("language", "==", language).stream()
+    max_rank = 0
+    for doc in docs:
+        data = doc.to_dict()
+        rank = data.get("rank")
+        if isinstance(rank, (int, float)) and rank > max_rank:
+            max_rank = int(rank)
+    return max_rank
+
+
+def _find_in_set(language: str, query: str) -> str | None:
+    """Return verb_id if query matches any search_extract in the live verbs collection."""
+    db = get_db()
+    docs = db.collection(VERBS_COLLECTION).where("language", "==", language).stream()
+    q = query.strip().casefold()
+    for doc in docs:
+        data = doc.to_dict()
+        for term in data.get("search_extract") or []:
+            if isinstance(term, str) and term.casefold() == q:
+                return data.get("verb_id", doc.id)
+    return None
+
+
+@router.get("/api/candidates")
+async def list_candidates(language: str | None = None) -> JSONResponse:
+    db = get_db()
+    col = db.collection(CANDIDATES_COLLECTION)
+    if language:
+        col = col.where("language", "==", language)
+    results: list[dict[str, Any]] = []
+    for doc in col.stream():
+        data = doc.to_dict()
+        results.append(
+            {
+                "verb_id": data.get("verb_id", doc.id),
+                "language": data.get("language", ""),
+                "query": data.get("query", ""),
+                "lemma": data.get("lemma") or "",
+                "status": data.get("status", "needs_generation"),
+                "rank": data.get("rank"),
+                "forms": data.get("forms", {}),
+                "examples": data.get("examples", []),
+                "search_extract": data.get("search_extract", []),
+                "created_at": data.get("created_at", ""),
+                "updated_at": data.get("updated_at", ""),
+            }
+        )
+    results.sort(key=lambda r: (r["language"], r["query"]))
+    return JSONResponse({"candidates": results})
+
+
+def _call_claude(language: str, query: str) -> dict[str, Any]:
+    """Call Claude to identify lemma + generate forms/examples for a raw query."""
+    from core.settings import _load_anthropic_api_key
+
+    api_key = _load_anthropic_api_key()
+    client = anthropic.Anthropic(api_key=api_key)
+
+    message = client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=1024,
+        system=_GENERATION_SYSTEM_PROMPT,
+        messages=[
+            {
+                "role": "user",
+                "content": (
+                    f"language: {language}\n"
+                    f"raw query (may be any inflected form): {query}"
+                ),
+            }
+        ],
+    )
+    raw = message.content[0].text.strip()
+
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Generation returned invalid JSON for '{query}': {raw[:200]}",
+        ) from exc
+
+
+@router.post("/api/candidates/{verb_id}/generate")
+async def generate_candidate(verb_id: str) -> JSONResponse:
+    db = get_db()
+    ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    doc = ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    data = doc.to_dict()
+    language = data.get("language", "")
+    query = data.get("query", "")
+
+    # Check if query already exists in live verbs
+    in_set_id = _find_in_set(language, query)
+    if in_set_id:
+        raise HTTPException(
+            status_code=409,
+            detail=f"'{query}' is already in the live verb set as '{in_set_id}'",
+        )
+
+    generated = _call_claude(language, query)
+    lemma = generated.get("lemma") or query
+    new_id = f"{language}_{lemma}"
+    now = datetime.now(UTC).isoformat()
+
+    # Check if resolved lemma already exists in live verbs
+    if new_id != verb_id:
+        existing_verb = db.collection(VERBS_COLLECTION).document(new_id).get()
+        if existing_verb.exists:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Resolves to '{new_id}' which already exists in live verbs",
+            )
+        # Check if another candidate already has this lemma
+        existing_cand = db.collection(CANDIDATES_COLLECTION).document(new_id).get()
+        if existing_cand.exists:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Resolves to '{new_id}' which already exists as a candidate",
+            )
+
+    rank = _get_max_rank(language) + 1
+
+    updated = {
+        **data,
+        "verb_id": new_id,
+        "lemma": lemma,
+        "rank": rank,
+        "status": "pending",
+        "forms": generated.get("forms", {}),
+        "examples": generated.get("examples", []),
+        "search_extract": generated.get("search_extract", []),
+        "updated_at": now,
+    }
+
+    if new_id != verb_id:
+        db.collection(CANDIDATES_COLLECTION).document(new_id).set(updated)
+        ref.delete()
+    else:
+        ref.set(updated)
+
+    return JSONResponse({"old_id": verb_id, **updated})
+
+
+@router.patch("/api/candidates/{verb_id}/status")
+async def set_candidate_status(verb_id: str, request: Request) -> JSONResponse:
+    body = await request.json()
+    status = body.get("status", "").strip()
+    if status not in CANDIDATE_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"status must be one of {sorted(CANDIDATE_STATUSES)}",
+        )
+    db = get_db()
+    ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    if not ref.get().exists:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    ref.update({"status": status, "updated_at": datetime.now(UTC).isoformat()})
+    return JSONResponse({"verb_id": verb_id, "status": status})
+
+
+@router.post("/api/candidates/{verb_id}/promote")
+async def promote_candidate(verb_id: str) -> JSONResponse:
+    db = get_db()
+    candidate_ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    candidate_doc = candidate_ref.get()
+
+    if not candidate_doc.exists:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    data = candidate_doc.to_dict()
+
+    existing_verb = db.collection(VERBS_COLLECTION).document(verb_id).get()
+    if existing_verb.exists:
+        raise HTTPException(
+            status_code=409,
+            detail=f"'{verb_id}' already exists in the verbs collection",
+        )
+
+    now = datetime.now(UTC).isoformat()
+    verb_doc = {k: v for k, v in data.items() if k != "status"}
+    verb_doc["created_at"] = now
+    verb_doc["updated_at"] = now
+
+    db.collection(VERBS_COLLECTION).document(verb_id).set(verb_doc)
+    candidate_ref.update({"status": "promoted", "updated_at": now})
+
+    return JSONResponse(
+        {"verb_id": verb_id, "promoted": True, "rank": data.get("rank")}
+    )

@@ -33,7 +33,6 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 	gcp-release-stage gcp-release-prod \
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
-        gcp-setup-stage-verb-signal gcp-setup-prod-verb-signal \
 	audit-examples audit-en audit-ru audit-he audit-es \
 	test test-demand \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview
@@ -192,7 +191,7 @@ gcp-stage-image: gcp-check ## GCP: print stage image reference
 		--format='value(spec.template.spec.containers[0].image)'
 
 ## GCP: promote currently deployed stage image to prod
-gcp-promote-stage-to-prod: gcp-check gcp-setup-prod-verb-signal gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
+gcp-promote-stage-to-prod: gcp-check gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
 	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
 	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
 	@echo "Promoting stage image to prod:"

@@ -38,3 +38,23 @@ def upsert_verb(
         payload["created_at"] = existing_data.get("created_at")
 
     doc_ref.set(payload)
+
+
+def find_verb_by_search_extract(language: str, query: str) -> dict[str, Any] | None:
+    normalized = query.strip().casefold()
+    if not normalized:
+        return None
+
+    db = get_db()
+    docs = (
+        db.collection(COLLECTION)
+        .where("language", "==", language)
+        .where("search_extract", "array_contains", normalized)
+        .limit(1)
+        .stream()
+    )
+
+    for doc in docs:
+        return doc.to_dict()
+
+    return None

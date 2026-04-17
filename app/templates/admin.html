@@ -8,6 +8,7 @@
 </head>
 <body>
 <div class="shell">
+
   <nav class="sidebar">
     <div class="sidebar-brand">
       <div class="name">Verbboard</div>
@@ -24,6 +25,12 @@
         <path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
       Verb demand
+    </div>
+    <div class="nav-item" data-panel="candidates" onclick="showPanel('candidates')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 2v4l3 1.5-.75 1.3L7 9V4h1z" fill="currentColor" opacity="0.8"/>
+      </svg>
+      Candidates
     </div>
   </nav>
 
@@ -97,7 +104,7 @@
           <select id="sig-sort" onchange="renderAggr()">
             <option value="count">Count (high → low)</option>
             <option value="last">Last seen (newest first)</option>
-	    <option value="status">status</option>
+            <option value="status">Status</option>
             <option value="query">Query (A → Z)</option>
           </select>
         </div>
@@ -142,12 +149,63 @@
       </div>
     </div>
 
-  </main>
+    ANDIDATES PANEL -->
+        <div id="panel-candidates" class="panel">
+		      <div class="stats">
+			              <div class="stat"><div class="stat-label">Pending / ungenerated</div><div class="stat-val" id="cand-stat-pending">—</div></div>
+				              <div class="stat"><div class="stat-label">Promoted</div><div class="stat-val" id="cand-stat-promoted">—</div></div>
+					              <div class="stat"><div class="stat-label">Needs fix</div><div class="stat-val" id="cand-stat-fix">—</div></div>
+						            </div>
+
+							          <div class="toolbar">
+									          <div class="toolbar-title">Candidates</div>
+										          <select id="cand-filter-lang" onchange="renderCandidates()">
+												            <option value="">All languages</option>
+													            </select>
+														            <select id="cand-filter-status" onchange="renderCandidates()">
+																              <option value="needs_generation,pending,to_be_fixed">Active</option>
+																	                <option value="">All</option>
+																			          <option value="needs_generation">Needs generation</option>
+																				            <option value="pending">Pending review</option>
+																					              <option value="to_be_fixed">Needs fix</option>
+																						                <option value="duplicate">Duplicate</option>
+																								          <option value="promoted">Promoted</option>
+																									          </select>
+																										          <select id="cand-sort" onchange="renderCandidates()">
+																												            <option value="lang_lemma">Lang → Query</option>
+																													              <option value="status">Status</option>
+																														                <option value="created">Newest first</option>
+																																        </select>
+																																	      </div>
+
+																																	            <div class="card">
+																																			            <table class="tbl" id="cand-table">
+																																					              <thead>
+																																							                  <tr>
+																																										                <th>Raw query</th>
+																																												              <th>Lemma</th>
+																																													                    <th>Lang</th>
+																																															                  <th>Rank</th>
+																																																	                <th>Status</th>
+																																																			              <th>Forms</th>
+																																																				                    <th>Examples</th>
+																																																						                  <th>Actions</th>
+																																																								              </tr>
+																																																									                </thead>
+																																																											          <tbody id="cand-body">
+																																																													              <tr><td colspan="8" class="loading">Loading…</td></tr>
+																																																														                </tbody>
+																																																																        </table>
+																																																																	      </div>
+																																																																	          </div>
+
+																																																																		    </main>
 </div>
 
 <script>
-  window.ADMIN_ROOT = '__ADMIN_ROOT__';
+	  window.ADMIN_ROOT = '__ADMIN_ROOT__';
 </script>
 <script src="/static/admin.js"></script>
 </body>
 </html>
+    
