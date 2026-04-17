@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from core.settings import _load_anthropic_api_key
 from core.storage.firestore_db import get_db
 from core.storage.verb_repository import find_verb_by_search_extract
+from core.storage.verb_document import build_storage_verb_id
 
 from app.routes.admin_utils import (
     CANDIDATES_COLLECTION,
@@ -183,7 +184,7 @@ async def generate_candidate(verb_id: str) -> JSONResponse:
     generated = _call_claude(language, query)
 
     lemma = generated.get("lemma") or query
-    new_id = f"{language}_{lemma}"
+    new_id = build_storage_verb_id(language=language, lemma=lemma)
     now = datetime.now(UTC).isoformat()
 
     if new_id != verb_id:
