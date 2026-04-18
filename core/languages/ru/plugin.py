@@ -14,19 +14,15 @@ def _format_aspect(aspect_value: str) -> str:
     return aspect_value
 
 
-def _lookup_pair_lemma_and_href(pair_id: str) -> tuple[str, str]:
-    if not pair_id:
+def _lookup_pair_lemma_and_href(pair_lemma: str) -> tuple[str, str]:
+    if not pair_lemma:
         return "", ""
-
     lexicon_path = DATA_DIR / "ru" / "lexicon.json"
     entries = load_lexicon(lexicon_path) if lexicon_path.exists() else []
-    pair_entry = next((entry for entry in entries if entry.id == pair_id), None)
+    pair_entry = next((e for e in entries if str(e.lemma) == pair_lemma), None)
     if pair_entry is None:
-        return pair_id, ""
-
-    pair_lemma = str(pair_entry.lemma)
-    pair_href = f"/learn?language=ru&verb_id={pair_id}"
-    return pair_lemma, pair_href
+        return pair_lemma, ""  # show lemma even if not in lexicon yet
+    return str(pair_entry.lemma), f"/learn?language=ru&verb_id={pair_entry.id}"
 
 
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
@@ -38,8 +34,8 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     aspect = _format_aspect(raw_aspect)
     is_perfective = raw_aspect == "perfective"
 
-    pair_id = str(morph.get("pair", ""))
-    pair_lemma, pair_href = _lookup_pair_lemma_and_href(pair_id)
+    pair_lemma_raw = str(morph.get("pair", ""))
+    pair_lemma, pair_href = _lookup_pair_lemma_and_href(pair_lemma_raw)
 
     present = forms.get("present", {})
     past = forms.get("past", {})

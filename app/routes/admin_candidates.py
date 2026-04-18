@@ -8,10 +8,11 @@ import anthropic
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
-from core.settings import _load_anthropic_api_key
+from core.settings import _load_anthropic_api_key, _GENERATION_SYSTEM_PROMPT
 from core.storage.firestore_db import get_db
 from core.storage.verb_repository import find_verb_by_search_extract
 from core.storage.verb_document import build_storage_verb_id
+
 
 from app.routes.admin_utils import (
     CANDIDATES_COLLECTION,
@@ -21,60 +22,6 @@ from app.routes.admin_utils import (
 )
 
 router = APIRouter()
-
-_GENERATION_SYSTEM_PROMPT = """\
-You are a linguistic data generator for a language-learning app.
-You receive a raw search query (which may be any inflected form, e.g. "went", "growing", "был")
-and a language code. First identify the dictionary lemma, then generate full conjugation data.
-Return ONLY raw valid JSON.
-Do not wrap in markdown fences.
-Do not add comments, explanations, or prose.
-All keys and string values must use double quotes.
-
-Output shape:
-{
-  "lemma": "<dictionary base form>",
-  "forms": { <conjugated forms — see rules below> },
-  "examples": [ {"dst": "<sentence>"}, ... ],
-  "search_extract": [ "<form1>", "<form2>", ... ]
-}
-
-ENGLISH (en):
-  lemma: infinitive base form (e.g. "went" → "go", "growing" → "grow")
-  forms keys: base, past, past_participle, present_3sg, gerund
-  examples: exactly 5 sentences:
-    1. simple present first person
-    2. simple present third person
-    3. simple past
-    4. present perfect
-    5. present continuous
-
-RUSSIAN (ru):
-  lemma: infinitive form
-  forms keys: infinitive, present_1sg, present_2sg, present_3sg,
-              present_1pl, present_2pl, present_3pl,
-              past_m, past_f, past_n, past_pl,
-              imperative_sg, imperative_pl, aspect, pair
-  examples: 5 sentences in Russian
-
-SPANISH (es):
-  lemma: infinitive form
-  forms keys: infinitive, present_yo, present_tu, present_el,
-              present_nosotros, present_vosotros, present_ellos,
-              preterite_yo, preterite_el, preterite_nosotros,
-              imperfect_yo, future_yo, gerund, past_participle
-  examples: 5 sentences in Spanish
-
-HEBREW (he):
-  lemma: infinitive form
-  forms keys: infinitive, present_ms, present_fs, present_mp, present_fp,
-              past_1sg, past_3ms, past_3fs, past_3pl,
-              future_1sg, future_3ms, future_3fs, future_3pl,
-              imperative_ms, imperative_fs, binyan
-  examples: 5 sentences in Hebrew script
-
-search_extract: deduplicated flat list of all unique surface form strings.
-"""
 
 
 def _get_max_rank(language: str) -> int:
@@ -96,8 +43,8 @@ def _call_claude(language: str, query: str) -> dict[str, Any]:
     client = anthropic.Anthropic(api_key=api_key)
 
     message = client.messages.create(
-        model="claude-opus-4-5",
-        max_tokens=1024,
+        model="claude-sonnet-4-6",  # was claude-opus-4-5
+        max_tokens=2048,
         system=_GENERATION_SYSTEM_PROMPT,
         messages=[
             {
@@ -210,6 +157,7 @@ async def generate_candidate(verb_id: str) -> JSONResponse:
         **data,
         "verb_id": new_id,
         "lemma": lemma,
+        "morph": generated.get("morph") or None,
         "rank": rank,
         "status": "pending",
         "forms": generated.get("forms", {}),

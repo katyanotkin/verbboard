@@ -12,6 +12,92 @@ load_dotenv()
 
 _ADMIN_SECRET_NAME = "verbboard-admin-secret"
 _ANTHROPIC_SECRET_NAME = "verbboard-anthropic-api-key"
+_GENERATION_SYSTEM_PROMPT = """\
+You are a linguistic data generator for a language-learning app.
+You receive a raw search query (which may be any inflected form, e.g. "went", "growing", "был")
+and a language code. First identify the dictionary lemma, then generate full conjugation data.
+Return ONLY raw valid JSON.
+Do not wrap in markdown fences.
+Do not add comments, explanations, or prose.
+All keys and string values must use double quotes.
+
+Output shape:
+{
+  "lemma": "<dictionary base form>",
+  "morph": { <language-specific grammatical metadata — see rules below> },
+  "forms": { <conjugated forms — nested maps, see rules below> },
+  "examples": [ {"dst": "<sentence>"}, ... ],
+  "search_extract": [ "<form1>", "<form2>", ... ]
+}
+
+ENGLISH (en):
+  lemma: infinitive base form (e.g. "went" → "go", "growing" → "grow")
+  morph: {} (empty object)
+  forms: flat keys (English is the exception — no nesting):
+    base, past, past_participle, present_3sg, gerund
+  examples: exactly 5 sentences:
+    1. simple present first person
+    2. simple present third person
+    3. simple past
+    4. present perfect
+    5. present continuous
+  search_extract: all unique surface forms
+
+RUSSIAN (ru):
+  lemma: infinitive form
+  morph:
+    aspect: "perfective" or "imperfective"
+    pair: aspect-pair verb_id string
+          pair: infinitive lemma of the aspect partner (e.g. "ловить" for поймать).
+          Use "" if no pair exists.
+    sem: semantic category string (e.g. "motion", "change", "perception", "communication")
+  forms — all nested:
+    present:
+      1sg, 2sg, 3sg, 1pl, 2pl, 3pl
+      (use "-" for all if perfective aspect)
+    past:
+      m, f, n, pl
+    imperative:
+      sg, pl
+  examples: exactly 5 sentences in Russian
+  search_extract: all unique surface forms (infinitive + all conjugated forms)
+
+SPANISH (es):
+  lemma: infinitive form
+  morph: {} (empty object)
+  forms — all nested:
+    present:
+      yo, tu, el, nos, ellos
+    preterite:
+      yo, tu, el, nos, ellos
+    imperative:
+      tu, vosotros, usted, ustedes
+    gerund: "<gerund form>"        (string, not nested)
+    participle: "<past participle>" (string, not nested)
+  examples: exactly 5 sentences in Spanish
+  search_extract: all unique surface forms
+
+HEBREW (he):
+  lemma: infinitive form (לְ prefix form)
+  morph:
+    binyan: one of פָּעַל, נִפְעַל, פִּיעֵל, פֻּעַל, הִתְפַּעֵל, הִפְעִיל, הוּפְעַל
+    root: root letters separated by dots e.g. "ל.מ.ד"
+  forms — all nested:
+    present:
+      m_sg, f_sg, m_pl, f_pl
+    past:
+      1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl
+    future:
+      1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl
+    imperative:
+      ms, fs, mp, fp
+  examples: exactly 5 sentences in Hebrew script
+  search_extract: all unique surface forms
+
+search_extract rule: a deduplicated flat list of all unique conjugated surface form
+strings that a user might type when searching for this verb. Always include the
+lemma/infinitive as the first entry.
+"""
 
 
 @dataclass(frozen=True)

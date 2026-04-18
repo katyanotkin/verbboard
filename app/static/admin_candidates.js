@@ -48,15 +48,31 @@ function renderFormsTable(forms) {
     return '<em style="color:var(--muted)">—</em>';
   }
 
-  const rows = Object.entries(forms)
-    .map(([key, value]) => `<tr>
-      <td style="color:var(--muted);padding-right:8px;white-space:nowrap;font-size:11px">${esc(key)}</td>
-      <td class="mono" style="font-size:11px">${esc(Array.isArray(value) ? value.join(', ') : String(value))}</td>
-    </tr>`)
-    .join('');
+  const rows = [];
 
-  return `<table style="border-collapse:collapse">${rows}</table>`;
-}
+  for (const [section, value] of Object.entries(forms)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      // Nested section (present, past, imperative, future, etc.)
+      rows.push(`<tr>
+        <td colspan="2" style="color:var(--accent);font-size:10px;padding-top:6px;text-transform:uppercase;letter-spacing:0.05em">${esc(section)}</td>
+      </tr>`);
+      for (const [key, val] of Object.entries(value)) {
+        rows.push(`<tr>
+          <td style="color:var(--muted);padding-right:8px;padding-left:8px;white-space:nowrap;font-size:11px">${esc(key)}</td>
+          <td class="mono" style="font-size:11px">${esc(Array.isArray(val) ? val.join(', ') : String(val ?? ''))}</td>
+        </tr>`);
+      }
+    } else {
+      // Flat value (gerund, participle, etc.)
+      rows.push(`<tr>
+        <td style="color:var(--muted);padding-right:8px;white-space:nowrap;font-size:11px">${esc(section)}</td>
+        <td class="mono" style="font-size:11px">${esc(Array.isArray(value) ? value.join(', ') : String(value ?? ''))}</td>
+      </tr>`);
+    }
+  }
+
+  return `<table style="border-collapse:collapse">${rows.join('')}</table>`;
+}	
 
 function renderExamplesList(examples) {
   if (!examples || !examples.length) {
