@@ -1,11 +1,21 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 router = APIRouter()
 
+ABOUT_TITLES = {
+    "en": "About VerbBoard",
+    "ru": "О приложении VerbBoard",
+    "es": "Sobre la VerbBoard",
+    "he": "VerbBoard אודות",
+}
+
 
 @router.get("/about", response_class=HTMLResponse)
-def about_page() -> str:
+def about_page(request: Request) -> str:
+    lang = request.query_params.get("lang", "en")
+    if lang not in {"en", "ru", "es", "he"}:
+        lang = "en"
     return """
 <!DOCTYPE html>
 <html>
@@ -72,6 +82,9 @@ def about_page() -> str:
     .back {
       text-align: center;
       margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
     }
 
     .back a {
@@ -83,7 +96,7 @@ def about_page() -> str:
 <body>
 
 <div class="container">
-  <h1>About VerbBoard</h1>
+  <h1>PAGE_TITLE</h1>
 
   <div class="lang-toggle">
     <button onclick="setLang('en')" id="btn-en" class="active">🇺🇸 EN</button>
@@ -94,87 +107,127 @@ def about_page() -> str:
 
   <!-- EN -->
   <div id="content-en" class="content active">
-    <p><b>What this is</b><br/>
-    Learn verbs through usage, not memorization.</p>
+    <p><b>What is VerbBoard?</b><br/>
+    A focused tool for learning verbs in English, Spanish, Hebrew, and Russian.
+    Each verb shows full conjugation with TTS audio for every form and example sentence.</p>
+
+    <p><b>How it works</b><br/>
+    Pick a language, pick a verb, study the forms. Play audio for any form or example.
+    Switch between female and male voices. Mark verbs you know with ★.</p>
 
     <p><b>Verb order</b><br/>
-    Verbs are roughly ordered by frequency and usefulness.</p>
+    Verbs are ordered by frequency first, then by demand — verbs people searched for
+    get added to the end of the list.</p>
 
     <p><b>Progress</b><br/>
-    ★ = learned<br/>
+    ★ = marked as known<br/>
     ✓ = seen<br/>
-    Progress is saved in your browser.</p>
+    Saved in your browser, no account needed.</p>
 
-    <p><b>Missing verbs</b><br/>
-    Type a verb — we track demand and add new ones over time.</p>
+    <p><b>Feedback & verb requests</b><br/>
+    Use the 💬 button on any page to leave feedback — feature ideas, bug reports, anything.<br/>
+    To request a verb, just search for it on the home page. We track all searches and add
+    the most requested ones.</p>
   </div>
 
   <!-- RU -->
   <div id="content-ru" class="content">
-    <p><b>Что это</b><br/>
-    Изучение глаголов через использование, а не заучивание.</p>
+    <p><b>Что такое VerbBoard?</b><br/>
+    Инструмент для изучения глаголов на английском, испанском, иврите и русском.
+    Каждый глагол — полное спряжение с TTS-аудио для каждой формы и примера.</p>
+
+    <p><b>Как это работает</b><br/>
+    Выберите язык и глагол — изучайте формы. Прослушайте любую форму или пример.
+    Переключайтесь между женским и мужским голосом. Отмечайте выученные глаголы звёздочкой ★.</p>
 
     <p><b>Порядок глаголов</b><br/>
-    Глаголы примерно отсортированы по частоте и полезности.</p>
+    Сначала глаголы по частоте употребления, затем по спросу — глаголы, которые искали
+    пользователи, добавляются в конец списка.</p>
 
     <p><b>Прогресс</b><br/>
-    ★ = запомнил<br/>
-    ✓ = видел<br/>
-    Прогресс сохраняется в браузере.</p>
+    ★ = отмечен как выученный<br/>
+    ✓ = уже просматривался<br/>
+    Сохраняется в браузере, без регистрации.</p>
 
-    <p><b>Нет глагола</b><br/>
-    Введите глагол — мы учитываем спрос и со временем добавляем новые.</p>
+    <p><b>Отзывы и запросы глаголов</b><br/>
+    Нажмите 💬 на любой странице, чтобы оставить отзыв — идеи, баги, всё что угодно.<br/>
+    Чтобы запросить глагол, просто введите его на главной странице. Мы отслеживаем все
+    запросы и добавляем самые популярные.</p>
   </div>
 
   <!-- ES -->
   <div id="content-es" class="content">
-    <p><b>Qué es</b><br/>
-    Aprende verbos mediante uso, no memorización.</p>
+    <p><b>¿Qué es VerbBoard?</b><br/>
+    Una herramienta para aprender verbos en inglés, español, hebreo y ruso.
+    Cada verbo incluye conjugación completa con audio TTS para cada forma y ejemplo.</p>
+
+    <p><b>Cómo funciona</b><br/>
+    Elige un idioma y un verbo, estudia las formas. Escucha cualquier forma o ejemplo.
+    Cambia entre voz femenina y masculina. Marca con ★ los verbos que ya dominas.</p>
 
     <p><b>Orden de los verbos</b><br/>
-    Los verbos están ordenados aproximadamente por frecuencia y utilidad.</p>
+    Primero por frecuencia, luego por demanda — los verbos que la gente busca se añaden
+    al final de la lista.</p>
 
     <p><b>Progreso</b><br/>
-    ★ = aprendido<br/>
-    ✓ = visto<br/>
-    El progreso se guarda en tu navegador.</p>
+    ★ = marcado como aprendido<br/>
+    ✓ = ya visto<br/>
+    Se guarda en tu navegador, sin registro.</p>
 
-    <p><b>Faltan verbos</b><br/>
-    Escribe un verbo — registramos la demanda y añadimos más.</p>
+    <p><b>Comentarios y solicitudes de verbos</b><br/>
+    Usa el botón 💬 en cualquier página para dejar comentarios — ideas, errores, lo que sea.<br/>
+    Para solicitar un verbo, simplemente búscalo en la página principal. Registramos todas
+    las búsquedas y añadimos las más solicitadas.</p>
   </div>
 
   <!-- HE -->
   <div id="content-he" class="content" dir="rtl">
-    <p><b>מה זה</b><br/>
-    לומדים פעלים דרך שימוש, לא שינון.</p>
+    <p><b>מה זה VerbBoard?</b><br/>
+    כלי ללימוד פעלים באנגלית, ספרדית, עברית ורוסית.
+    כל פועל מגיע עם נטייה מלאה ואודיו TTS לכל צורה ומשפט לדוגמה.</p>
+
+    <p><b>איך זה עובד</b><br/>
+    בחרו שפה ופועל ולמדו את הצורות. האזינו לכל צורה או משפט.
+    עברו בין קול נשי לגברי. סמנו פעלים שלמדתם עם ★.</p>
 
     <p><b>סדר הפעלים</b><br/>
-    הפעלים מסודרים בקירוב לפי תדירות ושימושיות.</p>
+    קודם לפי תדירות, אחר כך לפי ביקוש — פעלים שאנשים חיפשו מתווספים לסוף הרשימה.</p>
 
     <p><b>התקדמות</b><br/>
-    ★ = נלמד<br/>
-    ✓ = נראה<br/>
-    ההתקדמות נשמרת בדפדפן.</p>
+    ★ = סומן כנלמד<br/>
+    ✓ = כבר נראה<br/>
+    נשמר בדפדפן, ללא צורך בהרשמה.</p>
 
-    <p><b>פועל חסר</b><br/>
-    הקלידו פועל — אנחנו עוקבים אחרי הביקוש ומוסיפים בהמשך.</p>
+    <p><b>משוב ובקשות לפעלים</b><br/>
+    לחצו על 💬 בכל דף להשארת משוב — רעיונות, תקלות, כל דבר.<br/>
+    כדי לבקש פועל, פשוט חפשו אותו בדף הבית. אנחנו עוקבים אחרי כל החיפושים
+    ומוסיפים את הנפוצים ביותר.</p>
   </div>
 
   <div class="back">
     <a href="/">← Back</a>
+    <a href="/feedback?page=about&return_to=/about">💬 Feedback</a>
   </div>
 </div>
 
 <script>
+const ABOUT_TITLES = {
+    en: 'About VerbBoard',
+    ru: 'О приложении VerbBoard',
+    es: 'Sobre la VerbBoard',
+    he: 'VerbBoard אודות',
+}
+const _initLang = "INIT_LANG";
 function setLang(lang) {
   document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.lang-toggle button').forEach(el => el.classList.remove('active'));
-
   document.getElementById('content-' + lang).classList.add('active');
   document.getElementById('btn-' + lang).classList.add('active');
+  document.querySelector('h1').textContent = ABOUT_TITLES[lang] || ABOUT_TITLES.en;
 }
+setLang(_initLang);
 </script>
 
 </body>
 </html>
-"""
+""".replace("INIT_LANG", lang).replace("PAGE_TITLE", ABOUT_TITLES[lang])

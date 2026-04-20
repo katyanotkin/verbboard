@@ -149,10 +149,13 @@ def home(
 
 <body>
   <div class="page">
-  <h1 class="page-title">
-    VerbBoard <span class="copyright">©</span>
-    <a href="/about" class="about-inline">About</a>
-  </h1>
+  <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
+  <div class="about-links">
+    <a href="/about?lang=en" class="about-inline">About</a>
+    <a href="/about?lang=ru" class="about-inline">О приложении</a>
+    <a href="/about?lang=es" class="about-inline">Sobre la app</a>
+    <a href="/about?lang=he" class="about-inline">אודות</a>
+  </div>
 
     <form
       action="/learn"
