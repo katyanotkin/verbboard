@@ -57,6 +57,21 @@
 .btn-needs-fix:hover    { background: color-mix(in srgb, var(--warn, #b8860b) 10%, transparent); }
 .btn-needs-fix:disabled { opacity: 0.5; cursor: default; }
 
+.btn-preview {
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--info, #0369a1);
+  border: 1px solid var(--info, #0369a1) !important;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btn-preview:hover { background: color-mix(in srgb, var(--info, #0369a1) 10%, transparent); }
+
+
 .btn-reopen {
   padding: 3px 9px;
   font-size: 12px;

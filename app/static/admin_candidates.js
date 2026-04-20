@@ -141,12 +141,22 @@ function renderCandidates() {
       item.status === 'to_be_fixed';
 
     const actionButtons = [];
+    const ADMIN_PREFIX = window.location.pathname.split('/')[1]
+      ? '/' + window.location.pathname.split('/')[1]
+      : '';	  
 
     if (canPromote) {
       actionButtons.push(
         `<button class="btn-promote" onclick="promoteCandidate('${esc(item.verb_id)}',this)">▲ Promote</button>`,
       );
     }
+	  
+
+     if (item.status === 'pending' || item.status === 'to_be_fixed') {
+       actionButtons.push(
+        `<a class="btn-preview" href="/learn?language=${esc(item.language)}&verb_id=${esc(item.verb_id)}&source=candidate" target="_blank">👁 Preview</a>`,
+       );
+     }
 
     if (canNeedsFix) {
       actionButtons.push(

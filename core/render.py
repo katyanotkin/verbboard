@@ -8,7 +8,12 @@ from core.paths import TEMPLATES_DIR
 NO_AUDIO_ROW_KEYS = {"aspect", "pair"}
 
 
-def render_board_html(board: Board, return_to: str | None = None) -> str:
+def render_board_html(
+    board: Board,
+    return_to: str | None = None,
+    candidate_verb_id: str | None = None,
+    admin_href: str | None = None,
+) -> str:
     lemma = board.verb.display_lemma or board.verb.lemma
     if isinstance(lemma, dict):
         title = f"{lemma.get('imperfective', '')} / {lemma.get('perfective', '')}"
@@ -105,8 +110,34 @@ def render_board_html(board: Board, return_to: str | None = None) -> str:
     female_active = "active" if voice_key == "female" else ""
     male_active = "active" if voice_key == "male" else ""
 
+    if candidate_verb_id:
+        candidate_banner_assets = (
+            '<link rel="stylesheet" href="/static/candidate_banner.css">'
+            '<script defer src="/static/candidate_banner.js"></script>'
+        )
+        vid = escape(candidate_verb_id)
+        admin = escape(admin_href or "/") + "#candidates"
+        candidate_banner = f"""
+<div class="candidate-banner" id="candidate-banner" data-admin-href="{admin}">
+  <span class="candidate-banner-label">⚠ Candidate preview: <b>{escape(str(board.verb.lemma))}</b></span>
+  <div class="candidate-banner-actions">
+    <a href="{admin}" class="cand-nav-btn">← Admin</a>
+    <button class="cand-btn-promote" onclick="candidateAction('{vid}', 'promote')">▲ Promote</button>
+    <button class="cand-btn-fix" onclick="candidateAction('{vid}', 'fix')">⚑ Needs Fix</button>
+    <button class="cand-btn-regen" onclick="candidateAction('{vid}', 'regen')">⟳ Regen</button>
+  </div>
+</div>"""
+        voice_source_input = '<input type="hidden" name="source" value="candidate">'
+    else:
+        candidate_banner_assets = ""
+        candidate_banner = ""
+        voice_source_input = ""
+
     html = (
         template.replace("{{title}}", escape(title))
+        .replace("{{candidate_banner_assets}}", candidate_banner_assets)
+        .replace("{{candidate_banner}}", candidate_banner)
+        .replace("{{voice_source_input}}", voice_source_input)
         .replace("{{language}}", escape(board.language))
         .replace("{{voice_key}}", escape(board.voice_key))
         .replace("{{verb_id}}", escape(board.verb.id))

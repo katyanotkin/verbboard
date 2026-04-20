@@ -5,7 +5,7 @@ from typing import Any
 from core.lexicon import index_by_id, load_lexicon
 from core.models import Example, VerbEntry
 from core.paths import DATA_DIR
-from core.storage.verb_repository import get_verb, list_verbs
+from core.storage.verb_repository import get_candidate, get_verb, list_verbs
 
 
 def _firestore_document_to_verb_entry(document: dict[str, Any]) -> VerbEntry:
@@ -51,6 +51,13 @@ def load_entry_by_id(
     verb_id: str,
     source: str,
 ) -> VerbEntry | None:
+    if source == "candidate":
+        document = get_candidate(verb_id)
+        if document is None:
+            return None
+        if document.get("language") != language:
+            return None
+        return _firestore_document_to_verb_entry(document)
     if source == "firestore":
         document = get_verb(verb_id)
         if document is None:
@@ -58,6 +65,5 @@ def load_entry_by_id(
         if document.get("language") != language:
             return None
         return _firestore_document_to_verb_entry(document)
-
     entries = load_entries_for_language(language=language, source=source)
     return index_by_id(entries).get(verb_id)

@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import anthropic
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from core.settings import _load_anthropic_api_key, _GENERATION_SYSTEM_PROMPT
@@ -176,7 +176,7 @@ async def generate_candidate(verb_id: str) -> JSONResponse:
 
 
 @router.patch("/api/candidates/{verb_id}/status")
-async def set_candidate_status(verb_id: str, request) -> JSONResponse:
+async def set_candidate_status(verb_id: str, request: Request) -> JSONResponse:
     body = await request.json()
     status = body.get("status", "").strip()
     if status not in CANDIDATE_STATUSES:

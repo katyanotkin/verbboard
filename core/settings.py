@@ -113,6 +113,7 @@ class Settings:
     verb_signals_collection: str
     verb_signal_labels_collection: str
     verbs_collection: str
+    verb_candidates_collection: str
     log_level: str
     admin_secret: str
 
@@ -216,6 +217,9 @@ def load_settings() -> Settings:
             "demand_signal_labels",
         ),
         verbs_collection=os.getenv("VERBS_COLLECTION", "verbs"),
+        verb_candidates_collection=os.getenv(
+            "VERB_CANDIDATES_COLLECTION", "verb_candidates"
+        ),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         admin_secret=_load_admin_secret(),
     )

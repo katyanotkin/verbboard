@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from core.settings import load_settings
 from core.storage.firestore_db import get_db
 from core.storage.verb_document import build_verb_doc_id
 
@@ -58,3 +59,12 @@ def find_verb_by_search_extract(language: str, query: str) -> dict[str, Any] | N
         return doc.to_dict()
 
     return None
+
+
+def get_candidate(verb_id: str) -> dict[str, Any] | None:
+    db = get_db()
+    collection = load_settings().verb_candidates_collection
+    document = db.collection(collection).document(verb_id).get()
+    if not document.exists:
+        return None
+    return document.to_dict()

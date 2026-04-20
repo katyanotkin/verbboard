@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
@@ -11,6 +12,8 @@ from core.render import render_board_html
 from core.tts import VOICES
 from core.verb_loader import load_entries_for_language, load_entry_by_id
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
@@ -20,15 +23,42 @@ async def learn(
     language: str = Query(...),
     verb_id: str | None = Query(None),
     voice: str | None = Query(None),
+    source: str | None = Query(None),
 ) -> HTMLResponse:
     settings = request.app.state.settings
-    entries = load_entries_for_language(
-        language=language,
-        source=settings.verb_data_source,
-    )
-
-    if not entries:
-        return HTMLResponse("No verbs available", status_code=400)
+    logger.warning("lookup source %s -> verb %s", source, verb_id)
+    if source == "candidate":
+        if not verb_id:
+            return HTMLResponse(
+                "verb_id required for candidate preview", status_code=400
+            )
+        verb = load_entry_by_id(
+            language=language,
+            verb_id=verb_id,
+            source="candidate",
+        )
+        logger.warning("Candidate lookup %s -> %s", verb_id, verb)
+        if verb is None:
+            return HTMLResponse("Candidate not found", status_code=404)
+    else:
+        effective_source = settings.verb_data_source
+        entries = load_entries_for_language(
+            language=language,
+            source=effective_source,
+        )
+        if not entries:
+            return HTMLResponse("No verbs available", status_code=400)
+        if not verb_id:
+            verb = entries[0]
+        else:
+            verb = (
+                load_entry_by_id(
+                    language=language,
+                    verb_id=verb_id,
+                    source=effective_source,
+                )
+                or entries[0]
+            )
 
     if language not in VOICES:
         return HTMLResponse("Unknown language voices", status_code=400)
@@ -37,16 +67,6 @@ async def learn(
 
     if selected_voice not in VOICES[language]:
         return HTMLResponse("Unknown voice", status_code=400)
-
-    if not verb_id:
-        verb = entries[0]
-    else:
-        loaded_verb = load_entry_by_id(
-            language=language,
-            verb_id=verb_id,
-            source=settings.verb_data_source,
-        )
-        verb = loaded_verb or entries[0]
 
     plugin = get_plugin(language)
 
@@ -99,5 +119,10 @@ async def learn(
                 print(f"Audio generation failed: {result}")
 
     current_url = str(request.url)
-    html = render_board_html(board=board, return_to=current_url)
+    html = render_board_html(
+        board=board,
+        return_to=current_url,
+        candidate_verb_id=verb.id if source == "candidate" else None,
+        admin_href=f"/{settings.admin_secret}" if source == "candidate" else None,
+    )
     return HTMLResponse(html)

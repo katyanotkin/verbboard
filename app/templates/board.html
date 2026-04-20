@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>{{title}}</title>
 <link rel="stylesheet" href="/static/common.css"/>
+{{candidate_banner_assets}}
 
 <style>
 body {
@@ -277,6 +278,7 @@ button {
 </head>
 
 <body>
+{{candidate_banner}}	
 <div id="learn-page" data-language="{{language}}" data-verb-id="{{verb_id}}">
   <div class="topbar">
     <div>
@@ -295,6 +297,7 @@ button {
 	  <form method="get" action="/learn" class="voice-toggle">
 		  <input type="hidden" name="language" value="{{language}}">
 		  <input type="hidden" name="verb_id" value="{{verb_id}}">
+		  {{voice_source_input}}
 
 		 <span class="voice-icon">🔊</span>
 		 <div class="voice-toggle">
