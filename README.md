@@ -1,8 +1,7 @@
 # VerbBoard
 
 Minimal verb learning app (FastAPI + server-rendered UI).
-Focused on fast iteration and simple learning flow:
-get a verb → see it → hear it → move on.
+Focused on fast iteration and simple learning flow: get a verb → see it → hear it → move on.
 
 ---
 
@@ -13,7 +12,6 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Open in browser:
-
 ```
 http://127.0.0.1:8000
 ```
@@ -23,98 +21,55 @@ http://127.0.0.1:8000
 ## Current behavior
 
 ### Home page
-- Select:
-  - language (`en`, `ru`, `he`, `es`)
-  - verb
-  - voice (`female`, `male`)
-- Click **Learn** to open the learning view
-Or search for a verb (see below)
-Visual indicators:
-✓ seen verbs
-★ known verbs
-Progress bar shows known verbs count
+- Select language (`en`, `ru`, `he`, `es`), verb, voice (`female`, `male`)
+- Click **Learn** to open the learning view, or search for a verb
+
+Visual indicators: ✓ seen verbs · ★ known verbs · progress bar shows known count
 
 #### Search
-Search accepts:
--- infinitives
--- conjugated forms
--- partial matches
-Behavior:
--- first matching verb is opened directly
--- no results list (fast resolution)
--- If no match:
---- shows: "No match in the current set"
---- logs query for future expansion
+- Accepts infinitives, conjugated forms, partial matches
+- First matching verb opens directly (no results list)
+- No match: shows notice and logs query for future expansion
 
 ### Learn page
-- Displays:
-  - conjugation board
-  - examples with audio
-- Controls
-  - voice toggle (female / male; female set as default)
-  - * mark verb as known
-  - back to verb list
-- Behavior:
-  - known updates progress
-  - Preserves:
-    - language
-    - voice
-    - verb (when navigating back to Home)
-
-
-
-#### Direct verb access
-Open a specific verb:
-http://127.0.0.1:8000/learn?language=es&verb_id=es_tener&voice=female
-
+- Conjugation board with TTS audio for every form and example sentence
+- Voice toggle (female / male)
+- ★ mark verb as known
+- Back to verb list
 
 ## State persistence
-
 - Language and voice persist via cookies
 - Returning to Home keeps last selected values
-- Learn page maintains current context
 
+---
 
+## Architecture
+
+- **Firestore** — primary verb store and candidate pipeline
+- **GCS** — audio cache (on-demand TTS → persistent storage)
+- **Cloud Run** — stateless application layer
+
+## Candidate pipeline
+
+Unknown verb searches are logged as demand signals. Admin flow:
+1. Signals reviewed and classified
+2. Candidates generated via Claude API — conjugation, examples, morph
+3. Admin previews candidate on live learn page with inline Promote / Needs Fix / Regen
+4. Promoted candidates move to live verb set
+
+---
 
 ## Development
 
 ### Pre-commit linting
-
 ```bash
 pip install pre-commit
-pre-commit --version
 pre-commit install
 pre-commit run --all-files
 ```
 
-Hook installed at:
-
-```
-.git/hooks/pre-commit
-```
-
 ---
-
-## Notes
-### 2026-03-30
-
-- Cloud-backed architecture:
-  - Firestore used as primary verb store (runtime reads)
-  - GCS used for audio caching (on-demand generation → persistent storage)
-- Stateless application layer (Cloud Run)
-- Audio generated on demand and cached in GCS
-- Search supports conjugated forms (intent-based match, first hit wins)
-- Search UX:
-  - autocomplete suggestions
-- Missing searches logged to GCS for demand analysis (`VERB_DEMAND_BUCKET`)
-- Learning loop:
-  - `seen` (✓)
-  - `known` (★)
-- No backend personalization (yet)
-- Stage / prod environments separated (buckets + config)
-
-### Upcoming
-
-- Admin flow for approving / rejecting demanded verbs
-- Firestore-backed ingestion pipeline (no more static lexicon dependency)
-- Optional user state / personalization (TBD)
+## NOTES 2026-04-20
+## Upcoming
+- Verb picker UX for growing verb sets
+- Optional user personalization (TBD)
