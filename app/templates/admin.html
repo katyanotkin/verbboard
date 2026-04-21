@@ -14,18 +14,21 @@
       <div class="name">Verbboard</div>
       <div class="sub">Admin</div>
     </div>
-    <div class="nav-item active" data-panel="feedback" onclick="showPanel('feedback')">
+
+    <a class="nav-item active" href="__ADMIN_ROOT__/feedback">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
         <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H9l-3 2v-2H3a1 1 0 01-1-1V3z" fill="currentColor" opacity="0.7"/>
       </svg>
       Feedback
-    </div>
+    </a>
+
     <div class="nav-item" data-panel="signals" onclick="showPanel('signals')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
         <path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
       Verb demand
     </div>
+
     <div class="nav-item" data-panel="candidates" onclick="showPanel('candidates')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
         <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 2v4l3 1.5-.75 1.3L7 9V4h1z" fill="currentColor" opacity="0.8"/>
@@ -35,41 +38,6 @@
   </nav>
 
   <main class="main">
-
-    <!-- FEEDBACK PANEL -->
-    <div id="panel-feedback" class="panel active">
-      <div class="stats">
-        <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="fb-total">—</div></div>
-        <div class="stat"><div class="stat-label">With comment</div><div class="stat-val" id="fb-with-comment">—</div></div>
-        <div class="stat"><div class="stat-label">Languages</div><div class="stat-val" id="fb-langs">—</div></div>
-      </div>
-      <div class="toolbar">
-        <div class="toolbar-title">Feedback</div>
-        <select id="fb-filter-lang" onchange="renderFeedback()">
-          <option value="">All languages</option>
-        </select>
-        <select id="fb-filter-source" onchange="renderFeedback()">
-          <option value="">All sources</option>
-        </select>
-      </div>
-      <div class="card">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th>Comment</th>
-              <th>Lang</th>
-              <th>Page</th>
-              <th>Source</th>
-              <th>Date</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="fb-body">
-            <tr><td colspan="6" class="loading">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
 
     <!-- SIGNALS PANEL -->
     <div id="panel-signals" class="panel">
@@ -93,11 +61,10 @@
         </select>
         <div class="view-toggle">
           <button id="btn-view-aggr" class="toggle-btn active" onclick="setSigView('aggr')">Aggregated</button>
-          <button id="btn-view-raw"  class="toggle-btn"        onclick="setSigView('raw')">Raw signals</button>
+          <button id="btn-view-raw" class="toggle-btn" onclick="setSigView('raw')">Raw signals</button>
         </div>
       </div>
 
-      <!-- aggregated view -->
       <div id="sig-aggr-view">
         <div class="toolbar" style="margin-bottom:10px;margin-top:0">
           <span style="font-size:12px;color:var(--muted)">Sort by</span>
@@ -126,7 +93,6 @@
         </div>
       </div>
 
-      <!-- raw view -->
       <div id="sig-raw-view" style="display:none">
         <div class="toolbar" style="margin-bottom:10px">
           <button id="btn-hide-processed" class="toggle-btn" onclick="loadOrToggleProcessed()">Load processed</button>
@@ -150,66 +116,64 @@
     </div>
 
     <!-- CANDIDATES PANEL -->
-        <div id="panel-candidates" class="panel">
-		      <div class="stats">
-			              <div class="stat"><div class="stat-label">Pending / ungenerated</div><div class="stat-val" id="cand-stat-pending">—</div></div>
-				              <div class="stat"><div class="stat-label">Promoted</div><div class="stat-val" id="cand-stat-promoted">—</div></div>
-					              <div class="stat"><div class="stat-label">Needs fix</div><div class="stat-val" id="cand-stat-fix">—</div></div>
-						            </div>
+    <div id="panel-candidates" class="panel">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Pending / ungenerated</div><div class="stat-val" id="cand-stat-pending">—</div></div>
+        <div class="stat"><div class="stat-label">Promoted</div><div class="stat-val" id="cand-stat-promoted">—</div></div>
+        <div class="stat"><div class="stat-label">Needs fix</div><div class="stat-val" id="cand-stat-fix">—</div></div>
+      </div>
 
-							          <div class="toolbar">
-									          <div class="toolbar-title">Candidates</div>
-										          <select id="cand-filter-lang" onchange="renderCandidates()">
-												            <option value="">All languages</option>
-													            </select>
-														            <select id="cand-filter-status" onchange="renderCandidates()">
-																              <option value="needs_generation,pending,to_be_fixed">Active</option>
-																	                <option value="">All</option>
-																			          <option value="needs_generation">Needs generation</option>
-																				            <option value="pending">Pending review</option>
-																					              <option value="to_be_fixed">Needs fix</option>
-																						                <option value="duplicate">Duplicate</option>
-																								          <option value="promoted">Promoted</option>
-																									          </select>
-																										          <select id="cand-sort" onchange="renderCandidates()">
-																												            <option value="lang_lemma">Lang → Query</option>
-																													              <option value="status">Status</option>
-																														                <option value="created">Newest first</option>
-																																        </select>
-																																	      </div>
+      <div class="toolbar">
+        <div class="toolbar-title">Candidates</div>
+        <select id="cand-filter-lang" onchange="renderCandidates()">
+          <option value="">All languages</option>
+        </select>
+        <select id="cand-filter-status" onchange="renderCandidates()">
+          <option value="needs_generation,pending,to_be_fixed">Active</option>
+          <option value="">All</option>
+          <option value="needs_generation">Needs generation</option>
+          <option value="pending">Pending review</option>
+          <option value="to_be_fixed">Needs fix</option>
+          <option value="duplicate">Duplicate</option>
+          <option value="promoted">Promoted</option>
+        </select>
+        <select id="cand-sort" onchange="renderCandidates()">
+          <option value="lang_lemma">Lang → Query</option>
+          <option value="status">Status</option>
+          <option value="created">Newest first</option>
+        </select>
+      </div>
 
-																																	            <div class="card">
-																																			            <table class="tbl" id="cand-table">
-																																					              <thead>
-																																							                  <tr>
-																																										                <th>Raw query</th>
-																																												              <th>Lemma</th>
-																																													                    <th>Lang</th>
-																																															                  <th>Rank</th>
-																																																	                <th>Status</th>
-																																																			              <th>Forms</th>
-																																																				                    <th>Examples</th>
-																																																						                  <th>Actions</th>
-																																																								              </tr>
-																																																									                </thead>
-																																																											          <tbody id="cand-body">
-																																																													              <tr><td colspan="8" class="loading">Loading…</td></tr>
-																																																														                </tbody>
-																																																																        </table>
-																																																																	      </div>
-																																																																	          </div>
+      <div class="card">
+        <table class="tbl" id="cand-table">
+          <thead>
+            <tr>
+              <th>Raw query</th>
+              <th>Lemma</th>
+              <th>Lang</th>
+              <th>Rank</th>
+              <th>Status</th>
+              <th>Forms</th>
+              <th>Examples</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="cand-body">
+            <tr><td colspan="8" class="loading">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-																																																																		    </main>
+  </main>
 </div>
 
 <script>
-	  window.ADMIN_ROOT = '__ADMIN_ROOT__';
+  window.ADMIN_ROOT = '__ADMIN_ROOT__';
 </script>
 <script src="/static/admin_shared.js"></script>
-<script src="/static/admin_feedback.js"></script>
 <script src="/static/admin_signals.js"></script>
 <script src="/static/admin_candidates.js"></script>
 <script src="/static/admin.js"></script>
 </body>
 </html>
-    

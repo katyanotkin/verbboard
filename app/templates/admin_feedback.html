@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Feedback admin</title>
+  <link rel="stylesheet" href="/static/admin.css"/>
+</head>
+<body>
+  <div
+    id="admin-feedback-config"
+    data-admin-prefix="{{ admin_prefix }}"
+    data-feedback-api-base="{{ feedback_api_base }}"
+  ></div>
+
+  <main class="admin-page" style="max-width:1100px;margin:24px auto;padding:0 16px;">
+    <div
+      class="card"
+      style="padding:12px 16px;margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;"
+    >
+      <a class="nav-item active" href="{{ admin_prefix }}/feedback" style="border-left:none;padding:8px 12px;border-radius:8px;">
+        Feedback
+      </a>
+      <a class="nav-item" href="{{ admin_prefix }}/#signals" style="border-left:none;padding:8px 12px;border-radius:8px;">
+        Verb demand
+      </a>
+      <a class="nav-item" href="{{ admin_prefix }}/#candidates" style="border-left:none;padding:8px 12px;border-radius:8px;">
+        Candidates
+      </a>
+      <a href="{{ admin_prefix }}" style="margin-left:auto;">Back to admin</a>
+    </div>
+
+    <h1 style="margin-bottom:16px;">Feedback admin</h1>
+
+    <form id="filters" class="card" style="padding:16px;margin-bottom:18px;">
+      <div
+        class="filters"
+        style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;align-items:end;"
+      >
+        <div>
+          <label for="sort">Sort</label>
+          <select id="sort" name="sort">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="visibility">Visibility</label>
+          <select id="visibility" name="visibility">
+            <option value="visible">Visible only</option>
+            <option value="hidden">Hidden only</option>
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="page">Page</label>
+          <select id="page" name="page">
+            <option value="">All pages</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="language">Language</label>
+          <select id="language" name="language">
+            <option value="">All languages</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="source">Source</label>
+          <select id="source" name="source">
+            <option value="">All sources</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="query">Text search</label>
+          <input id="query" type="text" name="query" placeholder="Search comment text">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+        <button type="submit">Apply</button>
+        <a href="{{ admin_prefix }}/feedback">Reset</a>
+      </div>
+    </form>
+
+    <div id="feedback-list" class="card" style="padding:16px;">Loading…</div>
+  </main>
+
+  <script src="/static/admin_feedback.js"></script>
+</body>
+</html>

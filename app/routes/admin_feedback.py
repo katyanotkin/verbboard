@@ -1,51 +1,78 @@
 from __future__ import annotations
 
-from typing import Any
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
-
-from core.storage.firestore_db import get_db
+from core.admin_feedback_service import (
+    hide_feedback_by_id,
+    list_feedback_facets,
+    list_feedback_rows,
+    unhide_feedback_by_id,
+)
 
 router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
+
+
+@router.get("/feedback", response_class=HTMLResponse)
+async def feedback_admin_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request,
+        "admin_feedback.html",
+        {
+            "admin_prefix": request.scope.get("root_path", "")
+            + request.url.path.removesuffix("/feedback"),
+            "feedback_api_base": request.url.path.removesuffix("/feedback")
+            + "/api/feedback",
+        },
+    )
 
 
 @router.get("/api/feedback")
-async def list_feedback() -> JSONResponse:
-    db = get_db()
-    docs = (
-        db.collection("feedback")
-        .order_by("created_at", direction="DESCENDING")
-        .limit(200)
-        .stream()
-    )
-
-    results: list[dict[str, Any]] = []
-    for doc in docs:
-        data = doc.to_dict()
-        results.append(
-            {
-                "id": doc.id,
-                "comment": data.get("comment", ""),
-                "language": data.get("language", ""),
-                "page": data.get("page", ""),
-                "source": data.get("source", ""),
-                "verb_id": data.get("verb_id", ""),
-                "created_at": data["created_at"].isoformat()
-                if data.get("created_at")
-                else "",
-            }
+async def list_feedback(
+    sort: str = Query("newest"),
+    visibility: str = Query("visible"),
+    page: str = Query(""),
+    language: str = Query(""),
+    source: str = Query(""),
+    query: str = Query(""),
+    limit: int = Query(200, ge=1, le=1000),
+) -> JSONResponse:
+    try:
+        feedback_rows = list_feedback_rows(
+            sort=sort,
+            visibility=visibility,
+            page=page,
+            language=language,
+            source=source,
+            query=query,
+            limit=limit,
         )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
-    return JSONResponse({"feedback": results})
+    return JSONResponse({"feedback": feedback_rows})
 
 
-@router.delete("/api/feedback/{doc_id}")
-async def delete_feedback(doc_id: str) -> JSONResponse:
-    db = get_db()
-    ref = db.collection("feedback").document(doc_id)
-    if not ref.get().exists:
+@router.get("/api/feedback/facets")
+async def feedback_facets(
+    limit: int = Query(1000, ge=1, le=2000),
+) -> JSONResponse:
+    return JSONResponse(list_feedback_facets(limit=limit))
+
+
+@router.post("/api/feedback/{doc_id}/hide")
+async def hide_feedback(doc_id: str) -> JSONResponse:
+    if not hide_feedback_by_id(doc_id):
         raise HTTPException(status_code=404, detail="Document not found")
 
-    ref.delete()
-    return JSONResponse({"deleted": doc_id})
+    return JSONResponse({"hidden": doc_id})
+
+
+@router.post("/api/feedback/{doc_id}/unhide")
+async def unhide_feedback(doc_id: str) -> JSONResponse:
+    if not unhide_feedback_by_id(doc_id):
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    return JSONResponse({"unhidden": doc_id})

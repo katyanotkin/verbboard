@@ -11,3 +11,4 @@ anthropic==0.96.0
 google-cloud-secret-manager
 google-cloud-storage
 google-cloud-firestore
+Jinja2

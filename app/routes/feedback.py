@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from html import escape
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -116,6 +118,7 @@ def feedback_form(
       margin-top: 12px;
       font-size: 12px;
       color: #6b7280;
+      overflow-wrap: anywhere;
     }}
   </style>
 </head>
@@ -127,10 +130,10 @@ def feedback_form(
     {success_html}
 
     <form method="post" action="/feedback">
-      <input type="hidden" name="page" value="{page}">
-      <input type="hidden" name="language" value="{language}">
-      <input type="hidden" name="verb_id" value="{verb_id}">
-      <input type="hidden" name="return_to" value="{return_to}">
+      <input type="hidden" name="page" value="{escape(page)}">
+      <input type="hidden" name="language" value="{escape(language)}">
+      <input type="hidden" name="verb_id" value="{escape(verb_id)}">
+      <input type="hidden" name="return_to" value="{escape(return_to)}">
 
       <textarea
         name="comment"
@@ -140,11 +143,11 @@ def feedback_form(
 
       <div class="actions">
         <button type="submit" class="primary-btn">Send feedback</button>
-        <a href="{return_to}" class="secondary-link">Back</a>
+        <a href="{escape(return_to)}" class="secondary-link">Back</a>
       </div>
 
       <div class="meta">
-        page={page or "-"} · language={language or "-"} · verb_id={verb_id or "-"}
+        page={escape(page or "-")} · language={escape(language or "-")} · verb_id={escape(verb_id or "-")}
       </div>
     </form>
   </div>
@@ -169,6 +172,7 @@ def submit_feedback(
         verb_id=verb_id or None,
         path=str(request.url.path),
         user_agent=request.headers.get("user-agent"),
+        source="preview",
     )
 
     return RedirectResponse(url=return_to or "/", status_code=303)
