@@ -15,6 +15,7 @@ router = APIRouter()
 
 @router.get("/api/signals")
 async def list_signals(
+    request: Request,
     language: str | None = None,
     include_processed: bool = False,
     status: str | None = None,
@@ -76,7 +77,7 @@ async def list_signals(
 
 
 @router.delete("/api/signals/{doc_id}")
-async def delete_signal(doc_id: str) -> JSONResponse:
+async def delete_signal(request: Request, doc_id: str) -> JSONResponse:
     db = get_db()
     sig_col, _ = signal_collections()
 
@@ -89,7 +90,7 @@ async def delete_signal(doc_id: str) -> JSONResponse:
 
 
 @router.get("/api/signal_labels")
-async def list_signal_labels() -> JSONResponse:
+async def list_signal_labels(request: Request) -> JSONResponse:
     db = get_db()
     _, lbl_col = signal_collections()
 
@@ -193,7 +194,7 @@ async def classify_signal_group(request: Request) -> JSONResponse:
 
 
 @router.delete("/api/signal_labels/{label_id}")
-async def delete_signal_label(label_id: str) -> JSONResponse:
+async def delete_signal_label(request: Request, label_id: str) -> JSONResponse:
     db = get_db()
     sig_col, lbl_col = signal_collections()
 
@@ -251,7 +252,7 @@ async def delete_signal_label(label_id: str) -> JSONResponse:
 
 
 @router.get("/api/verbs/search_extracts")
-async def get_search_extracts(language: str) -> JSONResponse:
+async def get_search_extracts(request: Request, language: str) -> JSONResponse:
     db = get_db()
     docs = db.collection("verbs").where("language", "==", language).stream()
 

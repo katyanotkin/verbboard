@@ -123,6 +123,6 @@ async def learn(
         board=board,
         return_to=current_url,
         candidate_verb_id=verb.id if source == "candidate" else None,
-        admin_href=f"/{settings.admin_secret}" if source == "candidate" else None,
+        admin_href="/admin#candidates" if source == "candidate" else None,
     )
     return HTMLResponse(html)

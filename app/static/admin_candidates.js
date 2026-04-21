@@ -1,10 +1,12 @@
 'use strict';
 
+const CANDIDATES_ROOT = window.ADMIN_ROOT || "/admin";	  
+
 async function loadCandidates() {
   candidatesLoaded = true;
 
   try {
-    const response = await fetch(`${ROOT}/api/candidates`);
+    const response = await fetch(`${CANDIDATES_ROOT}/api/candidates`);
     if (!response.ok) throw new Error(await response.text());
 
     candidatesData = (await response.json()).candidates;
@@ -141,9 +143,6 @@ function renderCandidates() {
       item.status === 'to_be_fixed';
 
     const actionButtons = [];
-    const ADMIN_PREFIX = window.location.pathname.split('/')[1]
-      ? '/' + window.location.pathname.split('/')[1]
-      : '';	  
 
     if (canPromote) {
       actionButtons.push(
@@ -217,7 +216,7 @@ async function regenSingle(verbId, button) {
 
   try {
     const response = await fetch(
-      `${ROOT}/api/candidates/${encodeURIComponent(verbId)}/generate`,
+      `${CANDIDATES_ROOT}/api/candidates/${encodeURIComponent(verbId)}/generate`,
       { method: 'POST' },
     );
 
@@ -279,7 +278,7 @@ async function promoteCandidate(verbId, button) {
 
   try {
     const response = await fetch(
-      `${ROOT}/api/candidates/${encodeURIComponent(verbId)}/promote`,
+      `${CANDIDATES_ROOT}/api/candidates/${encodeURIComponent(verbId)}/promote`,
       { method: 'POST' },
     );
 
@@ -332,7 +331,7 @@ async function setCandidateStatus(verbId, newStatus, button) {
 
   try {
     const response = await fetch(
-      `${ROOT}/api/candidates/${encodeURIComponent(verbId)}/status`,
+      `${CANDIDATES_ROOT}/api/candidates/${encodeURIComponent(verbId)}/status`,
       {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -363,7 +362,7 @@ async function deleteCandidate(verbId, button) {
 
   try {
     const response = await fetch(
-      `${ROOT}/api/candidates/${encodeURIComponent(verbId)}`,
+      `${CANDIDATE_ROOT}/api/candidates/${encodeURIComponent(verbId)}`,
       { method: 'DELETE' },
     );
 

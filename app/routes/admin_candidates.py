@@ -19,6 +19,7 @@ from app.routes.admin_utils import (
     CANDIDATE_STATUSES,
     VERBS_COLLECTION,
     logger,
+    require_admin_api,
 )
 
 router = APIRouter()
@@ -74,7 +75,10 @@ def _call_claude(language: str, query: str) -> dict[str, Any]:
 
 
 @router.get("/api/candidates")
-async def list_candidates(language: str | None = None) -> JSONResponse:
+async def list_candidates(
+    request: Request, language: str | None = None
+) -> JSONResponse:
+    require_admin_api(request)
     db = get_db()
     col = db.collection(CANDIDATES_COLLECTION)
     if language:
@@ -104,7 +108,8 @@ async def list_candidates(language: str | None = None) -> JSONResponse:
 
 
 @router.post("/api/candidates/{verb_id}/generate")
-async def generate_candidate(verb_id: str) -> JSONResponse:
+async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
+    require_admin_api(request)
     db = get_db()
     ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
     doc = ref.get()
@@ -176,7 +181,8 @@ async def generate_candidate(verb_id: str) -> JSONResponse:
 
 
 @router.patch("/api/candidates/{verb_id}/status")
-async def set_candidate_status(verb_id: str, request: Request) -> JSONResponse:
+async def set_candidate_status(request: Request, verb_id: str) -> JSONResponse:
+    require_admin_api(request)
     body = await request.json()
     status = body.get("status", "").strip()
     if status not in CANDIDATE_STATUSES:
@@ -195,7 +201,8 @@ async def set_candidate_status(verb_id: str, request: Request) -> JSONResponse:
 
 
 @router.post("/api/candidates/{verb_id}/promote")
-async def promote_candidate(verb_id: str) -> JSONResponse:
+async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
+    require_admin_api(request)
     db = get_db()
     candidate_ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
     candidate_doc = candidate_ref.get()

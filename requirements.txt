@@ -4,7 +4,7 @@ edge-tts
 ruff
 types-requests
 pytest
-pre-commit	
+pre-commit
 python-multipart
 python-dotenv
 anthropic==0.96.0
@@ -12,3 +12,4 @@ google-cloud-secret-manager
 google-cloud-storage
 google-cloud-firestore
 Jinja2
+itsdangerous
