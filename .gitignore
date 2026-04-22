@@ -30,3 +30,4 @@ runtime/admin_logs/
 
 # Temporary
 *.tmp
+app/routes/admin_candidates.py.with-pealim-scraping

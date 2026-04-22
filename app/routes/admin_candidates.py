@@ -11,7 +11,10 @@ from fastapi.responses import JSONResponse
 from core.settings import _load_anthropic_api_key, _GENERATION_SYSTEM_PROMPT
 from core.storage.firestore_db import get_db
 from core.storage.verb_repository import find_verb_by_search_extract
-from core.storage.verb_document import build_storage_verb_id
+from core.storage.verb_document import (
+    build_storage_verb_id,
+    build_search_extract_from_entry,
+)
 
 
 from app.routes.admin_utils import (
@@ -162,7 +165,10 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         "status": "pending",
         "forms": generated.get("forms", {}),
         "examples": generated.get("examples", []),
-        "search_extract": generated.get("search_extract", []),
+        # search_extract built locally — no LLM tokens spent
+        "search_extract": build_search_extract_from_entry(
+            language=language, entry=generated
+        ),
         "updated_at": now,
     }
 

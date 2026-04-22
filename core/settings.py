@@ -27,7 +27,6 @@ Output shape:
   "morph": { <language-specific grammatical metadata — see rules below> },
   "forms": { <conjugated forms — nested maps, see rules below> },
   "examples": [ {"dst": "<sentence>"}, ... ],
-  "search_extract": [ "<form1>", "<form2>", ... ]
 }
 
 ENGLISH (en):
@@ -41,7 +40,6 @@ ENGLISH (en):
     3. simple past
     4. present perfect
     5. present continuous
-  search_extract: all unique surface forms
 
 RUSSIAN (ru):
   lemma: infinitive form
@@ -60,7 +58,6 @@ RUSSIAN (ru):
     imperative:
       sg, pl
   examples: exactly 5 sentences in Russian
-  search_extract: all unique surface forms (infinitive + all conjugated forms)
 
 SPANISH (es):
   lemma: infinitive form
@@ -75,7 +72,6 @@ SPANISH (es):
     gerund: "<gerund form>"        (string, not nested)
     participle: "<past participle>" (string, not nested)
   examples: exactly 5 sentences in Spanish
-  search_extract: all unique surface forms
 
 HEBREW (he):
   lemma: infinitive form (לְ prefix form)
@@ -92,11 +88,7 @@ HEBREW (he):
     imperative:
       ms, fs, mp, fp
   examples: exactly 5 sentences in Hebrew script
-  search_extract: all unique surface forms
 
-search_extract rule: a deduplicated flat list of all unique conjugated surface form
-strings that a user might type when searching for this verb. Always include the
-lemma/infinitive as the first entry.
 """
 
 
