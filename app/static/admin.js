@@ -5,4 +5,3 @@ const initialPanel = ['feedback', 'signals', 'candidates'].includes(location.has
   : 'feedback';
 
 showPanel(initialPanel);
-loadFeedback();

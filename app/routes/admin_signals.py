@@ -8,7 +8,11 @@ from fastapi.responses import JSONResponse
 
 from core.storage.firestore_db import get_db
 
-from app.routes.admin_utils import CANDIDATES_COLLECTION, signal_collections
+from app.routes.admin_utils import (
+    CANDIDATES_COLLECTION,
+    require_admin_api,
+    signal_collections,
+)
 
 router = APIRouter()
 
@@ -22,6 +26,8 @@ async def list_signals(
     sort_by: str = "ts",
     sort_dir: str = "desc",
 ) -> JSONResponse:
+    require_admin_api(request)
+
     db = get_db()
     sig_col, _ = signal_collections()
 
@@ -78,6 +84,8 @@ async def list_signals(
 
 @router.delete("/api/signals/{doc_id}")
 async def delete_signal(request: Request, doc_id: str) -> JSONResponse:
+    require_admin_api(request)
+
     db = get_db()
     sig_col, _ = signal_collections()
 
@@ -91,6 +99,8 @@ async def delete_signal(request: Request, doc_id: str) -> JSONResponse:
 
 @router.get("/api/signal_labels")
 async def list_signal_labels(request: Request) -> JSONResponse:
+    require_admin_api(request)
+
     db = get_db()
     _, lbl_col = signal_collections()
 
@@ -106,6 +116,7 @@ async def list_signal_labels(request: Request) -> JSONResponse:
                 "count": data.get("count", 0),
                 "last_ts": data.get("last_ts", ""),
                 "updated_at": data.get("updated_at", ""),
+                "hidden": bool(data.get("hidden", False)),
             }
         )
 
@@ -114,6 +125,8 @@ async def list_signal_labels(request: Request) -> JSONResponse:
 
 @router.post("/api/signal_labels")
 async def classify_signal_group(request: Request) -> JSONResponse:
+    require_admin_api(request)
+
     body = await request.json()
     query = body.get("query", "").strip()
     language = body.get("language", "").strip()
@@ -129,7 +142,6 @@ async def classify_signal_group(request: Request) -> JSONResponse:
             detail="status must be 'candidate' or 'garbage'",
         )
 
-    # When marked as candidate, create a stub candidate document if missing.
     if status == "candidate":
         db_ref = get_db()
         stub_id = f"{language}_{query}"
@@ -159,7 +171,15 @@ async def classify_signal_group(request: Request) -> JSONResponse:
     sig_col, lbl_col = signal_collections()
 
     label_id = f"{language}_{query}"
-    db.collection(lbl_col).document(label_id).set(
+    label_ref = db.collection(lbl_col).document(label_id)
+
+    existing_label = label_ref.get()
+    existing_hidden = False
+    if existing_label.exists:
+        existing_data = existing_label.to_dict() or {}
+        existing_hidden = bool(existing_data.get("hidden", False))
+
+    label_ref.set(
         {
             "query": query,
             "language": language,
@@ -167,6 +187,7 @@ async def classify_signal_group(request: Request) -> JSONResponse:
             "count": count,
             "last_ts": last_ts,
             "updated_at": datetime.now(UTC).isoformat(),
+            "hidden": existing_hidden,
         }
     )
 
@@ -179,9 +200,11 @@ async def classify_signal_group(request: Request) -> JSONResponse:
 
     batch = db.batch()
     batch_size = 0
+    processed_count = 0
     for doc in raw_docs:
         batch.update(doc.reference, {"status": status})
         batch_size += 1
+        processed_count += 1
         if batch_size == 500:
             batch.commit()
             batch = db.batch()
@@ -190,11 +213,45 @@ async def classify_signal_group(request: Request) -> JSONResponse:
     if batch_size:
         batch.commit()
 
-    return JSONResponse({"id": label_id, "status": status, "processed": batch_size})
+    return JSONResponse(
+        {"id": label_id, "status": status, "processed": processed_count}
+    )
+
+
+@router.post("/api/signal_labels/{label_id}/hide")
+async def hide_signal_label(request: Request, label_id: str) -> JSONResponse:
+    require_admin_api(request)
+
+    db = get_db()
+    _, lbl_col = signal_collections()
+    ref = db.collection(lbl_col).document(label_id)
+
+    if not ref.get().exists:
+        raise HTTPException(status_code=404, detail="Label not found")
+
+    ref.update({"hidden": True, "updated_at": datetime.now(UTC).isoformat()})
+    return JSONResponse({"hidden": label_id})
+
+
+@router.post("/api/signal_labels/{label_id}/unhide")
+async def unhide_signal_label(request: Request, label_id: str) -> JSONResponse:
+    require_admin_api(request)
+
+    db = get_db()
+    _, lbl_col = signal_collections()
+    ref = db.collection(lbl_col).document(label_id)
+
+    if not ref.get().exists:
+        raise HTTPException(status_code=404, detail="Label not found")
+
+    ref.update({"hidden": False, "updated_at": datetime.now(UTC).isoformat()})
+    return JSONResponse({"unhidden": label_id})
 
 
 @router.delete("/api/signal_labels/{label_id}")
 async def delete_signal_label(request: Request, label_id: str) -> JSONResponse:
+    require_admin_api(request)
+
     db = get_db()
     sig_col, lbl_col = signal_collections()
 
@@ -220,9 +277,11 @@ async def delete_signal_label(request: Request, label_id: str) -> JSONResponse:
 
     batch = db.batch()
     batch_size = 0
+    restored_count = 0
     for raw_doc in raw_docs:
         batch.update(raw_doc.reference, {"status": None})
         batch_size += 1
+        restored_count += 1
         if batch_size == 500:
             batch.commit()
             batch = db.batch()
@@ -245,7 +304,7 @@ async def delete_signal_label(request: Request, label_id: str) -> JSONResponse:
     return JSONResponse(
         {
             "deleted": label_id,
-            "restored": batch_size,
+            "restored": restored_count,
             "deleted_candidate": deleted_candidate,
         }
     )
@@ -253,6 +312,8 @@ async def delete_signal_label(request: Request, label_id: str) -> JSONResponse:
 
 @router.get("/api/verbs/search_extracts")
 async def get_search_extracts(request: Request, language: str) -> JSONResponse:
+    require_admin_api(request)
+
     db = get_db()
     docs = db.collection("verbs").where("language", "==", language).stream()
 

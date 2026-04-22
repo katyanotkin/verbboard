@@ -1,5 +1,7 @@
 'use strict';
 
+const SIGNALS_ROOT = window.ADMIN_ROOT || "/admin";
+
 const LANG_SCRIPTS = {
   en: /^[a-zA-Z\u00C0-\u024F\s'\-]+$/,
   es: /^[a-zA-Z\u00C0-\u024F\s'\-]+$/,
@@ -8,12 +10,12 @@ const LANG_SCRIPTS = {
 };
 
 async function loadSignals() {
-  signalsLoaded = true;
+  window.signalsLoaded = true;
 
   try {
     const [signalsResponse, labelsResponse] = await Promise.all([
-      fetch(`${ROOT}/api/signals`),
-      fetch(`${ROOT}/api/signal_labels`),
+      fetch(`${SIGNALS_ROOT}/api/signals`),
+      fetch(`${SIGNALS_ROOT}/api/signal_labels`),
     ]);
 
     if (!signalsResponse.ok) throw new Error(await signalsResponse.text());
@@ -27,7 +29,7 @@ async function loadSignals() {
 
     populateFilter('sig-filter-lang', languages.sort());
     updateSignalStats();
-    renderAggr();
+    renderActiveSignalView();
   } catch (error) {
     document.getElementById('sig-aggr-body').innerHTML =
       `<tr><td colspan="5" class="error-msg">Error: ${error.message}</td></tr>`;
@@ -39,7 +41,7 @@ async function loadExtracts(language) {
 
   try {
     const response = await fetch(
-      `${ROOT}/api/verbs/search_extracts?language=${encodeURIComponent(language)}`,
+      `${SIGNALS_ROOT}/api/verbs/search_extracts?language=${encodeURIComponent(language)}`,
     );
     if (!response.ok) return;
 
@@ -137,6 +139,7 @@ function aggrRows() {
 
   const labeled = new Map();
   for (const label of labelsData) {
+    if (label.hidden) continue;
     if (languageFilter && label.language !== languageFilter) continue;
 
     const status = classifyAggr(label.query, label.language);
@@ -146,12 +149,15 @@ function aggrRows() {
     }
 
     labeled.set(`${label.language}\x00${label.query}`, {
+      id: label.id,
       query: label.query,
       language: label.language,
       count: label.count,
       last_ts: label.last_ts,
       status,
-      labelId: `${label.language}_${label.query}`,
+      hidden: !!label.hidden,
+      labelId: label.id || `${label.language}_${label.query}`,
+      trashReason: status === 'garbage' ? trashScore(label.query, label.language) : null,
     });
   }
 
@@ -170,11 +176,13 @@ function aggrRows() {
 
     if (!raw.has(key)) {
       raw.set(key, {
+        id: null,
         query: signal.query,
         language: signal.language,
         count: 0,
         last_ts: '',
         status,
+        hidden: false,
         labelId: null,
         trashReason: trashScore(signal.query, signal.language),
       });
@@ -197,7 +205,7 @@ async function loadOrToggleProcessed() {
     button.disabled = true;
     button.textContent = 'Loading…';
     try {
-      const response = await fetch(`${ROOT}/api/signals?include_processed=true`);
+      const response = await fetch(`${SIGNALS_ROOT}/api/signals?include_processed=true`);
       if (!response.ok) throw new Error(await response.text());
 
       const allSignals = (await response.json()).signals;
@@ -257,27 +265,53 @@ function renderAggr() {
     const isTrash = !item.labelId && !item.status && item.trashReason;
 
     let actionCell;
-	if (item.labelId) {
-	  if (item.status === 'in_set') {
-	    // final state → no undo allowed
-	    actionCell = statusPill(item.status);
-	  } else {
-	    actionCell = `<span style="display:flex;align-items:center;gap:6px">
-		${statusPill(item.status)}
-		<button class="btn-del" title="Undo classification"
-		  onclick="undoLabel('${esc(item.labelId)}',this)">↩</button>
-	      </span>`;
-	  }
-	} else if (isTrash) {
-	  actionCell = `<span style="display:flex;align-items:center;gap:6px">
-	      <span class="trash-hint" title="${esc(item.trashReason)}">${esc(item.trashReason)}</span>
-	      <button class="btn-confirm-trash" onclick="quickTrash('${esc(item.query)}','${esc(item.language)}',this)">Mark garbage</button>
-	    </span>`;
-	} else if (canClassify) {
-	  actionCell = aggrClassifySelect(item.query, item.language, item.status);
-	} else {
-	  actionCell = statusPill(item.status);
-	}	  
+
+    if (item.labelId) {
+      const hideAction =
+        item.status === 'garbage'
+          ? (
+              item.hidden
+                ? `<button class="btn-del" title="Unhide"
+                    onclick="unhideSignalLabel('${esc(item.labelId)}',this)">Unhide</button>`
+                : `<button class="btn-del" title="Hide"
+                    onclick="hideSignalLabel('${esc(item.labelId)}',this)">Hide</button>`
+            )
+          : '';
+
+      if (item.status === 'in_set') {
+        actionCell = `<span style="display:flex;align-items:center;gap:6px">
+            ${statusPill(item.status)}
+          </span>`;
+      } else if (item.status === 'garbage') {
+        const reasonHint = item.trashReason
+          ? `<span class="trash-hint" title="${esc(item.trashReason)}">${esc(item.trashReason)}</span>`
+          : '';
+
+        actionCell = `<span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            ${statusPill(item.status)}
+            ${reasonHint}
+            <button class="btn-del" title="Undo classification"
+              onclick="undoLabel('${esc(item.labelId)}',this)">↩</button>
+            ${hideAction}
+          </span>`;
+      } else {
+        actionCell = `<span style="display:flex;align-items:center;gap:6px">
+            ${statusPill(item.status)}
+            <button class="btn-del" title="Undo classification"
+              onclick="undoLabel('${esc(item.labelId)}',this)">↩</button>
+          </span>`;
+      }
+    } else if (isTrash) {
+      actionCell = `<span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="trash-hint" title="${esc(item.trashReason)}">${esc(item.trashReason)}</span>
+          <button class="btn-confirm-trash" onclick="quickTrash('${esc(item.query)}','${esc(item.language)}',this)">Mark garbage</button>
+          <button class="btn-del" onclick="quickHideTrash('${esc(item.query)}','${esc(item.language)}',this)">Hide</button>
+        </span>`;
+    } else if (canClassify) {
+      actionCell = aggrClassifySelect(item.query, item.language, item.status);
+    } else {
+      actionCell = statusPill(item.status);
+    }
 
     const rowClass = isTrash ? 'trash-candidate' : '';
     return `<tr class="${rowClass}">
@@ -306,34 +340,14 @@ async function classifyGroup(query, language, selectEl) {
   );
 
   try {
-    const response = await fetch(`${ROOT}/api/signal_labels`, {
+    const response = await fetch(`${SIGNALS_ROOT}/api/signal_labels`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, language, status, count, last_ts: lastTs }),
     });
     if (!response.ok) throw new Error(await response.text());
 
-    signalsData
-      .filter(item => item.query === query && item.language === language && item.status == null)
-      .forEach(item => { item.status = status; });
-
-    const existingIndex = labelsData.findIndex(
-      item => item.query === query && item.language === language,
-    );
-    const labelDoc = {
-      id: `${language}_${query}`,
-      query,
-      language,
-      status,
-      count,
-      last_ts: lastTs,
-    };
-
-    if (existingIndex >= 0) labelsData[existingIndex] = labelDoc;
-    else labelsData.push(labelDoc);
-
-    updateSignalStats();
-    renderAggr();
+    await loadSignals();
   } catch (error) {
     selectEl.disabled = false;
     alert('Classify failed: ' + error.message);
@@ -353,37 +367,91 @@ async function quickTrash(query, language, button) {
   );
 
   try {
-    const response = await fetch(`${ROOT}/api/signal_labels`, {
+    const response = await fetch(`${SIGNALS_ROOT}/api/signal_labels`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, language, status: 'garbage', count, last_ts: lastTs }),
     });
     if (!response.ok) throw new Error(await response.text());
 
-    signalsData
-      .filter(item => item.query === query && item.language === language && item.status == null)
-      .forEach(item => { item.status = 'garbage'; });
-
-    const existingIndex = labelsData.findIndex(
-      item => item.query === query && item.language === language,
-    );
-    const labelDoc = {
-      id: `${language}_${query}`,
-      query,
-      language,
-      status: 'garbage',
-      count,
-      last_ts: lastTs,
-    };
-
-    if (existingIndex >= 0) labelsData[existingIndex] = labelDoc;
-    else labelsData.push(labelDoc);
-
-    updateSignalStats();
-    renderAggr();
+    await loadSignals();
   } catch (error) {
     button.disabled = false;
     alert('Failed: ' + error.message);
+  }
+}
+
+async function quickHideTrash(query, language, button) {
+  button.disabled = true;
+
+  const matching = signalsData.filter(
+    item => item.query === query && item.language === language && item.status == null,
+  );
+  const count = matching.length;
+  const lastTs = matching.reduce(
+    (best, item) => (!best || item.ts > best ? item.ts : best),
+    '',
+  );
+  const labelId = `${language}_${query}`;
+
+  try {
+    const classifyResponse = await fetch(`${SIGNALS_ROOT}/api/signal_labels`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        language,
+        status: 'garbage',
+        count,
+        last_ts: lastTs,
+      }),
+    });
+    if (!classifyResponse.ok) throw new Error(await classifyResponse.text());
+
+    const hideResponse = await fetch(
+      `${SIGNALS_ROOT}/api/signal_labels/${encodeURIComponent(labelId)}/hide`,
+      { method: 'POST' },
+    );
+    if (!hideResponse.ok) throw new Error(await hideResponse.text());
+
+    await loadSignals();
+  } catch (error) {
+    button.disabled = false;
+    alert('Hide failed: ' + error.message);
+  }
+}
+
+async function hideSignalLabel(labelId, button) {
+  button.disabled = true;
+
+  try {
+    const response = await fetch(
+      `${SIGNALS_ROOT}/api/signal_labels/${encodeURIComponent(labelId)}/hide`,
+      { method: 'POST' },
+    );
+    if (!response.ok) throw new Error(await response.text());
+
+    await loadSignals();
+  } catch (error) {
+    button.disabled = false;
+    alert('Hide failed: ' + error.message);
+  }
+}
+
+async function unhideSignalLabel(labelId, button) {
+  button.disabled = true;
+
+  try {
+    const response = await fetch(
+      `${SIGNALS_ROOT}/api/signal_labels/${encodeURIComponent(labelId)}/unhide`,
+      { method: 'POST' },
+    );
+    if (!response.ok) throw new Error(await response.text());
+
+    await loadSignals();
+  } catch (error) {
+    button.disabled = false;
+    alert('Unhide failed: ' + error.message);
   }
 }
 
@@ -392,27 +460,12 @@ async function undoLabel(labelId, button) {
 
   try {
     const response = await fetch(
-      `${ROOT}/api/signal_labels/${encodeURIComponent(labelId)}`,
+      `${SIGNALS_ROOT}/api/signal_labels/${encodeURIComponent(labelId)}`,
       { method: 'DELETE' },
     );
     if (!response.ok) throw new Error(await response.text());
 
-    const label = labelsData.find(item => item.id === labelId);
-    if (label) {
-      signalsData
-        .filter(
-          item =>
-            item.query === label.query &&
-            item.language === label.language &&
-            item.status === label.status,
-        )
-        .forEach(item => { item.status = null; });
-    }
-
-    labelsData = labelsData.filter(item => item.id !== labelId);
-
-    updateSignalStats();
-    renderAggr();
+    await loadSignals();
   } catch (error) {
     button.disabled = false;
     alert('Undo failed: ' + error.message);

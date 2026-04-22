@@ -122,12 +122,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
 
     existing = find_verb_by_search_extract(language, query)
     if existing is not None:
-        ref.update(
-            {
-                "status": "duplicate",
-                "updated_at": datetime.now(UTC).isoformat(),
-            }
-        )
+        ref.delete()
         raise HTTPException(
             status_code=409,
             detail=f"'{query}' is already in the live verb set",
@@ -142,7 +137,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
     if new_id != verb_id:
         existing_verb = db.collection(VERBS_COLLECTION).document(new_id).get()
         if existing_verb.exists:
-            ref.update({"status": "duplicate", "updated_at": now})
+            ref.delete()
             raise HTTPException(
                 status_code=409,
                 detail=f"Resolves to '{new_id}' which already exists in live verbs",
@@ -150,7 +145,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
 
         existing_cand = db.collection(CANDIDATES_COLLECTION).document(new_id).get()
         if existing_cand.exists:
-            ref.update({"status": "duplicate", "updated_at": now})
+            ref.delete()
             raise HTTPException(
                 status_code=409,
                 detail=f"Resolves to '{new_id}' which already exists as a candidate",
@@ -233,3 +228,18 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
     return JSONResponse(
         {"verb_id": verb_id, "promoted": True, "rank": data.get("rank")}
     )
+
+
+@router.delete("/api/candidates/{verb_id}")
+async def delete_candidate(request: Request, verb_id: str) -> JSONResponse:
+    require_admin_api(request)
+
+    db = get_db()
+    ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    doc = ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    ref.delete()
+    return JSONResponse({"deleted": verb_id})
