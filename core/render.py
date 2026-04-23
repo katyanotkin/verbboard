@@ -51,10 +51,11 @@ def render_board_html(
             else:
                 audio_html = ""
 
+            value_font_size = "15px" if key in ("pair", "aspect") else "22px"
             rows.append(
                 "<tr>"
                 f"<td>{label}</td>"
-                f"<td style='font-size: 26px'>{value_html}</td>"
+                f"<td style='font-size: {value_font_size}'>{value_html}</td>"
                 f"<td>{audio_html}</td>"
                 "</tr>"
             )

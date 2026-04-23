@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from core.lexicon import load_lexicon
 from core.models import Board, VerbEntry
-from core.paths import DATA_DIR
 from core.registry import LanguagePlugin, register
+from core.storage.verb_repository import find_verb_by_lemma
+from core.verb_service import generate_and_promote_verb
 
 
 def _format_aspect(aspect_value: str) -> str:
@@ -17,12 +17,19 @@ def _format_aspect(aspect_value: str) -> str:
 def _lookup_pair_lemma_and_href(pair_lemma: str) -> tuple[str, str]:
     if not pair_lemma:
         return "", ""
-    lexicon_path = DATA_DIR / "ru" / "lexicon.json"
-    entries = load_lexicon(lexicon_path) if lexicon_path.exists() else []
-    pair_entry = next((e for e in entries if str(e.lemma) == pair_lemma), None)
-    if pair_entry is None:
-        return pair_lemma, ""  # show lemma even if not in lexicon yet
-    return str(pair_entry.lemma), f"/learn?language=ru&verb_id={pair_entry.id}"
+    doc = find_verb_by_lemma("ru", pair_lemma)
+    if doc is not None:
+        return pair_lemma, f"/learn?language=ru&verb_id={doc['verb_id']}"
+    # Not in Firestore yet — trigger background generation
+    try:
+        import asyncio
+
+        asyncio.get_running_loop().run_in_executor(
+            None, lambda: generate_and_promote_verb("ru", pair_lemma)
+        )
+    except RuntimeError:
+        generate_and_promote_verb("ru", pair_lemma)
+    return f"{pair_lemma} ⏳", ""
 
 
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
