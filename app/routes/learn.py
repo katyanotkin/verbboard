@@ -6,7 +6,7 @@ import logging
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 
-from core.audio_service import ensure_audio
+from core.audio_service import build_hashed_audio_key, ensure_audio
 from core.registry import get as get_plugin
 from core.render import render_board_html
 from core.tts import VOICES
@@ -78,10 +78,12 @@ async def learn(
 
     for section in board.sections:
         for row in section["rows"]:
-            form_key = row["key"]
+            base_form_key = str(row["key"])
             text = str(row["text"] or "").strip()
             if not text:
                 continue
+
+            form_key = build_hashed_audio_key(base_form_key, text)
 
             tasks.append(
                 ensure_audio(
@@ -100,6 +102,9 @@ async def learn(
         if not example_text:
             continue
 
+        base_form_key = f"example_{index}"
+        form_key = build_hashed_audio_key(base_form_key, example_text)
+
         tasks.append(
             ensure_audio(
                 audio_backend=audio_backend,
@@ -107,7 +112,7 @@ async def learn(
                 language=language,
                 verb_id=verb.id,
                 voice=selected_voice,
-                form_key=f"example_{index}",
+                form_key=form_key,
                 voice_edge_id=voice_meta.edge_id,
             )
         )

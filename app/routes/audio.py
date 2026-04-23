@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Request
 from fastapi.responses import PlainTextResponse, Response
 
 from core.audio_service import read_audio_bytes
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -16,6 +20,7 @@ def get_audio(
     voice: str,
     form_key: str,
 ):
+    logger.warning("AUDIO REQUEST: %s %s %s %s", language, verb_id, voice, form_key)
     audio_backend = request.app.state.audio_backend
     audio_bytes = read_audio_bytes(
         audio_backend=audio_backend,

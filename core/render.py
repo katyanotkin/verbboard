@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from html import escape
 
+from core.audio_service import build_hashed_audio_key
 from core.models import Board
 from core.paths import TEMPLATES_DIR
 
@@ -26,9 +27,10 @@ def render_board_html(
     for section_index, section in enumerate(board.sections, start=1):
         rows = []
         for row_index, row in enumerate(section["rows"], start=1):
-            key = row["key"]
+            key = str(row["key"])
             label = escape(str(row["label"]))
-            text = escape(str(row["text"]))
+            raw_text = str(row["text"] or "")
+            text = escape(raw_text)
             href = str(row.get("href", ""))
 
             if href:
@@ -37,10 +39,14 @@ def render_board_html(
                 value_html = text
 
             if key not in NO_AUDIO_ROW_KEYS:
-                audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{key}.mp3"
+                hashed_key = build_hashed_audio_key(key, raw_text)
+                audio_src = (
+                    f"/audio/{board.language}/{board.verb.id}/"
+                    f"{board.voice_key}/{hashed_key}.mp3"
+                )
                 audio_id = (
                     f"audio_{board.language}_{board.verb.id}_{board.voice_key}_"
-                    f"section{section_index}_row{row_index}_{key}"
+                    f"section{section_index}_row{row_index}_{hashed_key}"
                 )
                 audio_html = (
                     f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
@@ -72,9 +78,16 @@ def render_board_html(
 
     examples_rows = []
     for index, ex in enumerate(board.verb.examples, start=1):
-        audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/example_{index}.mp3"
+        base_key = f"example_{index}"
+        raw_text = ex.dst
+        hashed_key = build_hashed_audio_key(base_key, raw_text)
+
+        audio_src = (
+            f"/audio/{board.language}/{board.verb.id}/"
+            f"{board.voice_key}/{hashed_key}.mp3"
+        )
         audio_id = (
-            f"audio_{board.language}_{board.verb.id}_{board.voice_key}_example_{index}"
+            f"audio_{board.language}_{board.verb.id}_{board.voice_key}_{hashed_key}"
         )
 
         example_direction = "rtl" if board.language == "he" else "ltr"
@@ -82,7 +95,7 @@ def render_board_html(
 
         examples_rows.append(
             "<tr>"
-            f"<td dir='{example_direction}' style='text-align:{example_align}'>{escape(ex.dst)}</td>"
+            f"<td dir='{example_direction}' style='text-align:{example_align}'>{escape(raw_text)}</td>"
             f"<td>"
             f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
             f"<button class='{button_class}' data-lang='{board.language}' title='Play' "

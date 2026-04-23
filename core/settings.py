@@ -29,6 +29,8 @@ Output shape:
   "examples": [ {"dst": "<sentence>"}, ... ],
 }
 
+Examples must be idiomatic, everyday language, not too verbose, naturally use the target verb.
+
 ENGLISH (en):
   lemma: infinitive base form (e.g. "went" → "go", "growing" → "grow")
   morph: {} (empty object)
@@ -48,11 +50,15 @@ RUSSIAN (ru):
     pair: aspect-pair verb_id string
           pair: infinitive lemma of the aspect partner (e.g. "ловить" for поймать).
           Use "" if no pair exists.
-    sem: semantic category string (e.g. "motion", "change", "perception", "communication")
+          Examples for `pair`:
+            - "ловить" -> "поймать"
+            - "поймать" -> "ловить"
+            - "уцелеть" -> ""   (do not invent)
   forms — all nested:
-    present:
-      1sg, 2sg, 3sg, 1pl, 2pl, 3pl
-      (use "-" for all if perfective aspect)
+    for imperfective verbs:
+      present: 1sg, 2sg, 3sg, 1pl, 2pl, 3pl
+    for perfective verbs:
+      future: 1sg, 2sg, 3sg, 1pl, 2pl, 3pl
     past:
       m, f, n, pl
     imperative:

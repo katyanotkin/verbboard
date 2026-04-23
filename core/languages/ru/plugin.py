@@ -15,21 +15,24 @@ def _format_aspect(aspect_value: str) -> str:
 
 
 def _lookup_pair_lemma_and_href(pair_lemma: str) -> tuple[str, str]:
-    if not pair_lemma:
+    normalized_pair_lemma = pair_lemma.strip()
+    if not normalized_pair_lemma:
         return "", ""
-    doc = find_verb_by_lemma("ru", pair_lemma)
+
+    doc = find_verb_by_lemma("ru", normalized_pair_lemma)
     if doc is not None:
-        return pair_lemma, f"/learn?language=ru&verb_id={doc['verb_id']}"
-    # Not in Firestore yet — trigger background generation
+        return normalized_pair_lemma, f"/learn?language=ru&verb_id={doc['verb_id']}"
+
     try:
         import asyncio
 
         asyncio.get_running_loop().run_in_executor(
-            None, lambda: generate_and_promote_verb("ru", pair_lemma)
+            None, lambda: generate_and_promote_verb("ru", normalized_pair_lemma)
         )
     except RuntimeError:
-        generate_and_promote_verb("ru", pair_lemma)
-    return f"{pair_lemma} ⏳", ""
+        generate_and_promote_verb("ru", normalized_pair_lemma)
+
+    return f"{normalized_pair_lemma} ⏳", ""
 
 
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
@@ -41,12 +44,16 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     aspect = _format_aspect(raw_aspect)
     is_perfective = raw_aspect == "perfective"
 
-    pair_lemma_raw = str(morph.get("pair", ""))
+    pair_value = morph.get("pair")
+    pair_lemma_raw = pair_value.strip() if isinstance(pair_value, str) else ""
     pair_lemma, pair_href = _lookup_pair_lemma_and_href(pair_lemma_raw)
 
-    present = forms.get("present", {})
-    past = forms.get("past", {})
-    imperative = forms.get("imperative", {})
+    tense_key = "future" if is_perfective else "present"
+    tense_title = "Будущее" if is_perfective else "Настоящее"
+
+    finite_forms = forms.get(tense_key, {}) or {}
+    past = forms.get("past", {}) or {}
+    imperative = forms.get("imperative", {}) or {}
 
     metadata_rows = [
         {"key": "lemma", "label": "глагол", "text": lemma},
@@ -64,17 +71,25 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
         )
 
     finite_rows = [
-        {"key": "pres_1sg", "label": "я", "text": present.get("1sg", "")},
-        {"key": "pres_2sg", "label": "ты", "text": present.get("2sg", "")},
-        {"key": "pres_3sg", "label": "он/она/оно", "text": present.get("3sg", "")},
-        {"key": "pres_1pl", "label": "мы", "text": present.get("1pl", "")},
-        {"key": "pres_2pl", "label": "вы", "text": present.get("2pl", "")},
-        {"key": "pres_3pl", "label": "они", "text": present.get("3pl", "")},
+        {"key": f"{tense_key}_1sg", "label": "я", "text": finite_forms.get("1sg", "")},
+        {"key": f"{tense_key}_2sg", "label": "ты", "text": finite_forms.get("2sg", "")},
+        {
+            "key": f"{tense_key}_3sg",
+            "label": "он/она/оно",
+            "text": finite_forms.get("3sg", ""),
+        },
+        {"key": f"{tense_key}_1pl", "label": "мы", "text": finite_forms.get("1pl", "")},
+        {"key": f"{tense_key}_2pl", "label": "вы", "text": finite_forms.get("2pl", "")},
+        {
+            "key": f"{tense_key}_3pl",
+            "label": "они",
+            "text": finite_forms.get("3pl", ""),
+        },
     ]
 
     sections = [
         {"title": "Основное", "rows": metadata_rows},
-        {"title": "Будущее" if is_perfective else "Настоящее", "rows": finite_rows},
+        {"title": tense_title, "rows": finite_rows},
         {
             "title": "Прошедшее",
             "rows": [
