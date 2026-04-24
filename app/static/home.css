@@ -375,6 +375,16 @@ input[type="text"]:focus {
   background: #f1f5f9;
 }
 
+.more-verbs-link {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+  color: #4a90e2;
+  text-decoration: none;
+  text-align: right;
+}
+.more-verbs-link:hover { text-decoration: underline; }
+
 .learn-btn.is-primary {
   background: var(--button-primary-bg);
   color: var(--button-primary-text);

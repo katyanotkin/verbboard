@@ -82,3 +82,16 @@ def find_verb_by_lemma(language: str, lemma: str) -> dict[str, Any] | None:
     for doc in docs:
         return doc.to_dict()
     return None
+
+
+def list_verbs_recent(language: str, limit: int = 20) -> list[dict[str, Any]]:
+    """Return the most recently added verbs for a language."""
+    db = get_db()
+    docs = (
+        db.collection(COLLECTION)
+        .where("language", "==", language)
+        .order_by("created_at", direction="DESCENDING")
+        .limit(limit)
+        .stream()
+    )
+    return [d.to_dict() for d in docs]

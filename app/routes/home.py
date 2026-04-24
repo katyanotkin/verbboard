@@ -4,6 +4,8 @@ from html import escape
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from dataclasses import dataclass
+from typing import Any
 
 from core.admin_logging import log_missing_verb_search
 from core.lexicon import load_lexicon
@@ -11,9 +13,10 @@ from core.paths import DATA_DIR
 from core.registry import all_plugins
 from core.search_utils import find_best_entry
 from core.storage.verb_repository import find_verb_by_search_extract
+from core.settings import load_settings
+from core.storage.verb_repository import list_verbs_recent
 
-
-router = APIRouter()
+_SETTINGS = load_settings()
 
 LANGUAGE_HOME_LABELS = {
     "en": "English",
@@ -22,8 +25,24 @@ LANGUAGE_HOME_LABELS = {
     "es": "Spanish / Español",
 }
 
+router = APIRouter()
+
+
+@dataclass
+class _HomeVerb:
+    id: str
+    lemma: Any  # str or dict for Russian
+
+
+def _doc_to_home_verb(d: dict) -> _HomeVerb:
+    lemma = d.get("display_lemma") or d.get("lemma") or ""
+    return _HomeVerb(id=d.get("verb_id", ""), lemma=lemma)
+
 
 def _load_entries(language: str):
+    if _SETTINGS.verb_data_source == "firestore":
+        docs = list_verbs_recent(language, limit=20)
+        return [_doc_to_home_verb(d) for d in docs]
     lex_path = DATA_DIR / language / "lexicon.json"
     return load_lexicon(lex_path) if lex_path.exists() else []
 
@@ -126,7 +145,7 @@ def home(
         f"<option value='{entry.id}' {'selected' if entry.id == selected_verb_id else ''}>"
         f"{entry.lemma if not isinstance(entry.lemma, dict) else (entry.lemma.get('imperfective', '') + ' / ' + entry.lemma.get('perfective', ''))}"
         f"</option>"
-        for entry in entries
+        for entry in entries[:20]
     )
 
     notice_html = ""
@@ -185,10 +204,11 @@ def home(
       </div>
 
       <div class="row">
-      <label><span class="label-icon">🧩</span> Choose a verb</label>
+        <label><span class="label-icon">🧩</span> Choose a verb</label>
         <select name="verb_id" id="verb-select">
           {verb_options}
         </select>
+        <a href="/verbs?language={selected_language}" class="more-verbs-link">More options →</a>
       </div>
 
       <div class="progress-row">

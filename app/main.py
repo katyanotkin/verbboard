@@ -10,6 +10,7 @@ from app.routes.learn import router as learn_router
 from app.routes.about import router as about_router
 from app.routes.feedback import router as feedback_router
 from app.routes.admin import router as admin_router
+from app.routes.verbs import router as verbs_router
 
 from core.audio_backend.factory import create_audio_backend
 from core.lexicon import lexicon_store
@@ -43,3 +44,4 @@ app.include_router(health_router)
 app.include_router(about_router)
 app.include_router(feedback_router)
 app.include_router(admin_router)
+app.include_router(verbs_router)
