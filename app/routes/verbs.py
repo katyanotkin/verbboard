@@ -47,42 +47,55 @@ def verb_browser(
     verbs_json = json.dumps(verbs_js, ensure_ascii=False)
     lang_json = json.dumps(selected_language)
 
-    lang_options = "\n".join(
-        f'<option value="{key}" {"selected" if key == selected_language else ""}>'
-        f"{plugin.display_name}</option>"
-        for key, plugin in plugins.items()
-    )
-
     html = f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>VerbBoard — Browse verbs</title>
-  <link rel="stylesheet" href="/static/common.css"/>
-  <link rel="stylesheet" href="/static/verbs.css"/>
-</head>
-<body>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <title>VerbBoard — Browse verbs</title>
+      <link rel="stylesheet" href="/static/common.css"/>
+      <link rel="stylesheet" href="/static/verbs.css"/>
+    </head>
+    <body>
   <div class="vb-page">
 
     <div class="vb-header">
       <a href="/?language={selected_language}" class="vb-back">⟵ Home</a>
       <h1 class="vb-title">Browse verbs</h1>
-      <select class="vb-lang-select"
-        onchange="window.location='/verbs?language='+this.value">
-        {lang_options}
-      </select>
     </div>
 
-    <div class="vb-toolbar">
-      <input id="vb-search" class="vb-search" type="text"
-             placeholder="Search…" autocomplete="off"/>
-      <div class="vb-filter-toggle" id="vb-filter-toggle">
-        <button class="vb-ftbtn active" data-filter="unknown">Unknown</button>
-        <button class="vb-ftbtn" data-filter="all">All</button>
-        <button class="vb-ftbtn" data-filter="known">Known</button>
-      </div>
+    <div class="vb-feedback-row">
+      <a
+        href="/feedback?page=verbs&language={selected_language}&return_to=/verbs?language={selected_language}"
+        class="feedback-link"
+        title="Send feedback"
+      >
+        💬 Feedback
+      </a>
     </div>
+
+    <form action="/search_verb" method="get" class="vb-toolbar">
+      <input type="hidden" name="language" value="{selected_language}" />
+
+      <input
+        id="vb-search"
+        name="q"
+        class="vb-search"
+        type="text"
+        placeholder="Find or request a verb…"
+        autocomplete="off"
+      />
+
+      <button type="submit" class="vb-search-submit">
+        Find
+      </button>
+
+      <div class="vb-filter-toggle" id="vb-filter-toggle">
+        <button type="button" class="vb-ftbtn active" data-filter="unknown">Unknown</button>
+        <button type="button" class="vb-ftbtn" data-filter="all">All</button>
+        <button type="button" class="vb-ftbtn" data-filter="known">Known</button>
+      </div>
+    </form>
 
     <div class="vb-toolbar vb-toolbar-meta">
       <select id="vb-sort" class="vb-sort-select">

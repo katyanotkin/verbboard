@@ -2,6 +2,7 @@
 
 (function () {
   const lang  = window.VB_LANGUAGE;
+  const returnTo = encodeURIComponent(`/verbs?language=${lang}`);	
   const verbs = window.VB_VERBS;  // [{id, lemma, rank}, ...] pre-sorted by rank
 
   const searchEl = document.getElementById('vb-search');
@@ -64,7 +65,7 @@
                     : '';
       const cls = isKnown ? ' is-known' : isSeen ? ' is-seen' : '';
       return `<a class="vb-item${cls}"
-                 href="/learn?language=${encodeURIComponent(lang)}&verb_id=${encodeURIComponent(v.id)}">
+		 href="/learn?language=${encodeURIComponent(lang)}&verb_id=${encodeURIComponent(v.id)}&return_to=${returnTo}">
         <span class="vb-lemma">${esc(v.lemma)}</span>${badge}
       </a>`;
     }).join('');

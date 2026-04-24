@@ -208,7 +208,12 @@ def home(
         <select name="verb_id" id="verb-select">
           {verb_options}
         </select>
-        <a href="/verbs?language={selected_language}" class="more-verbs-link">More options →</a>
+      </div>
+
+      <div class="row center">
+        <a href="/verbs?language={escape(selected_language)}" class="browse-link">
+            Browse all verbs →
+        </a>
       </div>
 
       <div class="progress-row">

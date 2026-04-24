@@ -24,6 +24,7 @@ async def learn(
     verb_id: str | None = Query(None),
     voice: str | None = Query(None),
     source: str | None = Query(None),
+    return_to: str | None = Query(None),
 ) -> HTMLResponse:
     settings = request.app.state.settings
     logger.warning("lookup source %s -> verb %s", source, verb_id)
@@ -123,11 +124,11 @@ async def learn(
             if isinstance(result, Exception):
                 print(f"Audio generation failed: {result}")
 
-    current_url = str(request.url)
     html = render_board_html(
         board=board,
-        return_to=current_url,
+        return_to=return_to,
         candidate_verb_id=verb.id if source == "candidate" else None,
         admin_href="/admin#candidates" if source == "candidate" else None,
     )
+
     return HTMLResponse(html)

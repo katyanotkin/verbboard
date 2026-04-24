@@ -114,11 +114,7 @@ def render_board_html(
         f"/?language={escape(board.language)}" f"&verb_id={escape(board.verb.id)}"
     )
 
-    resolved_return_to = return_to or (
-        f"/learn?language={escape(board.language)}"
-        f"&verb_id={escape(board.verb.id)}"
-        f"&voice={escape(board.voice_key)}"
-    )
+    resolved_return_to = return_to or f"/?language={escape(board.language)}"
 
     voice_key = (board.voice_key or "").lower()
     female_active = "active" if voice_key == "female" else ""
