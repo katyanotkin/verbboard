@@ -69,7 +69,33 @@ pre-commit run --all-files
 ```
 
 ---
-## NOTES 2026-04-20
+## NOTES 2026-04-26
+
+### Product evolution
+- Demand-driven verb expansion: unknown searches captured as signals
+- Built end-to-end candidate pipeline (signal → generation → preview → promotion)
+- Admin preview uses real learn page (no separate admin UI abstraction)
+- Feedback loop integrated across product (💬 + verb demand via search)
+
+### Data & modeling decisions
+- Output schema aligned with render layer
+- Aspect pairs stored as lemma strings (resolved at render time) → improved data resilience
+- Audio keys hashed by text → eliminates stale cache mismatches
+
+### AI / generation
+- Verb generation powered via Anthropic API
+- Switching from Opus → Sonnet reduced generation cost ~5x with no quality loss
+- Prompt design optimized for structured output
+
+### UX / behavior
+- Search over conjugated forms (not just lemmas)
+- Verb ordering: frequency first, then demand-driven (FIFO)
+- Stateless UX with local progress tracking (seen / known)
+- Verbs browsing page with filtering and sorting
+
+---
+
 ## Upcoming
-- Verb picker UX for growing verb sets
+- Centralize UI language configuration
+- Introduce guided verb practice sets with progress trackin 
 - Optional user personalization (TBD)
