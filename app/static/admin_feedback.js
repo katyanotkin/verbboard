@@ -1,13 +1,9 @@
 (function () {
   const configElement = document.getElementById("admin-feedback-config");
-  if (!configElement) {
-    return;
-  }
+  if (!configElement) return;
 
   const feedbackApiBase = configElement.dataset.feedbackApiBase;
-  if (!feedbackApiBase) {
-    return;
-  }
+  if (!feedbackApiBase) return;
 
   function escapeHtml(value) {
     return String(value)
@@ -55,9 +51,7 @@
 
   function populateSelect(selectId, allLabel, values) {
     const selectElement = document.getElementById(selectId);
-    if (!selectElement) {
-      return;
-    }
+    if (!selectElement) return;
 
     const currentValue = selectElement.value;
     selectElement.innerHTML = "";
@@ -78,16 +72,8 @@
   }
 
   async function loadFacetValues() {
-    const response = await fetch(`${feedbackApiBase}/facets`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to load feedback facets");
-    }
+    const response = await fetch(`${feedbackApiBase}/facets`);
+    if (!response.ok) throw new Error("Failed to load feedback facets");
 
     const payload = await response.json();
     populateSelect("page", "All pages", payload.pages || []);
@@ -95,13 +81,54 @@
     populateSelect("source", "All sources", payload.sources || []);
   }
 
-  function renderFeedback(feedbackRows) {
-    const feedbackList = document.getElementById("feedback-list");
-    if (!feedbackList) {
-      return;
-    }
+  function answerLabel(answer) {
+    if (answer === "yes") return "yes";
+    if (answer === "no") return "no";
+    if (answer === "no_preference") return "no preference";
+    return "-";
+  }
 
-    if (!feedbackRows.length) {
+  function renderPollSummary(rows, pollMeta) {
+    const activePollId = pollMeta?.poll_id || "";	  
+    const filtered = rows.filter(
+      (r) =>
+	r.poll_id === activePollId &&    
+        ["yes", "no", "no_preference"].includes(r.poll_answer)
+    );
+
+    const yes = filtered.filter(r => r.poll_answer === "yes").length;
+    const no = filtered.filter(r => r.poll_answer === "no").length;
+    const noPref = filtered.filter(r => r.poll_answer === "no_preference").length;
+
+    const total = yes + no + noPref;
+    if (!total) return "";
+
+    const yesPct = Math.round((yes / total) * 100);
+    const noPct = Math.round((no / total) * 100);
+    const noPrefPct = Math.round((noPref / total) * 100);
+
+    const pollLabel = pollMeta?.question_en || "";
+
+    return `
+      <div class="card" style="padding:14px 16px;margin-bottom:12px;background:#f8fafc;">
+        <div style="font-weight:700;margin-bottom:6px;">
+          Poll: ${escapeHtml(pollLabel)}
+        </div>
+        <div style="font-size:13px;color:#374151;">
+          Answers: ${total} ·
+          Yes: ${yes} (${yesPct}%) ·
+          No: ${no} (${noPct}%) ·
+          No preference: ${noPref} (${noPrefPct}%)
+        </div>
+      </div>
+    `;
+  }
+
+  function renderFeedback(rows, pollMeta) {
+    const feedbackList = document.getElementById("feedback-list");
+    if (!feedbackList) return;
+
+    if (!rows.length) {
       feedbackList.innerHTML = `
         <div class="card" style="padding:24px;color:#6b7280;">
           No feedback found.
@@ -110,44 +137,56 @@
       return;
     }
 
-    feedbackList.innerHTML = feedbackRows
-      .map((feedbackRow) => {
-        const hiddenBadge = feedbackRow.hidden
-          ? '<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#f3f4f6;color:#4b5563;">hidden</span>'
+    const pollSummary = renderPollSummary(rows, pollMeta);
+
+    feedbackList.innerHTML =
+      pollSummary +
+      rows.map(row => {
+        const hiddenBadge = row.hidden
+          ? '<span style="font-size:11px;background:#eee;padding:2px 6px;border-radius:6px;">hidden</span>'
           : "";
 
-        const actionButton = feedbackRow.hidden
-          ? `<button type="button" data-action="unhide" data-id="${escapeHtml(feedbackRow.id)}">Unhide</button>`
-          : `<button type="button" data-action="hide" data-id="${escapeHtml(feedbackRow.id)}">Hide</button>`;
+	const actionButton = row.hidden
+  	  ? `<button type="button" data-action="unhide" data-id="${escapeHtml(row.id)}">Unhide</button>`
+  	  : `<button type="button" data-action="hide" data-id="${escapeHtml(row.id)}">Hide</button>`;      
+
+        const pollBadge = row.poll_answer
+          ? `<span style="font-size:11px;color:#374151;">poll: ${escapeHtml(answerLabel(row.poll_answer))}</span>`
+          : "";
+
+        const pollRaw = row.poll_question
+          ? `<div style="margin-top:6px;font-size:12px;color:#374151;">
+               <b>Poll:</b> ${escapeHtml(row.poll_question)}<br>
+               <b>Answer:</b> ${escapeHtml(answerLabel(row.poll_answer))}
+             </div>`
+          : "";
 
         return `
-          <div class="card" style="padding:14px 16px;margin-bottom:12px;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;">
-              <div style="font-size:12px;color:#6b7280;line-height:1.5;overflow-wrap:anywhere;display:flex;gap:6px;flex-wrap:wrap;">
-                <span>${escapeHtml(feedbackRow.created_at || "-")}</span>
-                <span>·</span>
-                <span>${escapeHtml(feedbackRow.source || "-")}</span>
-                <span>·</span>
-                <span>${escapeHtml(feedbackRow.page || "-")}</span>
-                <span>·</span>
-                <span>${escapeHtml(feedbackRow.language || "-")}</span>
-                <span>·</span>
-                <span>${escapeHtml(feedbackRow.verb_id || "-")}</span>
-                ${hiddenBadge}
-              </div>
+	  <div class="card" style="padding:14px;margin-bottom:12px;">
+	    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px;">
+	      <div style="font-size:12px;color:#6b7280;line-height:1.5;overflow-wrap:anywhere;">
+		${escapeHtml(row.created_at || "-")} ·
+		${escapeHtml(row.source || "-")} ·
+		${escapeHtml(row.page || "-")} ·
+		${escapeHtml(row.language || "-")} ·
+		${escapeHtml(row.verb_id || "-")}
+		${pollBadge ? " · " + pollBadge : ""}
+		${hiddenBadge}
+	      </div>
 
-              <div style="flex-shrink:0;">
-                ${actionButton}
-              </div>
-            </div>
+	      <div style="flex-shrink:0;">
+		${actionButton}
+	      </div>
+	    </div>
 
-            <div style="white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;line-height:1.55;color:#111827;">
-              ${escapeHtml(feedbackRow.comment || "")}
-            </div>
-          </div>
-        `;
-      })
-      .join("");
+	    <div style="white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;line-height:1.55;color:#111827;">
+	      ${escapeHtml(row.comment || "")}
+	    </div>
+
+	    ${pollRaw}
+	  </div>
+	`;
+      }).join("");
   }
 
   async function loadFeedback() {
@@ -156,67 +195,32 @@
 
     const url = queryString ? `${feedbackApiBase}?${queryString}` : feedbackApiBase;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to load feedback");
-    }
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to load feedback");
 
     const payload = await response.json();
-    renderFeedback(payload.feedback || []);
-  }
 
-  async function moderateFeedback(feedbackId, action) {
-    const response = await fetch(
-      `${feedbackApiBase}/${encodeURIComponent(feedbackId)}/${action}`,
-      {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-        },
-      }
+    renderFeedback(
+      payload.feedback || [],
+      payload.poll_meta || {}
     );
-
-    if (!response.ok) {
-      throw new Error(`Failed to ${action} feedback`);
-    }
-
-    await loadFeedback();
   }
 
-  const filtersForm = document.getElementById("filters");
-  if (filtersForm) {
-    filtersForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      await loadFeedback();
-    });
-
-    for (const selectElement of filtersForm.querySelectorAll("select")) {
-      selectElement.addEventListener("change", async () => {
-        await loadFeedback();
-      });
-    }
-  }	
+  document.getElementById("filters")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await loadFeedback();
+  });
 
   document.addEventListener("click", async (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
+    const el = event.target;
+    if (!(el instanceof HTMLElement)) return;
 
-    const action = target.dataset.action;
-    const feedbackId = target.dataset.id;
+    const action = el.dataset.action;
+    const id = el.dataset.id;
+    if (!action || !id) return;
 
-    if (!action || !feedbackId) {
-      return;
-    }
-
-    await moderateFeedback(feedbackId, action);
+    await fetch(`${feedbackApiBase}/${id}/${action}`, { method: "POST" });
+    await loadFeedback();
   });
 
   (async function init() {
@@ -227,9 +231,9 @@
     const feedbackList = document.getElementById("feedback-list");
     if (feedbackList) {
       feedbackList.innerHTML = `
-	  <div class="card" style="padding:24px;color:#b91c1c;">
-	    ${escapeHtml(error.message || "Failed to load feedback admin page.")}
-	  </div>
+        <div class="card" style="padding:24px;color:#b91c1c;">
+          ${escapeHtml(error.message)}
+        </div>
       `;
     }
   });

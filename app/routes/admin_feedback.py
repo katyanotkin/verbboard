@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.routes.admin_utils import ADMIN_PREFIX, require_admin_api, require_admin_page
 from core.admin_feedback_service import (
+    get_active_poll_meta,
     hide_feedback_by_id,
     list_feedback_facets,
     list_feedback_rows,
@@ -58,7 +59,12 @@ async def list_feedback(
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
 
-    return JSONResponse({"feedback": feedback_rows})
+    return JSONResponse(
+        {
+            "feedback": feedback_rows,
+            "poll_meta": get_active_poll_meta(),
+        }
+    )
 
 
 @router.get("/api/feedback/facets")

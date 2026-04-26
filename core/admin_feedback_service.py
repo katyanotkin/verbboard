@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from core.storage.firestore_db import get_db
+from core.polls import ACTIVE_POLL_ID, POLL_QUESTIONS
 
 
 def _normalize_feedback_doc(doc: Any) -> dict[str, Any]:
@@ -12,6 +13,9 @@ def _normalize_feedback_doc(doc: Any) -> dict[str, Any]:
     return {
         "id": doc.id,
         "comment": str(data.get("comment") or ""),
+        "poll_id": str(data.get("poll_id") or ""),
+        "poll_question": str(data.get("poll_question") or ""),
+        "poll_answer": str(data.get("poll_answer") or ""),
         "language": str(data.get("language") or ""),
         "page": str(data.get("page") or ""),
         "source": str(data.get("source") or ""),
@@ -167,3 +171,13 @@ def unhide_feedback_by_id(doc_id: str) -> bool:
 
     ref.update({"hidden": False})
     return True
+
+
+def get_active_poll_meta() -> dict[str, str]:
+    if not ACTIVE_POLL_ID:
+        return {}
+
+    return {
+        "poll_id": ACTIVE_POLL_ID,
+        "question_en": POLL_QUESTIONS.get(ACTIVE_POLL_ID, {}).get("en", ""),
+    }

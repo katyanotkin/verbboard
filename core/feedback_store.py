@@ -10,7 +10,10 @@ FEEDBACK_COLLECTION = "feedback"
 
 def save_feedback(
     *,
-    comment: str,
+    comment: str | None,
+    poll_id: str | None = None,
+    poll_question: str | None = None,
+    poll_answer: str | None = None,
     page: str,
     language: str | None = None,
     verb_id: str | None = None,
@@ -18,15 +21,20 @@ def save_feedback(
     source: str = "preview",
     user_agent: str | None = None,
 ) -> str:
-    cleaned_comment = comment.strip()
-    if not cleaned_comment:
-        raise ValueError("Feedback comment is empty")
+    cleaned_comment = (comment or "").strip()
+    cleaned_poll_answer = (poll_answer or "").strip()
+
+    if not cleaned_comment and not cleaned_poll_answer:
+        raise ValueError("Empty feedback")
 
     client = firestore.Client()
     doc_ref = client.collection(FEEDBACK_COLLECTION).document()
 
     payload: dict[str, Any] = {
         "comment": cleaned_comment,
+        "poll_id": poll_id or "",
+        "poll_question": poll_question or "",
+        "poll_answer": cleaned_poll_answer,
         "page": page,
         "language": language or "",
         "verb_id": verb_id or "",
@@ -54,6 +62,7 @@ def load_feedback() -> list[dict[str, Any]]:
             {
                 "id": document.id,
                 "comment": str(payload.get("comment") or ""),
+                "poll_answer": payload.get("poll_answer"),
                 "page": str(payload.get("page") or ""),
                 "language": str(payload.get("language") or ""),
                 "verb_id": str(payload.get("verb_id") or ""),
