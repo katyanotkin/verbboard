@@ -190,8 +190,8 @@ function aggrRows() {
 
     const entry = raw.get(key);
     entry.count += 1;
-    if (!entry.last_ts || signal.ts > entry.last_ts) {
-      entry.last_ts = signal.ts;
+    if (!entry.last_ts || signal.created_at > entry.last_ts) {
+      entry.last_ts = signal.created_at;
     }
   }
 
@@ -335,7 +335,7 @@ async function classifyGroup(query, language, selectEl) {
   );
   const count = matching.length;
   const lastTs = matching.reduce(
-    (best, item) => (!best || item.ts > best ? item.ts : best),
+    (best, item) => (!best || item.created_at > best ? item.created_at : best),
     '',
   );
 
@@ -362,7 +362,7 @@ async function quickTrash(query, language, button) {
   );
   const count = matching.length;
   const lastTs = matching.reduce(
-    (best, item) => (!best || item.ts > best ? item.ts : best),
+    (best, item) => (!best || item.created_at > best ? item.created_at : best),
     '',
   );
 
@@ -389,7 +389,7 @@ async function quickHideTrash(query, language, button) {
   );
   const count = matching.length;
   const lastTs = matching.reduce(
-    (best, item) => (!best || item.ts > best ? item.ts : best),
+    (best, item) => (!best || item.created_at > best ? item.created_at : best),
     '',
   );
   const labelId = `${language}_${query}`;
@@ -500,7 +500,7 @@ function renderRaw() {
   }
 
   tbody.innerHTML = rows.map(item => {
-    const timestamp = item.ts ? item.ts.slice(0, 19).replace('T', ' ') : '';
+    const timestamp = item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '';
     const status = classifyRaw(item);
 
     return `<tr id="sig-${item.id}">

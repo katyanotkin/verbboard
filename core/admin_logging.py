@@ -8,16 +8,36 @@ import json
 logger = logging.getLogger(__name__)
 
 
-def log_missing_verb_search(language: str, query: str) -> None:
+def log_missing_verb_search(
+    *,
+    language: str,
+    query: str,
+    page: str = "",
+    source: str = "search",
+    verb_id: str = "",
+    user_agent: str = "",
+    device_type: str = "unknown",
+    viewport_width: int | None = None,
+) -> None:
     normalized_query = query.strip().casefold()
     if not normalized_query:
         return
+
+    now = datetime.now(UTC)
     record = {
-        "ts": datetime.now(UTC).isoformat(),
+        "created_at": now,
         "language": language,
         "query": normalized_query,
         "status": None,
+        # metadata
+        "page": page or "",
+        "source": source or "",
+        "verb_id": verb_id or "",
+        "user_agent": user_agent or "",
+        "device_type": device_type or "unknown",
+        "viewport_width": viewport_width,
     }
+
     _append_local(record)
     _write_firestore_signal(record)
 
@@ -27,7 +47,13 @@ def _append_local(record: dict) -> None:
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / "missing_verb_searches.jsonl"
     with log_path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        json_safe = {
+            **record,
+            "created_at": record["created_at"].isoformat()
+            if hasattr(record.get("created_at"), "isoformat")
+            else record.get("created_at"),
+        }
+        f.write(json.dumps(json_safe, ensure_ascii=False) + "\n")
 
 
 def _write_firestore_signal(record: dict) -> None:

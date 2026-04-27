@@ -17,7 +17,7 @@ def aggregate_candidates(
     for event in events:
         language = event["language"]
         query = event["query"]
-        ts = event["ts"]
+        created_at = event["created_at"]
 
         resolution = resolve_query(language=language, query=query)
 
@@ -31,8 +31,8 @@ def aggregate_candidates(
                     "verb_id": resolution["verb_id"],
                     "lemma": resolution["lemma"],
                     "count": 0,
-                    "first_seen_at": ts,
-                    "last_seen_at": ts,
+                    "first_seen_at": created_at,
+                    "last_seen_at": created_at,
                     "queries": set(),
                 },
             )
@@ -40,10 +40,10 @@ def aggregate_candidates(
             bucket["count"] += 1
             bucket["queries"].add(query)
 
-            if ts < bucket["first_seen_at"]:
-                bucket["first_seen_at"] = ts
-            if ts > bucket["last_seen_at"]:
-                bucket["last_seen_at"] = ts
+            if created_at < bucket["first_seen_at"]:
+                bucket["first_seen_at"] = created_at
+            if created_at > bucket["last_seen_at"]:
+                bucket["last_seen_at"] = created_at
 
         else:
             key = (language, resolution["normalized_query"])
@@ -55,8 +55,8 @@ def aggregate_candidates(
                     "normalized_query": resolution["normalized_query"],
                     "lemma_candidate": resolution["normalized_query"],
                     "count": 0,
-                    "first_seen_at": ts,
-                    "last_seen_at": ts,
+                    "first_seen_at": created_at,
+                    "last_seen_at": created_at,
                     "queries": set(),
                 },
             )
@@ -64,10 +64,10 @@ def aggregate_candidates(
             bucket["count"] += 1
             bucket["queries"].add(query)
 
-            if ts < bucket["first_seen_at"]:
-                bucket["first_seen_at"] = ts
-            if ts > bucket["last_seen_at"]:
-                bucket["last_seen_at"] = ts
+            if created_at < bucket["first_seen_at"]:
+                bucket["first_seen_at"] = created_at
+            if created_at > bucket["last_seen_at"]:
+                bucket["last_seen_at"] = created_at
 
     resolved = [
         {**value, "queries": sorted(value["queries"])}

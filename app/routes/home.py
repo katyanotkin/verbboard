@@ -61,6 +61,7 @@ def set_language(language: str):
 
 @router.get("/search_verb", response_model=None)
 def search_verb(
+    request: Request,
     language: str,
     q: str = "",
 ):
@@ -95,7 +96,13 @@ def search_verb(
         response.set_cookie("verb_id", matched_verb_id, httponly=False, samesite="lax")
         return response
 
-    log_missing_verb_search(language=language, query=query)
+    log_missing_verb_search(
+        language=language,
+        query=query,
+        page="home",
+        source="search",
+        user_agent=request.headers.get("user-agent", ""),
+    )
 
     response = RedirectResponse(
         url=f"/?language={language}&search={query}&not_available=1"

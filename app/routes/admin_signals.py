@@ -23,7 +23,7 @@ async def list_signals(
     language: str | None = None,
     include_processed: bool = False,
     status: str | None = None,
-    sort_by: str = "ts",
+    sort_by: str = "created_at",
     sort_dir: str = "desc",
 ) -> JSONResponse:
     require_admin_api(request)
@@ -50,17 +50,24 @@ async def list_signals(
     results: list[dict[str, Any]] = []
     for doc in docs:
         data = doc.to_dict()
+        created_at = data.get("created_at")
+
+        created_at_value = (
+            created_at.isoformat()
+            if hasattr(created_at, "isoformat")
+            else str(created_at or "")
+        )
         results.append(
             {
                 "id": doc.id,
-                "ts": data.get("ts", ""),
+                "created_at": created_at_value,
                 "language": data.get("language", ""),
                 "query": data.get("query", ""),
                 "status": data.get("status", None),
             }
         )
 
-    allowed_sort_fields = {"ts", "language", "query", "status"}
+    allowed_sort_fields = {"created_at", "language", "query", "status"}
     if sort_by not in allowed_sort_fields:
         raise HTTPException(
             status_code=400,
