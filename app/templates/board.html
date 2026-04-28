@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{html_lang}}" dir="{{html_dir}}">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -274,6 +274,7 @@ button {
 }
 </style>
 
+<script>window.UI = {{board_ui_json}};</script>
 <script defer src="/static/learn.js"></script>
 </head>
 
@@ -284,14 +285,14 @@ button {
     <div>
       <h1>{{title}}</h1>
       <div class="meta">
-        Language: <b>{{language}}</b>
+        {{board_language_label}} <b>{{language}}</b>
       </div>
     </div>
 
     <div class="topbar-actions">
 	  <a href="{{return_to}}" class="nav-btn">
 	    <span class="nav-arrow">⟵</span>
-	    <span>Back</span>
+	    <span>{{board_back}}</span>
 	  </a>
 
 	  <form method="get" action="/learn" class="voice-toggle">
@@ -302,24 +303,24 @@ button {
 		 <span class="voice-icon">🔊</span>
 		 <div class="voice-toggle">
 		    <button type="submit" name="voice" value="female" class="voice-btn {{female_active}}">
-		      Female
+		      {{board_voice_female}}
 		    </button>
 
 		    <button type="submit" name="voice" value="male" class="voice-btn {{male_active}}">
-		      Male
+		      {{board_voice_male}}
 		    </button>
 		 </div>
 
 	</form>
 
-	  <button class="known-btn" id="known-btn" title="Mark as known" aria-pressed="false">
-	    <img src="/static/gold-star.svg" class="known-icon" alt="Known">
+	  <button class="known-btn" id="known-btn" title="{{board_mark_known}}" aria-pressed="false">
+	    <img src="/static/gold-star.svg" class="known-icon" alt="{{board_mark_known}}">
 	  </button>
 
 	  <a
  		href="/feedback?page=learn&language={{language}}&verb_id={{verb_id}}&return_to={{return_to}}"
   		class="feedback-link"
-  		title="Send feedback"
+  		title="{{board_send_feedback}}"
 		>
   		💬
 	  </a>
@@ -330,10 +331,10 @@ button {
     {{sections}}
   </div>
 
-  <h2>Examples</h2>
+  <h2>{{board_examples_heading}}</h2>
 
   <table>
-    <tr><th>Sentence</th><th>Audio</th></tr>
+    <tr><th>{{board_col_sentence}}</th><th>{{board_col_audio}}</th></tr>
     {{examples}}
   </table>
 </div>

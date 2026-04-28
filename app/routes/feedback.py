@@ -7,6 +7,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from core.feedback_store import save_feedback
+from core.i18n import get_strings, resolve_ui_language
 from core.polls import ACTIVE_POLL_ID, get_poll_question
 from core.analytics.client_context import detect_device_type
 
@@ -23,23 +24,25 @@ def feedback_form(
     success: str = "",
     error: str = "",
 ) -> str:
-    poll_question = (
-        get_poll_question(ACTIVE_POLL_ID, language or "en") if ACTIVE_POLL_ID else ""
-    )
+    ui_lang = resolve_ui_language(request)
+    ui = get_strings(ui_lang)
+    html_dir = "rtl" if ui_lang == "he" else "ltr"
+
+    poll_question = get_poll_question(ACTIVE_POLL_ID, ui_lang) if ACTIVE_POLL_ID else ""
 
     success_html = ""
     if success == "1":
-        success_html = """
+        success_html = f"""
         <div style="margin-bottom:16px;padding:12px 14px;background:#ecfdf5;border:1px solid #86efac;border-radius:12px;color:#166534;">
-          Thanks — feedback received.
+          {escape(ui['feedback.success'])}
         </div>
         """
 
     error_html = ""
     if error == "empty":
-        error_html = """
+        error_html = f"""
         <div style="margin-bottom:16px;padding:12px 14px;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;color:#991b1b;">
-          Please write a comment or answer Yes/No.
+          {escape(ui['feedback.error_empty'])}
         </div>
         """
 
@@ -50,24 +53,24 @@ def feedback_form(
           <div class="question-title">{escape(poll_question)}</div>
           <div class="choice-row">
             <label class="choice-label">
-              <input type="radio" name="poll_answer" value="yes"> Yes
+              <input type="radio" name="poll_answer" value="yes"> {escape(ui['feedback.poll_yes'])}
             </label>
             <label class="choice-label">
-              <input type="radio" name="poll_answer" value="no"> No
+              <input type="radio" name="poll_answer" value="no"> {escape(ui['feedback.poll_no'])}
             </label>
             <label class="choice-label">
-              <input type="radio" name="poll_answer" value="no_preference"> No preference
+              <input type="radio" name="poll_answer" value="no_preference"> {escape(ui['feedback.poll_no_pref'])}
             </label>
           </div>
         </div>
         """
 
     return f"""<!doctype html>
-<html>
+<html lang="{ui_lang}" dir="{html_dir}">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>VerbBoard feedback</title>
+  <title>{escape(ui['feedback.title'])}</title>
   <style>
     body {{
       font-family: system-ui, sans-serif;
@@ -153,7 +156,7 @@ def feedback_form(
 </head>
 <body>
   <div class="card">
-    <h1>Feedback</h1>
+    <h1>{escape(ui['feedback.heading'])}</h1>
 
     {success_html}
     {error_html}
@@ -163,14 +166,15 @@ def feedback_form(
       <input type="hidden" name="language" value="{escape(language)}">
       <input type="hidden" name="verb_id" value="{escape(verb_id)}">
       <input type="hidden" name="return_to" value="{escape(return_to)}">
+      <input type="hidden" name="ui_language" value="{ui_lang}">
 
       {poll_block}
 
-      <textarea name="comment" placeholder="What felt confusing, wrong, or missing?"></textarea>
+      <textarea name="comment" placeholder="{escape(ui['feedback.comment_placeholder'])}"></textarea>
 
       <div class="actions">
-        <button type="submit" class="primary-btn">Send feedback</button>
-        <a href="{escape(return_to)}" class="secondary-link">Back</a>
+        <button type="submit" class="primary-btn">{escape(ui['feedback.submit_button'])}</button>
+        <a href="{escape(return_to)}" class="secondary-link">{escape(ui['feedback.back'])}</a>
       </div>
     </form>
   </div>
@@ -188,6 +192,7 @@ def submit_feedback(
     language: str = Form(""),
     verb_id: str = Form(""),
     return_to: str = Form("/"),
+    ui_language: str = Form(""),
 ):
     clean_comment = comment.strip()
 
@@ -195,7 +200,7 @@ def submit_feedback(
         poll_answer = ""
 
     poll_id = ACTIVE_POLL_ID if poll_answer else None
-    poll_question = get_poll_question(poll_id, language or "en") if poll_id else None
+    poll_question = get_poll_question(poll_id, ui_language or "en") if poll_id else None
 
     try:
         user_agent = request.headers.get("user-agent", "")
@@ -221,6 +226,7 @@ def submit_feedback(
                 "verb_id": verb_id,
                 "return_to": return_to,
                 "error": "empty",
+                "ui_language": ui_language,
             }
         )
         return RedirectResponse(url=f"/feedback?{params}", status_code=303)

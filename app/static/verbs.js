@@ -42,6 +42,8 @@
     return rows;
   }
 
+  const UI = window.UI || {};
+
   // ── render ─────────────────────────────────────────────────────────────────
   function render() {
     const knownSet = known();
@@ -49,11 +51,11 @@
     const rows     = visibleVerbs();
 
     countEl.textContent = rows.length
-      ? `${rows.length} verb${rows.length === 1 ? '' : 's'}`
+      ? `${rows.length} ${rows.length === 1 ? (UI['verbs.count_one'] || 'verb') : (UI['verbs.count_other'] || 'verbs')}`
       : '';
 
     if (!rows.length) {
-      listEl.innerHTML = '<div class="vb-empty">No verbs match</div>';
+      listEl.innerHTML = `<div class="vb-empty">${UI['verbs.empty_state'] || 'No verbs match'}</div>`;
       return;
     }
 

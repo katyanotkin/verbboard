@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from html import escape
 
 from core.audio_service import build_hashed_audio_key
@@ -14,7 +15,12 @@ def render_board_html(
     return_to: str | None = None,
     candidate_verb_id: str | None = None,
     admin_href: str | None = None,
+    ui_strings: dict[str, str] | None = None,
+    ui_lang: str = "en",
 ) -> str:
+    ui = ui_strings or {}
+    html_dir = "rtl" if ui_lang == "he" else "ltr"
+
     lemma = board.verb.display_lemma or board.verb.lemma
     if isinstance(lemma, dict):
         title = f"{lemma.get('imperfective', '')} / {lemma.get('perfective', '')}"
@@ -66,10 +72,13 @@ def render_board_html(
                 "</tr>"
             )
 
+        col_label = escape(ui.get("board.col_label", "Label"))
+        col_form = escape(ui.get("board.col_form", "Form"))
+        col_audio = escape(ui.get("board.col_audio", "Audio"))
         sections_html.append(
             f"<h2>{escape(section['title'])}</h2>"
             "<table>"
-            "<tr><th>Label</th><th>Form</th><th>Audio</th></tr>"
+            f"<tr><th>{col_label}</th><th>{col_form}</th><th>{col_audio}</th></tr>"
             + "".join(rows)
             + "</table>"
         )
@@ -143,8 +152,18 @@ def render_board_html(
         candidate_banner = ""
         voice_source_input = ""
 
+    board_ui_json = json.dumps(
+        {
+            "board.mark_known": ui.get("board.mark_known", "Mark as known"),
+            "board.known": ui.get("board.known", "Known"),
+        },
+        ensure_ascii=False,
+    )
+
     html = (
         template.replace("{{title}}", escape(title))
+        .replace("{{html_lang}}", ui_lang)
+        .replace("{{html_dir}}", html_dir)
         .replace("{{candidate_banner_assets}}", candidate_banner_assets)
         .replace("{{candidate_banner}}", candidate_banner)
         .replace("{{voice_source_input}}", voice_source_input)
@@ -157,6 +176,31 @@ def render_board_html(
         .replace("{{male_active}}", male_active)
         .replace("{{sections}}", "".join(sections_html))
         .replace("{{examples}}", "".join(examples_rows))
+        .replace("{{board_back}}", escape(ui.get("board.back", "Back")))
+        .replace(
+            "{{board_voice_female}}", escape(ui.get("board.voice_female", "Female"))
+        )
+        .replace("{{board_voice_male}}", escape(ui.get("board.voice_male", "Male")))
+        .replace(
+            "{{board_mark_known}}", escape(ui.get("board.mark_known", "Mark as known"))
+        )
+        .replace(
+            "{{board_send_feedback}}",
+            escape(ui.get("board.send_feedback", "Send feedback")),
+        )
+        .replace(
+            "{{board_language_label}}",
+            escape(ui.get("board.language_label", "Language:")),
+        )
+        .replace(
+            "{{board_examples_heading}}",
+            escape(ui.get("board.examples_heading", "Examples")),
+        )
+        .replace(
+            "{{board_col_sentence}}", escape(ui.get("board.col_sentence", "Sentence"))
+        )
+        .replace("{{board_col_audio}}", escape(ui.get("board.col_audio", "Audio")))
+        .replace("{{board_ui_json}}", board_ui_json)
     )
 
     return html

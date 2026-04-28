@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 
 from core.audio_service import build_hashed_audio_key, ensure_audio
+from core.i18n import get_strings, resolve_ui_language
 from core.registry import get as get_plugin
 from core.render import render_board_html
 from core.tts import VOICES
@@ -123,11 +124,16 @@ async def learn(
             if isinstance(result, Exception):
                 print(f"Audio generation failed: {result}")
 
+    ui_lang = resolve_ui_language(request)
+    ui_strings = get_strings(ui_lang)
+
     html = render_board_html(
         board=board,
         return_to=return_to,
         candidate_verb_id=verb.id if source == "candidate" else None,
         admin_href="/admin#candidates" if source == "candidate" else None,
+        ui_strings=ui_strings,
+        ui_lang=ui_lang,
     )
 
     return HTMLResponse(html)

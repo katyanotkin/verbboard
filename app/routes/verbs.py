@@ -5,6 +5,7 @@ import json
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 
+from core.i18n import get_strings, resolve_ui_language
 from core.registry import all_plugins
 from core.verb_loader import load_entries_for_language
 
@@ -23,6 +24,10 @@ def verb_browser(
     selected_language = language or cookie_language or "he"
     if selected_language not in plugins:
         selected_language = "he"
+
+    ui_lang = resolve_ui_language(request)
+    ui = get_strings(ui_lang)
+    html_dir = "rtl" if ui_lang == "he" else "ltr"
 
     entries = load_entries_for_language(
         language=selected_language,
@@ -46,13 +51,21 @@ def verb_browser(
 
     verbs_json = json.dumps(verbs_js, ensure_ascii=False)
     lang_json = json.dumps(selected_language)
+    ui_json = json.dumps(
+        {
+            "verbs.count_one": ui["verbs.count_one"],
+            "verbs.count_other": ui["verbs.count_other"],
+            "verbs.empty_state": ui["verbs.empty_state"],
+        },
+        ensure_ascii=False,
+    )
 
     html = f"""<!doctype html>
-    <html lang="en">
+    <html lang="{ui_lang}" dir="{html_dir}">
     <head>
       <meta charset="utf-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      <title>VerbBoard — Browse verbs</title>
+      <title>{ui['verbs.title']}</title>
       <link rel="stylesheet" href="/static/common.css"/>
       <link rel="stylesheet" href="/static/verbs.css"/>
     </head>
@@ -60,17 +73,17 @@ def verb_browser(
   <div class="vb-page">
 
     <div class="vb-header">
-      <a href="/?language={selected_language}" class="vb-back">⟵ Home</a>
-      <h1 class="vb-title">Browse verbs</h1>
+      <a href="/?language={selected_language}" class="vb-back">{ui['verbs.back_home']}</a>
+      <h1 class="vb-title">{ui['verbs.heading']}</h1>
     </div>
 
     <div class="vb-feedback-row">
       <a
         href="/feedback?page=verbs&language={selected_language}&return_to=/verbs?language={selected_language}"
         class="feedback-link"
-        title="Send feedback"
+        title="{ui['verbs.feedback_title']}"
       >
-        💬 Feedback
+        {ui['verbs.feedback_link']}
       </a>
     </div>
 
@@ -82,25 +95,25 @@ def verb_browser(
         name="q"
         class="vb-search"
         type="text"
-        placeholder="Find or request a verb…"
+        placeholder="{ui['verbs.search_placeholder']}"
         autocomplete="off"
       />
 
       <button type="submit" class="vb-search-submit">
-        Find
+        {ui['verbs.find_button']}
       </button>
 
       <div class="vb-filter-toggle" id="vb-filter-toggle">
-        <button type="button" class="vb-ftbtn active" data-filter="unknown">Unknown</button>
-        <button type="button" class="vb-ftbtn" data-filter="all">All</button>
-        <button type="button" class="vb-ftbtn" data-filter="known">Known</button>
+        <button type="button" class="vb-ftbtn active" data-filter="unknown">{ui['verbs.filter_unknown']}</button>
+        <button type="button" class="vb-ftbtn" data-filter="all">{ui['verbs.filter_all']}</button>
+        <button type="button" class="vb-ftbtn" data-filter="known">{ui['verbs.filter_known']}</button>
       </div>
     </form>
 
     <div class="vb-toolbar vb-toolbar-meta">
       <select id="vb-sort" class="vb-sort-select">
-        <option value="rank">By frequency</option>
-        <option value="alpha">A → Z</option>
+        <option value="rank">{ui['verbs.sort_frequency']}</option>
+        <option value="alpha">{ui['verbs.sort_az']}</option>
       </select>
       <div id="vb-count" class="vb-count"></div>
     </div>
@@ -112,6 +125,7 @@ def verb_browser(
   <script>
     window.VB_LANGUAGE = {lang_json};
     window.VB_VERBS = {verbs_json};
+    window.UI = {ui_json};
   </script>
   <script src="/static/verbs.js"></script>
 </body>
@@ -119,4 +133,5 @@ def verb_browser(
 
     response = HTMLResponse(html)
     response.set_cookie("language", selected_language, httponly=False, samesite="lax")
+    response.set_cookie("ui_language", ui_lang, httponly=False, samesite="lax")
     return response

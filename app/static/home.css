@@ -386,6 +386,65 @@ input[type="text"]:focus {
   background: #f1f5f9;
 }
 
+/* ===== UI language selector ===== */
+
+.ui-lang-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+.ui-lang-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ui-lang-selector {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.ui-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 16px;
+  text-decoration: none;
+  opacity: 0.45;
+  transition: opacity 0.12s ease, background 0.12s ease;
+  line-height: 1;
+}
+
+.ui-lang-code {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #374151;
+  line-height: 1;
+}
+
+.ui-lang-btn:hover {
+  opacity: 0.85;
+  background: #f1f5f9;
+}
+
+.ui-lang-btn.active {
+  opacity: 1;
+  background: #e0f2fe;
+  box-shadow: 0 0 0 1.5px #7dd3fc;
+}
+
+/* ===== More verbs link ===== */
+
 .more-verbs-link {
   display: block;
   margin-top: 5px;

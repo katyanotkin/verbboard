@@ -1,3 +1,36 @@
+/* ===== RTL support ===== */
+
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .feedback-link,
+[dir="rtl"] .about-links {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .topbar-actions {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .vb-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .vb-toolbar {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .vb-count {
+  text-align: left;
+}
+
+[dir="rtl"] .search-suggestion {
+  text-align: right;
+}
+
+/* ===== Feedback link ===== */
+
 .feedback-link {
   display: inline-flex;
   align-items: center;

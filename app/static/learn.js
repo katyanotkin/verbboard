@@ -34,7 +34,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	  knownButton.classList.toggle("is-active", isKnown);
 	  knownButton.setAttribute("aria-pressed", isKnown ? "true" : "false");
-	  knownButton.title = isKnown ? "Known" : "Mark as known";
+	  const UI = window.UI || {};
+	  knownButton.title = isKnown
+	    ? (UI['board.known'] || 'Known')
+	    : (UI['board.mark_known'] || 'Mark as known');
 
 	  if (shouldPop && isKnown) {
 	    knownButton.classList.remove("pop");
