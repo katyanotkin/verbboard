@@ -20,6 +20,7 @@ def save_feedback(
     path: str | None = None,
     source: str = "preview",
     user_agent: str | None = None,
+    device_type: str = "unknown",
 ) -> str:
     cleaned_comment = (comment or "").strip()
     cleaned_poll_answer = (poll_answer or "").strip()
@@ -41,6 +42,7 @@ def save_feedback(
         "path": path or "",
         "source": source,
         "user_agent": user_agent or "",
+        "device_type": device_type or "unknown",
         "created_at": datetime.now(UTC),
         "hidden": False,
     }
@@ -69,6 +71,7 @@ def load_feedback() -> list[dict[str, Any]]:
                 "path": str(payload.get("path") or ""),
                 "source": str(payload.get("source") or ""),
                 "user_agent": str(payload.get("user_agent") or ""),
+                "device_type": str(payload.get("device_type") or "unknown"),
                 "created_at": payload.get("created_at"),
                 "hidden": bool(payload.get("hidden", False)),
             }

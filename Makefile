@@ -239,7 +239,7 @@ gcp-setup-stage-audio: gcp-check
 ## GCP: ensure prod audio bucket exists and grant access
 gcp-setup-prod-audio: gcp-check
 	$(MAKE) gcp-ensure-bucket BUCKET=$(AUDIO_BUCKET_PROD)
-	$(MAKE) gcp-grant-bucket-audio-access BUCKET=$(AUDIO_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)	
+	$(MAKE) gcp-grant-bucket-audio-access BUCKET=$(AUDIO_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
 
 ## GCP: grant runtime service account Firestore access
 gcp-grant-firestore-access: gcp-check

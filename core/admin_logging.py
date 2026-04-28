@@ -5,6 +5,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 import json
 
+from core.analytics.client_context import detect_device_type
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +25,10 @@ def log_missing_verb_search(
     if not normalized_query:
         return
 
+    resolved_device_type = device_type
+    if resolved_device_type == "unknown":
+        resolved_device_type = detect_device_type(user_agent)
+
     now = datetime.now(UTC)
     record = {
         "created_at": now,
@@ -34,7 +40,7 @@ def log_missing_verb_search(
         "source": source or "",
         "verb_id": verb_id or "",
         "user_agent": user_agent or "",
-        "device_type": device_type or "unknown",
+        "device_type": resolved_device_type,
         "viewport_width": viewport_width,
     }
 

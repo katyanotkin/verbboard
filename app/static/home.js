@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
     learnButton.classList.toggle("is-dimmed", hasText);
     learnButton.disabled = hasText;
 
-    searchButton.disabled = !hasText;	  
+    searchButton.disabled = !hasText;
   }
 
   function getLanguage() {

@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from core.feedback_store import save_feedback
 from core.polls import ACTIVE_POLL_ID, get_poll_question
+from core.analytics.client_context import detect_device_type
 
 router = APIRouter()
 
@@ -197,6 +198,8 @@ def submit_feedback(
     poll_question = get_poll_question(poll_id, language or "en") if poll_id else None
 
     try:
+        user_agent = request.headers.get("user-agent", "")
+        device_type = detect_device_type(user_agent)
         save_feedback(
             comment=clean_comment,
             poll_id=poll_id,
@@ -206,7 +209,8 @@ def submit_feedback(
             language=language or None,
             verb_id=verb_id or None,
             path=str(request.url.path),
-            user_agent=request.headers.get("user-agent"),
+            user_agent=user_agent,
+            device_type=device_type,
             source="preview",
         )
     except ValueError:

@@ -89,10 +89,10 @@
   }
 
   function renderPollSummary(rows, pollMeta) {
-    const activePollId = pollMeta?.poll_id || "";	  
+    const activePollId = pollMeta?.poll_id || "";
     const filtered = rows.filter(
       (r) =>
-	r.poll_id === activePollId &&    
+	r.poll_id === activePollId &&
         ["yes", "no", "no_preference"].includes(r.poll_answer)
     );
 
@@ -124,7 +124,35 @@
     `;
   }
 
-  function renderFeedback(rows, pollMeta) {
+  function renderDeviceMix(deviceMix) {
+    const combined = deviceMix?.combined || {};
+    const total = Object.values(combined).reduce((sum, value) => sum + value, 0);
+
+    if (!total) return "";
+
+    function countAndPct(key) {
+      const count = combined[key] || 0;
+      const percent = Math.round((count / total) * 100);
+      return `${count} (${percent}%)`;
+    }
+
+    return `
+      <div class="card" style="padding:14px 16px;margin-bottom:12px;background:#f1f5f9;">
+        <div style="font-weight:700;margin-bottom:6px;">
+          Device mix, last ${escapeHtml(deviceMix.days || 90)} days
+        </div>
+        <div style="font-size:13px;color:#374151;">
+          Total: ${total} ·
+          Mobile: ${countAndPct("mobile")} ·
+          Desktop: ${countAndPct("desktop")} ·
+          Tablet: ${countAndPct("tablet")} ·
+          Unknown: ${countAndPct("unknown")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderFeedback(rows, pollRows, pollMeta, deviceMix) {
     const feedbackList = document.getElementById("feedback-list");
     if (!feedbackList) return;
 
@@ -137,9 +165,11 @@
       return;
     }
 
-    const pollSummary = renderPollSummary(rows, pollMeta);
+    const pollSummary = renderPollSummary(pollRows, pollMeta);
+    const deviceSummary = renderDeviceMix(deviceMix);
 
     feedbackList.innerHTML =
+      deviceSummary +
       pollSummary +
       rows.map(row => {
         const hiddenBadge = row.hidden
@@ -148,7 +178,7 @@
 
 	const actionButton = row.hidden
   	  ? `<button type="button" data-action="unhide" data-id="${escapeHtml(row.id)}">Unhide</button>`
-  	  : `<button type="button" data-action="hide" data-id="${escapeHtml(row.id)}">Hide</button>`;      
+  	  : `<button type="button" data-action="hide" data-id="${escapeHtml(row.id)}">Hide</button>`;
 
         const pollBadge = row.poll_answer
           ? `<span style="font-size:11px;color:#374151;">poll: ${escapeHtml(answerLabel(row.poll_answer))}</span>`
@@ -202,7 +232,9 @@
 
     renderFeedback(
       payload.feedback || [],
-      payload.poll_meta || {}
+      payload.poll_feedback || [],
+      payload.poll_meta || {},
+      payload.device_mix || {}
     );
   }
 

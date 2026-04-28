@@ -97,5 +97,5 @@ pre-commit run --all-files
 
 ## Upcoming
 - Centralize UI language configuration
-- Introduce guided verb practice sets with progress trackin 
+- Introduce guided verb practice sets with progress trackin
 - Optional user personalization (TBD)

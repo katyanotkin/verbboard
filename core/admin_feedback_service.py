@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from collections import Counter
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from core.settings import load_settings
 from core.storage.firestore_db import get_db
 from core.polls import ACTIVE_POLL_ID, POLL_QUESTIONS
 
@@ -180,4 +183,54 @@ def get_active_poll_meta() -> dict[str, str]:
     return {
         "poll_id": ACTIVE_POLL_ID,
         "question_en": POLL_QUESTIONS.get(ACTIVE_POLL_ID, {}).get("en", ""),
+    }
+
+
+def _count_device_types(
+    *,
+    collection_name: str,
+    days: int = 60,
+    limit: int = 2000,
+) -> dict[str, int]:
+    db = get_db()
+    cutoff = datetime.now(UTC) - timedelta(days=days)
+
+    docs = (
+        db.collection(collection_name)
+        .where("created_at", ">=", cutoff)
+        .order_by("created_at", direction="DESCENDING")
+        .limit(limit)
+        .stream()
+    )
+
+    counter: Counter[str] = Counter()
+
+    for doc in docs:
+        data = doc.to_dict() or {}
+        device_type = str(data.get("device_type") or "unknown").lower()
+        counter[device_type] += 1
+
+    return dict(counter)
+
+
+def get_device_mix(*, days: int = 60) -> dict[str, Any]:
+    settings = load_settings()
+
+    feedback_counts = _count_device_types(
+        collection_name="feedback",
+        days=days,
+    )
+    demand_counts = _count_device_types(
+        collection_name=settings.verb_signals_collection,
+        days=days,
+    )
+
+    combined = Counter(feedback_counts)
+    combined.update(demand_counts)
+
+    return {
+        "days": days,
+        "feedback": feedback_counts,
+        "demand_signal": demand_counts,
+        "combined": dict(combined),
     }

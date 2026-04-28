@@ -2,7 +2,7 @@
 
 (function () {
   const lang  = window.VB_LANGUAGE;
-  const returnTo = encodeURIComponent(`/verbs?language=${lang}`);	
+  const returnTo = encodeURIComponent(`/verbs?language=${lang}`);
   const verbs = window.VB_VERBS;  // [{id, lemma, rank}, ...] pre-sorted by rank
 
   const searchEl = document.getElementById('vb-search');
