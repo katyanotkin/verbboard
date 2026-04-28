@@ -52,8 +52,8 @@ repos:
         language: system
         pass_filenames: false
 
-      - id: pytest-demand
-        name: pytest demand regression tests
-        entry: bash -c 'PYTHONPATH=. pytest -q tests/test_recommendation_regression.py'
+      - id: pytest-all
+        name: pytest all regression tests
+        entry: bash -c 'PYTHONPATH=. pytest -q -x --tb=short tests/'
         language: system
         pass_filenames: false
