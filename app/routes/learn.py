@@ -52,14 +52,13 @@ async def learn(
         if not verb_id:
             verb = entries[0]
         else:
-            verb = (
-                load_entry_by_id(
-                    language=language,
-                    verb_id=verb_id,
-                    source=effective_source,
-                )
-                or entries[0]
+            verb = load_entry_by_id(
+                language=language,
+                verb_id=verb_id,
+                source=effective_source,
             )
+            if verb is None:
+                return HTMLResponse("Verb not found", status_code=404)
 
     if language not in VOICES:
         return HTMLResponse("Unknown language voices", status_code=400)
