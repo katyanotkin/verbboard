@@ -186,8 +186,26 @@ button {
 }
 
 .voice-icon {
-  font-size: 14px;
-  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.voice-icon.female {
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+.voice-icon.male {
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .voice-toggle {

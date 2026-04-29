@@ -379,6 +379,8 @@ input[type="text"]:focus {
   justify-content: center;
   gap: 4px;
   margin-bottom: 18px;
+  flex-wrap: nowrap;          /* ← prevent wrapping */
+  white-space: nowrap;        /* ← extra safety */
 }
 
 .ui-lang-pill {
