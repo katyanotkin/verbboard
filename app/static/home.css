@@ -96,7 +96,7 @@ form.controls {
 }
 
 .page-title {
-  margin: 0 0 18px;
+  margin: 0;
   text-align: center;
   font-size: 1.9rem;
   line-height: 1.15;
@@ -109,24 +109,6 @@ form.controls {
   opacity: 0.6;
   margin-left: 4px;
   vertical-align: middle;
-}
-
-.about-inline {
-  font-size: 0.75rem;
-  color: #64748b;
-  text-decoration: none;
-
-  margin-left: 10px;
-
-  border: 1px solid #e2e8f0;
-  padding: 2px 6px;
-  border-radius: 6px;
-
-  vertical-align: middle;
-}
-
-.about-inline:hover {
-  background: #f1f5f9;
 }
 
 /* ===== Labels ===== */
@@ -359,89 +341,64 @@ input[type="text"]:focus {
   text-decoration: underline;
 }
 
-.about-links {
+/* ===== Page header ===== */
+
+.page-header {
   display: flex;
-  gap: 8px;
+  align-items: baseline;
   justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  margin-top: -8px;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
-.about-inline {
-  font-size: 0.75rem;
+.about-link {
+  font-size: 0.82rem;
+  font-weight: 600;
   color: #64748b;
   text-decoration: none;
-
-  margin-left: 10px;
-
-  border: 1px solid #e2e8f0;
-  padding: 2px 6px;
-  border-radius: 6px;
-
-  vertical-align: middle;
+  white-space: nowrap;
 }
-
-.about-inline:hover {
-  background: #f1f5f9;
-}
+.about-link:hover { color: #334155; }
 
 /* ===== UI language selector ===== */
 
-.ui-lang-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 10px;
-  vertical-align: middle;
+.ui-lang-block {
+  text-align: center;
+  margin: 0 0 14px;
 }
 
 .ui-lang-label {
-  font-size: 0.72rem;
-  color: #94a3b8;
-  font-weight: 500;
-  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 6px;
 }
 
-.ui-lang-selector {
-  display: inline-flex;
-  gap: 6px;
+.ui-lang-pills {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 18px;
 }
 
-.ui-lang-btn {
+.ui-lang-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  height: 26px;
-  padding: 0 6px;
+  height: 22px;
+  padding: 0 7px;
   border-radius: 6px;
-  font-size: 16px;
-  text-decoration: none;
-  opacity: 0.45;
-  transition: opacity 0.12s ease, background 0.12s ease;
-  line-height: 1;
-}
-
-.ui-lang-code {
+  border: 1px solid #e2e8f0;
   font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #374151;
-  line-height: 1;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  color: #64748b;
+  background: transparent;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
 }
-
-.ui-lang-btn:hover {
-  opacity: 0.85;
-  background: #f1f5f9;
-}
-
-.ui-lang-btn.active {
-  opacity: 1;
-  background: #e0f2fe;
-  box-shadow: 0 0 0 1.5px #7dd3fc;
-}
+.ui-lang-pill:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.ui-lang-pill.active { background: #1e3a8a; color: white; border-color: #1e3a8a; }
 
 /* ===== More verbs link ===== */
 

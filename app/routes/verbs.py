@@ -9,6 +9,9 @@ from core.i18n import get_strings, resolve_ui_language
 from core.registry import all_plugins
 from core.verb_loader import load_entries_for_language
 
+RECENT_VERBS_LIMIT = 8
+MAX_SYNTHETIC_RANK = 999999
+
 router = APIRouter()
 
 
@@ -49,13 +52,36 @@ def verb_browser(
             }
         )
 
+    # Last 8 entries with a real rank = most recently added (proxy: highest rank number)
+    recent_ids: list[str] = []
+
+    for verb_row in reversed(verbs_js):
+        rank = verb_row.get("rank")
+        verb_id = verb_row.get("id")
+
+        if not isinstance(rank, int):
+            continue
+        if not isinstance(verb_id, str):
+            continue
+        if rank >= MAX_SYNTHETIC_RANK:
+            continue
+
+        recent_ids.append(verb_id)
+
+        if len(recent_ids) >= RECENT_VERBS_LIMIT:
+            break
+
+    recent_ids.reverse()
+
     verbs_json = json.dumps(verbs_js, ensure_ascii=False)
+    recent_json = json.dumps(recent_ids, ensure_ascii=False)
     lang_json = json.dumps(selected_language)
     ui_json = json.dumps(
         {
             "verbs.count_one": ui["verbs.count_one"],
             "verbs.count_other": ui["verbs.count_other"],
             "verbs.empty_state": ui["verbs.empty_state"],
+            "verbs.filter_recent": ui["verbs.filter_recent"],
         },
         ensure_ascii=False,
     )
@@ -104,7 +130,8 @@ def verb_browser(
       </button>
 
       <div class="vb-filter-toggle" id="vb-filter-toggle">
-        <button type="button" class="vb-ftbtn active" data-filter="unknown">{ui['verbs.filter_unknown']}</button>
+        <button type="button" class="vb-ftbtn active" data-filter="new">{ui['verbs.filter_new']}</button>
+        <button type="button" class="vb-ftbtn" data-filter="seen">{ui['verbs.filter_seen']}</button>
         <button type="button" class="vb-ftbtn" data-filter="all">{ui['verbs.filter_all']}</button>
         <button type="button" class="vb-ftbtn" data-filter="known">{ui['verbs.filter_known']}</button>
       </div>
@@ -125,6 +152,7 @@ def verb_browser(
   <script>
     window.VB_LANGUAGE = {lang_json};
     window.VB_VERBS = {verbs_json};
+    window.VB_RECENT_IDS = {recent_json};
     window.UI = {ui_json};
   </script>
   <script src="/static/verbs.js"></script>

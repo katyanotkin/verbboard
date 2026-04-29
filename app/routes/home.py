@@ -26,12 +26,7 @@ LANGUAGE_HOME_LABELS = {
     "es": "Spanish / Español",
 }
 
-_UI_LANG_FLAGS = [
-    ("en", "🇺🇸"),
-    ("ru", "🇷🇺"),
-    ("he", "🇮🇱"),
-    ("es", "🇪🇸"),
-]
+_UI_LANG_CODES = ["en", "ru", "he", "es"]
 
 router = APIRouter()
 
@@ -55,18 +50,20 @@ def _load_entries(language: str):
     return load_lexicon(lex_path) if lex_path.exists() else []
 
 
-def _build_ui_lang_selector(ui_lang: str, learning_lang: str, label: str) -> str:
-    btns = "".join(
+def _build_ui_lang_selector(
+    ui_lang: str, learning_lang: str, ui: dict[str, str]
+) -> str:
+    pills = "".join(
         f'<a href="/?ui_language={code}&language={escape(learning_lang)}"'
-        f' class="ui-lang-btn{" active" if code == ui_lang else ""}"'
-        f' aria-label="{code}">{flag}<span class="ui-lang-code">{code}</span></a>'
-        for code, flag in _UI_LANG_FLAGS
+        f' class="ui-lang-pill{" active" if code == ui_lang else ""}">'
+        f"{code.upper()}</a>"
+        for code in _UI_LANG_CODES
     )
     return (
-        f'<div class="ui-lang-row">'
-        f'<span class="ui-lang-label">{escape(label)}</span>'
-        f'<div class="ui-lang-selector">{btns}</div>'
-        f"</div>"
+        '<div class="ui-lang-block">'
+        f'<div class="ui-lang-label">Interface | Интерфейс | Interfaz | שפת ממשק</div>'
+        f'<div class="ui-lang-pills">{pills}</div>'
+        "</div>"
     )
 
 
@@ -188,9 +185,7 @@ def home(
             "</div>"
         )
 
-    ui_lang_selector = _build_ui_lang_selector(
-        ui_lang, selected_language, ui["home.ui_language_label"]
-    )
+    ui_lang_selector = _build_ui_lang_selector(ui_lang, selected_language, ui)
 
     html = f"""<!doctype html>
 <html lang="{ui_lang}" dir="{html_dir}">
@@ -204,11 +199,11 @@ def home(
 
 <body>
   <div class="page">
-  <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
-  <div class="about-links">
-    <a href="/about?lang={ui_lang}" class="about-inline">{escape(ui['home.about'])}</a>
-    {ui_lang_selector}
+  <div class="page-header">
+    <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
+    <a href="/about?lang={ui_lang}" class="about-link">{escape(ui['home.about'])}</a>
   </div>
+  {ui_lang_selector}
 
     <form
       action="/learn"

@@ -1,9 +1,10 @@
 'use strict';
 
 (function () {
-  const lang  = window.VB_LANGUAGE;
+  const lang     = window.VB_LANGUAGE;
   const returnTo = encodeURIComponent(`/verbs?language=${lang}`);
-  const verbs = window.VB_VERBS;  // [{id, lemma, rank}, ...] pre-sorted by rank
+  const verbs    = window.VB_VERBS;  // [{id, lemma, rank}, ...] pre-sorted by rank
+  const recentSet = new Set(window.VB_RECENT_IDS || []);
 
   const searchEl = document.getElementById('vb-search');
   const listEl   = document.getElementById('vb-list');
@@ -11,7 +12,7 @@
   const toggleEl = document.getElementById('vb-filter-toggle');
   const sortEl   = document.getElementById('vb-sort');
 
-  let activeFilter = 'unknown';
+  let activeFilter = 'new';
   let activeSort   = 'rank';
   let searchQuery  = '';
 
@@ -26,12 +27,13 @@
   // ── filter + sort ──────────────────────────────────────────────────────────
   function visibleVerbs() {
     const knownSet = known();
+    const seenSet  = seen();
     const q        = searchQuery.trim().toLowerCase();
 
     let rows = verbs.filter(v => {
-      // "unknown" = not yet marked known (seen is OK to include)
-      if (activeFilter === 'unknown' &&  knownSet.has(v.id)) return false;
-      if (activeFilter === 'known'   && !knownSet.has(v.id)) return false;
+      if (activeFilter === 'new'  && (knownSet.has(v.id) || seenSet.has(v.id))) return false;
+      if (activeFilter === 'seen' && (knownSet.has(v.id) || !seenSet.has(v.id))) return false;
+      if (activeFilter === 'known' && !knownSet.has(v.id)) return false;
       if (q && !v.lemma.toLowerCase().includes(q)) return false;
       return true;
     });
@@ -43,6 +45,20 @@
   }
 
   const UI = window.UI || {};
+
+  // ── item renderer ──────────────────────────────────────────────────────────
+  function renderItem(v, knownSet, seenSet) {
+    const isKnown = knownSet.has(v.id);
+    const isSeen  = !isKnown && seenSet.has(v.id);
+    const badge   = isKnown ? '<span class="vb-badge known">★</span>'
+                  : isSeen  ? '<span class="vb-badge seen">✓</span>'
+                  : '';
+    const cls = isKnown ? ' is-known' : isSeen ? ' is-seen' : '';
+    return `<a class="vb-item${cls}"
+       href="/learn?language=${encodeURIComponent(lang)}&verb_id=${encodeURIComponent(v.id)}&return_to=${returnTo}">
+      <span class="vb-lemma">${esc(v.lemma)}</span>${badge}
+    </a>`;
+  }
 
   // ── render ─────────────────────────────────────────────────────────────────
   function render() {
@@ -59,18 +75,21 @@
       return;
     }
 
-    listEl.innerHTML = rows.map(v => {
-      const isKnown = knownSet.has(v.id);
-      const isSeen  = !isKnown && seenSet.has(v.id);
-      const badge   = isKnown ? '<span class="vb-badge known">★</span>'
-                    : isSeen  ? '<span class="vb-badge seen">✓</span>'
-                    : '';
-      const cls = isKnown ? ' is-known' : isSeen ? ' is-seen' : '';
-      return `<a class="vb-item${cls}"
-		 href="/learn?language=${encodeURIComponent(lang)}&verb_id=${encodeURIComponent(v.id)}&return_to=${returnTo}">
-        <span class="vb-lemma">${esc(v.lemma)}</span>${badge}
-      </a>`;
-    }).join('');
+    // Recent strip: shown on 'all' or 'new' filter, not during search
+    const showRecent = !searchQuery.trim() && (activeFilter === 'all' || activeFilter === 'new');
+    const recentRows = showRecent ? rows.filter(v => recentSet.has(v.id)) : [];
+    const mainRows   = showRecent ? rows.filter(v => !recentSet.has(v.id)) : rows;
+
+    let html = '';
+    if (recentRows.length) {
+      html += `<div class="vb-section-label">${esc(UI['verbs.filter_recent'] || 'Recently added')}</div>`;
+      html += recentRows.map(v => renderItem(v, knownSet, seenSet)).join('');
+      if (mainRows.length) {
+        html += `<div class="vb-section-divider"></div>`;
+      }
+    }
+    html += mainRows.map(v => renderItem(v, knownSet, seenSet)).join('');
+    listEl.innerHTML = html;
   }
 
   // ── filter toggle ──────────────────────────────────────────────────────────
