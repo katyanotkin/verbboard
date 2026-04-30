@@ -35,6 +35,7 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 	gcp-ensure-bucket gcp-grant-bucket-writer \
 	audit-examples audit-en audit-ru audit-he audit-es \
 	test test-demand \
+	smoke-nav-local smoke-nav-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview
 
 ## Show available commands
@@ -191,7 +192,7 @@ gcp-stage-image: gcp-check ## GCP: print stage image reference
 		--format='value(spec.template.spec.containers[0].image)'
 
 ## GCP: promote currently deployed stage image to prod
-gcp-promote-stage-to-prod: gcp-check gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
+gcp-promote-stage-to-prod: gcp-check smoke-nav-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
 	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
 	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
 	@echo "Promoting stage image to prod:"
@@ -274,6 +275,14 @@ gcp-unmap-preview: gcp-check ## GCP: delete preview domain mapping
 	gcloud beta run domain-mappings delete \
 		--domain $(PREVIEW_DOMAIN) \
 		--region $(GCP_REGION)
+
+## QA: run nav smoke tests against local server (must be running on HOST_PORT)
+smoke-nav-local: ## QA: nav smoke test against http://localhost:$(HOST_PORT)
+	python scripts/smoke_nav.py "http://localhost:$(HOST_PORT)"
+
+## QA: run nav smoke tests against stage
+smoke-nav-stage: ## QA: nav smoke test against stage.verbboard.com
+	python scripts/smoke_nav.py $(STAGE_URL)
 
 ## GCP: smoke test prod
 smoke-prod: gcp-check ## GCP: smoke test prod service

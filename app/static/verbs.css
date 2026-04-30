@@ -60,7 +60,7 @@
   height: 38px;
   padding: 0 12px;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 15px;
   background: white;
   color: #111827;
@@ -75,7 +75,7 @@
   height: 38px;
   padding: 0 10px;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #eef2f7;
   color: #334155;
   font-size: 13px;
@@ -91,7 +91,7 @@
 .vb-filter-toggle {
   display: inline-flex;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   background: #f3f4f6;
 }
@@ -117,22 +117,12 @@
   margin-bottom: 10px;
 }
 
-.feedback-link {
-  font-size: 13px;
-  color: #6b7280;
-  text-decoration: none;
-}
-
-.feedback-link:hover {
-  text-decoration: underline;
-}
-
 /* sort + count row */
 .vb-sort-select {
   height: 30px;
   padding: 0 8px;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: 8px;
   background: white;
   font-size: 13px;
   color: #374151;

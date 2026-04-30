@@ -1,3 +1,34 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --page-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+
+  --text-main: #0f172a;
+  --text-body: #1f2937;
+  --text-muted: #667085;
+  --text-subtle: #475467;
+
+  --input-border: #d7deea;
+  --input-border-soft: #e4e9f2;
+  --input-focus: #93c5fd;
+
+  --line-soft: #edf1f7;
+
+  --button-secondary-bg: #eef2f7;
+  --button-secondary-text: #334155;
+
+  --button-primary-bg: #2563eb;
+  --button-primary-text: #ffffff;
+
+  --notice-bg: #fff7ed;
+  --notice-border: #fdba74;
+  --notice-text: #9a3412;
+}
+
 /* ===== RTL support ===== */
 
 [dir="rtl"] {

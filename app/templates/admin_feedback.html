@@ -13,30 +13,24 @@
     data-feedback-api-base="{{ feedback_api_base }}"
   ></div>
 
-  <main class="admin-page" style="max-width:1100px;margin:24px auto;padding:0 16px;">
-    <div
-      class="card"
-      style="padding:12px 16px;margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;"
-    >
-      <a class="nav-item active" href="{{ admin_prefix }}/feedback" style="border-left:none;padding:8px 12px;border-radius:8px;">
+  <main class="admin-page">
+    <div class="card card-toolbar">
+      <a class="nav-item active nav-item-tab" href="{{ admin_prefix }}/feedback">
         Feedback
       </a>
-      <a class="nav-item" href="{{ admin_prefix }}/#signals" style="border-left:none;padding:8px 12px;border-radius:8px;">
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/#signals">
         Verb demand
       </a>
-      <a class="nav-item" href="{{ admin_prefix }}/#candidates" style="border-left:none;padding:8px 12px;border-radius:8px;">
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/#candidates">
         Candidates
       </a>
       <a href="{{ admin_prefix }}" style="margin-left:auto;">Back to admin</a>
     </div>
 
-    <h1 style="margin-bottom:16px;">Feedback admin</h1>
+    <h1>Feedback admin</h1>
 
-    <form id="filters" class="card" style="padding:16px;margin-bottom:18px;">
-      <div
-        class="filters"
-        style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;align-items:end;"
-      >
+    <form id="filters" class="card card-form">
+      <div class="filters-grid">
         <div>
           <label for="sort">Sort</label>
           <select id="sort" name="sort">
@@ -81,13 +75,13 @@
         </div>
       </div>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
-        <button type="submit">Apply</button>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Apply</button>
         <a href="{{ admin_prefix }}/feedback">Reset</a>
       </div>
     </form>
 
-    <div id="feedback-list" class="card" style="padding:16px;">Loading…</div>
+    <div id="feedback-list" class="card card-body">Loading…</div>
   </main>
 
   <script src="/static/admin_feedback.js"></script>

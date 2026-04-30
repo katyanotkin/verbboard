@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from html import escape
+from urllib.parse import quote
 
 from core.audio_service import build_hashed_audio_key
 from core.models import Board
@@ -125,6 +126,12 @@ def render_board_html(
 
     resolved_return_to = return_to or f"/?language={escape(board.language)}"
 
+    source_suffix = "&source=candidate" if candidate_verb_id else ""
+    learn_href = (
+        f"/learn?language={escape(board.language)}"
+        f"&verb_id={escape(board.verb.id)}{source_suffix}"
+    )
+
     voice_key = (board.voice_key or "").lower()
     female_active = "active" if voice_key == "female" else ""
     male_active = "active" if voice_key == "male" else ""
@@ -167,6 +174,10 @@ def render_board_html(
         .replace("{{candidate_banner_assets}}", candidate_banner_assets)
         .replace("{{candidate_banner}}", candidate_banner)
         .replace("{{voice_source_input}}", voice_source_input)
+        .replace("{{language | urlencode}}", quote(board.language, safe=""))
+        .replace("{{verb_id | urlencode}}", quote(board.verb.id, safe=""))
+        .replace("{{return_to | urlencode}}", quote(resolved_return_to, safe="/"))
+        .replace("{{learn_href | urlencode}}", quote(learn_href, safe="/"))
         .replace("{{language}}", escape(board.language))
         .replace("{{voice_key}}", escape(board.voice_key))
         .replace("{{verb_id}}", escape(board.verb.id))

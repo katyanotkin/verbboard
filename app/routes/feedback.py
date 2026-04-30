@@ -1,17 +1,26 @@
 from __future__ import annotations
 
 from html import escape
-from urllib.parse import urlencode
+from urllib.parse import unquote, urlencode
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from core.analytics.client_context import detect_device_type
 from core.feedback_store import save_feedback
 from core.i18n import get_strings, resolve_ui_language
 from core.polls import ACTIVE_POLL_ID, get_poll_question
-from core.analytics.client_context import detect_device_type
 
 router = APIRouter()
+
+
+def _safe_return_to(return_to: str) -> str:
+    decoded = unquote(return_to or "/")
+    if not decoded.startswith("/"):
+        return "/"
+    if decoded.startswith("//"):
+        return "/"
+    return decoded
 
 
 @router.get("/feedback", response_class=HTMLResponse)
@@ -24,6 +33,8 @@ def feedback_form(
     success: str = "",
     error: str = "",
 ) -> str:
+    return_to = _safe_return_to(return_to)
+
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
     html_dir = "rtl" if ui_lang == "he" else "ltr"
@@ -194,6 +205,7 @@ def submit_feedback(
     return_to: str = Form("/"),
     ui_language: str = Form(""),
 ):
+    return_to = _safe_return_to(return_to)
     clean_comment = comment.strip()
 
     if poll_answer not in {"yes", "no", "no_preference"}:
@@ -231,4 +243,4 @@ def submit_feedback(
         )
         return RedirectResponse(url=f"/feedback?{params}", status_code=303)
 
-    return RedirectResponse(url=return_to or "/", status_code=303)
+    return RedirectResponse(url=return_to, status_code=303)

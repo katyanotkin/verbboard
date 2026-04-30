@@ -11,35 +11,47 @@
   border-radius: 12px;
   font-size: 13px;
 }
+
 .candidate-banner-actions {
   display: flex;
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
 }
-.cand-nav-btn {
+
+/* shared base for all banner action buttons */
+.cand-nav-btn,
+.cand-btn-promote,
+.cand-btn-fix,
+.cand-btn-regen {
   padding: 3px 10px;
-  border-radius: 3px;
-  background: #1e3a8a;
-  color: white;
   font-size: 12px;
   font-weight: 600;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
   text-decoration: none;
 }
+
+.cand-nav-btn {
+  background: #1e3a8a;
+  color: white;
+}
+
 .cand-btn-promote {
-  padding: 3px 9px; font-size: 12px;
-  background: var(--accent, #3a7a5a); color: #fff;
-  border: none; border-radius: 3px; cursor: pointer;
+  background: var(--accent, #3a7a5a);
+  color: #fff;
+  border: none;
 }
+
 .cand-btn-fix {
-  padding: 3px 9px; font-size: 12px;
-  background: transparent; color: var(--warn, #b8860b);
+  background: transparent;
+  color: var(--warn, #b8860b);
   border: 1px solid var(--warn, #b8860b);
-  border-radius: 3px; cursor: pointer;
 }
+
 .cand-btn-regen {
-  padding: 3px 9px; font-size: 12px;
-  background: transparent; color: #555;
+  background: transparent;
+  color: #555;
   border: 1px solid #aaa;
-  border-radius: 3px; cursor: pointer;
 }

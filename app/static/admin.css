@@ -142,11 +142,11 @@ button.toggle-btn:not(.active):not(.view-toggle button) {
 .tbl .empty td      { color: var(--muted); font-style: italic; text-align: center; padding: 28px; }
 
 /* ── pills ── */
-.pill         { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 500; white-space: nowrap; display: inline-block; }
+.pill,
+.status-pill  { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 500; white-space: nowrap; display: inline-block; }
 .pill-lang    { background: var(--bg); color: var(--muted); border: 1px solid var(--border); font-family: var(--mono); }
 .pill-src     { background: var(--warn-light); color: var(--warn); }
 
-.status-pill                  { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 500; white-space: nowrap; display: inline-block; }
 .status-pill.garbage          { background: var(--danger-light);  color: var(--danger); }
 .status-pill.candidate        { background: var(--warn-light);    color: var(--warn); }
 .status-pill.in_set           { background: var(--success-light); color: var(--success); }
@@ -208,3 +208,122 @@ tr.trash-candidate:hover td { background: #fff6e0; }
 
 .panel        { display: none; }
 .panel.active { display: block; }
+
+/* ── headings ── */
+h1 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+
+/* ── admin feedback page layout ── */
+.admin-page     { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+.card-toolbar   { padding: 12px 16px; margin-bottom: 18px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.card-form      { padding: 16px; margin-bottom: 18px; }
+.card-body      { padding: 16px; }
+.filters-grid   { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end; }
+.form-actions   { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.nav-item-tab   { border-left: none; padding: 8px 12px; border-radius: 8px; }
+
+/* ── candidate action buttons ── */
+.btn-primary,
+.btn-promote,
+.btn-preview,
+.btn-needs-fix,
+.btn-reopen,
+.btn-regen {
+  padding: 3px 9px;
+  font-size: 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.1s;
+}
+
+.btn-primary {
+  height: 28px;
+  padding: 0 12px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+.btn-primary:hover    { filter: brightness(1.1); }
+.btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+.btn-promote {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+.btn-promote:hover    { filter: brightness(1.1); }
+.btn-promote:disabled { opacity: 0.5; cursor: default; }
+
+.btn-preview {
+  display: inline-block;
+  background: transparent;
+  color: var(--info);
+  border: 1px solid var(--info);
+  text-decoration: none;
+}
+.btn-preview:hover { background: color-mix(in srgb, var(--info) 10%, transparent); }
+
+.btn-needs-fix {
+  background: transparent;
+  color: var(--warn);
+  border: 1px solid var(--warn);
+}
+.btn-needs-fix:hover    { background: color-mix(in srgb, var(--warn) 10%, transparent); }
+.btn-needs-fix:disabled { opacity: 0.5; cursor: default; }
+
+.btn-reopen,
+.btn-regen {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-reopen:hover,
+.btn-regen:hover    { color: var(--text); border-color: var(--text); }
+.btn-reopen:disabled,
+.btn-regen:disabled { opacity: 0.5; cursor: default; }
+
+.btn-col { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+
+/* expand/collapse cells */
+.cell-expand { vertical-align: top; }
+
+.expand-summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  user-select: none;
+  list-style: none;
+  white-space: nowrap;
+}
+.expand-summary::-webkit-details-marker { display: none; }
+.expand-summary::before {
+  content: '▶ ';
+  font-size: 9px;
+  vertical-align: middle;
+}
+details[open] .expand-summary::before { content: '▼ '; }
+
+.expand-body {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 4px;
+  min-width: 180px;
+}
+
+.row-promoted td { opacity: 0.5; }
+
+/* generate form input */
+.text-input {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+.text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}

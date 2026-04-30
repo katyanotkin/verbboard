@@ -220,7 +220,7 @@ function renderCandidates() {
       <td class="cell-expand">${formsCell}</td>
       <td class="cell-expand">${examplesCell}</td>
       <td>
-        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+        <div class="btn-col">
           ${actionButtons.join('')}
         </div>
       </td>
