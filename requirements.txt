@@ -13,3 +13,5 @@ google-cloud-storage
 google-cloud-firestore
 Jinja2
 itsdangerous
+playwright
+pytest-playwright

@@ -34,7 +34,7 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
 	audit-examples audit-en audit-ru audit-he audit-es \
-	test test-demand \
+	test test-unit test-e2e-local test-e2e-stage test-demand \
 	smoke-nav-local smoke-nav-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview
 
@@ -53,9 +53,20 @@ help:
 	@echo "  make gcp-release-stage"
 	@echo ""
 
-## QA: run all pytest tests
-test: ## QA: run all pytest tests
+## QA: run all tests (unit + browser e2e)
+test: ## QA: run all tests — unit + Playwright e2e
 	PYTHONPATH=. pytest
+
+## QA: run unit tests only (fast, no browser)
+test-unit: ## QA: run unit tests only (excludes tests/e2e/)
+	PYTHONPATH=. pytest --ignore=tests/e2e
+
+## QA: run Playwright browser e2e tests only
+test-e2e-local: ## QA: run Playwright browser flow tests locally
+	PYTHONPATH=. pytest tests/e2e -v
+
+test-e2e-stage: ## QA: run Playwright browser flow tests against stage
+        E2E_BASE_URL=https://stage.verbboard.com PYTHONPATH=. pytest tests/e2e -v
 
 ## QA: run demand regression tests
 test-demand: ## QA: run demand regression tests
@@ -192,7 +203,7 @@ gcp-stage-image: gcp-check ## GCP: print stage image reference
 		--format='value(spec.template.spec.containers[0].image)'
 
 ## GCP: promote currently deployed stage image to prod
-gcp-promote-stage-to-prod: gcp-check smoke-nav-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
+gcp-promote-stage-to-prod: gcp-check smoke-nav-stage test-e2e-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
 	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
 	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
 	@echo "Promoting stage image to prod:"
