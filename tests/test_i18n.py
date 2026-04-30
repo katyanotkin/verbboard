@@ -124,3 +124,55 @@ def test_completeness_vs_english(lang: str) -> None:
     lang_keys = set(get_strings(lang).keys())
     missing = en_keys - lang_keys
     assert not missing, f"{lang}.json missing keys from en.json: {sorted(missing)}"
+
+
+# ── about page i18n ───────────────────────────────────────────────────────────
+
+
+def test_about_default_lang_is_english(client: TestClient) -> None:
+    resp = client.get("/about")
+    assert resp.status_code == 200
+    assert "VerbBoard" in resp.text
+    assert 'lang="en"' in resp.text
+
+
+@pytest.mark.parametrize(
+    "lang,title_fragment",
+    [
+        ("en", "About VerbBoard"),
+        ("ru", "О приложении VerbBoard"),
+        ("es", "Sobre la app VerbBoard"),
+        ("he", "אודות VerbBoard"),
+    ],
+)
+def test_about_title_matches_ui_language(
+    client: TestClient, lang: str, title_fragment: str
+) -> None:
+    resp = client.get(f"/about?ui_language={lang}")
+    assert resp.status_code == 200
+    assert title_fragment in resp.text
+
+
+def test_about_hebrew_is_rtl(client: TestClient) -> None:
+    resp = client.get("/about?ui_language=he")
+    assert 'dir="rtl"' in resp.text
+
+
+def test_about_uses_ui_language_param_not_lang(client: TestClient) -> None:
+    ru = get_strings("ru")
+    resp = client.get("/about?ui_language=ru")
+    assert ru["about.back"] in resp.text
+    assert ru["about.feedback"] in resp.text
+
+
+def test_about_cookie_resolves_ui_language(client: TestClient) -> None:
+    es = get_strings("es")
+    resp = client.get("/about", cookies={"ui_language": "es"})
+    assert resp.status_code == 200
+    assert es["about.title"] in resp.text
+
+
+def test_about_no_lang_toggle_widget(client: TestClient) -> None:
+    resp = client.get("/about")
+    assert "lang-toggle" not in resp.text
+    assert "setLang(" not in resp.text

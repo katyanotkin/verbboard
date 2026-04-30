@@ -201,7 +201,7 @@ def home(
   <div class="page">
   <div class="page-header">
     <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
-    <a href="/about?lang={ui_lang}" class="about-link">{escape(ui['home.about'])}</a>
+    <a href="/about?ui_language={ui_lang}" class="about-link">{escape(ui['home.about'])}</a>
   </div>
   {ui_lang_selector}
 

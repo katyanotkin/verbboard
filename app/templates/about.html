@@ -29,34 +29,9 @@
       color: var(--text-main);
     }
 
-    .lang-toggle {
-      text-align: center;
-      margin-bottom: 16px;
-      font-size: 0.9rem;
-    }
-
-    .lang-toggle button {
-      margin: 0 6px;
-      padding: 4px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--card-border);
-      background: #f1f5f9;
-      cursor: pointer;
-    }
-
-    .lang-toggle button.active {
-      background: var(--button-primary-bg);
-      color: var(--button-primary-text);
-    }
-
     .content {
-      display: none;
       font-size: 0.95rem;
       line-height: 1.5;
-    }
-
-    .content.active {
-      display: block;
     }
 
     .content[dir="rtl"] {
@@ -77,37 +52,8 @@
 <div class="container">
   <h1>{{ title }}</h1>
 
-  <div class="lang-toggle">
-    <button onclick="setLang('en')" id="btn-en">🇺🇸 EN</button>
-    <button onclick="setLang('ru')" id="btn-ru">🇷🇺 RU</button>
-    <button onclick="setLang('es')" id="btn-es">🇪🇸 ES</button>
-    <button onclick="setLang('he')" id="btn-he">🇮🇱 HE</button>
-  </div>
-
-  <div id="content-en" class="content">
-    <p><b>What is VerbBoard?</b><br/>
-    A focused tool for learning verbs in English, Spanish, Hebrew, and Russian.
-    Each verb shows full conjugation with TTS audio for every form and example sentence.</p>
-
-    <p><b>How it works</b><br/>
-    Pick a language, pick a verb, study the forms. Play audio for any form or example.
-    Switch between female and male voices. Mark verbs you know with ★.</p>
-
-    <p><b>Verb order</b><br/>
-    Recently added verbs appear at the top of the Verbs page, so new additions are easy to find.
-    You can still browse the full list or search directly for any supported form.</p>
-
-    <p><b>Progress</b><br/>
-    ★ = marked as known<br/>
-    ✓ = seen<br/>
-    Saved in your browser, no account needed.</p>
-
-    <p><b>Feedback & verb requests</b><br/>
-    Use the 💬 button on any page to leave feedback — feature ideas, bug reports, anything.<br/>
-    To request a verb, just search for it on the home page. We track missing searches and use that signal for future additions.</p>
-  </div>
-
-  <div id="content-ru" class="content">
+  <div class="content"{% if lang == "he" %} dir="rtl"{% endif %}>
+    {% if lang == "ru" %}
     <p><b>Что такое VerbBoard?</b><br/>
     Инструмент для изучения глаголов на английском, испанском, иврите и русском.
     Каждый глагол — полное спряжение с TTS-аудио для каждой формы и примера.</p>
@@ -128,9 +74,8 @@
     <p><b>Отзывы и запросы глаголов</b><br/>
     Нажмите 💬 на любой странице, чтобы оставить отзыв — идеи, баги, всё что угодно.<br/>
     Чтобы запросить глагол, просто введите его на главной странице. Мы отслеживаем отсутствующие запросы и используем этот сигнал для будущих добавлений.</p>
-  </div>
 
-  <div id="content-es" class="content">
+    {% elif lang == "es" %}
     <p><b>¿Qué es VerbBoard?</b><br/>
     Una herramienta para aprender verbos en inglés, español, hebreo y ruso.
     Cada verbo incluye conjugación completa con audio TTS para cada forma y ejemplo.</p>
@@ -151,9 +96,8 @@
     <p><b>Comentarios y solicitudes de verbos</b><br/>
     Usa el botón 💬 en cualquier página para dejar comentarios — ideas, errores, lo que sea.<br/>
     Para solicitar un verbo, simplemente búscalo en la página principal. Registramos búsquedas sin resultado y usamos esa señal para futuras incorporaciones.</p>
-  </div>
 
-  <div id="content-he" class="content" dir="rtl">
+    {% elif lang == "he" %}
     <p><b>מה זה VerbBoard?</b><br/>
     כלי ללימוד פעלים באנגלית, ספרדית, עברית ורוסית.
     כל פועל מגיע עם נטייה מלאה ואודיו TTS לכל צורה ומשפט לדוגמה.</p>
@@ -174,6 +118,29 @@
     <p><b>משוב ובקשות לפעלים</b><br/>
     לחצו על 💬 בכל דף להשארת משוב — רעיונות, תקלות, כל דבר.<br/>
     כדי לבקש פועל, פשוט חפשו אותו בדף הבית. אנחנו עוקבים אחרי חיפושים חסרים ומשתמשים בהם להוספות עתידיות.</p>
+
+    {% else %}
+    <p><b>What is VerbBoard?</b><br/>
+    A focused tool for learning verbs in English, Spanish, Hebrew, and Russian.
+    Each verb shows full conjugation with TTS audio for every form and example sentence.</p>
+
+    <p><b>How it works</b><br/>
+    Pick a language, pick a verb, study the forms. Play audio for any form or example.
+    Switch between female and male voices. Mark verbs you know with ★.</p>
+
+    <p><b>Verb order</b><br/>
+    Recently added verbs appear at the top of the Verbs page, so new additions are easy to find.
+    You can still browse the full list or search directly for any supported form.</p>
+
+    <p><b>Progress</b><br/>
+    ★ = marked as known<br/>
+    ✓ = seen<br/>
+    Saved in your browser, no account needed.</p>
+
+    <p><b>Feedback &amp; verb requests</b><br/>
+    Use the 💬 button on any page to leave feedback — feature ideas, bug reports, anything.<br/>
+    To request a verb, just search for it on the home page. We track missing searches and use that signal for future additions.</p>
+    {% endif %}
   </div>
 
   <div class="back">
@@ -188,25 +155,6 @@
     </a>
   </div>
 </div>
-
-<script>
-const ABOUT_TITLES = {{ about_titles | tojson }};
-const _initLang = "{{ lang }}";
-
-function setLang(lang) {
-  document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.lang-toggle button').forEach(el => el.classList.remove('active'));
-
-  document.getElementById('content-' + lang).classList.add('active');
-  document.getElementById('btn-' + lang).classList.add('active');
-  document.querySelector('h1').textContent = ABOUT_TITLES[lang] || ABOUT_TITLES.en;
-
-  document.documentElement.lang = lang;
-  document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
-}
-
-setLang(_initLang);
-</script>
 
 </body>
 </html>
