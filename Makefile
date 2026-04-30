@@ -66,7 +66,7 @@ test-e2e-local: ## QA: run Playwright browser flow tests locally
 	PYTHONPATH=. pytest tests/e2e -v
 
 test-e2e-stage: ## QA: run Playwright browser flow tests against stage
-	E2E_BASE_URL=https://stage.verbboard.com PYTHONPATH=. pytest tests/e2e -v
+	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e -v
 
 ## QA: run demand regression tests
 test-demand: ## QA: run demand regression tests

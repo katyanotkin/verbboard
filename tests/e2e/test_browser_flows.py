@@ -9,7 +9,7 @@ These cover interactions that HTTP-level tests cannot prove:
 - The home Learn button submits the form and navigates to /learn.
 
 Server: started by tests/e2e/conftest.py (port 9753, local verb data, no-op audio).
-Verb used: `en_be` — rank-1 English verb guaranteed to be in runtime/data/en/lexicon.json.
+Verb used: tests prefer `en_be` when present, otherwise use the first available rendered option.
 """
 
 from __future__ import annotations
@@ -143,13 +143,30 @@ def test_voice_toggle_submits_correct_voice(page, live_server_url):
 # ---------------------------------------------------------------------------
 
 
+def _select_preferred_or_first_verb(page, preferred_verb_id: str = "en_be") -> str:
+    verb_select = page.locator("select[name='verb_id']")
+    verb_select.wait_for(state="visible")
+
+    if verb_select.locator(f"option[value='{preferred_verb_id}']").count() > 0:
+        verb_select.select_option(preferred_verb_id)
+        return preferred_verb_id
+
+    options = verb_select.locator("option")
+    for index in range(options.count()):
+        value = options.nth(index).get_attribute("value")
+        if value:
+            verb_select.select_option(value)
+            return value
+
+    raise AssertionError("No selectable verb found")
+
+
 def test_home_learn_button_navigates_to_learn(page, live_server_url):
     """Clicking Learn on the home page submits the form and lands on /learn."""
     page.goto(f"{live_server_url}/?language=en")
     page.wait_for_load_state("networkidle")
 
-    # Select en_be explicitly so the assertion is deterministic.
-    page.select_option("select[name='verb_id']", "en_be")
+    selected_verb_id = _select_preferred_or_first_verb(page, "en_be")
 
     learn_btn = page.locator("button.learn-btn")
     learn_btn.wait_for(state="visible")
@@ -157,7 +174,7 @@ def test_home_learn_button_navigates_to_learn(page, live_server_url):
 
     page.wait_for_url("**/learn**")
     assert "language=en" in page.url
-    assert "verb_id=en_be" in page.url
+    assert f"verb_id={selected_verb_id}" in page.url
 
 
 # ---------------------------------------------------------------------------
