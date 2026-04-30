@@ -89,9 +89,12 @@ pre-commit run --all-files
 
 ### UX / behavior
 - Search over conjugated forms (not just lemmas)
-- Verb ordering: frequency first, then demand-driven (FIFO)
 - Stateless UX with local progress tracking (seen / known)
 - Verbs browsing page with filtering and sorting
+
+#### Lexicon
+As of 2026-04-30, Lexicon JSON is retained for local development and Firestore import/backfill only.
+Runtime stage/prod reads from Firestore.
 
 ---
 

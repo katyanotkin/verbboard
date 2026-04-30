@@ -28,18 +28,6 @@ repos:
         language: system
         types: [python]
 
-      - id: regenerate-lexicons
-        name: Generate runtime lexicons
-        entry: bash -c "python -m tools.generate_lexicon --language en && python -m tools.generate_lexicon --language ru && python -m tools.generate_lexicon --language he && git diff --exit-code runtime/data"
-        language: system
-        pass_filenames: false
-
-      - id: check-lexicons
-        name: Validate all lexicons
-        entry: python tools/check_all_lexicons.py
-        language: system
-        pass_filenames: false
-
       - id: check-template
         name: Validate board template
         entry: python tools/check_template.py
