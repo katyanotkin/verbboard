@@ -47,8 +47,7 @@ RUSSIAN (ru):
   lemma: infinitive form
   morph:
     aspect: "perfective" or "imperfective"
-    pair: aspect-pair verb_id string
-          pair: infinitive lemma of the aspect partner (e.g. "ловить" for поймать).
+    pair: infinitive lemma of the aspect partner, not verb_id (e.g. "ловить" for поймать).
           Use "" if no pair exists.
           Examples for `pair`:
             - "ловить" -> "поймать"
@@ -57,8 +56,10 @@ RUSSIAN (ru):
   forms — all nested:
     for imperfective verbs:
       present: 1sg, 2sg, 3sg, 1pl, 2pl, 3pl
+      do not create forma.future slot
     for perfective verbs:
       future: 1sg, 2sg, 3sg, 1pl, 2pl, 3pl
+      do not create forms.present slot
     past:
       m, f, n, pl
     imperative:
