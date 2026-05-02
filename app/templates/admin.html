@@ -35,6 +35,13 @@
       </svg>
       Candidates
     </div>
+
+    <div class="nav-item" data-panel="live_verbs" onclick="showPanel('live_verbs')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+        <path d="M3 3h10v2H3zM3 7h7v2H3zM3 11h5v2H3z" fill="currentColor" opacity="0.8"/>
+      </svg>
+      Live verbs
+    </div>
   </nav>
 
   <main class="main">
@@ -165,6 +172,45 @@
       </div>
     </div>
 
+    <!-- LIVE VERBS PANEL -->
+    <div id="panel-live_verbs" class="panel">
+      <div class="toolbar">
+        <div class="toolbar-title">Live verbs</div>
+        <select id="live-lang-filter">
+          <option value="">All languages</option>
+          <option value="en">en</option>
+          <option value="ru">ru</option>
+          <option value="he">he</option>
+          <option value="es">es</option>
+        </select>
+        <input id="live-search-input" type="text" placeholder="Search — any form, e.g. начал, go, fue"
+          style="width:260px;padding:5px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;background:var(--bg);color:var(--text)"
+          onkeydown="if(event.key==='Enter')searchLiveVerbs()">
+        <button class="action-btn" onclick="searchLiveVerbs()">Search</button>
+      </div>
+      <div id="live-verb-results">
+        <div class="card">
+          <table class="tbl" id="live-verbs-table">
+            <thead>
+              <tr>
+                <th>Verb ID</th>
+                <th>Lemma</th>
+                <th>Lang</th>
+                <th>Rank</th>
+                <th>Examples</th>
+                <th>pronoun_forms</th>
+                <th>Updated</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="live-verbs-body">
+              <tr><td colspan="8" class="loading">Enter a search term above</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -174,6 +220,7 @@
 <script src="/static/admin_shared.js"></script>
 <script src="/static/admin_signals.js"></script>
 <script src="/static/admin_candidates.js"></script>
+<script src="/static/admin_live_verbs.js"></script>
 <script src="/static/admin.js"></script>
 </body>
 </html>

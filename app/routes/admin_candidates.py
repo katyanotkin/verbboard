@@ -236,6 +236,87 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
     )
 
 
+@router.get("/api/verbs")
+async def search_live_verbs(
+    request: Request, query: str = "", language: str = ""
+) -> JSONResponse:
+    require_admin_api(request)
+    normalized = query.strip().casefold()
+    if not normalized:
+        raise HTTPException(status_code=400, detail="query parameter is required")
+
+    db = get_db()
+    q = db.collection(VERBS_COLLECTION).where(
+        "search_extract", "array_contains", normalized
+    )
+    if language:
+        q = q.where("language", "==", language)
+
+    results = [doc.to_dict() for doc in q.stream()]
+    results.sort(key=lambda v: (v.get("language", ""), v.get("rank") or 9999))
+    return JSONResponse({"verbs": results})
+
+
+@router.get("/api/verbs/{verb_id}")
+async def get_live_verb(request: Request, verb_id: str) -> JSONResponse:
+    require_admin_api(request)
+    db = get_db()
+    doc = db.collection(VERBS_COLLECTION).document(verb_id).get()
+    if not doc.exists:
+        raise HTTPException(
+            status_code=404, detail="Verb not found in live verbs collection"
+        )
+    return JSONResponse(doc.to_dict())
+
+
+@router.post("/api/verbs/{verb_id}/regenerate")
+async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
+    require_admin_api(request)
+    db = get_db()
+    doc_ref = db.collection(VERBS_COLLECTION).document(verb_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(
+            status_code=404, detail="Verb not found in live verbs collection"
+        )
+
+    existing = doc.to_dict()
+    language = existing.get("language", "")
+    lemma = existing.get("lemma", "")
+    if not language or not lemma:
+        raise HTTPException(
+            status_code=422, detail="Verb document is missing language or lemma"
+        )
+
+    generated = _call_claude(language, lemma)
+
+    now = datetime.now(UTC).isoformat()
+    payload: dict[str, Any] = {
+        "verb_id": verb_id,
+        "language": language,
+        "lemma": lemma,
+        "rank": existing.get("rank"),
+        "morph": generated.get("morph") or None,
+        "forms": generated.get("forms", {}),
+        "examples": generated.get("examples", []),
+        "search_extract": build_search_extract_from_entry(
+            language=language, entry=generated
+        ),
+        "display_lemma": existing.get("display_lemma"),
+        "display_forms": existing.get("display_forms"),
+        "created_at": existing.get("created_at"),
+        "updated_at": now,
+    }
+    pronoun_forms = generated.get("pronoun_forms")
+    if pronoun_forms:
+        payload["pronoun_forms"] = pronoun_forms
+
+    doc_ref.set(payload)
+    return JSONResponse(
+        {"verb_id": verb_id, "regenerated": True, "lemma": lemma, "updated_at": now}
+    )
+
+
 @router.delete("/api/candidates/{verb_id}")
 async def delete_candidate(request: Request, verb_id: str) -> JSONResponse:
     require_admin_api(request)

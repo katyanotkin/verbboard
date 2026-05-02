@@ -64,7 +64,16 @@ RUSSIAN (ru):
       m, f, n, pl
     imperative:
       sg, pl
+  pronoun_forms — past forms prefixed with their subject pronoun, for unambiguous TTS:
+    m:  "он <past_m>"    (e.g. "он начал")
+    f:  "она <past_f>"   (e.g. "она начала")
+    n:  "оно <past_n>"   (e.g. "оно начало")
+    pl: "они <past_pl>"  (e.g. "они начали")
+    Use plain text only — do NOT include stress marks or any diacritics.
   examples: exactly 5 sentences in Russian
+    — at least one example MUST use the past tense neuter singular (оно + past_n form)
+      in a natural sentence where the subject is grammatically neuter
+      (e.g. "Солнце начало садиться.", "Молоко начало закипать.")
 
 SPANISH (es):
   lemma: infinitive form
