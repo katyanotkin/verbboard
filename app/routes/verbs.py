@@ -145,6 +145,11 @@ def verb_browser(
       <div id="vb-count" class="vb-count"></div>
     </div>
 
+    <div class="vb-legend">
+      <span class="vb-badge seen">✓</span><span>{ui['verbs.filter_seen']}</span>
+      <span class="vb-badge known">★</span><span>{ui['verbs.filter_known']}</span>
+    </div>
+
     <div id="vb-list" class="vb-list"></div>
 
   </div>

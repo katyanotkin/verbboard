@@ -163,7 +163,7 @@
 }
 .vb-item:hover    { background: #f0f4ff; border-color: #c7d7f9; }
 .vb-item:active   { background: #e0eaff; }
-.vb-item.is-known { background: #fffbeb; border-color: #fde68a; }
+.vb-item.is-known { background: #eff6ff; border-color: #bfdbfe; }
 .vb-item.is-seen  { background: #f9fafb; }
 
 .vb-lemma {
@@ -174,8 +174,22 @@
 }
 
 .vb-badge        { font-size: 13px; flex-shrink: 0; margin-left: 4px; }
-.vb-badge.known  { color: #d4af37; }
+.vb-badge.known  { color: #4a90e2; }
 .vb-badge.seen   { color: #9ca3af; }
+
+.vb-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: #6b7280;
+  padding: 4px 0 10px;
+}
+.vb-legend .vb-badge {
+  margin-left: 0;
+  margin-right: 3px;
+  font-size: 13px;
+}
 
 .vb-empty {
   grid-column: 1 / -1;

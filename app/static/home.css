@@ -164,9 +164,9 @@ input[type="text"]:focus {
 }
 
 .progress-star {
-  width: 14px;
-  height: 14px;
-  opacity: 0.9;
+  font-size: 14px;
+  color: #f97316;
+  line-height: 1;
 }
 
 .progress-count {

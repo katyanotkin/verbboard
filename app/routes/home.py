@@ -242,7 +242,7 @@ def home(
           <div class="progress-fill" style="width: 0%"></div>
         </div>
         <div class="progress-meta">
-          <img src="/static/gold-star.svg" class="progress-star" alt="Known">
+          <span class="progress-star">★</span>
           <span class="progress-count">001</span>
         </div>
       </div>
