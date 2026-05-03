@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from core.languages.config import LANGUAGE
 from core.models import Board, VerbEntry
 from core.registry import LanguagePlugin, register
 
@@ -72,7 +73,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
 register(
     LanguagePlugin(
         language="en",
-        display_name="English",
+        display_name=LANGUAGE["en"].display,
         build_board=build_board,
     )
 )

@@ -4,12 +4,14 @@ from pathlib import Path
 # ensure repo root on PYTHONPATH
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import core.languages.en.plugin  # noqa: F401
+import core.languages.es.plugin  # noqa: F401
 import core.languages.he.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
 
+from core.languages.config import LANGUAGE
 from core.registry import all_plugins
 
-EXPECTED_LANGUAGES = {"en", "ru", "he"}
+EXPECTED_LANGUAGES = set(LANGUAGE.keys())
 
 
 def main() -> None:

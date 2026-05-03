@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-SUPPORTED_LANGUAGES = ("en", "ru", "he", "es")
+from core.languages.config import LANGUAGE
+
+SUPPORTED_LANGUAGES = tuple(LANGUAGE.keys())
 
 
 def supported_languages_list() -> list[str]:

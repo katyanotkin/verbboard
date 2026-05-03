@@ -6,7 +6,9 @@ from pathlib import Path
 
 from fastapi import Request
 
-SUPPORTED_UI_LANGS = {"en", "ru", "he", "es"}
+from core.languages.config import LANGUAGE
+
+SUPPORTED_UI_LANGS: set[str] = set(LANGUAGE.keys())
 DEFAULT_UI_LANG = "en"
 
 _I18N_DIR = Path(__file__).parent.parent / "app" / "i18n"

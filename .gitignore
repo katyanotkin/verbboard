@@ -31,3 +31,4 @@ runtime/admin_logs/
 # Temporary
 *.tmp
 admin_candidates.py.with-pealim-scraping
+/experiments

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.languages.config import LANGUAGE
 from core.models import Board, VerbEntry
 from core.registry import LanguagePlugin, register
 from core.storage.verb_repository import find_verb_by_lemma
@@ -120,7 +121,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
 register(
     LanguagePlugin(
         language="ru",
-        display_name="Russian",
+        display_name=LANGUAGE["ru"].display,
         build_board=build_board,
     )
 )

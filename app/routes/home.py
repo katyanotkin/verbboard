@@ -9,6 +9,7 @@ from typing import Any
 
 from core.admin_logging import log_missing_verb_search
 from core.i18n import get_strings, resolve_ui_language
+from core.languages.config import LANGUAGE
 from core.lexicon import load_lexicon
 from core.paths import DATA_DIR
 from core.registry import all_plugins
@@ -18,15 +19,6 @@ from core.settings import load_settings
 from core.storage.verb_repository import list_verbs_recent
 
 _SETTINGS = load_settings()
-
-LANGUAGE_HOME_LABELS = {
-    "en": "English",
-    "ru": "Russian / Русский",
-    "he": "Hebrew / עברית",
-    "es": "Spanish / Español",
-}
-
-_UI_LANG_CODES = ["en", "ru", "he", "es"]
 
 router = APIRouter()
 
@@ -57,7 +49,7 @@ def _build_ui_lang_selector(
         f'<a href="/?ui_language={code}&language={escape(learning_lang)}"'
         f' class="ui-lang-pill{" active" if code == ui_lang else ""}">'
         f"{code.upper()}</a>"
-        for code in _UI_LANG_CODES
+        for code in LANGUAGE
     )
     return (
         '<div class="ui-lang-block">'
@@ -141,7 +133,7 @@ def home(
 
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
-    html_dir = "rtl" if ui_lang == "he" else "ltr"
+    html_dir = "rtl" if LANGUAGE.get(ui_lang, LANGUAGE["en"]).rtl else "ltr"
 
     cookie_language = request.cookies.get("language")
     cookie_verb_id = request.cookies.get("verb_id")
@@ -165,7 +157,7 @@ def home(
 
     lang_options = "\n".join(
         f"<option value='{key}' {'selected' if key == selected_language else ''}>"
-        f"{LANGUAGE_HOME_LABELS.get(key, plugin.display_name)}"
+        f"{LANGUAGE[key].home_label if key in LANGUAGE else plugin.display_name}"
         f"</option>"
         for key, plugin in plugins.items()
     )
