@@ -64,6 +64,14 @@ RUSSIAN (ru):
       m, f, n, pl
     imperative:
       sg, pl
+      IMPORTANT: Russian imperative formation is irregular for many verbs.
+      Derive the imperative from the actual conjugation stem, not by
+      mechanical suffix substitution. Common error class: verbs whose
+      present/future stem ends in a soft consonant take -ь (sg) / -ьте (pl),
+      NOT -и / -ите. Examples: зависеть → завись/зависьте (not зависи),
+      уведомить → уведомь/уведомьте, познакомить → познакомь/познакомьте.
+      Other irregular patterns: ехать → езжай, бежать → беги,
+      давать → давай, вставать → вставай.
   pronoun_forms — past forms prefixed with their subject pronoun, for unambiguous TTS:
     m:  "он <past_m>"    (e.g. "он начал")
     f:  "она <past_f>"   (e.g. "она начала")
