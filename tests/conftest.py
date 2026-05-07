@@ -19,6 +19,10 @@ import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.main import app  # noqa: E402
+
+# load_dotenv(override=True) runs during the app import above and may overwrite
+# env vars set by setdefault above. Re-assert values that tests depend on.
+os.environ["VERB_DATA_SOURCE"] = "local"
 from core.audio_backend.base import AudioBackend  # noqa: E402
 from core.models import Example, VerbEntry  # noqa: E402
 

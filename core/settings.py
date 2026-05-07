@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from google.cloud import secretmanager
 
 
-load_dotenv()
+load_dotenv(override=True)
 
 _ADMIN_SECRET_NAME = "verbboard-admin-secret"
 _ANTHROPIC_SECRET_NAME = "verbboard-anthropic-api-key"

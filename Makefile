@@ -37,7 +37,9 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 	test test-unit test-e2e-local test-e2e-stage test-demand \
 	smoke-nav-local smoke-nav-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
-	cache-audio-stage cache-audio-prod
+	cache-audio-stage cache-audio-prod \
+	audit-audio-stage audit-audio-prod \
+	clean-audio-stage clean-audio-prod
 
 ## Show available commands
 help:
@@ -263,6 +265,28 @@ cache-audio-stage: gcp-check ## GCP: cache-audio-stage [AUDIO_LANG=he]
 cache-audio-prod: gcp-check ## GCP: cache-audio-prod [AUDIO_LANG=he]
 	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
 		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_PROD)
+
+## GCP: dry-run audit — show missing audio for stage bucket
+audit-audio-stage: gcp-check ## GCP: audit-audio-stage [AUDIO_LANG=he]
+	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
+		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_STAGE) --dry-run
+
+## GCP: dry-run audit — show missing audio for prod bucket
+audit-audio-prod: gcp-check ## GCP: audit-audio-prod [AUDIO_LANG=he]
+	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
+		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_PROD) --dry-run
+
+## GCP: dry-run — show unhashed (old-style) audio blobs to delete from stage
+clean-audio-stage: gcp-check ## GCP: clean-audio-stage [AUDIO_LANG=he] [EXECUTE=1]
+	$(PYTHON) -m tools.clean_audio --language $(or $(AUDIO_LANG),all) \
+		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_STAGE) \
+		$(if $(EXECUTE),--execute,)
+
+## GCP: dry-run — show unhashed (old-style) audio blobs to delete from prod
+clean-audio-prod: gcp-check ## GCP: clean-audio-prod [AUDIO_LANG=he] [EXECUTE=1]
+	$(PYTHON) -m tools.clean_audio --language $(or $(AUDIO_LANG),all) \
+		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_PROD) \
+		$(if $(EXECUTE),--execute,)
 
 ## GCP: grant runtime service account Firestore access
 gcp-grant-firestore-access: gcp-check
