@@ -48,8 +48,8 @@ async def ensure_audio(
     )
 
     normalized_text = text.strip()
-    logger.warning(
-        "ENSURE AUDIO language=%s verb_id=%s voice=%s form_key=%s text=%r",
+    logger.debug(
+        "ensure_audio language=%s verb_id=%s voice=%s form_key=%s text=%r",
         language,
         verb_id,
         voice,
@@ -93,8 +93,8 @@ def read_audio_bytes(
         form_key=form_key,
     )
 
-    logger.warning(
-        "READ AUDIO language=%s verb_id=%s voice=%s form_key=%s key=%s",
+    logger.debug(
+        "read_audio language=%s verb_id=%s voice=%s form_key=%s key=%s",
         language,
         verb_id,
         voice,

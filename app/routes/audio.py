@@ -20,7 +20,7 @@ def get_audio(
     voice: str,
     form_key: str,
 ):
-    logger.warning("AUDIO REQUEST: %s %s %s %s", language, verb_id, voice, form_key)
+    logger.debug("audio request: %s %s %s %s", language, verb_id, voice, form_key)
     audio_backend = request.app.state.audio_backend
     audio_bytes = read_audio_bytes(
         audio_backend=audio_backend,

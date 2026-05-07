@@ -28,7 +28,7 @@ async def learn(
     return_to: str | None = Query(None),
 ) -> HTMLResponse:
     settings = request.app.state.settings
-    logger.warning("lookup source %s -> verb %s", source, verb_id)
+    logger.debug("lookup source %s -> verb %s", source, verb_id)
     if source == "candidate":
         if not verb_id:
             return HTMLResponse(
@@ -39,7 +39,7 @@ async def learn(
             verb_id=verb_id,
             source="candidate",
         )
-        logger.warning("Candidate lookup %s -> %s", verb_id, verb)
+        logger.debug("Candidate lookup %s -> %s", verb_id, verb)
         if verb is None:
             return HTMLResponse("Candidate not found", status_code=404)
     else:
