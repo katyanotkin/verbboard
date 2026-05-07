@@ -254,14 +254,14 @@ gcp-setup-prod-audio: gcp-check
 	$(MAKE) gcp-ensure-bucket BUCKET=$(AUDIO_BUCKET_PROD)
 	$(MAKE) gcp-grant-bucket-audio-access BUCKET=$(AUDIO_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
 
-## GCP: pre-cache audio for LANG (default: all) to stage bucket
-cache-audio-stage: gcp-check ## GCP: cache-audio-stage [LANG=he]
-	$(PYTHON) -m tools.cache_audio --language $(or $(LANG),all) \
+## GCP: pre-cache audio for AUDIO_LANG (default: all) to stage bucket
+cache-audio-stage: gcp-check ## GCP: cache-audio-stage [AUDIO_LANG=he]
+	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
 		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_STAGE)
 
-## GCP: pre-cache audio for LANG (default: all) to prod bucket
-cache-audio-prod: gcp-check ## GCP: cache-audio-prod [LANG=he]
-	$(PYTHON) -m tools.cache_audio --language $(or $(LANG),all) \
+## GCP: pre-cache audio for AUDIO_LANG (default: all) to prod bucket
+cache-audio-prod: gcp-check ## GCP: cache-audio-prod [AUDIO_LANG=he]
+	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
 		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_PROD)
 
 ## GCP: grant runtime service account Firestore access
