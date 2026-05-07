@@ -10,6 +10,11 @@ from core.tts import tts_to_mp3
 
 logger = logging.getLogger(__name__)
 
+# Process-local set of GCS keys confirmed to exist.
+# Keys are content-addressed (text hash in filename) so they are immutable —
+# once confirmed present they never need a remote existence check again.
+_known_keys: set[str] = set()
+
 
 def build_hashed_audio_key(base_form_key: str, text: str) -> str:
     normalized_text = text.strip()
@@ -52,8 +57,12 @@ async def ensure_audio(
         normalized_text,
     )
 
+    if key in _known_keys:
+        return key
+
     if audio_backend.exists(key):
         logger.info("Audio cache hit: %s", key)
+        _known_keys.add(key)
         return key
 
     logger.info("Audio cache miss: %s", key)
@@ -64,6 +73,7 @@ async def ensure_audio(
         audio_bytes = output_path.read_bytes()
 
     audio_backend.write_bytes(key, audio_bytes)
+    _known_keys.add(key)
     logger.info("Audio written: %s", key)
 
     return key

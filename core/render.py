@@ -8,7 +8,9 @@ from core.audio_service import build_hashed_audio_key
 from core.models import Board
 from core.paths import TEMPLATES_DIR
 
-NO_AUDIO_ROW_KEYS = {"aspect", "pair"}
+NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}
+
+_BOARD_TEMPLATE = (TEMPLATES_DIR / "board.html").read_text(encoding="utf-8")
 
 
 def render_board_html(
@@ -84,7 +86,7 @@ def render_board_html(
             + "</table>"
         )
 
-    template = (TEMPLATES_DIR / "board.html").read_text(encoding="utf-8")
+    template = _BOARD_TEMPLATE
 
     examples_rows = []
     for index, ex in enumerate(board.verb.examples, start=1):

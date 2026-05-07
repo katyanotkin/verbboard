@@ -21,4 +21,4 @@ def test_health_reflects_local_environment(client: TestClient) -> None:
     data = client.get("/health").json()
     assert data["environment"] == "local"
     assert data["verb_data_source"] == "local"
-    assert data["audio_backend"] == "local"
+    assert data["audio_backend"] == "gcs"

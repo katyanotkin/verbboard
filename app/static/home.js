@@ -302,4 +302,17 @@ document.addEventListener("DOMContentLoaded", function () {
   updatePrimaryAction();
   sortAndMarkVerbs();
   updateProgress();
+
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) return;
+    const btn = document.getElementById("learn-btn");
+    if (!btn || !btn.classList.contains("loading")) return;
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    const label = btn.querySelector(".learn-label");
+    const icon = btn.querySelector(".learn-icon");
+    if (label) label.textContent = btn.dataset.label || "";
+    if (icon) icon.textContent = btn.dataset.icon || "▶";
+    updatePrimaryAction();
+  });
 });

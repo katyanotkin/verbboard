@@ -14,10 +14,17 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     past = forms.get("past", {}) or {}
     future = forms.get("future", {}) or {}
 
+    infinitive = str(verb.display_lemma or verb.lemma or "")
+
     sections = [
         {
             "title": "Metadata",
             "rows": [
+                {
+                    "key": "infinitive",
+                    "label": "שם פועל / infinitive",
+                    "text": infinitive,
+                },
                 {
                     "key": "binyan",
                     "label": "בניין",

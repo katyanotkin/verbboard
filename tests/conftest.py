@@ -5,8 +5,9 @@ import os
 # Must be set before any import that calls load_settings()
 os.environ.setdefault("ADMIN_SECRET", "test-secret")
 os.environ.setdefault("ENVIRONMENT", "local")
-os.environ.setdefault("AUDIO_BACKEND", "local")
 os.environ.setdefault("VERB_DATA_SOURCE", "local")
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "test-project")
+os.environ.setdefault("AUDIO_BUCKET", "test-bucket")
 
 # Stub out lexicon preload before app.main is imported, so the startup hook
 # does not try to read missing local lexicon files.
@@ -18,11 +19,24 @@ import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.main import app  # noqa: E402
+from core.audio_backend.base import AudioBackend  # noqa: E402
 from core.models import Example, VerbEntry  # noqa: E402
 
 
+class _StubAudioBackend(AudioBackend):
+    def exists(self, key: str) -> bool:
+        return False
+
+    def read_bytes(self, key: str) -> bytes:
+        return b""
+
+    def write_bytes(self, key: str, data: bytes) -> None:
+        pass
+
+
 @pytest.fixture()
-def client() -> TestClient:  # type: ignore[return]
+def client(monkeypatch) -> TestClient:  # type: ignore[return]
+    monkeypatch.setattr("app.main.create_audio_backend", lambda _: _StubAudioBackend())
     with TestClient(app) as c:
         yield c
 

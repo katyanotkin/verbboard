@@ -280,7 +280,9 @@ def home(
         </button>
 
         <button type="submit" class="learn-btn is-primary" id="learn-btn"
-          data-loading="{escape(ui['home.loading'])}">
+          data-loading="{escape(ui['home.loading'])}"
+          data-label="{escape(ui['home.learn_button'])}"
+          data-icon="▶">
           <span class="learn-icon">▶</span>
           <span class="learn-label">{escape(ui['home.learn_button'])}</span>
         </button>

@@ -36,7 +36,8 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 	audit-examples audit-en audit-ru audit-he audit-es \
 	test test-unit test-e2e-local test-e2e-stage test-demand \
 	smoke-nav-local smoke-nav-stage \
-	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview
+	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
+	cache-audio-stage cache-audio-prod
 
 ## Show available commands
 help:
@@ -252,6 +253,16 @@ gcp-setup-stage-audio: gcp-check
 gcp-setup-prod-audio: gcp-check
 	$(MAKE) gcp-ensure-bucket BUCKET=$(AUDIO_BUCKET_PROD)
 	$(MAKE) gcp-grant-bucket-audio-access BUCKET=$(AUDIO_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+
+## GCP: pre-cache audio for LANG (default: all) to stage bucket
+cache-audio-stage: gcp-check ## GCP: cache-audio-stage [LANG=he]
+	$(PYTHON) -m tools.cache_audio --language $(or $(LANG),all) \
+		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_STAGE)
+
+## GCP: pre-cache audio for LANG (default: all) to prod bucket
+cache-audio-prod: gcp-check ## GCP: cache-audio-prod [LANG=he]
+	$(PYTHON) -m tools.cache_audio --language $(or $(LANG),all) \
+		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_PROD)
 
 ## GCP: grant runtime service account Firestore access
 gcp-grant-firestore-access: gcp-check

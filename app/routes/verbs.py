@@ -36,10 +36,9 @@ def verb_browser(
         language=selected_language,
         source=settings.verb_data_source,
     )
-    entries_sorted = sorted(entries, key=lambda entry: entry.rank or 999999)
 
     verbs_js = []
-    for entry in entries_sorted:
+    for entry in entries:
         lemma = entry.display_lemma or entry.lemma
         if isinstance(lemma, dict):
             lemma = lemma.get("imperfective") or lemma.get("perfective") or ""

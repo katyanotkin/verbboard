@@ -44,15 +44,7 @@ async def learn(
             return HTMLResponse("Candidate not found", status_code=404)
     else:
         effective_source = settings.verb_data_source
-        entries = load_entries_for_language(
-            language=language,
-            source=effective_source,
-        )
-        if not entries:
-            return HTMLResponse("No verbs available", status_code=400)
-        if not verb_id:
-            verb = entries[0]
-        else:
+        if verb_id:
             verb = load_entry_by_id(
                 language=language,
                 verb_id=verb_id,
@@ -60,6 +52,14 @@ async def learn(
             )
             if verb is None:
                 return HTMLResponse("Verb not found", status_code=404)
+        else:
+            entries = load_entries_for_language(
+                language=language,
+                source=effective_source,
+            )
+            if not entries:
+                return HTMLResponse("No verbs available", status_code=400)
+            verb = entries[0]
 
     if language not in VOICES:
         return HTMLResponse("Unknown language voices", status_code=400)
