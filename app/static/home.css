@@ -39,11 +39,41 @@ form.controls {
   margin: 16px 0;
 }
 
-.row.dual-actions {
+.verb-label-row {
   display: flex;
-  gap: 10px;
-  align-items: stretch;
-  margin-top: 20px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.verb-label-row label {
+  margin-bottom: 0;
+}
+
+.browse-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.93rem;
+  font-weight: 600;
+  color: var(--button-primary-bg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.browse-inline-link:hover {
+  text-decoration: underline;
+}
+
+.browse-icon {
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
+.learn-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
 }
 
 .page-title {
@@ -172,7 +202,7 @@ input[type="text"]:focus {
 .search-input-row {
   display: flex;
   gap: 8px;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .search-input-row .search-input-wrap {
@@ -186,8 +216,8 @@ input[type="text"]:focus {
 }
 
 .search-row input[type="text"] {
-  padding: 10px 12px;
-  font-size: 0.96rem;
+  padding: 12px 14px;
+  font-size: 1rem;
   border-color: var(--input-border-soft);
 }
 
@@ -271,10 +301,10 @@ input[type="text"]:focus {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  flex: 1;
+  min-width: 150px;
 
   min-height: 44px;
-  padding: 10px 18px;
+  padding: 10px 24px;
 
   border-radius: 999px;
   border: 1px solid #e2e8f0;
@@ -320,30 +350,6 @@ input[type="text"]:focus {
               box-shadow 0.12s ease;
 }
 
-.browse-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex: 1;
-  min-height: 44px;
-  padding: 10px 18px;
-  border-radius: 999px;
-  border: none;
-  background: var(--button-primary-bg);
-  color: var(--button-primary-text);
-  font-weight: 600;
-  font-size: 0.94rem;
-  text-decoration: none;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
-  transition: transform 0.12s ease, filter 0.12s ease;
-}
-
-.browse-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-}
 
 /* ===== Page header ===== */
 

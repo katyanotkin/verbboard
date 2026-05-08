@@ -31,6 +31,7 @@ def verb_browser(
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
     html_dir = "rtl" if ui_lang == "he" else "ltr"
+    sort_az_label = get_strings(selected_language).get("verbs.sort_az", "A → Z")
 
     entries = load_entries_for_language(
         language=selected_language,
@@ -139,7 +140,7 @@ def verb_browser(
     <div class="vb-toolbar vb-toolbar-meta">
       <select id="vb-sort" class="vb-sort-select">
         <option value="rank">{ui['verbs.sort_frequency']}</option>
-        <option value="alpha">{ui['verbs.sort_az']}</option>
+        <option value="alpha">{sort_az_label}</option>
       </select>
       <div id="vb-count" class="vb-count"></div>
     </div>

@@ -14,7 +14,7 @@ h1 {
 }
 
 h2 {
-  margin: 24px 0 12px 0;
+  margin: 14px 0 8px 0;
   font-size: 22px;
   color: #111827;
 }
@@ -32,7 +32,7 @@ table {
 
 th,
 td {
-  padding: 12px 14px;
+  padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid var(--card-border);
 }
@@ -268,7 +268,7 @@ button {
 }
 
 .section-block {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .examples-table td:first-child {

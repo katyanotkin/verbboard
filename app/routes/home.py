@@ -221,17 +221,18 @@ def home(
       </div>
 
       <div class="row">
-        <label><span class="label-icon">🧩</span> {escape(ui['home.verb_label'])}</label>
+        <div class="verb-label-row">
+          <label><span class="label-icon">🧩</span> {escape(ui['home.verb_label'])}</label>
+          <a href="/verbs?language={escape(selected_language)}" class="browse-inline-link" id="browse-btn">
+            <span class="browse-icon">🧩</span>{escape(ui['home.browse_link'])}
+          </a>
+        </div>
         <select name="verb_id" id="verb-select">
           {verb_options}
         </select>
       </div>
 
-      <div class="row dual-actions">
-        <a href="/verbs?language={escape(selected_language)}" class="browse-btn" id="browse-btn">
-          {escape(ui['home.browse_link'])}
-        </a>
-
+      <div class="row learn-row">
         <button type="submit" class="learn-btn" id="learn-btn"
           data-loading="{escape(ui['home.loading'])}"
           data-label="{escape(ui['home.learn_button'])}"
@@ -242,6 +243,7 @@ def home(
       </div>
 
       <div class="row search-row">
+        <label>{escape(ui['home.search_label'])}</label>
         <div class="search-input-row">
           <div class="search-input-wrap">
             <input
