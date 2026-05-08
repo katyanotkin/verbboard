@@ -210,10 +210,6 @@ def home(
         btn.querySelector('.learn-icon').textContent = '•••';
       "
     >
-      <div class="intro-hint">
-        {escape(ui['home.intro_hint'])}
-      </div>
-
       <div class="row">
       <label><span class="label-icon">🌐</span> {escape(ui['home.language_label'])}</label>
         <select
@@ -231,10 +227,47 @@ def home(
         </select>
       </div>
 
-      <div class="row center">
-        <a href="/verbs?language={escape(selected_language)}" class="browse-link">
-            {escape(ui['home.browse_link'])}
+      <div class="row dual-actions">
+        <a href="/verbs?language={escape(selected_language)}" class="browse-btn" id="browse-btn">
+          {escape(ui['home.browse_link'])}
         </a>
+
+        <button type="submit" class="learn-btn" id="learn-btn"
+          data-loading="{escape(ui['home.loading'])}"
+          data-label="{escape(ui['home.learn_button'])}"
+          data-icon="▶">
+          <span class="learn-icon">▶</span>
+          <span class="learn-label">{escape(ui['home.learn_button'])}</span>
+        </button>
+      </div>
+
+      <div class="row search-row">
+        <div class="search-input-row">
+          <div class="search-input-wrap">
+            <input
+              type="text"
+              name="q"
+              id="search-input"
+              value="{escape(search_value)}"
+              placeholder="{escape(ui['home.search_placeholder'])}"
+              autocomplete="off"
+            />
+            <div id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Verb suggestions"></div>
+          </div>
+
+          <button
+            type="submit"
+            formaction="/search_verb"
+            formmethod="get"
+            class="search-btn"
+            id="search-btn"
+            name="search_submit"
+            value="1"
+          >
+            {escape(ui['home.find_button'])}
+          </button>
+        </div>
+        {notice_html}
       </div>
 
       <div class="progress-row">
@@ -245,47 +278,6 @@ def home(
           <span class="progress-star">★</span>
           <span class="progress-count">001</span>
         </div>
-      </div>
-
-      <div class="row search-row">
-        <label class="secondary-label">{escape(ui['home.search_label'])}</label>
-        <div class="search-input-wrap">
-          <input
-            type="text"
-            name="q"
-            id="search-input"
-            value="{escape(search_value)}"
-            placeholder="{escape(ui['home.search_placeholder'])}"
-            autocomplete="off"
-          />
-          <div id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Verb suggestions"></div>
-        </div>
-        <div class="field-help">
-          {escape(ui['home.search_help'])}
-        </div>
-        {notice_html}
-      </div>
-
-      <div class="row center dual-actions">
-        <button
-          type="submit"
-          formaction="/search_verb"
-          formmethod="get"
-          class="search-btn"
-          id="search-btn"
-          name="search_submit"
-          value="1"
-        >
-          {escape(ui['home.find_button'])}
-        </button>
-
-        <button type="submit" class="learn-btn is-primary" id="learn-btn"
-          data-loading="{escape(ui['home.loading'])}"
-          data-label="{escape(ui['home.learn_button'])}"
-          data-icon="▶">
-          <span class="learn-icon">▶</span>
-          <span class="learn-label">{escape(ui['home.learn_button'])}</span>
-        </button>
       </div>
 
         <div class="feedback-row">

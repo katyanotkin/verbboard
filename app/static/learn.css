@@ -270,3 +270,19 @@ button {
 .section-block {
   margin-bottom: 20px;
 }
+
+.examples-table td:first-child {
+  width: 65%;
+}
+
+.example-src {
+  display: block;
+}
+
+.example-translation {
+  display: none;
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+}

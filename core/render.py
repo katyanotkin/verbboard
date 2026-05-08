@@ -86,6 +86,13 @@ def render_board_html(
             + "</table>"
         )
 
+    if len(sections_html) > 1:
+        meta_section_html = sections_html[0]
+        conj_sections_html = "".join(sections_html[1:])
+    else:
+        meta_section_html = ""
+        conj_sections_html = "".join(sections_html)
+
     template = _BOARD_TEMPLATE
 
     examples_rows = []
@@ -107,7 +114,10 @@ def render_board_html(
 
         examples_rows.append(
             "<tr>"
-            f"<td dir='{example_direction}' style='text-align:{example_align}'>{escape(raw_text)}</td>"
+            f"<td dir='{example_direction}' style='text-align:{example_align}'>"
+            f"<span class='example-src'>{escape(raw_text)}</span>"
+            f"<span class='example-translation'></span>"
+            f"</td>"
             f"<td>"
             f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
             f"<button class='{button_class}' data-lang='{board.language}' title='Play' "
@@ -187,7 +197,8 @@ def render_board_html(
         .replace("{{return_to}}", escape(resolved_return_to))
         .replace("{{female_active}}", female_active)
         .replace("{{male_active}}", male_active)
-        .replace("{{sections}}", "".join(sections_html))
+        .replace("{{sections_meta}}", meta_section_html)
+        .replace("{{sections_conj}}", conj_sections_html)
         .replace("{{examples}}", "".join(examples_rows))
         .replace("{{board_back}}", escape(ui.get("board.back", "Back")))
         .replace(

@@ -16,7 +16,7 @@ def render_form_value(value: Any) -> str:
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     forms = verb.forms
 
-    present_label = "3rd person sg"
+    present_label = "he / she / it"
     present_text = render_form_value(forms.get("present_3sg", ""))
 
     if forms.get("present_1sg") or forms.get("present_other"):
@@ -30,23 +30,18 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
 
     sections = [
         {
-            "title": "Principal forms",
+            "title": "Infinitive",
             "rows": [
                 {
                     "key": "base",
-                    "label": "base",
+                    "label": "infinitive",
                     "text": render_form_value(forms.get("base", "")),
                 },
-                {
-                    "key": "past",
-                    "label": "past",
-                    "text": render_form_value(forms.get("past", "")),
-                },
-                {
-                    "key": "past_participle",
-                    "label": "past participle",
-                    "text": render_form_value(forms["past_participle"]),
-                },
+            ],
+        },
+        {
+            "title": "Present",
+            "rows": [
                 {
                     "key": "present_3sg",
                     "label": present_label,
@@ -54,11 +49,26 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
                 },
                 {
                     "key": "gerund",
-                    "label": "gerund",
+                    "label": "gerund (-ing)",
                     "text": render_form_value(forms.get("gerund", "")),
                 },
             ],
-        }
+        },
+        {
+            "title": "Past",
+            "rows": [
+                {
+                    "key": "past",
+                    "label": "past simple",
+                    "text": render_form_value(forms.get("past", "")),
+                },
+                {
+                    "key": "past_participle",
+                    "label": "past participle",
+                    "text": render_form_value(forms["past_participle"]),
+                },
+            ],
+        },
     ]
 
     return Board(

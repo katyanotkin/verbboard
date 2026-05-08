@@ -4,7 +4,8 @@ import sys
 required = {
     "{{title}}",
     "{{language}}",
-    "{{sections}}",
+    "{{sections_meta}}",
+    "{{sections_conj}}",
     "{{examples}}",
 }
 
