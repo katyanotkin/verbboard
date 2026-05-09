@@ -74,65 +74,22 @@ As of 2026-04-30, Lexicon JSON is retained for local development and Firestore i
 Runtime stage/prod reads from Firestore.
 ---
 
-# Product Notes — 2026-05-03
+# Product Notes — 2026-05-09
 
-## Product evolution
+## Features
 
-- Demand-driven loop now fully operational and editable:
-  search → signal → generation → preview → promotion
-- Direct live verb regeneration in production (no pipeline friction)
-- Admin evolved into a content control layer, not just a moderation UI
-- Feedback, demand signals, and analytics now form a closed product loop
+- **Inline translations** — example sentences on the learn page show a translation button when the UI language differs from the verb language
+- **Demand-driven content loop** — search → signal → AI generation → admin preview → promotion; live regeneration in production
+- **Full localization** — UI in EN / RU / HE / ES; ✓ seen · ★ known markers across the product
+- **Language system** — adding a new language is config-driven; one entry, no scattered code
+- **Home page** — Browse and Choose a verb are co-equal starting points; search has its own row
+- **Learn page** — examples above conjugation tables; English split into Infinitive / Present / Past sections
+- **Hebrew** — infinitive row (שם פועל) with audio; Browse sort label follows the verb language
+- **Audio** — on-demand generation on first play (no silent failures for uncached forms); both voices pre-generated when a verb is added or regenerated
+- **E2E tests** — navigation and user flow tests are hard deployment gates; stage → prod blocked on real flows
 
-## Language system _(major milestone)_
+## Coming next
 
-Language configuration fully centralized into a single source of truth.
-
-Eliminated duplication across: routes, plugins, UI labels, language selectors.
-
-The system now guarantees:
-- consistent display (names, native forms, RTL)
-- no drift between UI and backend
-- adding a new language is config-driven, not code-scattered
-
-> **Product implication:** scaling beyond 4 languages is now operationally trivial.
-
-## UX / behavior
-
-- Full UI localization stabilized (EN / RU / HE / ES)
-- Introduced consistent learning markers: ✓ seen · ★ known — standardized across the product
-- Added visual legend + unified icon system
-- UI components standardized (buttons, badges, feedback flows)
-
-## AI / generation
-
-- AI is now part of live content operations, not just batch generation
-- Regeneration allows: correcting bad verbs instantly, iterating on prompts without pipeline delay
-- RU generation quality improved: correct aspect/tense mapping, expanded grammatical coverage (edge cases enforced)
-
-## Data & modeling
-
-- Firestore fully established as runtime source of truth
-- Lexicon JSON downgraded to: local dev, import/backfill only
-- Demand + feedback now include contextual metadata (device, page, source)
-
-## Testing & release discipline
-
-- E2E tests + navigation smoke tests are now hard deployment gates
-- Stage → prod promotion is blocked on real user flows
-- Test suite covers: navigation integrity, feedback loop correctness, state retention & security edge cases
-
----
-
-## System direction
-
-The product has shifted from a **static learning tool** to a **self-evolving system** driven by real user demand, with live-editable content and scalable language support.
-
-**Upcoming:**
-- Guided practice sets (first real retention layer)
-- Personalization (only if it preserves simplicity)
-- Expand language coverage (now unblocked by architecture)
-
----
-
-_The system is no longer just generating content — it can now adapt, correct, and scale itself in real time._
+- Practice loop with completion badges
+- Login and cross-device progress sync
+- Expand language coverage
