@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 from pathlib import Path
@@ -31,7 +32,7 @@ def build_audio_key(
     return f"audio/{language}/{verb_id}/{voice}/{form_key}.mp3"
 
 
-def prewarm_verb_audio_keys(
+async def prewarm_verb_audio_keys(
     audio_backend: AudioBackend,
     language: str,
     verb_id: str,
@@ -41,13 +42,19 @@ def prewarm_verb_audio_keys(
 
     Replaces N serial blob.exists() calls (one per form) with a single
     list_blobs() prefix scan, eliminating the 2-4s cold-load penalty on
-    the learn page.
+    the learn page.  Runs the blocking list_keys() call in a thread so the
+    event loop is not stalled while GCS responds.
     """
     prefix = f"audio/{language}/{verb_id}/{voice}/"
-    count = 0
-    for key in audio_backend.list_keys(prefix):
-        _known_keys.add(key)
-        count += 1
+
+    def _collect() -> int:
+        count = 0
+        for key in audio_backend.list_keys(prefix):
+            _known_keys.add(key)
+            count += 1
+        return count
+
+    count = await asyncio.to_thread(_collect)
     logger.debug("prewarm: %d keys loaded for %s", count, prefix)
 
 

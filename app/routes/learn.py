@@ -79,7 +79,7 @@ async def learn(
     board = plugin.build_board(verb, selected_voice, voice_meta.label)
 
     audio_backend = request.app.state.audio_backend
-    prewarm_verb_audio_keys(audio_backend, language, verb.id, selected_voice)
+    await prewarm_verb_audio_keys(audio_backend, language, verb.id, selected_voice)
     tasks = []
 
     for section in board.sections:
