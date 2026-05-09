@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from datetime import UTC, datetime
@@ -26,6 +27,93 @@ from app.routes.admin_utils import (
 )
 
 _GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
+
+_NO_AUDIO_ROW_KEYS: frozenset[str] = frozenset({"aspect", "pair", "binyan", "root"})
+
+
+async def _warm_verb_audio(audio_backend, language: str, verb_data: dict) -> None:
+    """Pre-generate audio for all form rows and examples in both voices."""
+    from core.audio_service import build_hashed_audio_key, ensure_audio
+    from core.models import Example, VerbEntry
+    from core.registry import get as get_plugin
+    from core.tts import VOICES
+
+    if language not in VOICES:
+        return
+
+    plugin = get_plugin(language)
+    examples = [
+        Example(
+            dst=ex["dst"],
+            translations={
+                k: v
+                for k, v in ex.get("translations", {}).items()
+                if isinstance(k, str) and isinstance(v, str)
+            },
+        )
+        for ex in verb_data.get("examples", [])
+        if isinstance(ex, dict) and isinstance(ex.get("dst"), str)
+    ]
+    verb = VerbEntry(
+        id=verb_data["verb_id"],
+        rank=int(verb_data.get("rank") or 999999),
+        lemma=verb_data["lemma"],
+        forms=verb_data.get("forms", {}),
+        examples=examples,
+        morph=verb_data.get("morph"),
+        tags=verb_data.get("tags"),
+        display_lemma=verb_data.get("display_lemma"),
+        display_forms=verb_data.get("display_forms"),
+    )
+
+    tasks = []
+    for voice_key, voice_meta in VOICES[language].items():
+        board = plugin.build_board(verb, voice_key, voice_meta.label)
+        for section in board.sections:
+            for row in section["rows"]:
+                base_key = str(row["key"])
+                if base_key in _NO_AUDIO_ROW_KEYS:
+                    continue
+                text = str(row["text"] or "").strip()
+                if not text:
+                    continue
+                form_key = build_hashed_audio_key(base_key, text)
+                tasks.append(
+                    ensure_audio(
+                        audio_backend=audio_backend,
+                        text=text,
+                        language=language,
+                        verb_id=verb.id,
+                        voice=voice_key,
+                        form_key=form_key,
+                        voice_edge_id=voice_meta.edge_id,
+                    )
+                )
+        for idx, example in enumerate(board.verb.examples, start=1):
+            text = example.dst.strip()
+            if not text:
+                continue
+            form_key = build_hashed_audio_key(f"example_{idx}", text)
+            tasks.append(
+                ensure_audio(
+                    audio_backend=audio_backend,
+                    text=text,
+                    language=language,
+                    verb_id=verb.id,
+                    voice=voice_key,
+                    form_key=form_key,
+                    voice_edge_id=voice_meta.edge_id,
+                )
+            )
+
+    if tasks:
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for r in results:
+            if isinstance(r, Exception):
+                logger.warning(
+                    "Audio pre-generation error %s/%s: %s", language, verb.id, r
+                )
+
 
 router = APIRouter()
 
@@ -196,6 +284,14 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         )
         updated["examples"] = translated_examples
 
+    asyncio.create_task(
+        _warm_verb_audio(
+            audio_backend=request.app.state.audio_backend,
+            language=language,
+            verb_data=updated,
+        )
+    )
+
     return JSONResponse({"old_id": verb_id, **updated})
 
 
@@ -345,6 +441,15 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
                 "updated_at": datetime.now(UTC).isoformat(),
             }
         )
+        payload["examples"] = translated_examples
+
+    asyncio.create_task(
+        _warm_verb_audio(
+            audio_backend=request.app.state.audio_backend,
+            language=language,
+            verb_data=payload,
+        )
+    )
 
     return JSONResponse(
         {"verb_id": verb_id, "regenerated": True, "lemma": lemma, "updated_at": now}
