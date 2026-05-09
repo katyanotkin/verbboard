@@ -233,8 +233,7 @@ def load_settings() -> Settings:
 def _validate(settings: Settings) -> None:
     if settings.environment not in {"local", "stage", "prod"}:
         raise ValueError(
-            f"Unsupported ENVIRONMENT={settings.environment}. "
-            "Expected local|stage|prod"
+            f"Unsupported ENVIRONMENT={settings.environment}. Expected local|stage|prod"
         )
     if settings.verb_data_source not in {"local", "firestore"}:
         raise ValueError(

@@ -67,4 +67,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   markSeen();
   updateKnownButton();
+
+  const toggleBtn = document.getElementById("toggle-translations");
+  if (toggleBtn) {
+    const table = document.querySelector(".examples-table");
+    const labelShow = toggleBtn.dataset.labelShow;
+    const labelHide = toggleBtn.dataset.labelHide;
+    let visible = false;
+
+    toggleBtn.addEventListener("click", function () {
+      visible = !visible;
+      table.classList.toggle("translations-visible", visible);
+      toggleBtn.textContent = visible ? labelHide : labelShow;
+    });
+  }
 });

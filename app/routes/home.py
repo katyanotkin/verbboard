@@ -193,7 +193,7 @@ def home(
   <div class="page">
   <div class="page-header">
     <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
-    <a href="/about?ui_language={ui_lang}" class="about-link">{escape(ui['home.about'])}</a>
+    <a href="/about?ui_language={ui_lang}" class="about-link">{escape(ui["home.about"])}</a>
   </div>
   {ui_lang_selector}
 
@@ -211,7 +211,7 @@ def home(
       "
     >
       <div class="row">
-      <label><span class="label-icon">🌐</span> {escape(ui['home.language_label'])}</label>
+      <label><span class="label-icon">🌐</span> {escape(ui["home.language_label"])}</label>
         <select
           name="language"
           onchange="window.location='/set_language?language=' + this.value;"
@@ -222,9 +222,9 @@ def home(
 
       <div class="row">
         <div class="verb-label-row">
-          <label><span class="label-icon">🧩</span> {escape(ui['home.verb_label'])}</label>
+          <label><span class="label-icon">🧩</span> {escape(ui["home.verb_label"])}</label>
           <a href="/verbs?language={escape(selected_language)}" class="browse-inline-link" id="browse-btn">
-            <span class="browse-icon">🧩</span>{escape(ui['home.browse_link'])}
+            <span class="browse-icon">🧩</span>{escape(ui["home.browse_link"])}
           </a>
         </div>
         <select name="verb_id" id="verb-select">
@@ -234,16 +234,16 @@ def home(
 
       <div class="row learn-row">
         <button type="submit" class="learn-btn" id="learn-btn"
-          data-loading="{escape(ui['home.loading'])}"
-          data-label="{escape(ui['home.learn_button'])}"
+          data-loading="{escape(ui["home.loading"])}"
+          data-label="{escape(ui["home.learn_button"])}"
           data-icon="▶">
           <span class="learn-icon">▶</span>
-          <span class="learn-label">{escape(ui['home.learn_button'])}</span>
+          <span class="learn-label">{escape(ui["home.learn_button"])}</span>
         </button>
       </div>
 
       <div class="row search-row">
-        <label>{escape(ui['home.search_label'])}</label>
+        <label>{escape(ui["home.search_label"])}</label>
         <div class="search-input-row">
           <div class="search-input-wrap">
             <input
@@ -251,7 +251,7 @@ def home(
               name="q"
               id="search-input"
               value="{escape(search_value)}"
-              placeholder="{escape(ui['home.search_placeholder'])}"
+              placeholder="{escape(ui["home.search_placeholder"])}"
               autocomplete="off"
             />
             <div id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Verb suggestions"></div>
@@ -266,7 +266,7 @@ def home(
             name="search_submit"
             value="1"
           >
-            {escape(ui['home.find_button'])}
+            {escape(ui["home.find_button"])}
           </button>
         </div>
         {notice_html}
@@ -287,7 +287,7 @@ def home(
                 href="/feedback?page=home&language={escape(selected_language)}&return_to=/?language={escape(selected_language)}"
                 class="feedback-link"
             >
-            {escape(ui['home.feedback_link'])}
+            {escape(ui["home.feedback_link"])}
             </a>
         </div>
     </form>

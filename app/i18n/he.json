@@ -48,6 +48,8 @@
   "board.col_form": "צורה",
   "board.col_audio": "שמע",
   "board.col_sentence": "משפט",
+  "board.show_translations": "תרגום",
+  "board.hide_translations": "× תרגום",
 
   "feedback.title": "VerbBoard — משוב",
   "feedback.heading": "משוב",

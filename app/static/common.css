@@ -62,6 +62,29 @@
 
 /* ===== Feedback link ===== */
 
+/* ===== Secondary button ===== */
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: filter 0.1s ease;
+}
+
+.btn-secondary:hover {
+  filter: brightness(0.95);
+}
+
+/* ===== Feedback link ===== */
+
 .feedback-link {
   display: inline-flex;
   align-items: center;

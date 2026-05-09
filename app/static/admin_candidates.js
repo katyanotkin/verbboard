@@ -170,7 +170,7 @@ function renderCandidates() {
 
       if (item.status === 'pending' || item.status === 'to_be_fixed') {
         actionButtons.push(
-          `<a class="btn-preview" href="/learn?language=${esc(item.language)}&verb_id=${esc(item.verb_id)}&source=candidate" target="_blank">👁 Preview</a>`,
+          `<a class="btn-preview" href="/learn?language=${esc(item.language)}&verb_id=${esc(item.verb_id)}&source=candidate&ui_language=en" target="_blank">👁 Preview</a>`,
         );
       }
 

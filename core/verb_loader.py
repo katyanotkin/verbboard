@@ -10,7 +10,14 @@ from core.storage.verb_repository import get_candidate, get_verb, list_verbs
 
 def _firestore_document_to_verb_entry(document: dict[str, Any]) -> VerbEntry:
     examples = [
-        Example(dst=example["dst"])
+        Example(
+            dst=example["dst"],
+            translations={
+                k: v
+                for k, v in example.get("translations", {}).items()
+                if isinstance(k, str) and isinstance(v, str)
+            },
+        )
         for example in document.get("examples", [])
         if isinstance(example, dict) and isinstance(example.get("dst"), str)
     ]

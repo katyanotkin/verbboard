@@ -38,7 +38,7 @@ def generate_and_promote_verb(language: str, lemma: str) -> dict[str, Any] | Non
         client = anthropic.Anthropic(api_key=api_key)
         message = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=2048,
+            max_tokens=4096,
             system=_GENERATION_SYSTEM_PROMPT,
             messages=[
                 {

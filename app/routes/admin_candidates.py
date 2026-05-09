@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import UTC, datetime
 from typing import Any
 
@@ -15,8 +16,7 @@ from core.storage.verb_document import (
     build_storage_verb_id,
     build_search_extract_from_entry,
 )
-
-
+from core.translation_service import translate_examples
 from app.routes.admin_utils import (
     CANDIDATES_COLLECTION,
     CANDIDATE_STATUSES,
@@ -24,6 +24,8 @@ from app.routes.admin_utils import (
     logger,
     require_admin_api,
 )
+
+_GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
 
 router = APIRouter()
 
@@ -48,7 +50,7 @@ def _call_claude(language: str, query: str) -> dict[str, Any]:
 
     message = client.messages.create(
         model="claude-sonnet-4-6",  # was claude-opus-4-5
-        max_tokens=2048,
+        max_tokens=4096,
         system=_GENERATION_SYSTEM_PROMPT,
         messages=[
             {
@@ -177,6 +179,22 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         ref.delete()
     else:
         ref.set(updated)
+
+    translated_examples = translate_examples(
+        verb_lang=language,
+        lemma=lemma,
+        examples=updated["examples"],
+        project=_GCP_PROJECT,
+        api_key=_load_anthropic_api_key(),
+    )
+    if translated_examples is not updated["examples"]:
+        db.collection(CANDIDATES_COLLECTION).document(new_id).update(
+            {
+                "examples": translated_examples,
+                "updated_at": datetime.now(UTC).isoformat(),
+            }
+        )
+        updated["examples"] = translated_examples
 
     return JSONResponse({"old_id": verb_id, **updated})
 
@@ -312,6 +330,22 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
         payload["pronoun_forms"] = pronoun_forms
 
     doc_ref.set(payload)
+
+    translated_examples = translate_examples(
+        verb_lang=language,
+        lemma=lemma,
+        examples=payload["examples"],
+        project=_GCP_PROJECT,
+        api_key=_load_anthropic_api_key(),
+    )
+    if translated_examples is not payload["examples"]:
+        doc_ref.update(
+            {
+                "examples": translated_examples,
+                "updated_at": datetime.now(UTC).isoformat(),
+            }
+        )
+
     return JSONResponse(
         {"verb_id": verb_id, "regenerated": True, "lemma": lemma, "updated_at": now}
     )

@@ -48,6 +48,8 @@
   "board.col_form": "Forma",
   "board.col_audio": "Audio",
   "board.col_sentence": "Frase",
+  "board.show_translations": "Traducción",
+  "board.hide_translations": "× Traducción",
 
   "feedback.title": "VerbBoard — Comentarios",
   "feedback.heading": "Comentarios",

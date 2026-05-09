@@ -91,7 +91,7 @@ def verb_browser(
     <head>
       <meta charset="utf-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      <title>{ui['verbs.title']}</title>
+      <title>{ui["verbs.title"]}</title>
       <link rel="stylesheet" href="/static/common.css"/>
       <link rel="stylesheet" href="/static/verbs.css"/>
     </head>
@@ -99,17 +99,17 @@ def verb_browser(
   <div class="vb-page">
 
     <div class="vb-header">
-      <a href="/?language={selected_language}" class="vb-back">{ui['verbs.back_home']}</a>
-      <h1 class="vb-title">{ui['verbs.heading']}</h1>
+      <a href="/?language={selected_language}" class="vb-back">{ui["verbs.back_home"]}</a>
+      <h1 class="vb-title">{ui["verbs.heading"]}</h1>
     </div>
 
     <div class="vb-feedback-row">
       <a
         href="/feedback?page=verbs&language={selected_language}&return_to=/verbs?language={selected_language}"
         class="feedback-link"
-        title="{ui['verbs.feedback_title']}"
+        title="{ui["verbs.feedback_title"]}"
       >
-        {ui['verbs.feedback_link']}
+        {ui["verbs.feedback_link"]}
       </a>
     </div>
 
@@ -121,33 +121,33 @@ def verb_browser(
         name="q"
         class="vb-search"
         type="text"
-        placeholder="{ui['verbs.search_placeholder']}"
+        placeholder="{ui["verbs.search_placeholder"]}"
         autocomplete="off"
       />
 
       <button type="submit" class="vb-search-submit">
-        {ui['verbs.find_button']}
+        {ui["verbs.find_button"]}
       </button>
 
       <div class="vb-filter-toggle" id="vb-filter-toggle">
-        <button type="button" class="vb-ftbtn active" data-filter="new">{ui['verbs.filter_new']}</button>
-        <button type="button" class="vb-ftbtn" data-filter="seen">{ui['verbs.filter_seen']}</button>
-        <button type="button" class="vb-ftbtn" data-filter="all">{ui['verbs.filter_all']}</button>
-        <button type="button" class="vb-ftbtn" data-filter="known">{ui['verbs.filter_known']}</button>
+        <button type="button" class="vb-ftbtn active" data-filter="new">{ui["verbs.filter_new"]}</button>
+        <button type="button" class="vb-ftbtn" data-filter="seen">{ui["verbs.filter_seen"]}</button>
+        <button type="button" class="vb-ftbtn" data-filter="all">{ui["verbs.filter_all"]}</button>
+        <button type="button" class="vb-ftbtn" data-filter="known">{ui["verbs.filter_known"]}</button>
       </div>
     </form>
 
     <div class="vb-toolbar vb-toolbar-meta">
       <select id="vb-sort" class="vb-sort-select">
-        <option value="rank">{ui['verbs.sort_frequency']}</option>
+        <option value="rank">{ui["verbs.sort_frequency"]}</option>
         <option value="alpha">{sort_az_label}</option>
       </select>
       <div id="vb-count" class="vb-count"></div>
     </div>
 
     <div class="vb-legend">
-      <span class="vb-badge seen">✓</span><span>{ui['verbs.filter_seen']}</span>
-      <span class="vb-badge known">★</span><span>{ui['verbs.filter_known']}</span>
+      <span class="vb-badge seen">✓</span><span>{ui["verbs.filter_seen"]}</span>
+      <span class="vb-badge known">★</span><span>{ui["verbs.filter_known"]}</span>
     </div>
 
     <div id="vb-list" class="vb-list"></div>

@@ -95,6 +95,12 @@ def render_board_html(
 
     template = _BOARD_TEMPLATE
 
+    translation_dir = "rtl" if ui_lang == "he" else "ltr"
+    has_any_translation = any(
+        ui_lang in ex.translations and board.language != ui_lang
+        for ex in board.verb.examples
+    )
+
     examples_rows = []
     for index, ex in enumerate(board.verb.examples, start=1):
         base_key = f"example_{index}"
@@ -112,11 +118,20 @@ def render_board_html(
         example_direction = "rtl" if board.language == "he" else "ltr"
         example_align = "right" if board.language == "he" else "left"
 
+        translation_text = ""
+        if board.language != ui_lang:
+            translation_text = ex.translations.get(ui_lang, "")
+
+        translation_span = (
+            f"<span class='example-translation' dir='{translation_dir}'>"
+            f"{escape(translation_text)}</span>"
+        )
+
         examples_rows.append(
             "<tr>"
             f"<td dir='{example_direction}' style='text-align:{example_align}'>"
             f"<span class='example-src'>{escape(raw_text)}</span>"
-            f"<span class='example-translation'></span>"
+            f"{translation_span}"
             f"</td>"
             f"<td>"
             f"<audio id='{audio_id}' src='{audio_src}' preload='none'></audio>"
@@ -132,9 +147,7 @@ def render_board_html(
             "</tr>"
         )
 
-    home_href = (
-        f"/?language={escape(board.language)}" f"&verb_id={escape(board.verb.id)}"
-    )
+    home_href = f"/?language={escape(board.language)}&verb_id={escape(board.verb.id)}"
 
     resolved_return_to = return_to or f"/?language={escape(board.language)}"
 
@@ -170,6 +183,22 @@ def render_board_html(
         candidate_banner_assets = ""
         candidate_banner = ""
         voice_source_input = ""
+
+    if has_any_translation:
+        toggle_label_show = escape(
+            ui.get("board.show_translations", "Show translations")
+        )
+        toggle_label_hide = escape(
+            ui.get("board.hide_translations", "Hide translations")
+        )
+        examples_toggle = (
+            f"<button id='toggle-translations' class='btn-secondary toggle-translations-btn' "
+            f"data-label-show='{toggle_label_show}' "
+            f"data-label-hide='{toggle_label_hide}'>"
+            f"{toggle_label_show}</button>"
+        )
+    else:
+        examples_toggle = ""
 
     board_ui_json = json.dumps(
         {
@@ -225,6 +254,7 @@ def render_board_html(
         )
         .replace("{{board_col_audio}}", escape(ui.get("board.col_audio", "Audio")))
         .replace("{{board_ui_json}}", board_ui_json)
+        .replace("{{board_examples_toggle}}", examples_toggle)
     )
 
     return html

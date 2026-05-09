@@ -96,10 +96,7 @@ def run(
             imported_for_language += 1
             total_verbs_imported += 1
 
-            print(
-                f"Imported {language}/{payload['verb_id']} "
-                f"({imported_for_language})"
-            )
+            print(f"Imported {language}/{payload['verb_id']} ({imported_for_language})")
 
             if (
                 limit_per_language is not None

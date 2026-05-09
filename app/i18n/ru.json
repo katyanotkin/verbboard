@@ -48,6 +48,8 @@
   "board.col_form": "Значение",
   "board.col_audio": "Аудио",
   "board.col_sentence": "Предложение",
+  "board.show_translations": "Перевод",
+  "board.hide_translations": "× Перевод",
 
   "feedback.title": "VerbBoard — Отзыв",
   "feedback.heading": "Отзыв",

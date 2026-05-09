@@ -48,6 +48,8 @@
   "board.col_form": "Form",
   "board.col_audio": "Audio",
   "board.col_sentence": "Sentence",
+  "board.show_translations": "Translation",
+  "board.hide_translations": "× Translation",
 
   "feedback.title": "VerbBoard feedback",
   "feedback.heading": "Feedback",

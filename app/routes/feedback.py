@@ -45,7 +45,7 @@ def feedback_form(
     if success == "1":
         success_html = f"""
         <div style="margin-bottom:16px;padding:12px 14px;background:#ecfdf5;border:1px solid #86efac;border-radius:12px;color:#166534;">
-          {escape(ui['feedback.success'])}
+          {escape(ui["feedback.success"])}
         </div>
         """
 
@@ -53,7 +53,7 @@ def feedback_form(
     if error == "empty":
         error_html = f"""
         <div style="margin-bottom:16px;padding:12px 14px;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;color:#991b1b;">
-          {escape(ui['feedback.error_empty'])}
+          {escape(ui["feedback.error_empty"])}
         </div>
         """
 
@@ -64,13 +64,13 @@ def feedback_form(
           <div class="question-title">{escape(poll_question)}</div>
           <div class="choice-row">
             <label class="choice-label">
-              <input type="radio" name="poll_answer" value="yes"> {escape(ui['feedback.poll_yes'])}
+              <input type="radio" name="poll_answer" value="yes"> {escape(ui["feedback.poll_yes"])}
             </label>
             <label class="choice-label">
-              <input type="radio" name="poll_answer" value="no"> {escape(ui['feedback.poll_no'])}
+              <input type="radio" name="poll_answer" value="no"> {escape(ui["feedback.poll_no"])}
             </label>
             <label class="choice-label">
-              <input type="radio" name="poll_answer" value="no_preference"> {escape(ui['feedback.poll_no_pref'])}
+              <input type="radio" name="poll_answer" value="no_preference"> {escape(ui["feedback.poll_no_pref"])}
             </label>
           </div>
         </div>
@@ -81,7 +81,7 @@ def feedback_form(
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>{escape(ui['feedback.title'])}</title>
+  <title>{escape(ui["feedback.title"])}</title>
   <style>
     body {{
       font-family: system-ui, sans-serif;
@@ -167,7 +167,7 @@ def feedback_form(
 </head>
 <body>
   <div class="card">
-    <h1>{escape(ui['feedback.heading'])}</h1>
+    <h1>{escape(ui["feedback.heading"])}</h1>
 
     {success_html}
     {error_html}
@@ -181,11 +181,11 @@ def feedback_form(
 
       {poll_block}
 
-      <textarea name="comment" placeholder="{escape(ui['feedback.comment_placeholder'])}"></textarea>
+      <textarea name="comment" placeholder="{escape(ui["feedback.comment_placeholder"])}"></textarea>
 
       <div class="actions">
-        <button type="submit" class="primary-btn">{escape(ui['feedback.submit_button'])}</button>
-        <a href="{escape(return_to)}" class="secondary-link">{escape(ui['feedback.back'])}</a>
+        <button type="submit" class="primary-btn">{escape(ui["feedback.submit_button"])}</button>
+        <a href="{escape(return_to)}" class="secondary-link">{escape(ui["feedback.back"])}</a>
       </div>
     </form>
   </div>

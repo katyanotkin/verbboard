@@ -286,3 +286,20 @@ button {
   color: var(--text-muted);
   font-style: italic;
 }
+
+.examples-table.translations-visible .example-translation:not(:empty) {
+  display: block;
+}
+
+.examples-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.examples-heading-row h2 {
+  margin: 0;
+}
+
+/* .toggle-translations-btn inherits .btn-secondary from common.css */
