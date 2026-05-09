@@ -31,6 +31,26 @@ def build_audio_key(
     return f"audio/{language}/{verb_id}/{voice}/{form_key}.mp3"
 
 
+def prewarm_verb_audio_keys(
+    audio_backend: AudioBackend,
+    language: str,
+    verb_id: str,
+    voice: str,
+) -> None:
+    """Bulk-list GCS keys for one verb+voice and populate the process-local cache.
+
+    Replaces N serial blob.exists() calls (one per form) with a single
+    list_blobs() prefix scan, eliminating the 2-4s cold-load penalty on
+    the learn page.
+    """
+    prefix = f"audio/{language}/{verb_id}/{voice}/"
+    count = 0
+    for key in audio_backend.list_keys(prefix):
+        _known_keys.add(key)
+        count += 1
+    logger.debug("prewarm: %d keys loaded for %s", count, prefix)
+
+
 async def ensure_audio(
     audio_backend: AudioBackend,
     text: str,

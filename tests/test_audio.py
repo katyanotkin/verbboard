@@ -55,6 +55,9 @@ class _StubBackend(AudioBackend):
     def write_bytes(self, key: str, data: bytes) -> None:
         pass
 
+    def list_keys(self, prefix: str):
+        return iter([])
+
 
 # ── audio endpoint: on-demand generation ────────────────────────────────────
 

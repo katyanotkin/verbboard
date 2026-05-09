@@ -37,6 +37,9 @@ class _StubAudioBackend(AudioBackend):
     def write_bytes(self, key: str, data: bytes) -> None:
         pass
 
+    def list_keys(self, prefix: str):
+        return iter([])
+
 
 @pytest.fixture()
 def client(monkeypatch) -> TestClient:  # type: ignore[return]

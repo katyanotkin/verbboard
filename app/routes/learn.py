@@ -6,7 +6,11 @@ import logging
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 
-from core.audio_service import build_hashed_audio_key, ensure_audio
+from core.audio_service import (
+    build_hashed_audio_key,
+    ensure_audio,
+    prewarm_verb_audio_keys,
+)
 from core.i18n import get_strings, resolve_ui_language
 from core.registry import get as get_plugin
 from core.render import render_board_html
@@ -75,6 +79,7 @@ async def learn(
     board = plugin.build_board(verb, selected_voice, voice_meta.label)
 
     audio_backend = request.app.state.audio_backend
+    prewarm_verb_audio_keys(audio_backend, language, verb.id, selected_voice)
     tasks = []
 
     for section in board.sections:

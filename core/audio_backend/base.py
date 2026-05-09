@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 
 
 class AudioBackend(ABC):
@@ -13,4 +15,8 @@ class AudioBackend(ABC):
 
     @abstractmethod
     def write_bytes(self, key: str, data: bytes) -> None:
+        pass
+
+    @abstractmethod
+    def list_keys(self, prefix: str) -> Iterator[str]:
         pass

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 from google.cloud import storage
 
 from .base import AudioBackend
@@ -21,3 +23,7 @@ class GCSAudioBackend(AudioBackend):
     def write_bytes(self, key: str, data: bytes) -> None:
         blob = self.bucket.blob(key)
         blob.upload_from_string(data)
+
+    def list_keys(self, prefix: str) -> Iterator[str]:
+        for blob in self.bucket.list_blobs(prefix=prefix):
+            yield blob.name
