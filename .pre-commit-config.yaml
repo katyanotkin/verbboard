@@ -24,24 +24,24 @@ repos:
     hooks:
       - id: python-compile
         name: Python syntax check
-        entry: python -m py_compile
+        entry: .venv/bin/python -m py_compile
         language: system
         types: [python]
 
       - id: check-template
         name: Validate board template
-        entry: python tools/check_template.py
+        entry: .venv/bin/python tools/check_template.py
         language: system
         pass_filenames: false
 
       - id: check-plugins
         name: Validate language plugins
-        entry: python tools/check_plugins.py
+        entry: .venv/bin/python tools/check_plugins.py
         language: system
         pass_filenames: false
 
       - id: pytest-all
         name: pytest all regression tests
-        entry: bash -c 'PYTHONPATH=. pytest -q -x --tb=short tests/'
+        entry: bash -c 'PYTHONPATH=. .venv/bin/pytest -q -x --tb=short tests/'
         language: system
         pass_filenames: false

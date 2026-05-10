@@ -231,6 +231,8 @@ function renderCandidates() {
 
 async function regenSingle(verbId, button) {
   button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = '⟳ Generating…';
 
   try {
     const response = await fetch(
@@ -290,6 +292,7 @@ async function regenSingle(verbId, button) {
     renderCandidates();
   } catch (error) {
     button.disabled = false;
+    button.textContent = originalText;
     alert('Generate failed: ' + error.message);
   }
 }

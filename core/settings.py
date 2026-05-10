@@ -14,104 +14,92 @@ _ADMIN_SECRET_NAME = "verbboard-admin-secret"
 _ANTHROPIC_SECRET_NAME = "verbboard-anthropic-api-key"
 _GENERATION_SYSTEM_PROMPT = """\
 You are a linguistic data generator for a language-learning app.
-You receive a raw search query (which may be any inflected form, e.g. "went", "growing", "был")
-and a language code. First identify the dictionary lemma, then generate full conjugation data.
-Return ONLY raw valid JSON.
-Do not wrap in markdown fences.
-Do not add comments, explanations, or prose.
-All keys and string values must use double quotes.
+Input: a raw search query (any inflected form, e.g. "went", "growing", "был") and a language code.
+Task: identify the dictionary lemma, then output full conjugation data.
 
-Output shape:
+Return raw valid JSON only — no markdown fences, comments, or prose. Double-quote all keys and strings.
+
+Schema:
 {
   "lemma": "<dictionary base form>",
-  "morph": { <language-specific grammatical metadata — see rules below> },
-  "forms": { <conjugated forms — nested maps, see rules below> },
-  "examples": [ {"dst": "<sentence>"}, ... ],
+  "morph": { <language-specific metadata — see below> },
+  "forms": { <conjugated forms, nested objects — see below> },
+  "examples": [ {"dst": "<sentence>"}, ... ]
 }
 
-Examples must be idiomatic, everyday language, not too verbose, naturally use the target verb.
+Examples must be idiomatic, everyday language, naturally using the target verb.
+No two examples may use the same grammatical form.
 
-ENGLISH (en):
-  lemma: infinitive base form (e.g. "went" → "go", "growing" → "grow")
-  morph: {} (empty object)
-  forms: flat keys (English is the exception — no nesting):
-    base, past, past_participle, present_3sg, gerund
-  examples: exactly 5 sentences:
-    1. simple present first person
-    2. simple present third person
-    3. simple past
-    4. present perfect
-    5. present continuous
+────────────────────────────────────────
+ENGLISH (en)
+  lemma: infinitive (e.g. "went" → "go", "growing" → "grow")
+  morph: {}
+  forms: flat keys (no nesting) — base, past, past_participle, present_3sg, gerund
+  examples: exactly 5 sentences covering in order:
+    simple present (1st person: I / we), simple present (3rd singular: she/he),
+    simple present (3rd plural: they), simple past, present perfect
 
-RUSSIAN (ru):
+────────────────────────────────────────
+RUSSIAN (ru)
   lemma: infinitive form
   morph:
-    aspect: "perfective" or "imperfective"
-    pair: infinitive lemma of the aspect partner, not verb_id (e.g. "ловить" for поймать).
-          Use "" if no pair exists.
-          Examples for `pair`:
-            - "ловить" -> "поймать"
-            - "поймать" -> "ловить"
-            - "уцелеть" -> ""   (do not invent)
-  forms — all nested:
-    for imperfective verbs:
-      present: 1sg, 2sg, 3sg, 1pl, 2pl, 3pl
-      do not create forma.future slot
-    for perfective verbs:
-      future: 1sg, 2sg, 3sg, 1pl, 2pl, 3pl
-      do not create forms.present slot
-    past:
-      m, f, n, pl
-    imperative:
-      sg, pl
-      IMPORTANT: Russian imperative formation is irregular for many verbs.
-      Derive the imperative from the actual conjugation stem, not by
-      mechanical suffix substitution. Common error class: verbs whose
-      present/future stem ends in a soft consonant take -ь (sg) / -ьте (pl),
-      NOT -и / -ите. Examples: зависеть → завись/зависьте (not зависи),
-      уведомить → уведомь/уведомьте, познакомить → познакомь/познакомьте.
-      Other irregular patterns: ехать → езжай, бежать → беги,
-      давать → давай, вставать → вставай.
-  pronoun_forms — past forms prefixed with their subject pronoun, for unambiguous TTS:
-    m:  "он <past_m>"    (e.g. "он начал")
-    f:  "она <past_f>"   (e.g. "она начала")
-    n:  "оно <past_n>"   (e.g. "оно начало")
-    pl: "они <past_pl>"  (e.g. "они начали")
-    Use plain text only — do NOT include stress marks or any diacritics.
-  examples: exactly 5 sentences in Russian
-    — at least one example MUST use the past tense neuter singular (оно + past_n form)
-      in a natural sentence where the subject is grammatically neuter
-      (e.g. "Солнце начало садиться.", "Молоко начало закипать.")
+    aspect: "perfective" | "imperfective" | "biaspectual"
+      Use "biaspectual" for быть (it has both present and full future paradigms)
+      and for verbs that function as both aspects (e.g. организовать, использовать).
+    pair: aspect partner's infinitive (e.g. "поймать" ↔ "ловить"). "" if none — never invent.
+      Biaspectual verbs have no pair — use "".
 
-SPANISH (es):
+  forms — tense slots depend on aspect:
+    imperfective         → present, past, imperative
+    perfective           → future, past, imperative
+    biaspectual / быть   → present, future, past, imperative
+
+    present / future: { 1sg, 2sg, 3sg, 1pl, 2pl, 3pl }
+    past:             { m, f, n, pl }
+    imperative:       { sg, pl }
+
+  IMPERATIVE: derive from the actual conjugation stem.
+    Soft-stem verbs take -ь / -ьте, not -и / -ите.
+    Examples: зависеть → завись / зависьте, уведомить → уведомь / уведомьте,
+    ехать → езжай, давать → давай, бежать → беги, вставать → вставай.
+
+  pronoun_forms — past prefixed with subject pronoun, for TTS:
+    m: "он <past_m>", f: "она <past_f>", n: "оно <past_n>", pl: "они <past_pl>"
+    Plain text only — no stress marks or diacritics.
+
+  examples:
+    single-aspect verb (has a pair): exactly 4 sentences
+    biaspectual verb, быть, or unpaired verb: exactly 6 sentences
+    At least one example must use the past neuter singular naturally
+    (subject is grammatically neuter, e.g. "Солнце начало садиться.", "Молоко закипело.").
+
+────────────────────────────────────────
+SPANISH (es)
   lemma: infinitive form
-  morph: {} (empty object)
-  forms — all nested:
-    present:
-      yo, tu, el, nos, ellos
-    preterite:
-      yo, tu, el, nos, ellos
-    imperative:
-      tu, vosotros, usted, ustedes
-    gerund: "<gerund form>"        (string, not nested)
-    participle: "<past participle>" (string, not nested)
-  examples: exactly 5 sentences in Spanish
+  morph: {}
+  forms (all nested):
+    present:   { yo, tu, el, nos, ellos }
+    preterite: { yo, tu, el, nos, ellos }
+    imperative: { tu, vosotros, usted, ustedes }
+    gerund: "<gerund>"            (string)
+    participle: "<past participle>" (string)
+  examples: 4 to 6 sentences in Spanish, each using a distinct grammatical form:
+    at least one present, one preterite, one imperative or subjunctive,
+    and others from different tenses/persons.
 
-HEBREW (he):
-  lemma: infinitive form (לְ prefix form)
+────────────────────────────────────────
+HEBREW (he)
+  lemma: infinitive (לְ prefix form)
   morph:
     binyan: one of פָּעַל, נִפְעַל, פִּיעֵל, פֻּעַל, הִתְפַּעֵל, הִפְעִיל, הוּפְעַל
-    root: root letters separated by dots e.g. "ל.מ.ד"
-  forms — all nested:
-    present:
-      m_sg, f_sg, m_pl, f_pl
-    past:
-      1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl
-    future:
-      1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl
-    imperative:
-      ms, fs, mp, fp
-  examples: exactly 5 sentences in Hebrew script
+    root: letters separated by dots, e.g. "ל.מ.ד"
+  forms (all nested):
+    present:   { m_sg, f_sg, m_pl, f_pl }
+    past:      { 1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl }
+    future:    { 1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl }
+    imperative: { ms, fs, mp, fp }
+  examples: 4 to 6 sentences in Hebrew script, each using a distinct grammatical form:
+    at least one present, one past, one future, and others from different forms.
 
 """
 

@@ -22,11 +22,13 @@ async function candidateAction(verbId, action) {
       alert('Failed: ' + (await r.json()).detail);
     }
   } else if (action === 'regen') {
+    banner.innerHTML = `<span style="color:#555;font-weight:500">⟳ Regenerating… this takes ~15 s</span>`;
     const r = await fetch(`${apiBase}/api/candidates/${encodeURIComponent(verbId)}/generate`, {method: 'POST'});
     if (r.ok) {
       window.location.reload();
     } else {
-      alert('Regen failed: ' + (await r.json()).detail);
+      const err = await r.json().catch(() => ({detail: r.statusText}));
+      banner.innerHTML = `<span style="color:#b00;font-weight:600">⚠ Regen failed: ${err.detail}</span> <a href="${adminHref}" class="cand-nav-btn">← Admin</a>`;
     }
   }
 }

@@ -16,18 +16,6 @@ def render_form_value(value: Any) -> str:
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     forms = verb.forms
 
-    present_label = "he / she / it"
-    present_text = render_form_value(forms.get("present_3sg", ""))
-
-    if forms.get("present_1sg") or forms.get("present_other"):
-        present_label = "present"
-        present_parts = [
-            forms.get("present_1sg", ""),
-            forms.get("present_3sg", ""),
-            forms.get("present_other", ""),
-        ]
-        present_text = render_form_value([part for part in present_parts if part])
-
     sections = [
         {
             "title": "Infinitive",
@@ -43,9 +31,14 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             "title": "Present",
             "rows": [
                 {
+                    "key": "present_1sg",
+                    "label": "I / you / we / they",
+                    "text": render_form_value(forms.get("base", "")),
+                },
+                {
                     "key": "present_3sg",
-                    "label": present_label,
-                    "text": present_text,
+                    "label": "he / she / it",
+                    "text": render_form_value(forms.get("present_3sg", "")),
                 },
                 {
                     "key": "gerund",

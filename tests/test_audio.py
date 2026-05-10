@@ -187,7 +187,7 @@ def test_warm_covers_all_forms_and_examples(monkeypatch) -> None:
     _run_async(_warm_verb_audio(_StubBackend(), "en", _EN_VERB_DATA))
 
     female_texts = {c["text"] for c in calls if c["voice"] == "female"}
-    # 5 form rows + 1 example = 6 per voice
+    # 6 form rows (base appears in both Infinitive and Present sections) + 1 example = 7 per voice
     assert female_texts == {
         "go",
         "went",
@@ -196,7 +196,7 @@ def test_warm_covers_all_forms_and_examples(monkeypatch) -> None:
         "going",
         "I go to school every day.",
     }
-    assert len(calls) == 12  # 6 per voice × 2 voices
+    assert len(calls) == 14  # 7 per voice × 2 voices
 
 
 def test_warm_skips_no_audio_row_keys(monkeypatch) -> None:
