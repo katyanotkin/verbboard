@@ -12,30 +12,41 @@
   const toggleEl = document.getElementById('vb-filter-toggle');
   const sortEl   = document.getElementById('vb-sort');
 
-  // ── state persistence via URL hash (#filter=seen&sort=rank) ────────────────
+  // ── state persistence via URL hash + localStorage ────────────────────────
+  const _STATE_KEY = `vb-ui:${lang}`;
+
   function readHash() {
     const p = new URLSearchParams(window.location.hash.slice(1));
-    return { filter: p.get('filter') || 'new', sort: p.get('sort') || 'alpha' };
+    return { filter: p.get('filter'), sort: p.get('sort') };
   }
 
-  function writeHash() {
+  function readStorage() {
+    try {
+      const s = JSON.parse(localStorage.getItem(_STATE_KEY) || '{}');
+      return { filter: s.filter || null, sort: s.sort || null };
+    } catch (_) { return { filter: null, sort: null }; }
+  }
+
+  function writeState() {
     const p = new URLSearchParams();
     p.set('filter', activeFilter);
     p.set('sort',   activeSort);
     history.replaceState(null, '', '#' + p.toString());
+    localStorage.setItem(_STATE_KEY, JSON.stringify({ filter: activeFilter, sort: activeSort }));
   }
 
-  const saved = readHash();
-  let activeFilter = saved.filter;
-  let activeSort   = saved.sort;
-  let searchQuery  = '';
+  const fromHash    = readHash();
+  const fromStorage = readStorage();
+  let activeFilter  = fromHash.filter || fromStorage.filter || 'new';
+  let activeSort    = fromHash.sort   || fromStorage.sort   || 'alpha';
+  let searchQuery   = '';
 
   // Sync DOM to restored state
   sortEl.value = activeSort;
   toggleEl.querySelectorAll('.vb-ftbtn').forEach(b => {
     b.classList.toggle('active', b.dataset.filter === activeFilter);
   });
-  writeHash();
+  writeState();
 
   // ── localStorage ──────────────────────────────────────────────────────────
   function readSet(key) {
@@ -120,14 +131,14 @@
     toggleEl.querySelectorAll('.vb-ftbtn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeFilter = btn.dataset.filter;
-    writeHash();
+    writeState();
     render();
   });
 
   // ── sort ───────────────────────────────────────────────────────────────────
   sortEl.addEventListener('change', function () {
     activeSort = sortEl.value;
-    writeHash();
+    writeState();
     render();
   });
 
