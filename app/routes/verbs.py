@@ -113,37 +113,37 @@ def verb_browser(
       </a>
     </div>
 
-    <form action="/search_verb" method="get" class="vb-toolbar">
+    <form action="/search_verb" method="get" class="vb-form">
       <input type="hidden" name="language" value="{selected_language}" />
 
-      <input
-        id="vb-search"
-        name="q"
-        class="vb-search"
-        type="text"
-        placeholder="{ui["verbs.search_placeholder"]}"
-        autocomplete="off"
-      />
+      <div class="vb-search-row">
+        <input
+          id="vb-search"
+          name="q"
+          class="vb-search"
+          type="text"
+          placeholder="{ui["verbs.search_placeholder"]}"
+          autocomplete="off"
+        />
+        <button type="submit" class="vb-search-submit">
+          {ui["verbs.find_button"]}
+        </button>
+      </div>
 
-      <button type="submit" class="vb-search-submit">
-        {ui["verbs.find_button"]}
-      </button>
-
-      <div class="vb-filter-toggle" id="vb-filter-toggle">
-        <button type="button" class="vb-ftbtn active" data-filter="new">{ui["verbs.filter_new"]}</button>
-        <button type="button" class="vb-ftbtn" data-filter="seen">{ui["verbs.filter_seen"]}</button>
-        <button type="button" class="vb-ftbtn" data-filter="all">{ui["verbs.filter_all"]}</button>
-        <button type="button" class="vb-ftbtn" data-filter="known">{ui["verbs.filter_known"]}</button>
+      <div class="vb-controls-row">
+        <div class="vb-filter-toggle" id="vb-filter-toggle">
+          <button type="button" class="vb-ftbtn" data-filter="new">{ui["verbs.filter_new"]}</button>
+          <button type="button" class="vb-ftbtn" data-filter="seen">{ui["verbs.filter_seen"]}</button>
+          <button type="button" class="vb-ftbtn" data-filter="all">{ui["verbs.filter_all"]}</button>
+          <button type="button" class="vb-ftbtn" data-filter="known">{ui["verbs.filter_known"]}</button>
+        </div>
+        <select id="vb-sort" class="vb-sort-select">
+          <option value="alpha">{sort_az_label}</option>
+          <option value="rank">{ui["verbs.sort_frequency"]}</option>
+        </select>
+        <div id="vb-count" class="vb-count"></div>
       </div>
     </form>
-
-    <div class="vb-toolbar vb-toolbar-meta">
-      <select id="vb-sort" class="vb-sort-select">
-        <option value="rank">{ui["verbs.sort_frequency"]}</option>
-        <option value="alpha">{sort_az_label}</option>
-      </select>
-      <div id="vb-count" class="vb-count"></div>
-    </div>
 
     <div class="vb-legend">
       <span class="vb-badge seen">✓</span><span>{ui["verbs.filter_seen"]}</span>

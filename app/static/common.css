@@ -48,7 +48,8 @@
   flex-direction: row-reverse;
 }
 
-[dir="rtl"] .vb-toolbar {
+[dir="rtl"] .vb-search-row,
+[dir="rtl"] .vb-controls-row {
   flex-direction: row-reverse;
 }
 

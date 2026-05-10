@@ -12,9 +12,30 @@
   const toggleEl = document.getElementById('vb-filter-toggle');
   const sortEl   = document.getElementById('vb-sort');
 
-  let activeFilter = 'new';
-  let activeSort   = 'rank';
+  // ── state persistence via URL hash (#filter=seen&sort=rank) ────────────────
+  function readHash() {
+    const p = new URLSearchParams(window.location.hash.slice(1));
+    return { filter: p.get('filter') || 'new', sort: p.get('sort') || 'alpha' };
+  }
+
+  function writeHash() {
+    const p = new URLSearchParams();
+    p.set('filter', activeFilter);
+    p.set('sort',   activeSort);
+    history.replaceState(null, '', '#' + p.toString());
+  }
+
+  const saved = readHash();
+  let activeFilter = saved.filter;
+  let activeSort   = saved.sort;
   let searchQuery  = '';
+
+  // Sync DOM to restored state
+  sortEl.value = activeSort;
+  toggleEl.querySelectorAll('.vb-ftbtn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === activeFilter);
+  });
+  writeHash();
 
   // ── localStorage ──────────────────────────────────────────────────────────
   function readSet(key) {
@@ -99,12 +120,14 @@
     toggleEl.querySelectorAll('.vb-ftbtn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeFilter = btn.dataset.filter;
+    writeHash();
     render();
   });
 
   // ── sort ───────────────────────────────────────────────────────────────────
   sortEl.addEventListener('change', function () {
     activeSort = sortEl.value;
+    writeHash();
     render();
   });
 

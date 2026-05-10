@@ -178,6 +178,98 @@ def test_home_learn_button_navigates_to_learn(page, live_server_url):
 
 
 # ---------------------------------------------------------------------------
+# Verbs page: filter + sort state persistence across Back navigation
+# ---------------------------------------------------------------------------
+
+
+def test_verbs_filter_and_sort_persist_after_back_navigation(page, live_server_url):
+    """Filter and sort survive Back navigation from Learn → Verbs (both non-default)."""
+    page.goto(f"{live_server_url}/verbs?language=en")
+    page.wait_for_load_state("networkidle")
+
+    # Change filter from default "new" to "all"
+    page.locator(".vb-ftbtn[data-filter='all']").click()
+    page.wait_for_timeout(100)
+
+    # Change sort from default "alpha" to "rank" (frequency)
+    page.locator("#vb-sort").select_option("rank")
+    page.wait_for_timeout(100)
+
+    # Click the first visible verb to navigate to Learn
+    first_verb = page.locator(".vb-item").first
+    first_verb.wait_for(state="visible")
+    first_verb.click()
+    page.wait_for_url("**/learn**")
+
+    # Navigate back to Verbs
+    page.go_back()
+    page.wait_for_url("**/verbs**")
+    page.wait_for_timeout(200)  # let JS init run
+
+    # Filter should still be "all"
+    all_btn_class = (
+        page.locator(".vb-ftbtn[data-filter='all']").get_attribute("class") or ""
+    )
+    assert (
+        "active" in all_btn_class
+    ), f"Expected 'all' filter to remain active after Back, got class: {all_btn_class!r}"
+
+    # Sort should still be "rank"
+    sort_value = page.locator("#vb-sort").input_value()
+    assert (
+        sort_value == "rank"
+    ), f"Expected sort='rank' after Back navigation, got: {sort_value!r}"
+
+
+def test_verbs_filter_only_change_persists_after_back_navigation(page, live_server_url):
+    """Filter change alone (sort left at default alpha) survives Back navigation."""
+    page.goto(f"{live_server_url}/verbs?language=en")
+    page.wait_for_load_state("networkidle")
+
+    # Verify default sort is alpha
+    assert (
+        page.locator("#vb-sort").input_value() == "alpha"
+    ), "Expected alpha as default sort"
+
+    # Change filter to "seen" only -- do not touch sort
+    page.locator(".vb-ftbtn[data-filter='seen']").click()
+    page.wait_for_timeout(100)
+
+    # Navigate to Learn (switch to "all" first to ensure there are items to click)
+    page.locator(".vb-ftbtn[data-filter='all']").click()
+    page.wait_for_timeout(100)
+    first_verb = page.locator(".vb-item").first
+    first_verb.wait_for(state="visible")
+    # Reset filter to "seen" before clicking away
+    page.locator(".vb-ftbtn[data-filter='seen']").click()
+    page.wait_for_timeout(100)
+    # Navigate directly to a learn URL to avoid needing a visible "seen" verb
+    page.goto(
+        f"{live_server_url}/learn?language=en&verb_id=en_be&return_to=/verbs?language=en"
+    )
+    page.wait_for_load_state("networkidle")
+
+    # Navigate back
+    page.go_back()
+    page.wait_for_url("**/verbs**")
+    page.wait_for_timeout(200)
+
+    # Filter should still be "seen"
+    seen_btn_class = (
+        page.locator(".vb-ftbtn[data-filter='seen']").get_attribute("class") or ""
+    )
+    assert (
+        "active" in seen_btn_class
+    ), f"Expected 'seen' filter to remain active after Back, got: {seen_btn_class!r}"
+
+    # Sort should still be "alpha" (unchanged default)
+    sort_value = page.locator("#vb-sort").input_value()
+    assert (
+        sort_value == "alpha"
+    ), f"Expected sort='alpha' (default) after Back navigation, got: {sort_value!r}"
+
+
+# ---------------------------------------------------------------------------
 # Known-star (localStorage)
 # ---------------------------------------------------------------------------
 

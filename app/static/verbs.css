@@ -41,25 +41,32 @@
   cursor: pointer;
 }
 
-/* ── toolbars ────────────────────────────────────────────────────────────── */
-.vb-toolbar {
+/* ── search + controls ───────────────────────────────────────────────────── */
+.vb-form {
+  margin-bottom: 4px;
+}
+
+.vb-search-row {
   display: flex;
   gap: 8px;
   align-items: center;
   margin-bottom: 8px;
-  flex-wrap: wrap;
 }
 
-.vb-toolbar-meta {
+.vb-controls-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
   margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
 .vb-search {
   flex: 1;
   min-width: 100px;
-  height: 38px;
+  height: 40px;
   padding: 0 12px;
-  border: 1px solid #e5e7eb;
+  border: 1.5px solid #94a3b8;
   border-radius: 10px;
   font-size: 15px;
   background: white;
@@ -72,19 +79,22 @@
 }
 
 .vb-search-submit {
-  height: 38px;
-  padding: 0 10px;
-  border: 1px solid #e5e7eb;
+  height: 40px;
+  padding: 0 18px;
+  border: none;
   border-radius: 10px;
-  background: #eef2f7;
-  color: #334155;
-  font-size: 13px;
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .vb-search-submit:hover {
-  background: #e5e7eb;
+  filter: brightness(1.05);
 }
 
 /* filter toggle */
