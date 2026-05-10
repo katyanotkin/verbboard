@@ -32,7 +32,7 @@ _EN_VERB_DATA = {
 }
 
 _HE_VERB_DATA = {
-    "verb_id": "he_lalechet",
+    "verb_id": "he_lalekhet",
     "language": "he",
     "lemma": "ללכת",
     "rank": 1,
