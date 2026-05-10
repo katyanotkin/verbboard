@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Query, Request
 from fastapi.responses import HTMLResponse
 
 from core.audio_service import (
@@ -22,9 +22,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+async def _run_audio_background(audio_backend, language, verb_id, voice, tasks) -> None:
+    await prewarm_verb_audio_keys(audio_backend, language, verb_id, voice)
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for result in results:
+        if isinstance(result, Exception):
+            logger.warning("Audio generation failed: %s", result)
+
+
 @router.get("/learn", response_class=HTMLResponse)
 async def learn(
     request: Request,
+    background_tasks: BackgroundTasks,
     language: str = Query(...),
     verb_id: str | None = Query(None),
     voice: str | None = Query(None),
@@ -79,7 +88,6 @@ async def learn(
     board = plugin.build_board(verb, selected_voice, voice_meta.label)
 
     audio_backend = request.app.state.audio_backend
-    await prewarm_verb_audio_keys(audio_backend, language, verb.id, selected_voice)
     tasks = []
 
     for section in board.sections:
@@ -124,10 +132,14 @@ async def learn(
         )
 
     if tasks:
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for result in results:
-            if isinstance(result, Exception):
-                print(f"Audio generation failed: {result}")
+        background_tasks.add_task(
+            _run_audio_background,
+            audio_backend,
+            language,
+            verb.id,
+            selected_voice,
+            tasks,
+        )
 
     ui_lang = resolve_ui_language(request)
     ui_strings = get_strings(ui_lang)

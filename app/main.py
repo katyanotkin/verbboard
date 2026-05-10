@@ -4,7 +4,8 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
+from starlette.staticfiles import StaticFiles
+from starlette.types import Scope
 
 from app.routes.about import router as about_router
 from app.routes.admin import router as admin_router
@@ -35,8 +36,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+class _CachedStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope: Scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "public, max-age=3600"
+        return response
+
+
 app = FastAPI(lifespan=lifespan, title="VerbBoard")
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", _CachedStaticFiles(directory="app/static"), name="static")
 
 app.include_router(about_router)
 app.include_router(admin_router)

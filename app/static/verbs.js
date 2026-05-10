@@ -144,5 +144,17 @@
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  // ── hover-prefetch: inject <link rel="prefetch"> on first pointer contact ──
+  const _prefetched = new Set();
+  listEl.addEventListener('pointerover', function (e) {
+    const item = e.target.closest('.vb-item[href]');
+    if (!item || _prefetched.has(item.href)) return;
+    _prefetched.add(item.href);
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = item.href;
+    document.head.appendChild(link);
+  }, { passive: true });
+
   render();
 })();
