@@ -10,15 +10,9 @@ from typing import Any
 from core.admin_logging import log_missing_verb_search
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
-from core.lexicon import load_lexicon
-from core.paths import DATA_DIR
 from core.registry import all_plugins
 from core.search_utils import find_best_entry
-from core.storage.verb_repository import find_verb_by_search_extract
-from core.settings import load_settings
-from core.storage.verb_repository import list_verbs_recent
-
-_SETTINGS = load_settings()
+from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 
 router = APIRouter()
 
@@ -35,11 +29,8 @@ def _doc_to_home_verb(d: dict) -> _HomeVerb:
 
 
 def _load_entries(language: str):
-    if _SETTINGS.verb_data_source == "firestore":
-        docs = list_verbs_recent(language, limit=20)
-        return [_doc_to_home_verb(d) for d in docs]
-    lex_path = DATA_DIR / language / "lexicon.json"
-    return load_lexicon(lex_path) if lex_path.exists() else []
+    docs = list_verbs_recent(language, limit=20)
+    return [_doc_to_home_verb(d) for d in docs]
 
 
 def _build_ui_lang_selector(

@@ -40,7 +40,6 @@ async def learn(
     source: str | None = Query(None),
     return_to: str | None = Query(None),
 ) -> HTMLResponse:
-    settings = request.app.state.settings
     logger.debug("lookup source %s -> verb %s", source, verb_id)
     if source == "candidate":
         if not verb_id:
@@ -56,20 +55,12 @@ async def learn(
         if verb is None:
             return HTMLResponse("Candidate not found", status_code=404)
     else:
-        effective_source = settings.verb_data_source
         if verb_id:
-            verb = load_entry_by_id(
-                language=language,
-                verb_id=verb_id,
-                source=effective_source,
-            )
+            verb = load_entry_by_id(language=language, verb_id=verb_id)
             if verb is None:
                 return HTMLResponse("Verb not found", status_code=404)
         else:
-            entries = load_entries_for_language(
-                language=language,
-                source=effective_source,
-            )
+            entries = load_entries_for_language(language=language)
             if not entries:
                 return HTMLResponse("No verbs available", status_code=400)
             verb = entries[0]

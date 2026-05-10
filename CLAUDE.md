@@ -75,8 +75,8 @@ make local-run
 
 - Port is defined in `.env` as `HOST_PORT` (check `.env` & Makefile for actual value)
 - Local base URL: `http://localhost:${HOST_PORT}`
-- In local environment: `VERB_DATA_SOURCE=local` (need verification), `AUDIO_BACKEND=local`
-- In stage/prod: `VERB_DATA_SOURCE=firestore`, `AUDIO_BACKEND=gcs`
+- All environments use Firestore for verb data — no local JSON fallback
+- Audio backend is GCS-only (stage/prod bucket configured via `AUDIO_BUCKET`)
 
 ---
 
@@ -107,7 +107,7 @@ core/
   settings.py              # Settings dataclass + loader (env vars + GCP Secret Manager)
   registry.py              # Language plugin registry (all_plugins())
   verb_service.py          # AI verb generation via Claude + Firestore promotion
-  verb_loader.py           # Loads verb entries (local or Firestore)
+  verb_loader.py           # Loads verb entries from Firestore (60s in-process TTL cache)
   audio_service.py         # Audio orchestration
   audio_backend/
     base.py                # Abstract audio backend
@@ -132,13 +132,10 @@ core/
     verb_document.py       # Document builders + ID generation + search_extract builder
   search_utils.py          # flatten_values, normalize_text
   render.py                # Board rendering logic
-  cache.py                 # Caching layer
   tts.py                   # TTS integration
   supported_languages.py   # Language config
   paths.py                 # Path helpers
   polls.py                 # Polling utilities
-  lexicon.py               # LEGACY — prototype only, do not use
-  lexicon_loader.py        # LEGACY — prototype only, do not use
 
 tests/                     # Test suite (to be scaffolded)
 tools/                     # Dev/admin tooling scripts
@@ -156,8 +153,7 @@ pytest.ini                 # Pytest config (read before adding test config)
 ### Settings & Environment
 - `core/settings.py` → `load_settings()` returns a frozen `Settings` dataclass
 - Environment auto-detected from `ENVIRONMENT` env var or `K_SERVICE` (Cloud Run)
-- `local` → uses local audio + either local or Firesore verb data source (defined by verb_data_source in .env)
-- `stage` / `prod` → uses GCS audio + Firestore verb data
+- All environments use Firestore for verb data
 - Secrets: `ADMIN_SECRET` and `ANTHROPIC_API_KEY` from `.env` locally, GCP Secret Manager in cloud
 
 ### Language Plugins
@@ -207,7 +203,6 @@ pytest.ini                 # Pytest config (read before adding test config)
 - **Do not modify production source files** unless it will cause complicated code — prefer test helpers
 - **Do not introduce a frontend framework** — vanilla JS only
 - **Do not add a second database** — Firestore is the single source of truth
-- **Do not use `core/lexicon.py` or `core/lexicon_loader.py`** — prototype legacy, not in use
 - **Do not commit `.env` or any secrets**
 - When adding a feature, ask: does this conflict with the stateless/frictionless UX principle?
 - Russian audio replacement is a separate workstream — do not touch `core/tts.py` or audio backends

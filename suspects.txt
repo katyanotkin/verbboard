@@ -1,0 +1,23 @@
+Russian top 10 (may have outdated forms/examples/audio after prompt changes):
+ru_govorit
+ru_skazat
+ru_delat
+ru_sdelat
+ru_idti
+ru_poyti
+ru_videt
+ru_uvidet
+ru_znat
+ru_uznat
+
+English top 10 (missing I/you/we/they present row, may need regen):
+en_be
+en_have
+en_do
+en_say
+en_go
+en_get
+en_make
+en_know
+en_think
+en_take

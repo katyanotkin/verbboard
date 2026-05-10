@@ -20,7 +20,6 @@ def verb_browser(
     request: Request,
     language: str | None = Query(None),
 ) -> HTMLResponse:
-    settings = request.app.state.settings
     cookie_language = request.cookies.get("language")
     plugins = all_plugins()
 
@@ -33,10 +32,7 @@ def verb_browser(
     html_dir = "rtl" if ui_lang == "he" else "ltr"
     sort_az_label = get_strings(selected_language).get("verbs.sort_az", "A → Z")
 
-    entries = load_entries_for_language(
-        language=selected_language,
-        source=settings.verb_data_source,
-    )
+    entries = load_entries_for_language(language=selected_language)
 
     verbs_js = []
     for entry in entries:

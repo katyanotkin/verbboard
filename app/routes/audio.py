@@ -30,11 +30,8 @@ async def _generate_on_demand(
     from core.verb_loader import load_entry_by_id
 
     voice_meta = VOICES[language][voice]
-    settings = request.app.state.settings
 
-    verb = load_entry_by_id(
-        language=language, verb_id=verb_id, source=settings.verb_data_source
-    )
+    verb = load_entry_by_id(language=language, verb_id=verb_id)
     if verb is None:
         verb = load_entry_by_id(language=language, verb_id=verb_id, source="candidate")
     if verb is None:

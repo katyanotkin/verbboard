@@ -111,7 +111,6 @@ class Settings:
     port: int
     google_cloud_project: str
     audio_bucket: str
-    verb_data_source: str
     verb_signals_collection: str
     verb_signal_labels_collection: str
     verbs_collection: str
@@ -129,15 +128,6 @@ def _resolve_environment() -> str:
         return "stage"
     if service_name:
         return "prod"
-    return "local"
-
-
-def _resolve_verb_data_source(environment: str) -> str:
-    override = os.getenv("VERB_DATA_SOURCE")
-    if override:
-        return override
-    if environment in {"stage", "prod"}:
-        return "firestore"
     return "local"
 
 
@@ -201,7 +191,6 @@ def load_settings() -> Settings:
         port=int(os.getenv("PORT", "8080")),
         google_cloud_project=os.getenv("GOOGLE_CLOUD_PROJECT", ""),
         audio_bucket=os.getenv("AUDIO_BUCKET", ""),
-        verb_data_source=_resolve_verb_data_source(environment),
         verb_signals_collection=os.getenv("VERB_SIGNALS_COLLECTION", "demand_signal"),
         verb_signal_labels_collection=os.getenv(
             "VERB_SIGNAL_LABELS_COLLECTION",
@@ -222,11 +211,6 @@ def _validate(settings: Settings) -> None:
     if settings.environment not in {"local", "stage", "prod"}:
         raise ValueError(
             f"Unsupported ENVIRONMENT={settings.environment}. Expected local|stage|prod"
-        )
-    if settings.verb_data_source not in {"local", "firestore"}:
-        raise ValueError(
-            f"Unsupported VERB_DATA_SOURCE={settings.verb_data_source}. "
-            "Expected 'local' or 'firestore'"
         )
     if not settings.google_cloud_project:
         raise ValueError("GOOGLE_CLOUD_PROJECT must be set")
