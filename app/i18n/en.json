@@ -36,6 +36,18 @@
   "verbs.count_other": "verbs",
   "verbs.empty_state": "No verbs match",
 
+  "practice.label": "Practice",
+  "practice.start": "Start",
+  "practice.start_mixed": "Start (includes known)",
+  "practice.finish": "Finish",
+  "practice.of": "of",
+  "practice.not_enough": "Not enough verbs",
+  "practice.in_progress": "In progress",
+  "practice.continue": "Continue",
+  "practice.abandon": "Abandon",
+  "practice.prev": "Prev",
+  "practice.next": "Next",
+
   "board.back": "Back",
   "board.voice_female": "Female",
   "board.voice_male": "Male",

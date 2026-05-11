@@ -36,6 +36,18 @@
   "verbs.count_other": "verbos",
   "verbs.empty_state": "Sin coincidencias",
 
+  "practice.label": "Práctica",
+  "practice.start": "Empezar",
+  "practice.start_mixed": "Empezar (con conocidos)",
+  "practice.finish": "Terminar",
+  "practice.of": "de",
+  "practice.not_enough": "No hay suficientes verbos",
+  "practice.in_progress": "En curso",
+  "practice.continue": "Continuar",
+  "practice.abandon": "Abandonar",
+  "practice.prev": "Anterior",
+  "practice.next": "Siguiente",
+
   "board.back": "Volver",
   "board.voice_female": "Femenino",
   "board.voice_male": "Masculino",

@@ -15,7 +15,7 @@
 }
 
 .vb-back {
-  color: #1e3a8a;
+  color: var(--color-navy);
   text-decoration: none;
   font-weight: 600;
   font-size: 15px;
@@ -33,7 +33,7 @@
 
 .vb-lang-select {
   padding: 5px 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--card-border);
   border-radius: 8px;
   background: white;
   font-size: 13px;
@@ -97,10 +97,10 @@
   filter: brightness(1.05);
 }
 
-/* filter toggle */
+/* filter + size toggle (shared segmented control) */
 .vb-filter-toggle {
   display: inline-flex;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--card-border);
   border-radius: 10px;
   overflow: hidden;
   background: #f3f4f6;
@@ -116,9 +116,9 @@
   white-space: nowrap;
   transition: background 0.1s, color 0.1s;
 }
-.vb-ftbtn + .vb-ftbtn { border-left: 1px solid #e5e7eb; }
-.vb-ftbtn.active      { background: #1e3a8a; color: white; }
-.vb-ftbtn:not(.active):hover { background: #e5e7eb; }
+.vb-ftbtn + .vb-ftbtn        { border-left: 1px solid var(--card-border); }
+.vb-ftbtn.active              { background: var(--color-navy); color: white; }
+.vb-ftbtn:not(.active):hover  { background: #e5e7eb; }
 
 /* feedback */
 .vb-feedback-row {
@@ -131,7 +131,7 @@
 .vb-sort-select {
   height: 30px;
   padding: 0 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--card-border);
   border-radius: 8px;
   background: white;
   font-size: 13px;
@@ -163,12 +163,12 @@
   justify-content: space-between;
   padding: 10px 12px;
   background: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--card-border);
   border-radius: 10px;
   text-decoration: none;
   color: #111827;
   font-size: 15px;
-  min-height: 44px;          /* comfortable tap target */
+  min-height: 44px;
   transition: background 0.1s, border-color 0.1s;
 }
 .vb-item:hover    { background: #f0f4ff; border-color: #c7d7f9; }
@@ -224,4 +224,84 @@
   height: 1px;
   background: #f3f4f6;
   margin: 6px 0;
+}
+
+/* ── practice panel ──────────────────────────────────────────────────────── */
+/* Size toggle reuses .vb-filter-toggle + .vb-ftbtn (same segmented control). */
+/* Action button reuses .btn-pill-navy from common.css.                        */
+
+.practice-panel {
+  margin-bottom: 14px;
+}
+
+.practice-picker,
+.practice-inprogress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.practice-picker {
+  background: var(--page-bg);
+  border: 1px solid var(--card-border);
+}
+
+.practice-inprogress {
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
+}
+
+.practice-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.practice-inprogress-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--notice-text);
+  white-space: nowrap;
+}
+
+.practice-abandon-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--notice-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--notice-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+.practice-abandon-btn:hover { background: #fef3c7; }
+
+/* ── badges ───────────────────────────────────────────────────────────────── */
+.practice-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 0 2px;
+  flex-wrap: wrap;
+}
+
+.practice-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
 }

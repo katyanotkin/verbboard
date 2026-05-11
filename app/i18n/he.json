@@ -36,6 +36,18 @@
   "verbs.count_other": "פעלים",
   "verbs.empty_state": "אין תוצאות",
 
+  "practice.label": "תרגול",
+  "practice.start": "התחל",
+  "practice.start_mixed": "התחל (עם ידועים)",
+  "practice.finish": "סיים",
+  "practice.of": "מתוך",
+  "practice.not_enough": "אין מספיק פעלים",
+  "practice.in_progress": "בתהליך",
+  "practice.continue": "המשך",
+  "practice.abandon": "בטל",
+  "practice.prev": "קודם",
+  "practice.next": "הבא",
+
   "board.back": "חזרה",
   "board.voice_female": "נקבה",
   "board.voice_male": "זכר",

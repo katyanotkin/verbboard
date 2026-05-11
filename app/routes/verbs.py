@@ -78,6 +78,12 @@ def verb_browser(
             "verbs.count_other": ui["verbs.count_other"],
             "verbs.empty_state": ui["verbs.empty_state"],
             "verbs.filter_recent": ui["verbs.filter_recent"],
+            "practice.label": ui["practice.label"],
+            "practice.start": ui["practice.start"],
+            "practice.start_mixed": ui["practice.start_mixed"],
+            "practice.in_progress": ui["practice.in_progress"],
+            "practice.continue": ui["practice.continue"],
+            "practice.abandon": ui["practice.abandon"],
         },
         ensure_ascii=False,
     )
@@ -109,42 +115,44 @@ def verb_browser(
       </a>
     </div>
 
-    <form action="/search_verb" method="get" class="vb-form">
+    <form action="/search_verb" method="get" class="vb-toolbar">
       <input type="hidden" name="language" value="{selected_language}" />
 
-      <div class="vb-search-row">
-        <input
-          id="vb-search"
-          name="q"
-          class="vb-search"
-          type="text"
-          placeholder="{ui["verbs.search_placeholder"]}"
-          autocomplete="off"
-        />
-        <button type="submit" class="vb-search-submit">
-          {ui["verbs.find_button"]}
-        </button>
-      </div>
+      <input
+        id="vb-search"
+        name="q"
+        class="vb-search"
+        type="text"
+        placeholder="{ui["verbs.search_placeholder"]}"
+        autocomplete="off"
+      />
 
-      <div class="vb-controls-row">
-        <div class="vb-filter-toggle" id="vb-filter-toggle">
-          <button type="button" class="vb-ftbtn" data-filter="new">{ui["verbs.filter_new"]}</button>
-          <button type="button" class="vb-ftbtn" data-filter="seen">{ui["verbs.filter_seen"]}</button>
-          <button type="button" class="vb-ftbtn" data-filter="all">{ui["verbs.filter_all"]}</button>
-          <button type="button" class="vb-ftbtn" data-filter="known">{ui["verbs.filter_known"]}</button>
-        </div>
-        <select id="vb-sort" class="vb-sort-select">
-          <option value="alpha">{sort_az_label}</option>
-          <option value="rank">{ui["verbs.sort_frequency"]}</option>
-        </select>
-        <div id="vb-count" class="vb-count"></div>
+      <button type="submit" class="vb-search-submit">
+        {ui["verbs.find_button"]}
+      </button>
+
+      <div class="vb-filter-toggle" id="vb-filter-toggle">
+        <button type="button" class="vb-ftbtn active" data-filter="new">{ui["verbs.filter_new"]}</button>
+        <button type="button" class="vb-ftbtn" data-filter="seen">{ui["verbs.filter_seen"]}</button>
+        <button type="button" class="vb-ftbtn" data-filter="all">{ui["verbs.filter_all"]}</button>
+        <button type="button" class="vb-ftbtn" data-filter="known">{ui["verbs.filter_known"]}</button>
       </div>
     </form>
+
+    <div class="vb-toolbar vb-toolbar-meta">
+      <select id="vb-sort" class="vb-sort-select">
+        <option value="rank">{ui["verbs.sort_frequency"]}</option>
+        <option value="alpha">{sort_az_label}</option>
+      </select>
+      <div id="vb-count" class="vb-count"></div>
+    </div>
 
     <div class="vb-legend">
       <span class="vb-badge seen">✓</span><span>{ui["verbs.filter_seen"]}</span>
       <span class="vb-badge known">★</span><span>{ui["verbs.filter_known"]}</span>
     </div>
+
+    <div id="practice-panel" class="practice-panel"></div>
 
     <div id="vb-list" class="vb-list"></div>
 

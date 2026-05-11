@@ -204,6 +204,10 @@ def render_board_html(
         {
             "board.mark_known": ui.get("board.mark_known", "Mark as known"),
             "board.known": ui.get("board.known", "Known"),
+            "practice.prev": ui.get("practice.prev", "Prev"),
+            "practice.next": ui.get("practice.next", "Next"),
+            "practice.of": ui.get("practice.of", "of"),
+            "practice.finish": ui.get("practice.finish", "Finish"),
         },
         ensure_ascii=False,
     )
