@@ -6,11 +6,18 @@ import os
 from datetime import UTC, datetime
 from typing import Any
 
-import anthropic
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from core.settings import _load_anthropic_api_key, _GENERATION_SYSTEM_PROMPT
+from core.settings import _load_anthropic_api_key
+from core.settings_ai import (
+    _MAX_TOKENS,
+    _MAX_TOKENS_DEFAULT,
+    _MODEL,
+    _MODEL_DEFAULT,
+    get_anthropic_client,
+    get_cached_system,
+)
 from core.storage.firestore_db import get_db
 from core.storage.verb_repository import find_verb_by_search_extract
 from core.storage.verb_document import (
@@ -132,14 +139,13 @@ def _get_max_rank(language: str) -> int:
     return max_rank
 
 
-def _call_claude(language: str, query: str) -> dict[str, Any]:
-    api_key = _load_anthropic_api_key()
-    client = anthropic.Anthropic(api_key=api_key)
+async def _call_claude(language: str, query: str) -> dict[str, Any]:
+    client = get_anthropic_client()
 
-    message = client.messages.create(
-        model="claude-sonnet-4-6",  # was claude-opus-4-5
-        max_tokens=4096,
-        system=_GENERATION_SYSTEM_PROMPT,
+    message = await client.messages.create(
+        model=_MODEL.get(language, _MODEL_DEFAULT),
+        max_tokens=_MAX_TOKENS.get(language, _MAX_TOKENS_DEFAULT),
+        system=get_cached_system(language),
         messages=[
             {
                 "role": "user",
@@ -221,7 +227,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
             detail=f"'{query}' is already in the live verb set",
         )
 
-    generated = _call_claude(language, query)
+    generated = await _call_claude(language, query)
 
     lemma = generated.get("lemma") or query
     new_id = build_storage_verb_id(language=language, lemma=lemma)
@@ -402,7 +408,7 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
             status_code=422, detail="Verb document is missing language or lemma"
         )
 
-    generated = _call_claude(language, lemma)
+    generated = await _call_claude(language, lemma)
 
     now = datetime.now(UTC).isoformat()
     payload: dict[str, Any] = {

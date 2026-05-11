@@ -7,7 +7,8 @@ from typing import Any
 
 import anthropic
 
-from core.settings import _load_anthropic_api_key, _GENERATION_SYSTEM_PROMPT
+from core.settings import _load_anthropic_api_key
+from core.settings_ai import _GENERATION_SYSTEM_PROMPT
 from core.storage.firestore_db import get_db
 from core.storage.verb_document import (
     build_storage_verb_id,
