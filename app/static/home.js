@@ -303,6 +303,21 @@ document.addEventListener("DOMContentLoaded", function () {
   sortAndMarkVerbs();
   updateProgress();
 
+  const form = document.getElementById("home-form");
+  if (form) {
+    form.addEventListener("submit", function (event) {
+      if (event.submitter && event.submitter.name === "search_submit") return;
+      const btn = this.querySelector(".learn-btn");
+      if (!btn) return;
+      btn.disabled = true;
+      btn.classList.add("loading");
+      const label = btn.querySelector(".learn-label");
+      const icon = btn.querySelector(".learn-icon");
+      if (label) label.textContent = btn.dataset.loading;
+      if (icon) icon.textContent = "•••";
+    });
+  }
+
   window.addEventListener("pageshow", function (event) {
     if (!event.persisted) return;
     const btn = document.getElementById("learn-btn");

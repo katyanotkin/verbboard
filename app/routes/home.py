@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from html import escape
+from dataclasses import dataclass
+from typing import Any
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from dataclasses import dataclass
-from typing import Any
+from fastapi.templating import Jinja2Templates
 
 from core.admin_logging import log_missing_verb_search
 from core.i18n import get_strings, resolve_ui_language
@@ -15,6 +15,7 @@ from core.search_utils import find_best_entry
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 
 router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
 
 
 @dataclass
@@ -28,26 +29,19 @@ def _doc_to_home_verb(d: dict) -> _HomeVerb:
     return _HomeVerb(id=d.get("verb_id", ""), lemma=lemma)
 
 
-def _load_entries(language: str):
+def _entry_label(entry: _HomeVerb) -> str:
+    if isinstance(entry.lemma, dict):
+        return (
+            entry.lemma.get("imperfective", "")
+            + " / "
+            + entry.lemma.get("perfective", "")
+        )
+    return str(entry.lemma)
+
+
+def _load_entries(language: str) -> list[_HomeVerb]:
     docs = list_verbs_recent(language, limit=20)
     return [_doc_to_home_verb(d) for d in docs]
-
-
-def _build_ui_lang_selector(
-    ui_lang: str, learning_lang: str, ui: dict[str, str]
-) -> str:
-    pills = "".join(
-        f'<a href="/?ui_language={code}&language={escape(learning_lang)}"'
-        f' class="ui-lang-pill{" active" if code == ui_lang else ""}">'
-        f"{code.upper()}</a>"
-        for code in LANGUAGE
-    )
-    return (
-        '<div class="ui-lang-block">'
-        f'<div class="ui-lang-label">Interface | Интерфейс | Interfaz | שפת ממשק</div>'
-        f'<div class="ui-lang-pills">{pills}</div>'
-        "</div>"
-    )
 
 
 @router.get("/set_language", response_model=None)
@@ -146,150 +140,37 @@ def home(
     raw_search_value = search or ""
     search_value = "" if str(not_available) == "1" else raw_search_value
 
-    lang_options = "\n".join(
-        f"<option value='{key}' {'selected' if key == selected_language else ''}>"
-        f"{LANGUAGE[key].home_label if key in LANGUAGE else plugin.display_name}"
-        f"</option>"
-        for key, plugin in plugins.items()
-    )
-
-    verb_options = "\n".join(
-        f"<option value='{entry.id}' {'selected' if entry.id == selected_verb_id else ''}>"
-        f"{entry.lemma if not isinstance(entry.lemma, dict) else (entry.lemma.get('imperfective', '') + ' / ' + entry.lemma.get('perfective', ''))}"
-        f"</option>"
-        for entry in entries[:20]
-    )
-
-    notice_html = ""
-    if str(not_available) == "1" and raw_search_value.strip():
-        notice_html = (
-            "<div class='notice'>"
-            f"{escape(ui['home.no_match'])} <b>{escape(raw_search_value)}</b>"
-            "</div>"
+    lang_options = [
+        (
+            key,
+            LANGUAGE[key].home_label if key in LANGUAGE else plugin.display_name,
+            key == selected_language,
         )
+        for key, plugin in plugins.items()
+    ]
 
-    ui_lang_selector = _build_ui_lang_selector(ui_lang, selected_language, ui)
+    verb_options = [
+        (entry.id, _entry_label(entry), entry.id == selected_verb_id)
+        for entry in entries[:20]
+    ]
 
-    html = f"""<!doctype html>
-<html lang="{ui_lang}" dir="{html_dir}">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>VerbBoard</title>
-  <link rel="stylesheet" href="/static/common.css"/>
-  <link rel="stylesheet" href="/static/home.css"/>
-</head>
+    notice_text = raw_search_value.strip() if str(not_available) == "1" else None
 
-<body>
-  <div class="page">
-  <div class="page-header">
-    <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
-    <a href="/about?ui_language={ui_lang}" class="about-link">{escape(ui["home.about"])}</a>
-  </div>
-  {ui_lang_selector}
-
-    <form
-      action="/learn"
-      method="get"
-      class="controls"
-      onsubmit="
-        if (event.submitter && event.submitter.name === 'search_submit') return true;
-        const btn = this.querySelector('.learn-btn');
-        btn.disabled = true;
-        btn.classList.add('loading');
-        btn.querySelector('.learn-label').textContent = btn.dataset.loading;
-        btn.querySelector('.learn-icon').textContent = '•••';
-      "
-    >
-      <div class="row">
-      <label><span class="label-icon">🌐</span> {escape(ui["home.language_label"])}</label>
-        <select
-          name="language"
-          onchange="window.location='/set_language?language=' + this.value;"
-        >
-          {lang_options}
-        </select>
-      </div>
-
-      <div class="row">
-        <div class="verb-label-row">
-          <label><span class="label-icon">🧩</span> {escape(ui["home.verb_label"])}</label>
-          <a href="/verbs?language={escape(selected_language)}" class="browse-inline-link" id="browse-btn">
-            <span class="browse-icon">🧩</span>{escape(ui["home.browse_link"])}
-          </a>
-        </div>
-        <select name="verb_id" id="verb-select">
-          {verb_options}
-        </select>
-      </div>
-
-      <div class="row learn-row">
-        <button type="submit" class="learn-btn" id="learn-btn"
-          data-loading="{escape(ui["home.loading"])}"
-          data-label="{escape(ui["home.learn_button"])}"
-          data-icon="▶">
-          <span class="learn-icon">▶</span>
-          <span class="learn-label">{escape(ui["home.learn_button"])}</span>
-        </button>
-      </div>
-
-      <div class="row search-row">
-        <label>{escape(ui["home.search_label"])}</label>
-        <div class="search-input-row">
-          <div class="search-input-wrap">
-            <input
-              type="text"
-              name="q"
-              id="search-input"
-              value="{escape(search_value)}"
-              placeholder="{escape(ui["home.search_placeholder"])}"
-              autocomplete="off"
-            />
-            <div id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Verb suggestions"></div>
-          </div>
-
-          <button
-            type="submit"
-            formaction="/search_verb"
-            formmethod="get"
-            class="search-btn"
-            id="search-btn"
-            name="search_submit"
-            value="1"
-          >
-            {escape(ui["home.find_button"])}
-          </button>
-        </div>
-        {notice_html}
-      </div>
-
-      <div class="progress-row">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: 0%"></div>
-        </div>
-        <div class="progress-meta">
-          <span class="progress-star">★</span>
-          <span class="progress-count">001</span>
-        </div>
-      </div>
-
-        <div class="feedback-row">
-            <a
-                href="/feedback?page=home&language={escape(selected_language)}&return_to=/?language={escape(selected_language)}"
-                class="feedback-link"
-            >
-            {escape(ui["home.feedback_link"])}
-            </a>
-        </div>
-    </form>
-  </div>
-
-  <script src="/static/home.js"></script>
-</body>
-</html>
-"""
-
-    response = HTMLResponse(html)
+    response = templates.TemplateResponse(
+        request,
+        "home.html",
+        {
+            "lang": ui_lang,
+            "html_dir": html_dir,
+            "ui": ui,
+            "ui_lang_codes": list(LANGUAGE.keys()),
+            "learning_lang": selected_language,
+            "lang_options": lang_options,
+            "verb_options": verb_options,
+            "search_value": search_value,
+            "notice_text": notice_text,
+        },
+    )
     response.set_cookie("language", selected_language, httponly=False, samesite="lax")
     response.set_cookie("ui_language", ui_lang, httponly=False, samesite="lax")
     if selected_verb_id:
