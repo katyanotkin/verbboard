@@ -10,7 +10,7 @@ VerbBoard is a language learning app focused on verbs: conjugation tables, real 
 - **Frontend:** Vanilla JS + CSS (no framework -- do not introduce one)
 - **Data:** GCP Firestore (single source of truth in all environments)
 - **Audio:** GCS-only (`AUDIO_BUCKET`); pluggable backend abstraction in `core/audio_backend/`
-- **AI generation:** Anthropic Claude (`claude-sonnet-4-6`)
+- **AI generation:** Anthropic Claude -- Haiku (`claude-haiku-4-5-20251001`) for English, Sonnet (`claude-sonnet-4-6`) for all other languages
 - **Secrets:** GCP Secret Manager (prod/stage) or `.env` (local)
 - **Infrastructure:** GCP -- Cloud Run + Firestore + GCS
 - **App entry point:** `app.main:app`
@@ -35,11 +35,12 @@ app/
   main.py          # FastAPI app, routers, plugin imports, startup
   routes/          # home, verbs, learn, audio, feedback, health, about, admin*
   static/          # Vanilla JS + CSS
-  templates/       # Jinja2 templates (admin views)
+  templates/       # Jinja2 templates (home.html + admin views)
 
 core/
   models.py        # VerbEntry, Board, Example dataclasses
-  settings.py      # load_settings() -- frozen Settings dataclass
+  settings.py      # load_settings() -- frozen Settings dataclass; secrets loading
+  settings_ai.py   # AI generation: prompts (split by lang), model/token config, async client, get_cached_system()
   registry.py      # language plugin registry (all_plugins())
   verb_loader.py   # loads verbs from Firestore (60s TTL cache)
   audio_service.py # ensure_audio(), build_hashed_audio_key()
@@ -65,7 +66,7 @@ Use the **Explore** agent for detailed file navigation.
 - Key fields: `language`, `verb_id`, `lemma`, `rank`, `forms`, `examples`, `search_extract` (array), `morph`, `display_lemma`, `display_forms`
 - Search: `find_verb_by_search_extract()` uses `array_contains` on normalized query
 
-**AI generation:** Admin triggers `_call_claude(language, query)` in `admin_candidates.py` -> strict JSON -> stored as candidate -> previewable at `/learn` -> promoted to `verbs` via admin.
+**AI generation:** Admin triggers `_call_claude(language, query)` in `admin_candidates.py` (async, awaited) -> strict JSON -> stored as candidate -> previewable at `/learn` -> promoted to `verbs` via admin. All AI config (prompts, model, tokens, async client) lives in `core/settings_ai.py`. Per-language system prompt via `get_cached_system(language)` with `cache_control: ephemeral` for Anthropic prompt caching. English uses Haiku, others use Sonnet; Hebrew gets `max_tokens=4096`, others 2048.
 
 **Audio:**
 - URL: `/audio/{language}/{verb_id}/{voice}/{form_key}.mp3`
