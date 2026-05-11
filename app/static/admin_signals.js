@@ -10,7 +10,7 @@ const LANG_SCRIPTS = {
 };
 
 async function loadSignals() {
-  window.signalsLoaded = true;
+  signalsLoaded = true;
 
   try {
     const [signalsResponse, labelsResponse] = await Promise.all([
@@ -232,26 +232,34 @@ async function loadOrToggleProcessed() {
   renderActiveSignalView();
 }
 
+function setSigSort(field) {
+  if (sigSortBy === field) {
+    sigSortDir = sigSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sigSortBy = field;
+    sigSortDir = (field === 'count' || field === 'last') ? 'desc' : 'asc';
+  }
+  renderAggr();
+}
+
 function renderAggr() {
-  const sortBy = document.getElementById('sig-sort').value;
   let rows = aggrRows();
 
-  if (sortBy === 'count') {
-    rows.sort((a, b) => b.count - a.count);
-  } else if (sortBy === 'last') {
-    rows.sort((a, b) => b.last_ts.localeCompare(a.last_ts));
-  } else if (sortBy === 'status') {
-    rows.sort((a, b) => {
-      const aStatus = statusOrder[a.status ?? '__unclassified__'] ?? 999;
-      const bStatus = statusOrder[b.status ?? '__unclassified__'] ?? 999;
-      if (aStatus !== bStatus) return aStatus - bStatus;
-      if (a.count !== b.count) return b.count - a.count;
-      if (a.last_ts !== b.last_ts) return b.last_ts.localeCompare(a.last_ts);
-      return a.query.localeCompare(b.query);
-    });
+  if (sigSortBy === 'count') {
+    rows.sort((a, b) => sigSortDir === 'desc' ? b.count - a.count : a.count - b.count);
+  } else if (sigSortBy === 'last') {
+    rows.sort((a, b) => sigSortDir === 'desc'
+      ? b.last_ts.localeCompare(a.last_ts)
+      : a.last_ts.localeCompare(b.last_ts));
   } else {
-    rows.sort((a, b) => a.query.localeCompare(b.query));
+    rows.sort((a, b) => sigSortDir === 'asc'
+      ? a.query.localeCompare(b.query)
+      : b.query.localeCompare(a.query));
   }
+
+  updateSortHeaders('sth', sigSortBy, sigSortDir, {
+    query: 'Query', count: 'Count', last: 'Last seen',
+  });
 
   const tbody = document.getElementById('sig-aggr-body');
   if (!rows.length) {
@@ -465,7 +473,15 @@ async function undoLabel(labelId, button) {
     );
     if (!response.ok) throw new Error(await response.text());
 
+    const result = await response.json().catch(() => ({}));
     await loadSignals();
+
+    if (result.deleted_candidate) {
+      candidatesLoaded = false;
+      if (document.getElementById('panel-candidates').classList.contains('active')) {
+        await loadCandidates();
+      }
+    }
   } catch (error) {
     button.disabled = false;
     alert('Undo failed: ' + error.message);

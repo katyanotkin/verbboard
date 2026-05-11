@@ -126,6 +126,8 @@ router = APIRouter()
 
 
 def _get_max_rank(language: str) -> int:
+    # Concurrent generations can both read the same max before either writes,
+    # so duplicate ranks are possible. Rank is a loose ordering hint, not a unique key.
     db = get_db()
     docs = db.collection(VERBS_COLLECTION).where("language", "==", language).stream()
 
@@ -153,10 +155,11 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
                     f"language: {language}\n"
                     f"raw query (may be any inflected form): {query}"
                 ),
-            }
+            },
+            {"role": "assistant", "content": "{"},
         ],
     )
-    raw = message.content[0].text.strip()
+    raw = "{" + message.content[0].text
 
     try:
         return json.loads(raw)
@@ -227,6 +230,14 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
             detail=f"'{query}' is already in the live verb set",
         )
 
+    existing_by_id = db.collection(VERBS_COLLECTION).document(verb_id).get()
+    if existing_by_id.exists:
+        ref.delete()
+        raise HTTPException(
+            status_code=409,
+            detail=f"'{verb_id}' already exists in the live verb set",
+        )
+
     generated = await _call_claude(language, query)
 
     lemma = generated.get("lemma") or query
@@ -250,7 +261,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
                 detail=f"Resolves to '{new_id}' which already exists as a candidate",
             )
 
-    rank = _get_max_rank(language) + 1
+    rank = await asyncio.to_thread(_get_max_rank, language) + 1
 
     updated = {
         **data,
@@ -274,7 +285,8 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
     else:
         ref.set(updated)
 
-    translated_examples = translate_examples(
+    translated_examples = await asyncio.to_thread(
+        translate_examples,
         verb_lang=language,
         lemma=lemma,
         examples=updated["examples"],
@@ -332,6 +344,12 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
         raise HTTPException(status_code=404, detail="Candidate not found")
 
     data = candidate_doc.to_dict()
+
+    if data.get("status") != "pending":
+        raise HTTPException(
+            status_code=422,
+            detail=f"Cannot promote: only 'pending' candidates can be promoted, got '{data.get('status')}'",
+        )
 
     existing_verb = db.collection(VERBS_COLLECTION).document(verb_id).get()
     if existing_verb.exists:
@@ -433,7 +451,8 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
 
     doc_ref.set(payload)
 
-    translated_examples = translate_examples(
+    translated_examples = await asyncio.to_thread(
+        translate_examples,
         verb_lang=language,
         lemma=lemma,
         examples=payload["examples"],

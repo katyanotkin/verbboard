@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hmac
+
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from core.settings import load_settings
@@ -16,7 +18,7 @@ def _serializer() -> URLSafeTimedSerializer:
 
 def verify_admin_password(password: str) -> bool:
     settings = load_settings()
-    return password == settings.admin_secret
+    return hmac.compare_digest(password, settings.admin_secret)
 
 
 def create_admin_session_token() -> str:

@@ -34,13 +34,22 @@ def _run_async(coro):
 
 
 def _make_mock_client(response_text: str) -> MagicMock:
-    """Build a mock AsyncAnthropic client whose messages.create returns response_text."""
+    """Build a mock AsyncAnthropic client whose messages.create returns response_text.
+
+    response_text must be the JSON continuation *after* the '{' prefill,
+    i.e. the full JSON string with the leading '{' stripped.
+    """
     mock_message = MagicMock()
     mock_message.content = [MagicMock(text=response_text)]
 
     mock_client = MagicMock()
     mock_client.messages.create = AsyncMock(return_value=mock_message)
     return mock_client
+
+
+def _json_tail(obj: object) -> str:
+    """Return json.dumps(obj) without the leading '{'."""
+    return json.dumps(obj)[1:]
 
 
 # ---------------------------------------------------------------------------
@@ -52,7 +61,7 @@ def test_call_claude_returns_coroutine_without_await() -> None:
     """Calling _call_claude without await must return a coroutine, not a dict."""
     from app.routes.admin_candidates import _call_claude
 
-    mock_client = _make_mock_client('{"lemma": "go"}')
+    mock_client = _make_mock_client('"lemma": "go"}')
 
     with patch(
         "app.routes.admin_candidates.get_anthropic_client",
@@ -75,7 +84,7 @@ def test_call_claude_returns_coroutine_without_await() -> None:
 def test_call_claude_returns_parsed_dict_on_valid_json() -> None:
     """A valid JSON string from Claude must be parsed into a Python dict."""
     payload = {"lemma": "go", "forms": {"base": "go", "past": "went"}}
-    mock_client = _make_mock_client(json.dumps(payload))
+    mock_client = _make_mock_client(_json_tail(payload))
 
     with patch(
         "app.routes.admin_candidates.get_anthropic_client",
@@ -116,7 +125,7 @@ def test_call_claude_raises_502_on_invalid_json() -> None:
 
 def test_call_claude_uses_4096_max_tokens_for_hebrew() -> None:
     """Hebrew language must trigger max_tokens=4096."""
-    mock_client = _make_mock_client('{"lemma": "ללכת"}')
+    mock_client = _make_mock_client('"lemma": "ללכת"}')
 
     with patch(
         "app.routes.admin_candidates.get_anthropic_client",
@@ -134,7 +143,7 @@ def test_call_claude_uses_4096_max_tokens_for_hebrew() -> None:
 
 def test_call_claude_uses_2048_max_tokens_for_english() -> None:
     """Non-Hebrew languages must fall back to max_tokens=2048."""
-    mock_client = _make_mock_client('{"lemma": "go"}')
+    mock_client = _make_mock_client('"lemma": "go"}')
 
     with patch(
         "app.routes.admin_candidates.get_anthropic_client",
@@ -152,7 +161,7 @@ def test_call_claude_uses_2048_max_tokens_for_english() -> None:
 
 def test_call_claude_uses_2048_max_tokens_for_russian() -> None:
     """Russian, like all non-Hebrew languages, must use max_tokens=2048."""
-    mock_client = _make_mock_client('{"lemma": "идти"}')
+    mock_client = _make_mock_client('"lemma": "идти"}')
 
     with patch(
         "app.routes.admin_candidates.get_anthropic_client",
@@ -173,7 +182,7 @@ def test_call_claude_uses_2048_max_tokens_for_russian() -> None:
 
 def test_call_claude_passes_cache_control_ephemeral_on_system_prompt() -> None:
     """The system arg must be a list containing a dict with cache_control ephemeral."""
-    mock_client = _make_mock_client('{"lemma": "go"}')
+    mock_client = _make_mock_client('"lemma": "go"}')
 
     with patch(
         "app.routes.admin_candidates.get_anthropic_client",
@@ -204,7 +213,7 @@ def test_call_claude_passes_cache_control_ephemeral_on_system_prompt() -> None:
 
 def test_call_claude_uses_haiku_for_english() -> None:
     """English must use the Haiku model."""
-    mock_client = _make_mock_client('{"lemma": "go"}')
+    mock_client = _make_mock_client('"lemma": "go"}')
 
     with patch(
         "app.routes.admin_candidates.get_anthropic_client",
@@ -223,7 +232,7 @@ def test_call_claude_uses_haiku_for_english() -> None:
 def test_call_claude_uses_sonnet_for_non_english() -> None:
     """Non-English languages must use the Sonnet model."""
     for lang, query in [("he", "ללכת"), ("ru", "идти"), ("es", "ir")]:
-        mock_client = _make_mock_client(f'{{"lemma": "{query}"}}')
+        mock_client = _make_mock_client(f'"lemma": "{query}"}}')
 
         with patch(
             "app.routes.admin_candidates.get_anthropic_client",

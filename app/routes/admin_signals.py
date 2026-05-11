@@ -28,6 +28,15 @@ async def list_signals(
 ) -> JSONResponse:
     require_admin_api(request)
 
+    allowed_sort_fields = {"created_at", "language", "query", "status"}
+    if sort_by not in allowed_sort_fields:
+        raise HTTPException(
+            status_code=400,
+            detail=f"sort_by must be one of {sorted(allowed_sort_fields)}",
+        )
+    if sort_dir not in {"asc", "desc"}:
+        raise HTTPException(status_code=400, detail="sort_dir must be 'asc' or 'desc'")
+
     db = get_db()
     sig_col, _ = signal_collections()
 

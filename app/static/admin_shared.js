@@ -15,6 +15,11 @@ let sigView = 'aggr';
 let hideProcessed = false;
 let processedLoaded = false;
 
+let sigSortBy = 'count';
+let sigSortDir = 'desc';
+let candSortBy = 'query';
+let candSortDir = 'asc';
+
 const extractsCache = {};
 
 const statusOrder = {
@@ -55,11 +60,15 @@ function populateFilter(selectId, values) {
 }
 
 function showPanel(name) {
-  document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  if (!panel) return;
+
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
 
-  document.getElementById('panel-' + name).classList.add('active');
-  document.querySelector(`[data-panel="${name}"]`).classList.add('active');
+  panel.classList.add('active');
+  const navItem = document.querySelector(`[data-panel="${name}"]`);
+  if (navItem) navItem.classList.add('active');
 
   location.hash = name;
 
@@ -81,5 +90,21 @@ function renderActiveSignalView() {
     renderAggr();
   } else {
     renderRaw();
+  }
+}
+
+// Updates sortable column headers: sets label + ▲/▼ indicator on the active column.
+// idPrefix: e.g. 'sth' → looks for ids sth-{field}; labels: { field: 'Label', ... }
+function updateSortHeaders(idPrefix, sortBy, sortDir, labels) {
+  for (const [field, label] of Object.entries(labels)) {
+    const th = document.getElementById(`${idPrefix}-${field}`);
+    if (!th) continue;
+    if (field === sortBy) {
+      th.textContent = `${label} ${sortDir === 'asc' ? '▲' : '▼'}`;
+      th.classList.add('sort-active');
+    } else {
+      th.textContent = label;
+      th.classList.remove('sort-active');
+    }
   }
 }

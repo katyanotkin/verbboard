@@ -3,7 +3,7 @@
 const CANDIDATES_ROOT = window.ADMIN_ROOT || "/admin";
 
 async function loadCandidates() {
-  window.candidatesLoaded = true;
+  candidatesLoaded = true;
 
   try {
     const response = await fetch(`${CANDIDATES_ROOT}/api/candidates`);
@@ -22,7 +22,7 @@ async function loadCandidates() {
     renderCandidates();
   } catch (error) {
     document.getElementById('cand-body').innerHTML =
-      `<tr><td colspan="8" class="error-msg">Error: ${error.message}</td></tr>`;
+      `<tr><td colspan="6" class="error-msg">Error: ${esc(error.message)}</td></tr>`;
   }
 }
 
@@ -52,54 +52,20 @@ function candStatusPill(status) {
   return `<span class="status-pill ${cssClass}">${label}</span>`;
 }
 
-function renderFormsTable(forms) {
-  if (!forms || !Object.keys(forms).length) {
-    return '<em style="color:var(--muted)">—</em>';
+
+function setCandSort(field) {
+  if (candSortBy === field) {
+    candSortDir = candSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    candSortBy = field;
+    candSortDir = 'asc';
   }
-
-  const rows = [];
-
-  for (const [section, value] of Object.entries(forms)) {
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      rows.push(`<tr>
-        <td colspan="2" style="color:var(--accent);font-size:10px;padding-top:6px;text-transform:uppercase;letter-spacing:0.05em">${esc(section)}</td>
-      </tr>`);
-
-      for (const [key, val] of Object.entries(value)) {
-        rows.push(`<tr>
-          <td style="color:var(--muted);padding-right:8px;padding-left:8px;white-space:nowrap;font-size:11px">${esc(key)}</td>
-          <td class="mono" style="font-size:11px">${esc(Array.isArray(val) ? val.join(', ') : String(val ?? ''))}</td>
-        </tr>`);
-      }
-    } else {
-      rows.push(`<tr>
-        <td style="color:var(--muted);padding-right:8px;white-space:nowrap;font-size:11px">${esc(section)}</td>
-        <td class="mono" style="font-size:11px">${esc(Array.isArray(value) ? value.join(', ') : String(value ?? ''))}</td>
-      </tr>`);
-    }
-  }
-
-  return `<table style="border-collapse:collapse">${rows.join('')}</table>`;
-}
-
-function renderExamplesList(examples) {
-  if (!examples || !examples.length) {
-    return '<em style="color:var(--muted)">—</em>';
-  }
-
-  return examples
-    .map(
-      (example, index) => `<div style="font-size:12px;padding:2px 0">
-      <span style="color:var(--muted);margin-right:4px">${index + 1}.</span>${esc(example.dst ?? example)}
-    </div>`,
-    )
-    .join('');
+  renderCandidates();
 }
 
 function renderCandidates() {
   const languageFilter = document.getElementById('cand-filter-lang').value;
   const statusFilter = document.getElementById('cand-filter-status').value;
-  const sortBy = document.getElementById('cand-sort').value;
 
   let rows = candidatesData.filter((item) => {
     if (languageFilter && item.language !== languageFilter) {
@@ -116,33 +82,35 @@ function renderCandidates() {
     return true;
   });
 
-  if (sortBy === 'created') {
-    rows = [...rows].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
-  } else if (sortBy === 'status') {
+  if (candSortBy === 'status') {
     rows = [...rows].sort((a, b) => {
       const aStatus = candStatusOrder[a.status] ?? 99;
       const bStatus = candStatusOrder[b.status] ?? 99;
-
-      if (aStatus !== bStatus) {
-        return aStatus - bStatus;
-      }
-      if (a.language !== b.language) {
-        return a.language.localeCompare(b.language);
-      }
+      const diff = candSortDir === 'asc' ? aStatus - bStatus : bStatus - aStatus;
+      if (diff !== 0) return diff;
+      if (a.language !== b.language) return a.language.localeCompare(b.language);
       return a.query.localeCompare(b.query);
     });
   } else {
     rows = [...rows].sort((a, b) => {
       if (a.language !== b.language) {
-        return a.language.localeCompare(b.language);
+        return candSortDir === 'asc'
+          ? a.language.localeCompare(b.language)
+          : b.language.localeCompare(a.language);
       }
-      return a.query.localeCompare(b.query);
+      return candSortDir === 'asc'
+        ? a.query.localeCompare(b.query)
+        : b.query.localeCompare(a.query);
     });
   }
 
+  updateSortHeaders('cth', candSortBy, candSortDir, {
+    query: 'Raw query', status: 'Status',
+  });
+
   const tbody = document.getElementById('cand-body');
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty"><td colspan="8">No candidates</td></tr>';
+    tbody.innerHTML = '<tr class="empty"><td colspan="6">No candidates</td></tr>';
     return;
   }
 
@@ -152,7 +120,7 @@ function renderCandidates() {
       const needsGeneration = item.status === 'needs_generation';
       const isDuplicate = item.status === 'duplicate';
 
-      const canPromote = item.status === 'pending' || item.status === 'to_be_fixed';
+      const canPromote = item.status === 'pending';
       const canNeedsFix = item.status === 'pending';
       const canReopen = item.status === 'to_be_fixed' || item.status === 'duplicate';
       const canGenerate =
@@ -195,32 +163,22 @@ function renderCandidates() {
 
       if (isDuplicate) {
         actionButtons.push(
-          `<button class="btn-del" onclick="deleteCandidate('${esc(item.verb_id)}',this)">🗑 Delete</button>`,
+          `<button class="btn-del" onclick="deleteCandidate('${esc(item.verb_id)}',this)">🗑</button>`,
         );
       }
 
-      const formsCell = needsGeneration
-        ? '<em style="color:var(--muted);font-size:12px">—</em>'
-        : `<details><summary class="expand-summary">Forms</summary>
-           <div class="expand-body">${renderFormsTable(item.forms)}</div>
-         </details>`;
-
-      const examplesCell = needsGeneration
-        ? '<em style="color:var(--muted);font-size:12px">—</em>'
-        : `<details><summary class="expand-summary">Examples</summary>
-           <div class="expand-body">${renderExamplesList(item.examples)}</div>
-         </details>`;
+      const lemmaDisplay = item.lemma
+        ? `<span class="cand-lemma">${esc(item.lemma)}</span>`
+        : '<em style="color:var(--muted)">—</em>';
 
       return `<tr id="cand-row-${esc(item.verb_id)}" class="${isPromoted ? 'row-promoted' : ''}">
       <td><span class="mono">${esc(item.query)}</span></td>
-      <td><span class="mono" style="color:var(--muted)">${item.lemma ? esc(item.lemma) : '—'}</span></td>
+      <td>${lemmaDisplay}</td>
       <td><span class="pill pill-lang">${esc(item.language)}</span></td>
       <td style="color:var(--muted);font-size:12px">${item.rank ?? '—'}</td>
       <td>${candStatusPill(item.status)}</td>
-      <td class="cell-expand">${formsCell}</td>
-      <td class="cell-expand">${examplesCell}</td>
       <td>
-        <div class="btn-col">
+        <div class="btn-row">
           ${actionButtons.join('')}
         </div>
       </td>
@@ -242,14 +200,9 @@ async function regenSingle(verbId, button) {
 
     if (response.status === 409) {
       const conflict = await response.json().catch(() => ({}));
-      const candidate = candidatesData.find((item) => item.verb_id === verbId);
 
-      if (candidate) {
-        candidate.status = 'duplicate';
-        if (conflict.duplicate_of) {
-          candidate.duplicate_of = conflict.duplicate_of;
-        }
-      }
+      // generate_candidate deletes the candidate doc before raising 409 — remove it locally
+      candidatesData = candidatesData.filter((item) => item.verb_id !== verbId);
 
       const statusFilter = document.getElementById('cand-filter-status');
       if (statusFilter && statusFilter.value === 'needs_generation,pending,to_be_fixed') {
@@ -259,11 +212,7 @@ async function regenSingle(verbId, button) {
       updateCandidateStats();
       renderCandidates();
 
-      alert(
-        conflict.detail ||
-          conflict.message ||
-          'Duplicate detected. Candidate marked as duplicate.',
-      );
+      alert(conflict.detail || conflict.message || 'Already in live verbs. Candidate removed.');
 
       return;
     }
@@ -274,6 +223,7 @@ async function regenSingle(verbId, button) {
     }
 
     const doc = await response.json();
+    delete doc.old_id;
     const existingIndex = candidatesData.findIndex(
       (item) => item.verb_id === verbId || item.verb_id === doc.verb_id,
     );
@@ -395,6 +345,14 @@ async function deleteCandidate(verbId, button) {
       `${CANDIDATES_ROOT}/api/candidates/${encodeURIComponent(verbId)}`,
       { method: 'DELETE' },
     );
+
+    if (response.status === 404) {
+      // Already gone from Firestore (e.g. deleted server-side on a prior 409) — clean up locally
+      candidatesData = candidatesData.filter((item) => item.verb_id !== verbId);
+      updateCandidateStats();
+      renderCandidates();
+      return;
+    }
 
     if (!response.ok) {
       const errorPayload = await response.json().catch(() => ({ detail: response.statusText }));

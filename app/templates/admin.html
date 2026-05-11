@@ -60,11 +60,10 @@
         </select>
         <select id="sig-filter-status" onchange="renderActiveSignalView()">
           <option value="">All statuses</option>
-          <option value="__unclassified__">Unclassified</option>
+          <option value="__unclassified__" selected>Unclassified</option>
           <option value="candidate">Candidate</option>
           <option value="in_set">In set</option>
           <option value="garbage">Garbage</option>
-          <option value="processed">Processed</option>
         </select>
         <div class="view-toggle">
           <button id="btn-view-aggr" class="toggle-btn active" onclick="setSigView('aggr')">Aggregated</button>
@@ -73,23 +72,14 @@
       </div>
 
       <div id="sig-aggr-view">
-        <div class="toolbar" style="margin-bottom:10px;margin-top:0">
-          <span style="font-size:12px;color:var(--muted)">Sort by</span>
-          <select id="sig-sort" onchange="renderAggr()">
-            <option value="count">Count (high → low)</option>
-            <option value="last">Last seen (newest first)</option>
-            <option value="status">Status</option>
-            <option value="query">Query (A → Z)</option>
-          </select>
-        </div>
         <div class="card">
           <table class="tbl">
             <thead>
               <tr>
-                <th>Query</th>
+                <th class="th-sort" id="sth-query" onclick="setSigSort('query')">Query</th>
                 <th>Lang</th>
-                <th>Count</th>
-                <th>Last seen</th>
+                <th class="th-sort" id="sth-count" onclick="setSigSort('count')">Count</th>
+                <th class="th-sort" id="sth-last" onclick="setSigSort('last')">Last seen</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -144,29 +134,22 @@
           <option value="duplicate">Duplicate</option>
           <option value="promoted">Promoted</option>
         </select>
-        <select id="cand-sort" onchange="renderCandidates()">
-          <option value="lang_lemma">Lang → Query</option>
-          <option value="status">Status</option>
-          <option value="created">Newest first</option>
-        </select>
       </div>
 
       <div class="card">
         <table class="tbl" id="cand-table">
           <thead>
             <tr>
-              <th>Raw query</th>
+              <th class="th-sort" id="cth-query" onclick="setCandSort('query')">Raw query</th>
               <th>Lemma</th>
               <th>Lang</th>
               <th>Rank</th>
-              <th>Status</th>
-              <th>Forms</th>
-              <th>Examples</th>
+              <th class="th-sort" id="cth-status" onclick="setCandSort('status')">Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="cand-body">
-            <tr><td colspan="8" class="loading">Loading…</td></tr>
+            <tr><td colspan="6" class="loading">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -183,10 +166,10 @@
           <option value="he">he</option>
           <option value="es">es</option>
         </select>
-        <input id="live-search-input" type="text" placeholder="Search — any form, e.g. начал, go, fue"
-          style="width:260px;padding:5px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;background:var(--bg);color:var(--text)"
+        <input id="live-search-input" type="text" class="search-input"
+          placeholder="Search — any form, e.g. начал, go, fue"
           onkeydown="if(event.key==='Enter')searchLiveVerbs()">
-        <button class="action-btn" onclick="searchLiveVerbs()">Search</button>
+        <button class="btn-primary" onclick="searchLiveVerbs()">Search</button>
       </div>
       <div id="live-verb-results">
         <div class="card">
