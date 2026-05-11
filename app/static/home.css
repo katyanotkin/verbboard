@@ -171,9 +171,9 @@ input[type="text"]:focus {
 .progress-meta {
   display: flex;
   align-items: center;
-  gap: 5px;
-  min-width: 54px;
+  gap: 4px;
   justify-content: flex-end;
+  white-space: nowrap;
 }
 
 .progress-star {
@@ -182,11 +182,17 @@ input[type="text"]:focus {
   line-height: 1;
 }
 
-.progress-count {
+.progress-count,
+.progress-total {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-subtle);
   font-variant-numeric: tabular-nums;
+}
+
+.progress-total {
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 /* ===== Search ===== */

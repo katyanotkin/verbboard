@@ -13,6 +13,7 @@ from core.languages.config import LANGUAGE
 from core.registry import all_plugins
 from core.search_utils import find_best_entry
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
+from core.verb_loader import load_entries_for_language
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -128,6 +129,7 @@ def home(
         selected_language = "he"
 
     entries = _load_entries(selected_language)
+    total_verbs = len(load_entries_for_language(language=selected_language))
 
     selected_verb_id = verb_id or cookie_verb_id
     if entries:
@@ -169,6 +171,7 @@ def home(
             "verb_options": verb_options,
             "search_value": search_value,
             "notice_text": notice_text,
+            "total_verbs": total_verbs,
         },
     )
     response.set_cookie("language", selected_language, httponly=False, samesite="lax")

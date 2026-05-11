@@ -93,27 +93,20 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateProgress() {
-    if (!verbSelect) return;
+    const language = getLanguage();
+    const total = window.VB_TOTAL || 0;
+    if (!language || total === 0) return;
 
-    const options = Array.from(verbSelect.options);
-    const total = options.length;
-
-    const count = options.filter((option) =>
-      option.textContent.startsWith("★ ")
-    ).length;
-
-    const percent = total > 0 ? (count / total) * 100 : 0;
+    const count = readSet(`known:${language}`).size;
+    const percent = (count / total) * 100;
 
     const fill = document.querySelector(".progress-fill");
     const countEl = document.querySelector(".progress-count");
+    const totalEl = document.querySelector(".progress-total");
 
-    if (fill) {
-      fill.style.width = `${percent}%`;
-    }
-
-    if (countEl) {
-      countEl.textContent = String(count).padStart(3, "0");
-    }
+    if (fill) fill.style.width = `${percent}%`;
+    if (countEl) countEl.textContent = String(count);
+    if (totalEl) totalEl.textContent = ` / ${total}`;
   }
 
   function hideSuggestions() {
