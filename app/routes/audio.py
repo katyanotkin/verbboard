@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, Request
@@ -73,11 +74,10 @@ async def _generate_on_demand(
         form_key=form_key,
         voice_edge_id=voice_meta.edge_id,
     )
-    return audio_backend.read_bytes(
-        build_audio_key(
-            language=language, verb_id=verb_id, voice=voice, form_key=form_key
-        )
+    key = build_audio_key(
+        language=language, verb_id=verb_id, voice=voice, form_key=form_key
     )
+    return await asyncio.to_thread(audio_backend.read_bytes, key)
 
 
 @router.get("/audio/{language}/{verb_id}/{voice}/{form_key}.mp3")
@@ -91,7 +91,8 @@ async def get_audio(
     logger.debug("audio request: %s %s %s %s", language, verb_id, voice, form_key)
     audio_backend = request.app.state.audio_backend
 
-    audio_bytes = read_audio_bytes(
+    audio_bytes = await asyncio.to_thread(
+        read_audio_bytes,
         audio_backend=audio_backend,
         language=language,
         verb_id=verb_id,

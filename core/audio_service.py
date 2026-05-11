@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 # once confirmed present they never need a remote existence check again.
 _known_keys: set[str] = set()
 
+# Prefixes already bulk-listed this process lifetime; skip repeat list calls.
+_prewarmed_prefixes: set[str] = set()
+
 
 def build_hashed_audio_key(base_form_key: str, text: str) -> str:
     normalized_text = text.strip()
@@ -46,6 +49,8 @@ async def prewarm_verb_audio_keys(
     event loop is not stalled while GCS responds.
     """
     prefix = f"audio/{language}/{verb_id}/{voice}/"
+    if prefix in _prewarmed_prefixes:
+        return
 
     def _collect() -> int:
         count = 0
@@ -55,6 +60,7 @@ async def prewarm_verb_audio_keys(
         return count
 
     count = await asyncio.to_thread(_collect)
+    _prewarmed_prefixes.add(prefix)
     logger.debug("prewarm: %d keys loaded for %s", count, prefix)
 
 
@@ -87,7 +93,7 @@ async def ensure_audio(
     if key in _known_keys:
         return key
 
-    if audio_backend.exists(key):
+    if await asyncio.to_thread(audio_backend.exists, key):
         logger.info("Audio cache hit: %s", key)
         _known_keys.add(key)
         return key
@@ -99,7 +105,7 @@ async def ensure_audio(
         await tts_to_mp3(normalized_text, output_path, voice_edge_id)
         audio_bytes = output_path.read_bytes()
 
-    audio_backend.write_bytes(key, audio_bytes)
+    await asyncio.to_thread(audio_backend.write_bytes, key, audio_bytes)
     _known_keys.add(key)
     logger.info("Audio written: %s", key)
 

@@ -22,8 +22,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-async def _run_audio_background(audio_backend, language, verb_id, voice, tasks) -> None:
-    await prewarm_verb_audio_keys(audio_backend, language, verb_id, voice)
+async def _run_audio_background(tasks) -> None:
     results = await asyncio.gather(*tasks, return_exceptions=True)
     for result in results:
         if isinstance(result, Exception):
@@ -123,14 +122,8 @@ async def learn(
         )
 
     if tasks:
-        background_tasks.add_task(
-            _run_audio_background,
-            audio_backend,
-            language,
-            verb.id,
-            selected_voice,
-            tasks,
-        )
+        await prewarm_verb_audio_keys(audio_backend, language, verb.id, selected_voice)
+        background_tasks.add_task(_run_audio_background, tasks)
 
     ui_lang = resolve_ui_language(request)
     ui_strings = get_strings(ui_lang)
