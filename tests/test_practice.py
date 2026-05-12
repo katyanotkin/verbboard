@@ -61,6 +61,7 @@ def _board(verb: VerbEntry) -> Board:
 
 
 def test_verbs_page_has_practice_panel_element(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setattr("app.routes.verbs.PRACTICE_LOOP_ENABLED", True)
     monkeypatch.setattr(
         "app.routes.verbs.load_entries_for_language",
         lambda **kw: _stub_entries(),
@@ -72,6 +73,7 @@ def test_verbs_page_has_practice_panel_element(client: TestClient, monkeypatch) 
 def test_verbs_page_ui_includes_practice_strings(
     client: TestClient, monkeypatch
 ) -> None:
+    monkeypatch.setattr("app.routes.verbs.PRACTICE_LOOP_ENABLED", True)
     monkeypatch.setattr(
         "app.routes.verbs.load_entries_for_language",
         lambda **kw: _stub_entries(),

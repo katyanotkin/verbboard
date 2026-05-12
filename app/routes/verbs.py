@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
@@ -11,6 +12,11 @@ from core.verb_loader import load_entries_for_language
 
 RECENT_VERBS_LIMIT = 8
 MAX_SYNTHETIC_RANK = 999999
+PRACTICE_LOOP_ENABLED = os.getenv("PRACTICE_LOOP_ENABLED", "false").lower() in (
+    "true",
+    "1",
+    "yes",
+)
 
 router = APIRouter()
 
@@ -72,20 +78,28 @@ def verb_browser(
     verbs_json = json.dumps(verbs_js, ensure_ascii=False)
     recent_json = json.dumps(recent_ids, ensure_ascii=False)
     lang_json = json.dumps(selected_language)
-    ui_json = json.dumps(
-        {
-            "verbs.count_one": ui["verbs.count_one"],
-            "verbs.count_other": ui["verbs.count_other"],
-            "verbs.empty_state": ui["verbs.empty_state"],
-            "verbs.filter_recent": ui["verbs.filter_recent"],
-            "practice.label": ui["practice.label"],
-            "practice.start": ui["practice.start"],
-            "practice.start_mixed": ui["practice.start_mixed"],
-            "practice.in_progress": ui["practice.in_progress"],
-            "practice.continue": ui["practice.continue"],
-            "practice.abandon": ui["practice.abandon"],
-        },
-        ensure_ascii=False,
+    ui_strings: dict[str, str] = {
+        "verbs.count_one": ui["verbs.count_one"],
+        "verbs.count_other": ui["verbs.count_other"],
+        "verbs.empty_state": ui["verbs.empty_state"],
+        "verbs.filter_recent": ui["verbs.filter_recent"],
+    }
+    if PRACTICE_LOOP_ENABLED:
+        ui_strings.update(
+            {
+                "practice.label": ui["practice.label"],
+                "practice.start": ui["practice.start"],
+                "practice.start_mixed": ui["practice.start_mixed"],
+                "practice.in_progress": ui["practice.in_progress"],
+                "practice.continue": ui["practice.continue"],
+                "practice.abandon": ui["practice.abandon"],
+            }
+        )
+    ui_json = json.dumps(ui_strings, ensure_ascii=False)
+    practice_panel_html = (
+        '<div id="practice-panel" class="practice-panel"></div>'
+        if PRACTICE_LOOP_ENABLED
+        else ""
     )
 
     html = f"""<!doctype html>
@@ -152,7 +166,7 @@ def verb_browser(
       <span class="vb-badge known">★</span><span>{ui["verbs.filter_known"]}</span>
     </div>
 
-    <div id="practice-panel" class="practice-panel"></div>
+    {practice_panel_html}
 
     <div id="vb-list" class="vb-list"></div>
 
