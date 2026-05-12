@@ -5,6 +5,7 @@ from html import escape
 from urllib.parse import quote
 
 from core.audio_service import build_hashed_audio_key
+from core.languages.config import LANGUAGE as LANG_CONFIG
 from core.models import Board
 from core.paths import TEMPLATES_DIR
 
@@ -23,6 +24,9 @@ def render_board_html(
 ) -> str:
     ui = ui_strings or {}
     html_dir = "rtl" if ui_lang == "he" else "ltr"
+
+    lang_cfg = LANG_CONFIG.get(board.language)
+    language_display = lang_cfg.native if lang_cfg else board.language.upper()
 
     lemma = board.verb.display_lemma or board.verb.lemma
     if isinstance(lemma, dict):
@@ -67,21 +71,23 @@ def render_board_html(
                 audio_html = ""
 
             value_font_size = "15px" if key in ("pair", "aspect") else "22px"
+            form_cell = (
+                f"<span style='font-size:{value_font_size}'>{value_html}</span>"
+                f"{audio_html}"
+            )
             rows.append(
                 "<tr>"
-                f"<td>{label}</td>"
-                f"<td style='font-size: {value_font_size}'>{value_html}</td>"
-                f"<td>{audio_html}</td>"
+                f"<td class='conj-label'>{label}</td>"
+                f"<td class='conj-form'>{form_cell}</td>"
                 "</tr>"
             )
 
         col_label = escape(ui.get("board.col_label", "Label"))
         col_form = escape(ui.get("board.col_form", "Form"))
-        col_audio = escape(ui.get("board.col_audio", "Audio"))
         sections_html.append(
             f"<h2>{escape(section['title'])}</h2>"
-            "<table>"
-            f"<tr><th>{col_label}</th><th>{col_form}</th><th>{col_audio}</th></tr>"
+            "<table class='conj-table'>"
+            f"<tr><th>{col_label}</th><th>{col_form}</th></tr>"
             + "".join(rows)
             + "</table>"
         )
@@ -224,6 +230,7 @@ def render_board_html(
         .replace("{{return_to | urlencode}}", quote(resolved_return_to, safe="/"))
         .replace("{{learn_href | urlencode}}", quote(learn_href, safe="/"))
         .replace("{{language}}", escape(board.language))
+        .replace("{{language_display}}", escape(language_display))
         .replace("{{voice_key}}", escape(board.voice_key))
         .replace("{{verb_id}}", escape(board.verb.id))
         .replace("{{home_href}}", home_href)

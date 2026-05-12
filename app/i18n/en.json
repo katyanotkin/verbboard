@@ -59,8 +59,8 @@
   "board.col_label": "Label",
   "board.col_form": "Form",
   "board.col_audio": "Audio",
-  "board.col_sentence": "Sentence",
-  "board.show_translations": "Translation",
+  "board.col_sentence": "Example",
+  "board.show_translations": "With translation",
   "board.hide_translations": "× Translation",
 
   "feedback.title": "VerbBoard feedback",

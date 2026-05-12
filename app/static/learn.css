@@ -47,6 +47,12 @@ tr:last-child td {
   border-bottom: none;
 }
 
+.conj-form {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 button {
   padding: 6px 10px;
   cursor: pointer;
@@ -354,4 +360,7 @@ button {
   margin: 0;
 }
 
-/* .toggle-translations-btn inherits .btn-secondary from common.css */
+.toggle-translations-btn {
+  border-color: #94a3b8;
+  font-weight: 500;
+}
