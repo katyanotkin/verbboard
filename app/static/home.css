@@ -143,57 +143,8 @@ input[type="text"]:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-/* ===== Progress ===== */
-
-.progress-row {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 8px;
-  background: #edf2f7;
-  border-radius: 999px;
-  overflow: hidden;
-  border: 1px solid #dde5ef;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #4a90e2;
-  width: 0%;
-  transition: width 0.2s ease;
-}
-
-.progress-meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  justify-content: flex-end;
-  white-space: nowrap;
-}
-
-.progress-star {
-  font-size: 14px;
-  color: #f97316;
-  line-height: 1;
-}
-
-.progress-count,
-.progress-total {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-subtle);
-  font-variant-numeric: tabular-nums;
-}
-
-.progress-total {
-  font-weight: 400;
-  color: var(--text-muted);
-}
+/* home-specific progress row spacing */
+.progress-row { margin-top: 8px; }
 
 /* ===== Search ===== */
 

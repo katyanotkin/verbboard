@@ -208,12 +208,22 @@ def render_board_html(
 
     board_ui_json = json.dumps(
         {
-            "board.mark_known": ui.get("board.mark_known", "Mark as known"),
-            "board.known": ui.get("board.known", "Known"),
+            "board.mark_known": ui.get("board.mark_known", "Mark as learned"),
+            "board.known": ui.get("board.known", "Learned"),
             "practice.prev": ui.get("practice.prev", "Prev"),
             "practice.next": ui.get("practice.next", "Next"),
             "practice.of": ui.get("practice.of", "of"),
             "practice.finish": ui.get("practice.finish", "Finish"),
+            "practice.abandon": ui.get("practice.abandon", "Abandon"),
+            "practice.listen_first": ui.get(
+                "practice.listen_first", "Listen to the audio first"
+            ),
+            "practice.wrap_up": ui.get("practice.wrap_up", "Practice complete"),
+            "practice.learned_prompt": ui.get(
+                "practice.learned_prompt", "Which verbs did you learn?"
+            ),
+            "practice.save": ui.get("practice.save", "Save"),
+            "practice.skip": ui.get("practice.skip", "Skip"),
         },
         ensure_ascii=False,
     )

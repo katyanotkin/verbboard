@@ -31,6 +31,11 @@ _PRACTICE_UI_KEYS = [
     "practice.abandon",
     "practice.prev",
     "practice.next",
+    "practice.wrap_up",
+    "practice.learned_prompt",
+    "practice.save",
+    "practice.skip",
+    "practice.listen_first",
 ]
 
 
@@ -93,6 +98,10 @@ def test_verbs_page_ui_includes_practice_strings(
         "practice.in_progress",
         "practice.continue",
         "practice.abandon",
+        "practice.wrap_up",
+        "practice.learned_prompt",
+        "practice.save",
+        "practice.skip",
     ]:
         assert key in ui, f"Missing UI key: {key}"
 
@@ -123,7 +132,18 @@ def test_board_ui_json_includes_practice_strings(mock_verb: VerbEntry) -> None:
     end = html.index(";", start)
     ui = json.loads(html[start:end])
 
-    for key in ["practice.prev", "practice.next", "practice.of", "practice.finish"]:
+    for key in [
+        "practice.prev",
+        "practice.next",
+        "practice.of",
+        "practice.finish",
+        "practice.abandon",
+        "practice.listen_first",
+        "practice.wrap_up",
+        "practice.learned_prompt",
+        "practice.save",
+        "practice.skip",
+    ]:
         assert key in ui, f"Missing board UI key: {key}"
         assert ui[key], f"Empty board UI key: {key}"
 

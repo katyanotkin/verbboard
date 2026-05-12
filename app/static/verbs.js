@@ -8,7 +8,6 @@
 
   const searchEl   = document.getElementById('vb-search');
   const listEl     = document.getElementById('vb-list');
-  const countEl    = document.getElementById('vb-count');
   const toggleEl   = document.getElementById('vb-filter-toggle');
   const sortEl     = document.getElementById('vb-sort');
   const practiceEl = document.getElementById('practice-panel');
@@ -79,6 +78,19 @@
 
   const UI = window.UI || {};
 
+  function updateProgress() {
+    const total   = verbs.length;
+    if (!total) return;
+    const count   = known().size;
+    const percent = (count / total) * 100;
+    const fill    = document.querySelector('.progress-fill');
+    const countEl = document.querySelector('.progress-count');
+    const totalEl = document.querySelector('.progress-total');
+    if (fill)    fill.style.width      = `${percent}%`;
+    if (countEl) countEl.textContent   = String(count);
+    if (totalEl) totalEl.textContent   = ` / ${total}`;
+  }
+
   // ── item renderer ──────────────────────────────────────────────────────────
   function renderItem(v, knownSet, seenSet) {
     const isKnown = knownSet.has(v.id);
@@ -99,9 +111,6 @@
     const seenSet  = seen();
     const rows     = visibleVerbs();
 
-    countEl.textContent = rows.length
-      ? `${rows.length} ${rows.length === 1 ? (UI['verbs.count_one'] || 'verb') : (UI['verbs.count_other'] || 'verbs')}`
-      : '';
 
     if (!rows.length) {
       listEl.innerHTML = `<div class="vb-empty">${UI['verbs.empty_state'] || 'No verbs match'}</div>`;
@@ -167,6 +176,7 @@
   const practiceSessionKey = `practice_session:${lang}`;
   const practiceSizeKey    = `practice_size:${lang}`;
   const practiceBadgesKey  = `practice_badges:${lang}`;
+  const practiceWrapupKey  = `practice_wrapup:${lang}`;
   const PRACTICE_SIZES     = [3, 6, 9];
   const PRACTICE_POOL      = 20;   // draw from top-N new verbs before padding with known
 
@@ -270,9 +280,12 @@
   function startPractice() {
     const pool     = buildPool(activePracticeSize);
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    const ids      = shuffled.slice(0, activePracticeSize).map(v => v.id);
+    const picked   = shuffled.slice(0, activePracticeSize);
+    const ids      = picked.map(v => v.id);
+    const lemmas   = {};
+    picked.forEach(function (v) { lemmas[v.id] = v.lemma; });
 
-    localStorage.setItem(practiceSessionKey, JSON.stringify({ ids, size: activePracticeSize }));
+    localStorage.setItem(practiceSessionKey, JSON.stringify({ ids, lemmas, size: activePracticeSize }));
 
     const verbsUrl = `/verbs?language=${encodeURIComponent(lang)}`;
     window.location.href =
@@ -283,4 +296,94 @@
 
   render();
   renderPracticePanel();
+  updateProgress();
+
+  // Show practice wrap-up if learn.js stored one (fires on any return to this page)
+  const pendingWrapup = localStorage.getItem(practiceWrapupKey);
+  if (pendingWrapup) {
+    localStorage.removeItem(practiceWrapupKey);
+    try { _showWrapUp(JSON.parse(pendingWrapup)); } catch (_) {}
+  }
+
+  function _showWrapUp(wrapupData) {
+    const knownSet = readSet(`known:${lang}`);
+    const lemmas   = wrapupData.lemmas || {};
+
+    const overlay = document.createElement('div');
+    overlay.className = 'practice-wrapup-overlay';
+
+    const card = document.createElement('div');
+    card.className = 'practice-wrapup-card';
+
+    const heading = document.createElement('h3');
+    heading.textContent = UI['practice.wrap_up'] || 'Practice complete';
+    card.appendChild(heading);
+
+    const prompt = document.createElement('p');
+    prompt.textContent = UI['practice.learned_prompt'] || 'Which verbs did you learn?';
+    card.appendChild(prompt);
+
+    const list = document.createElement('div');
+    list.className = 'practice-wrapup-list';
+
+    wrapupData.ids.forEach(function (id) {
+      const label = document.createElement('label');
+      label.className = 'practice-wrapup-item';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.dataset.id = id;
+      cb.checked = knownSet.has(id);
+
+      const span = document.createElement('span');
+      span.textContent = lemmas[id] || id;
+
+      label.appendChild(cb);
+      label.appendChild(span);
+
+      if (knownSet.has(id)) {
+        const star = document.createElement('span');
+        star.className = 'practice-wrapup-star';
+        star.textContent = '★';
+        label.appendChild(star);
+      }
+
+      list.appendChild(label);
+    });
+
+    card.appendChild(list);
+
+    const actions = document.createElement('div');
+    actions.className = 'practice-wrapup-actions';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn-pill-navy';
+    saveBtn.textContent = UI['practice.save'] || 'Save';
+
+    const skipBtn = document.createElement('button');
+    skipBtn.className = 'practice-abandon-btn';
+    skipBtn.textContent = UI['practice.skip'] || 'Skip';
+
+    actions.appendChild(saveBtn);
+    actions.appendChild(skipBtn);
+    card.appendChild(actions);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    saveBtn.addEventListener('click', function () {
+      const newKnown = readSet(`known:${lang}`);
+      wrapupData.ids.forEach(function (id) { newKnown.delete(id); });
+      overlay.querySelectorAll("input[type='checkbox']:checked").forEach(function (cb) {
+        newKnown.add(cb.dataset.id);
+      });
+      localStorage.setItem(`known:${lang}`, JSON.stringify(Array.from(newKnown)));
+      overlay.remove();
+      render();
+      updateProgress();
+    });
+
+    skipBtn.addEventListener('click', function () {
+      overlay.remove();
+    });
+  }
 })();
