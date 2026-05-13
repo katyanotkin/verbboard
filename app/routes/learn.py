@@ -11,7 +11,9 @@ from core.audio_service import (
     ensure_audio,
     prewarm_verb_audio_keys,
 )
+from core.auth.firebase_auth import get_optional_auth_user
 from core.i18n import get_strings, resolve_ui_language
+from core.progress.progress_service import record_seen
 from core.registry import get as get_plugin
 from core.render import render_board_html
 from core.tts import VOICES
@@ -124,6 +126,14 @@ async def learn(
     if tasks:
         await prewarm_verb_audio_keys(audio_backend, language, verb.id, selected_voice)
         background_tasks.add_task(_run_audio_background, tasks)
+
+    user = get_optional_auth_user(request)
+    if user is not None and source != "candidate":
+        record_seen(
+            user=user,
+            language=language,
+            verb_id=verb.id,
+        )
 
     ui_lang = resolve_ui_language(request)
     ui_strings = get_strings(ui_lang)

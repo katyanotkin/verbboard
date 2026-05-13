@@ -7,7 +7,6 @@ from functools import lru_cache
 from dotenv import load_dotenv
 from google.cloud import secretmanager
 
-
 load_dotenv(override=True)
 
 _ADMIN_SECRET_NAME = "verbboard-admin-secret"
@@ -27,6 +26,7 @@ class Settings:
     verb_candidates_collection: str
     log_level: str
     admin_secret: str
+    firebase_web_config_json: str
 
 
 def _resolve_environment() -> str:
@@ -112,6 +112,7 @@ def load_settings() -> Settings:
         ),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         admin_secret=_load_admin_secret(),
+        firebase_web_config_json=os.getenv("FIREBASE_WEB_CONFIG_JSON", ""),
     )
     _validate(settings)
     return settings

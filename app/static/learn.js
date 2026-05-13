@@ -1,44 +1,25 @@
 document.addEventListener("DOMContentLoaded", function () {
   const knownButton = document.getElementById("known-btn");
-  const pageRoot    = document.getElementById("learn-page");
+  const pageRoot = document.getElementById("learn-page");
 
   if (!knownButton || !pageRoot) return;
 
   const language = pageRoot.dataset.language;
-  const verbId   = pageRoot.dataset.verbId;
+  const verbId = pageRoot.dataset.verbId;
 
   if (!language || !verbId) return;
 
-  const seenKey       = `seen:${language}`;
-  const knownKey      = `known:${language}`;
+  const progress = window.VerbBoardProgress;
+  if (!progress) return;
+
+  const seenKey = `seen:${language}`;
   const audioPlaysKey = `audio_plays:${language}`;
-  const sessionKey    = `practice_session:${language}`;
-  const badgesKey     = `practice_badges:${language}`;
-
-  function readSet(storageKey) {
-    try {
-      return new Set(JSON.parse(localStorage.getItem(storageKey) || "[]"));
-    } catch (_) {
-      return new Set();
-    }
-  }
-
-  function writeSet(storageKey, valueSet) {
-    localStorage.setItem(storageKey, JSON.stringify(Array.from(valueSet)));
-  }
-
-  function markSeen() {
-    const seen = readSet(seenKey);
-    if (!seen.has(verbId)) {
-      seen.add(verbId);
-      writeSet(seenKey, seen);
-    }
-  }
+  const sessionKey = `practice_session:${language}`;
+  const badgesKey = `practice_badges:${language}`;
 
   function updateKnownButton(shouldPop) {
-    const known   = readSet(knownKey);
-    const isKnown = known.has(verbId);
-    const UI      = window.UI || {};
+    const isKnown = progress.isKnown(language, verbId);
+    const UI = window.UI || {};
 
     knownButton.classList.toggle("is-active", isKnown);
     knownButton.setAttribute("aria-pressed", isKnown ? "true" : "false");
@@ -53,15 +34,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function toggleKnown() {
-    const known = readSet(knownKey);
-    if (known.has(verbId)) {
-      known.delete(verbId);
-    } else {
-      known.add(verbId);
-    }
-    writeSet(knownKey, known);
-    markSeen();
+  async function toggleKnown() {
+    const nextKnown = !progress.isKnown(language, verbId);
+    await progress.setKnown(language, verbId, nextKnown);
+    await progress.markSeen(language, verbId);
     updateKnownButton(true);
   }
 
@@ -70,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
     toggleKnown();
   });
 
-  markSeen();
+  progress.markSeen(language, verbId);
   updateKnownButton(false);
 
   // ── audio play tracking ────────────────────────────────────────────────────
@@ -90,10 +66,10 @@ document.addEventListener("DOMContentLoaded", function () {
   // ── translations toggle ────────────────────────────────────────────────────
   const toggleBtn = document.getElementById("toggle-translations");
   if (toggleBtn) {
-    const table     = document.querySelector(".examples-table");
+    const table = document.querySelector(".examples-table");
     const labelShow = toggleBtn.dataset.labelShow;
     const labelHide = toggleBtn.dataset.labelHide;
-    let visible     = false;
+    let visible = false;
 
     toggleBtn.addEventListener("click", function () {
       visible = !visible;
@@ -103,7 +79,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ── practice session bar ──────────────────────────────────────────────────
-  const PRACTICE_MIN_PLAYS = 5;  // plays required per verb: gates Next/Finish and badge
+  const PRACTICE_MIN_PLAYS = 5;
 
   let practiceSession;
   try {
@@ -124,10 +100,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function _mountPracticeBar(session, idx) {
-    const UI      = window.UI || {};
+    const UI = window.UI || {};
     const verbsUrl = `/verbs?language=${encodeURIComponent(language)}`;
-    const total    = session.ids.length;
-    const isLast   = idx === total - 1;
+    const total = session.ids.length;
+    const isLast = idx === total - 1;
 
     const bar = document.createElement("div");
     bar.className = "practice-bar";
@@ -137,9 +113,9 @@ document.addEventListener("DOMContentLoaded", function () {
     prevBtn.textContent = UI["practice.prev"] || "Prev";
     prevBtn.disabled = idx === 0;
 
-    const progress = document.createElement("span");
-    progress.className = "practice-progress";
-    progress.textContent = `${idx + 1} ${UI["practice.of"] || "of"} ${total}`;
+    const progressEl = document.createElement("span");
+    progressEl.className = "practice-progress";
+    progressEl.textContent = `${idx + 1} ${UI["practice.of"] || "of"} ${total}`;
 
     const nextBtn = document.createElement("button");
     nextBtn.className = "practice-nav-btn";
@@ -160,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
     warnEl.textContent = UI["practice.listen_first"] || "Listen to the audio first";
 
     bar.appendChild(prevBtn);
-    bar.appendChild(progress);
+    bar.appendChild(progressEl);
     bar.appendChild(nextBtn);
     bar.appendChild(finishBtn);
     bar.appendChild(abandonBtn);
@@ -177,8 +153,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function hasListened() {
       let plays;
-      try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}"); }
-      catch (_) { plays = {}; }
+      try {
+        plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}");
+      } catch (_) {
+        plays = {};
+      }
       return (plays[verbId] || 0) >= PRACTICE_MIN_PLAYS;
     }
 
@@ -186,7 +165,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function showWarn() {
       warnEl.hidden = false;
       clearTimeout(warnTimer);
-      warnTimer = setTimeout(function () { warnEl.hidden = true; }, 2500);
+      warnTimer = setTimeout(function () {
+        warnEl.hidden = true;
+      }, 2500);
     }
 
     prevBtn.addEventListener("click", function () {
@@ -195,12 +176,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     nextBtn.addEventListener("click", function () {
       if (idx >= total - 1) return;
-      if (!hasListened()) { showWarn(); return; }
+      if (!hasListened()) {
+        showWarn();
+        return;
+      }
       navTo(session.ids[idx + 1]);
     });
 
     finishBtn.addEventListener("click", function () {
-      if (!hasListened()) { showWarn(); return; }
+      if (!hasListened()) {
+        showWarn();
+        return;
+      }
       _finishPractice(session);
     });
 
@@ -213,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function _finishPractice(session) {
     let accomplished = false;
     try {
-      const seenSet = readSet(seenKey);
+      const seenSet = progress.readSet(seenKey);
       let plays;
       try {
         plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}");

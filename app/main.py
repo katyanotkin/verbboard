@@ -7,8 +7,14 @@ from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 from starlette.types import Scope
 
+# Import plugins so they self-register on module import.
+import core.languages.en.plugin  # noqa: F401
+import core.languages.es.plugin  # noqa: F401
+import core.languages.he.plugin  # noqa: F401
+import core.languages.ru.plugin  # noqa: F401
 from app.routes.about import router as about_router
 from app.routes.admin import router as admin_router
+from app.routes.api_progress import router as api_progress_router
 from app.routes.audio import router as audio_router
 from app.routes.feedback import router as feedback_router
 from app.routes.health import router as health_router
@@ -17,12 +23,6 @@ from app.routes.learn import router as learn_router
 from app.routes.verbs import router as verbs_router
 from core.audio_backend.factory import create_audio_backend
 from core.settings import load_settings
-
-# Import plugins so they self-register on module import.
-import core.languages.en.plugin  # noqa: F401
-import core.languages.es.plugin  # noqa: F401
-import core.languages.he.plugin  # noqa: F401
-import core.languages.ru.plugin  # noqa: F401
 
 
 @asynccontextmanager
@@ -54,3 +54,4 @@ app.include_router(health_router)
 app.include_router(home_router)
 app.include_router(learn_router)
 app.include_router(verbs_router)
+app.include_router(api_progress_router)
