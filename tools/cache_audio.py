@@ -25,7 +25,6 @@ import core.languages.en.plugin  # noqa: F401
 import core.languages.es.plugin  # noqa: F401
 import core.languages.he.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
-
 from core.audio_backend.gcs import GCSAudioBackend
 from core.audio_service import build_audio_key, build_hashed_audio_key, ensure_audio
 from core.registry import get as get_plugin
@@ -64,7 +63,7 @@ async def _cache_language(
     dry_run: bool,
 ) -> dict[str, int]:
     print(f"\n[{language}] Loading verbs from Firestore...")
-    entries = load_entries_for_language(language=language, source="firestore")
+    entries = load_entries_for_language(language=language)
     print(f"[{language}] {len(entries)} verbs")
 
     # Bulk-list existing blobs once per language — much faster than N exists() calls.
