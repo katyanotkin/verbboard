@@ -30,4 +30,5 @@ RUN python -m tools.audit_examples --language all
 
 EXPOSE 8080
 
+ENV PATH="/app/.venv/bin:$PATH"
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
