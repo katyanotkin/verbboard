@@ -9,6 +9,7 @@ from firebase_admin import auth as firebase_auth
 from firebase_admin import credentials
 
 from core.auth.models import AuthUser
+from core.settings import load_settings
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,19 @@ def initialize_firebase_admin() -> None:
 
 
 def verify_firebase_token(token: str) -> AuthUser:
+    settings = load_settings()
+    if (
+        settings.environment == "local"
+        and settings.allow_local_dev_auth
+        and token == "local-dev"
+    ):
+        return AuthUser(
+            uid="local-dev-user",
+            email="dev@example.com",
+            name="Local Dev",
+            picture="",
+        )
+
     initialize_firebase_admin()
 
     decoded = firebase_auth.verify_id_token(token)

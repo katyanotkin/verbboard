@@ -27,6 +27,7 @@ class Settings:
     log_level: str
     admin_secret: str
     firebase_web_config_json: str
+    allow_local_dev_auth: bool
 
 
 def _resolve_environment() -> str:
@@ -113,6 +114,7 @@ def load_settings() -> Settings:
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         admin_secret=_load_admin_secret(),
         firebase_web_config_json=os.getenv("FIREBASE_WEB_CONFIG_JSON", ""),
+        allow_local_dev_auth=os.getenv("ALLOW_LOCAL_DEV_AUTH", "").lower() == "true",
     )
     _validate(settings)
     return settings
