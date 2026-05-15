@@ -1,11 +1,14 @@
 """
 Audit suspicious cached example audio blobs in GCS.
 
-Heuristic:
-- example audio blobs smaller than a language-specific threshold are suspicious
-
 This tool is intentionally REPORT-ONLY.
 It does not delete or regenerate audio.
+
+Strategy:
+- group example audio blobs by language
+- compute average blob size per language
+- report the smallest N blobs per language
+- include % distance from language average
 
 Examples:
 
@@ -18,12 +21,11 @@ Examples:
 
     python -m tools.audit_audio \
         --language he \
-        --voice female \
-        --csv he_suspects.csv
+        --bottom-n 12
 
     python -m tools.audit_audio \
-        --language en \
-        --min-bytes 5000
+        --language ru \
+        --voice female
 """
 
 from __future__ import annotations
@@ -34,6 +36,7 @@ import os
 import sys
 from collections import defaultdict
 from datetime import datetime
+from statistics import mean
 from typing import Any
 
 from google.cloud import storage
@@ -42,13 +45,6 @@ from core.supported_languages import (
     supported_languages_list,
     supported_languages_with_all,
 )
-
-DEFAULT_MIN_BYTES = {
-    "en": 7000,
-    "es": 9000,
-    "he": 12000,
-    "ru": 15000,
-}
 
 
 def _parse_args() -> argparse.Namespace:
@@ -84,20 +80,10 @@ def _parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--min-bytes",
+        "--bottom-n",
         type=int,
-        default=None,
-        help=(
-            "Override language-specific threshold. "
-            "If omitted, defaults are used per language."
-        ),
-    )
-
-    parser.add_argument(
-        "--limit",
-        type=int,
-        default=20,
-        help="Max suspects to print per language",
+        default=12,
+        help="Report N smallest blobs per language",
     )
 
     parser.add_argument(
@@ -140,16 +126,6 @@ def _parse_blob_name(blob_name: str) -> dict[str, str] | None:
     }
 
 
-def _threshold_for_language(
-    language: str,
-    override: int | None,
-) -> int:
-    if override is not None:
-        return override
-
-    return DEFAULT_MIN_BYTES.get(language, 10000)
-
-
 def main() -> None:
     args = _parse_args()
 
@@ -166,13 +142,12 @@ def main() -> None:
         supported_languages_list() if args.language == "all" else [args.language]
     )
 
-    suspects: list[dict[str, Any]] = []
+    rows_by_language: dict[str, list[dict[str, Any]]] = defaultdict(list)
 
     for language in languages:
         prefix = f"audio/{language}/"
-        threshold = _threshold_for_language(language, args.min_bytes)
 
-        print(f"[{language}] scanning {prefix} " f"(threshold={threshold} bytes)")
+        print(f"[{language}] scanning {prefix}")
 
         for blob in bucket.list_blobs(prefix=prefix):
             parsed = _parse_blob_name(blob.name)
@@ -185,43 +160,61 @@ def main() -> None:
 
             size_bytes = blob.size or 0
 
-            if size_bytes >= threshold:
-                continue
+            row = {
+                "language": parsed["language"],
+                "voice": parsed["voice"],
+                "verb_id": parsed["verb_id"],
+                "example_key": parsed["example_key"],
+                "size_bytes": size_bytes,
+                "updated": (
+                    blob.updated.isoformat()
+                    if isinstance(blob.updated, datetime)
+                    else ""
+                ),
+                "blob_name": blob.name,
+            }
 
-            suspects.append(
-                {
-                    "language": parsed["language"],
-                    "voice": parsed["voice"],
-                    "verb_id": parsed["verb_id"],
-                    "example_key": parsed["example_key"],
-                    "size_bytes": size_bytes,
-                    "threshold_bytes": threshold,
-                    "updated": (
-                        blob.updated.isoformat()
-                        if isinstance(blob.updated, datetime)
-                        else ""
-                    ),
-                    "blob_name": blob.name,
-                }
-            )
+            rows_by_language[language].append(row)
 
-    suspects.sort(key=lambda row: row["size_bytes"])
-
-    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
-
-    for row in suspects:
-        grouped[row["language"]].append(row)
+    output_rows: list[dict[str, Any]] = []
 
     print()
 
     for language in languages:
-        rows = grouped.get(language, [])
+        rows = rows_by_language.get(language, [])
 
-        print(f"[{language}] suspects={len(rows)}")
+        if not rows:
+            print(f"[{language}] no example audio found")
+            print()
+            continue
 
-        for row in rows[: args.limit]:
+        sizes = [row["size_bytes"] for row in rows]
+        avg_size = mean(sizes)
+
+        sorted_rows = sorted(rows, key=lambda row: row["size_bytes"])
+        smallest_rows = sorted_rows[: args.bottom_n]
+
+        print(
+            f"[{language}] "
+            f"count={len(rows)} "
+            f"avg={round(avg_size)} "
+            f"bottom={len(smallest_rows)}"
+        )
+
+        for row in smallest_rows:
+            pct_from_avg = ((row["size_bytes"] - avg_size) / avg_size) * 100
+
+            enriched_row = {
+                **row,
+                "avg_size_bytes": round(avg_size),
+                "pct_from_avg": round(pct_from_avg, 2),
+            }
+
+            output_rows.append(enriched_row)
+
             print(
                 f"  {row['size_bytes']:>8}  "
+                f"{pct_from_avg:>7.2f}%  "
                 f"{row['voice']:<6}  "
                 f"{row['blob_name']}"
             )
@@ -237,16 +230,17 @@ def main() -> None:
                 "verb_id",
                 "example_key",
                 "size_bytes",
-                "threshold_bytes",
+                "avg_size_bytes",
+                "pct_from_avg",
                 "updated",
                 "blob_name",
             ],
         )
 
         writer.writeheader()
-        writer.writerows(suspects)
+        writer.writerows(output_rows)
 
-    print(f"Wrote {len(suspects)} suspects to {args.csv}")
+    print(f"Wrote {len(output_rows)} rows " f"to {args.csv}")
 
 
 if __name__ == "__main__":
