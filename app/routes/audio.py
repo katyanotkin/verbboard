@@ -101,14 +101,25 @@ async def get_audio(
     )
 
     if audio_bytes is None and language in VOICES and voice in VOICES[language]:
-        audio_bytes = await _generate_on_demand(
-            request=request,
-            audio_backend=audio_backend,
-            language=language,
-            verb_id=verb_id,
-            voice=voice,
-            form_key=form_key,
-        )
+        try:
+            audio_bytes = await _generate_on_demand(
+                request=request,
+                audio_backend=audio_backend,
+                language=language,
+                verb_id=verb_id,
+                voice=voice,
+                form_key=form_key,
+            )
+        except Exception:
+            logger.exception(
+                "On-demand audio generation failed "
+                "language=%s verb_id=%s voice=%s form_key=%s",
+                language,
+                verb_id,
+                voice,
+                form_key,
+            )
+            raise
 
     if audio_bytes is None:
         return PlainTextResponse("Audio not found", status_code=404)

@@ -26,9 +26,14 @@ router = APIRouter()
 
 async def _run_audio_background(tasks) -> None:
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    for result in results:
+
+    for index, result in enumerate(results):
         if isinstance(result, Exception):
-            logger.warning("Audio generation failed: %s", result)
+            logger.exception(
+                "Background audio generation failed task=%s exception=%r",
+                index,
+                result,
+            )
 
 
 @router.get("/learn", response_class=HTMLResponse)
