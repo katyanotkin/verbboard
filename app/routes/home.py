@@ -12,6 +12,7 @@ from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
 from core.registry import all_plugins
 from core.search_utils import find_best_entry
+from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 from core.verb_loader import load_entries_for_language
 
@@ -117,6 +118,8 @@ def home(
 ) -> HTMLResponse:
     plugins = all_plugins()
 
+    settings = load_settings()
+
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
     html_dir = "rtl" if LANGUAGE.get(ui_lang, LANGUAGE["en"]).rtl else "ltr"
@@ -172,6 +175,7 @@ def home(
             "search_value": search_value,
             "notice_text": notice_text,
             "total_verbs": total_verbs,
+            "firebase_web_config_json": settings.firebase_web_config_json,
         },
     )
     response.set_cookie("language", selected_language, httponly=False, samesite="lax")

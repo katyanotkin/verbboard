@@ -46,8 +46,20 @@ document.addEventListener("DOMContentLoaded", function () {
     toggleKnown();
   });
 
-  progress.markSeen(language, verbId);
-  updateKnownButton(false);
+  async function initializeProgress() {
+    if (
+      window.VerbBoardAuth &&
+      window.VerbBoardAuth.ready
+    ) {
+      await window.VerbBoardAuth.ready();
+    }
+
+    await progress.markSeen(language, verbId);
+
+    updateKnownButton(false);
+  }
+
+  initializeProgress();
 
   // ── audio play tracking ────────────────────────────────────────────────────
   document.querySelectorAll("audio").forEach(function (audio) {

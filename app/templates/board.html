@@ -9,6 +9,14 @@
 {{candidate_banner_assets}}
 
 <script>window.UI = {{board_ui_json}};</script>
+<script>
+window.FIREBASE_WEB_CONFIG = {{firebase_web_config_json}};
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+
+<script defer src="/static/auth.js"></script>
 <script defer src="/static/progress.js"></script>
 <script defer src="/static/learn.js"></script>
 </head>

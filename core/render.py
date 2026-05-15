@@ -21,6 +21,7 @@ def render_board_html(
     admin_href: str | None = None,
     ui_strings: dict[str, str] | None = None,
     ui_lang: str = "en",
+    firebase_web_config_json: str = "",
 ) -> str:
     ui = ui_strings or {}
     html_dir = "rtl" if ui_lang == "he" else "ltr"
@@ -241,6 +242,7 @@ def render_board_html(
         template.replace("{{title}}", escape(title))
         .replace("{{html_lang}}", ui_lang)
         .replace("{{html_dir}}", html_dir)
+        .replace("{{firebase_web_config_json}}", firebase_web_config_json)
         .replace("{{candidate_banner_assets}}", candidate_banner_assets)
         .replace("{{candidate_banner}}", candidate_banner)
         .replace("{{voice_source_input}}", voice_source_input)

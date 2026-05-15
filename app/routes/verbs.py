@@ -161,7 +161,6 @@ def verb_browser(
         <option value="rank">{ui["verbs.sort_frequency"]}</option>
         <option value="alpha">{sort_az_label}</option>
       </select>
-      <span class="vb-legend-seen">{ui["verbs.filter_seen"]}</span>
       <span class="vb-legend-known"><span class="vb-badge known">★</span>{ui["verbs.filter_known"]}</span>
       <div class="progress-row">
         <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>

@@ -84,6 +84,10 @@
   filter: brightness(0.95);
 }
 
+.auth-btn {
+  margin-left: 10px;
+}
+
 /* ===== Primary pill button (navy) ===== */
 
 .btn-pill-navy {
