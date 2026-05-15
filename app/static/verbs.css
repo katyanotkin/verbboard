@@ -171,7 +171,10 @@
 .vb-item:hover    { background: #f0f4ff; border-color: #c7d7f9; }
 .vb-item:active   { background: #e0eaff; }
 .vb-item.is-known { background: #eff6ff; border-color: #bfdbfe; }
-.vb-item.is-seen  { background: #f9fafb; }
+.vb-item.is-seen {
+  background: #f8fafc;
+  border-color: #e5e7eb;
+}
 
 .vb-lemma {
   font-weight: 500;
@@ -182,9 +185,7 @@
 
 .vb-badge        { font-size: 13px; flex-shrink: 0; margin-left: 4px; }
 .vb-badge.known  { color: #4a90e2; }
-.vb-badge.seen   { color: #9ca3af; }
 
-.vb-legend-seen,
 .vb-legend-known {
   display: inline-flex;
   align-items: center;
@@ -194,7 +195,6 @@
   white-space: nowrap;
 }
 
-.vb-legend-seen .vb-badge,
 .vb-legend-known .vb-badge {
   margin-left: 0;
   font-size: 12px;

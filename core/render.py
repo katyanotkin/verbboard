@@ -81,13 +81,22 @@ def render_board_html(
                 f"<td class='conj-form'>{form_cell}</td>"
                 "</tr>"
             )
-
         col_label = escape(ui.get("board.col_label", "Label"))
         col_form = escape(ui.get("board.col_form", "Form"))
+
+        section_title = section.get("title", "")
+        title_html = f"<h2>{escape(str(section_title))}</h2>" if section_title else ""
+
+        show_headers = bool(section_title)
+
+        header_html = (
+            f"<tr><th>{col_label}</th><th>{col_form}</th></tr>" if show_headers else ""
+        )
+
         sections_html.append(
-            f"<h2>{escape(section['title'])}</h2>"
-            "<table class='conj-table'>"
-            f"<tr><th>{col_label}</th><th>{col_form}</th></tr>"
+            title_html
+            + "<table class='conj-table'>"
+            + header_html
             + "".join(rows)
             + "</table>"
         )

@@ -16,9 +16,8 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
 
     infinitive = str(verb.display_lemma or verb.lemma or "")
 
-    sections = [
+    sections: list[dict[str, object]] = [
         {
-            "title": "Metadata",
             "rows": [
                 {
                     "key": "infinitive",

@@ -96,7 +96,6 @@
     const isKnown = knownSet.has(v.id);
     const isSeen  = !isKnown && seenSet.has(v.id);
     const badge   = isKnown ? '<span class="vb-badge known">★</span>'
-                  : isSeen  ? '<span class="vb-badge seen">✓</span>'
                   : '';
     const cls = isKnown ? ' is-known' : isSeen ? ' is-seen' : '';
     return `<a class="vb-item${cls}"
