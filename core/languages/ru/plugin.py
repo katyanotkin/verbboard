@@ -85,25 +85,25 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     if is_biaspectual:
         tense_sections = [
             {
-                "title": "Настоящее",
+                "title": "Настоящее время",
                 "rows": _tense_rows("present", forms.get("present", {}) or {}),
             },
             {
-                "title": "Будущее",
+                "title": "Будущее время",
                 "rows": _tense_rows("future", forms.get("future", {}) or {}),
             },
         ]
     elif is_perfective:
         tense_sections = [
             {
-                "title": "Будущее",
+                "title": "Будущее время",
                 "rows": _tense_rows("future", forms.get("future", {}) or {}),
             }
         ]
     else:
         tense_sections = [
             {
-                "title": "Настоящее",
+                "title": "Настоящее время",
                 "rows": _tense_rows("present", forms.get("present", {}) or {}),
             }
         ]
@@ -112,7 +112,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
         {"title": "Основное", "rows": metadata_rows},
         *tense_sections,
         {
-            "title": "Прошедшее",
+            "title": "Прошедшее время",
             "rows": [
                 {"key": "past_m", "label": "он", "text": past.get("m", "")},
                 {"key": "past_f", "label": "она", "text": past.get("f", "")},
@@ -121,7 +121,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
         {
-            "title": "Повелительное",
+            "title": "Повелительное наклонение",
             "rows": [
                 {"key": "imp_sg", "label": "ты", "text": imperative.get("sg", "")},
                 {"key": "imp_pl", "label": "вы", "text": imperative.get("pl", "")},
