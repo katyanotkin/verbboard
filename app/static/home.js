@@ -48,46 +48,46 @@ document.addEventListener("DOMContentLoaded", function () {
     const known = readSet(`known:${language}`);
     const selectedValue = verbSelect.value;
 
-    const options = Array.from(verbSelect.options).map((option, originalIndex) => {
-      const baseLabel = option.textContent.replace(/^[✓★]\s+/, "");
+    const options = Array.from(verbSelect.options).map((option) => {
+      const baseLabel = option.textContent.replace(/^[★]\s+/, "");
       const isKnown = known.has(option.value);
       const isSeen = !isKnown && seen.has(option.value);
 
-      let group = 0; // unseen
-      if (isSeen) group = 1;
-      if (isKnown) group = 2;
-
       return {
-        value: option.value,
-        baseLabel,
-        group,
-        selected: option.value === selectedValue,
-        originalIndex,
+	value: option.value,
+	baseLabel,
+	isKnown,
+	isSeen,
+	selected: option.value === selectedValue,
       };
     });
 
     options.sort((left, right) => {
-      if (left.group !== right.group) {
-        return left.group - right.group;
+      if (left.isKnown !== right.isKnown) {
+	return left.isKnown ? 1 : -1;
       }
-      return left.originalIndex - right.originalIndex;
+
+      return left.baseLabel.localeCompare(
+	right.baseLabel,
+	language
+      );
     });
 
     verbSelect.innerHTML = "";
 
     for (const optionData of options) {
       const option = document.createElement("option");
+
       option.value = optionData.value;
 
       let prefix = "";
-      if (optionData.group === 1) {
-        prefix = "✓ ";
-      } else if (optionData.group === 2) {
-        prefix = "★ ";
+      if (optionData.isKnown) {
+	prefix = "★ ";
       }
 
       option.textContent = `${prefix}${optionData.baseLabel}`;
       option.selected = optionData.selected;
+
       verbSelect.appendChild(option);
     }
   }
@@ -153,7 +153,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const ranked = [];
 
     for (const option of options) {
-      const cleanLabel = option.textContent.replace(/^[✓★]\s+/, "");
+      const cleanLabel = option.textContent.replace(/^[★]\s+/, "");
       const score = scoreSuggestion(query, cleanLabel);
       if (score === null) continue;
 
@@ -181,7 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return options.map(function (option) {
       return {
         id: option.value,
-        label: option.textContent.replace(/^[✓★]\s+/, ""),
+        label: option.textContent.replace(/^[★]\s+/, ""),
         score: 0,
       };
     });
