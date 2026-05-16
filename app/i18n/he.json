@@ -7,7 +7,7 @@
   "home.intro_hint": "🌐 שפה → 🧩 פועל → ▶ למד",
   "home.language_label": "אני לומד·ת",
   "home.verb_label": "בחר פועל",
-  "home.browse_link": "כל הפעלים ←",
+  "home.browse_link": "← עיון בפעלים",
   "home.search_label": "🔍 חפש או בקש פועל",
   "home.search_placeholder": "הקלד פועל לחיפוש או לבקשה",
   "home.search_help": "חסר פועל? אנו עוקבים אחר הביקוש להוספות עתידיות.",
@@ -16,7 +16,7 @@
   "home.loading": "טוען…",
   "home.feedback_link": "💬 משוב",
   "home.no_match": "לא נמצא בסט הנוכחי:",
-  "home.ui_language_label": "ממשק",
+  "home.ui_language_label": "שפת האפליקציה",
 
   "verbs.title": "VerbBoard — פעלים",
   "verbs.back_home": "ראשי ⟶",

@@ -7,7 +7,7 @@
   "home.intro_hint": "🌐 Language → 🧩 Verb → ▶ Learn",
   "home.language_label": "I'm studying",
   "home.verb_label": "Choose a verb",
-  "home.browse_link": "Browse all verbs →",
+  "home.browse_link": "Browse verbs →",
   "home.search_label": "🔍 Find or request a verb",
   "home.search_placeholder": "Type a verb to find it or request it",
   "home.search_help": "Missing verb? We track demand for future additions.",
@@ -16,7 +16,7 @@
   "home.loading": "Loading…",
   "home.feedback_link": "💬 Feedback",
   "home.no_match": "No match in the current set:",
-  "home.ui_language_label": "Interface",
+  "home.ui_language_label": "App language",
 
   "verbs.title": "VerbBoard — Browse verbs",
   "verbs.back_home": "⟵ Home",

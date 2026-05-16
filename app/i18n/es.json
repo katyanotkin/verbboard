@@ -7,7 +7,7 @@
   "home.intro_hint": "🌐 Idioma → 🧩 Verbo → ▶ Aprender",
   "home.language_label": "Estoy aprendiendo",
   "home.verb_label": "Elige un verbo",
-  "home.browse_link": "Ver todos los verbos →",
+  "home.browse_link": "Explorar verbos →",
   "home.search_label": "🔍 Buscar o solicitar un verbo",
   "home.search_placeholder": "Escribe un verbo para buscarlo o solicitarlo",
   "home.search_help": "¿Falta un verbo? Registramos la demanda para futuras adiciones.",
@@ -16,7 +16,7 @@
   "home.loading": "Cargando…",
   "home.feedback_link": "💬 Comentarios",
   "home.no_match": "Sin coincidencias en el conjunto actual:",
-  "home.ui_language_label": "Interfaz",
+  "home.ui_language_label": "Idioma de la app",
 
   "verbs.title": "VerbBoard — Explorar verbos",
   "verbs.back_home": "⟵ Inicio",

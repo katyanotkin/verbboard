@@ -39,43 +39,6 @@ form.controls {
   margin: 16px 0;
 }
 
-.verb-label-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.verb-label-row label {
-  margin-bottom: 0;
-}
-
-.browse-inline-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.93rem;
-  font-weight: 600;
-  color: var(--button-primary-bg);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.browse-inline-link:hover {
-  text-decoration: underline;
-}
-
-.browse-icon {
-  font-size: 0.78rem;
-  opacity: 0.85;
-}
-
-.learn-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 6px;
-}
-
 .page-title {
   margin: 0;
   text-align: center;
@@ -143,8 +106,54 @@ input[type="text"]:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-/* home-specific progress row spacing */
-.progress-row { margin-top: 8px; }
+/* ===== Progress ===== */
+
+.progress-row {
+  margin-top: 8px;
+}
+
+/* ===== Browse ===== */
+
+.browse-row {
+  margin-top: 10px;
+  margin-bottom: 18px;
+}
+
+.browse-main-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 44px;
+  padding: 11px 16px;
+
+  border-radius: 14px;
+  border: 1px solid #dbe4f0;
+
+  background: #f8fafc;
+  color: #1e3a8a;
+
+  font-size: 0.98rem;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    transform 0.12s ease;
+}
+
+.browse-main-link:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.browse-icon {
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
 
 /* ===== Search ===== */
 
@@ -152,8 +161,6 @@ input[type="text"]:focus {
   position: relative;
   z-index: 100;
   margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line-soft);
 }
 
 .search-input-row {
@@ -234,6 +241,25 @@ input[type="text"]:focus {
   font-weight: 500;
 }
 
+/* ===== Learn ===== */
+
+.learn-row {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.learn-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.learn-input-row select {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ===== Notice ===== */
 
 .notice {
@@ -258,10 +284,10 @@ input[type="text"]:focus {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-width: 150px;
 
+  min-width: 118px;
   min-height: 44px;
-  padding: 10px 24px;
+  padding: 10px 18px;
 
   border-radius: 999px;
   border: 1px solid #e2e8f0;
@@ -274,10 +300,11 @@ input[type="text"]:focus {
 
   cursor: pointer;
 
-  transition: transform 0.12s ease,
-              filter 0.12s ease,
-              background 0.12s ease,
-              box-shadow 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    filter 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .search-btn {
@@ -301,12 +328,12 @@ input[type="text"]:focus {
   cursor: pointer;
   flex-shrink: 0;
 
-  transition: transform 0.12s ease,
-              filter 0.12s ease,
-              background 0.12s ease,
-              box-shadow 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    filter 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease;
 }
-
 
 /* ===== Page header ===== */
 
@@ -325,7 +352,10 @@ input[type="text"]:focus {
   text-decoration: none;
   white-space: nowrap;
 }
-.about-link:hover { color: #334155; }
+
+.about-link:hover {
+  color: #334155;
+}
 
 /* ===== UI language selector ===== */
 
@@ -366,20 +396,19 @@ input[type="text"]:focus {
   background: transparent;
   transition: background 0.1s, color 0.1s, border-color 0.1s;
 }
-.ui-lang-pill:hover { background: #f1f5f9; border-color: #cbd5e1; }
-.ui-lang-pill.active { background: #1e3a8a; color: white; border-color: #1e3a8a; }
 
-/* ===== More verbs link ===== */
-
-.more-verbs-link {
-  display: block;
-  margin-top: 5px;
-  font-size: 13px;
-  color: #4a90e2;
-  text-decoration: none;
-  text-align: right;
+.ui-lang-pill:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
-.more-verbs-link:hover { text-decoration: underline; }
+
+.ui-lang-pill.active {
+  background: #1e3a8a;
+  color: white;
+  border-color: #1e3a8a;
+}
+
+/* ===== Buttons states ===== */
 
 .learn-btn.is-primary {
   background: var(--button-primary-bg);
@@ -395,7 +424,7 @@ input[type="text"]:focus {
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
 }
 
-/* hover */
+/* ===== Hover ===== */
 
 .search-btn:hover:not(:disabled) {
   background: #dbe3ee;
@@ -407,7 +436,7 @@ input[type="text"]:focus {
   filter: brightness(1.01);
 }
 
-/* disabled */
+/* ===== Disabled ===== */
 
 .learn-btn:disabled,
 .search-btn:disabled {
@@ -417,7 +446,7 @@ input[type="text"]:focus {
   box-shadow: none;
 }
 
-/* loading */
+/* ===== Loading ===== */
 
 .learn-btn.loading {
   opacity: 0.72;
@@ -426,7 +455,7 @@ input[type="text"]:focus {
   box-shadow: none;
 }
 
-/* dimmed (when search active) */
+/* ===== Dimmed ===== */
 
 .learn-btn.is-dimmed {
   opacity: 0.7;
