@@ -128,26 +128,28 @@ input[type="text"]:focus {
   min-height: 44px;
   padding: 11px 16px;
 
-  border-radius: 14px;
-  border: 1px solid #dbe4f0;
+  border-radius: 999px;
+  border: 1px solid var(--button-primary-bg);
 
-  background: #f8fafc;
-  color: #1e3a8a;
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
 
   font-size: 0.98rem;
   font-weight: 700;
   text-decoration: none;
 
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+
   transition:
+    transform 0.12s ease,
+    filter 0.12s ease,
     background 0.12s ease,
-    border-color 0.12s ease,
-    transform 0.12s ease;
+    box-shadow 0.12s ease;
 }
 
 .browse-main-link:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
   transform: translateY(-1px);
+  filter: brightness(1.01);
 }
 
 .browse-icon {
@@ -411,10 +413,10 @@ input[type="text"]:focus {
 /* ===== Buttons states ===== */
 
 .learn-btn.is-primary {
-  background: var(--button-primary-bg);
-  color: var(--button-primary-text);
-  border-color: var(--button-primary-bg);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+  background: #dbe7fb;
+  color: #1e3a8a;
+  border-color: #c7d7f5;
+  box-shadow: none;
 }
 
 .search-btn.is-primary {
