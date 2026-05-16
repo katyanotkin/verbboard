@@ -283,11 +283,11 @@ input[type="text"]:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
 
-  min-width: 118px;
-  min-height: 44px;
-  padding: 10px 18px;
+  min-width: 92px;
+  min-height: 42px;
+  padding: 9px 14px;
 
   border-radius: 999px;
   border: 1px solid #e2e8f0;
@@ -296,7 +296,7 @@ input[type="text"]:focus {
   color: #1f2937;
 
   font-weight: 600;
-  font-size: 0.94rem;
+  font-size: 0.9rem;
 
   cursor: pointer;
 

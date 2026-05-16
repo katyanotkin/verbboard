@@ -15,7 +15,9 @@
     </div>
 
     <div class="ui-lang-block">
-      <div class="ui-lang-label">Interface | Интерфейс | Interfaz | שפת ממשק</div>
+      <div class="ui-lang-label">
+        {{ ui_language_labels | join(" | ") }}
+      </div>
       <div class="ui-lang-pills">
         {% for code in ui_lang_codes %}
         <a href="/?ui_language={{ code }}&language={{ learning_lang }}"

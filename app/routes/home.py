@@ -122,6 +122,12 @@ def home(
 
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
+    ui_language_labels = [
+        get_strings("en")["home.ui_language_label"],
+        get_strings("ru")["home.ui_language_label"],
+        get_strings("es")["home.ui_language_label"],
+        get_strings("he")["home.ui_language_label"],
+    ]
     html_dir = "rtl" if LANGUAGE.get(ui_lang, LANGUAGE["en"]).rtl else "ltr"
 
     cookie_language = request.cookies.get("language")
@@ -169,6 +175,7 @@ def home(
             "html_dir": html_dir,
             "ui": ui,
             "ui_lang_codes": list(LANGUAGE.keys()),
+            "ui_language_labels": ui_language_labels,
             "learning_lang": selected_language,
             "lang_options": lang_options,
             "verb_options": verb_options,
