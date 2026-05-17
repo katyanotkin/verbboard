@@ -267,7 +267,8 @@ def render_board_html(
         )
         .replace("{{board_voice_male}}", escape(ui.get("board.voice_male", "Male")))
         .replace(
-            "{{board_mark_known}}", escape(ui.get("board.mark_known", "Mark as known"))
+            "{{board_mark_known}}",
+            escape(ui.get("board.mark_known", "Mark as learned")),
         )
         .replace(
             "{{board_send_feedback}}",
