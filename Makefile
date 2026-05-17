@@ -22,6 +22,9 @@ GCP_RUNTIME_SERVICE_ACCOUNT?=$(shell gcloud projects describe $(GCP_PROJECT) --f
 IMAGE_TAG=$(shell git rev-parse --short HEAD)
 GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
+COMMON_ENV_VARS=GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT)
+COMMON_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest
+
 .DEFAULT_GOAL := help
 
 .PHONY: help lexicon \
@@ -174,7 +177,8 @@ gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
 		--image $(GCP_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars ENVIRONMENT=stage,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE)\
+		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=stage,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE)\
+		--set-secrets $(COMMON_SECRETS) \
 		--allow-unauthenticated
 
 ## GCP: build + deploy to stage
@@ -215,7 +219,8 @@ gcp-promote-stage-to-prod: gcp-check smoke-nav-stage test-e2e-stage gcp-setup-pr
 		--image $(STAGE_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars ENVIRONMENT=prod,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
+		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
+                --set-secrets $(COMMON_SECRETS) \
 		--allow-unauthenticated
 
 ## GCP: create bucket if missing
