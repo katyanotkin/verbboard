@@ -285,8 +285,8 @@
 /* ── badges ───────────────────────────────────────────────────────────────── */
 .practice-badges {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: flex-end;
+  gap: 8px;
   margin-top: 8px;
   padding: 0 2px;
   flex-wrap: wrap;
@@ -296,13 +296,30 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--color-navy);
-  color: white;
+  background: linear-gradient(160deg, #F5C542 0%, #E09200 100%);
+  color: #7A4F00;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
+  position: relative;
+  border: 2px solid #C8880A;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+  margin-top: 14px;
+}
+
+/* ribbon above the medal circle */
+.practice-badge::before {
+  content: '';
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 13px;
+  background: linear-gradient(180deg, #7B9ED9 0%, #4A6FA5 100%);
+  border-radius: 2px 2px 0 0;
 }
 
 /* ── practice wrap-up overlay ────────────────────────────────────────────── */
