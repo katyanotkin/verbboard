@@ -28,6 +28,7 @@ class Settings:
     admin_secret: str
     firebase_web_config_json: str
     allow_local_dev_auth: bool
+    badge_compact_threshold: int
 
 
 def _resolve_environment() -> str:
@@ -115,6 +116,7 @@ def load_settings() -> Settings:
         admin_secret=_load_admin_secret(),
         firebase_web_config_json=os.getenv("FIREBASE_WEB_CONFIG_JSON", ""),
         allow_local_dev_auth=os.getenv("ALLOW_LOCAL_DEV_AUTH", "").lower() == "true",
+        badge_compact_threshold=int(os.getenv("BADGE_COMPACT_THRESHOLD", "400")),
     )
     _validate(settings)
     return settings

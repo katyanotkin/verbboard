@@ -110,6 +110,12 @@
   filter: brightness(1.12);
 }
 
+.btn-pill-navy:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  filter: none;
+}
+
 /* ===== Feedback link ===== */
 
 .feedback-link {

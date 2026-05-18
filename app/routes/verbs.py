@@ -115,8 +115,7 @@ def verb_browser(
                 "practice.abandon": ui["practice.abandon"],
                 "practice.wrap_up": ui["practice.wrap_up"],
                 "practice.learned_prompt": ui["practice.learned_prompt"],
-                "practice.save": ui["practice.save"],
-                "practice.skip": ui["practice.skip"],
+                "practice.done": ui["practice.done"],
             }
         )
 
@@ -135,6 +134,7 @@ def verb_browser(
             "recent_json": json.dumps(recent_ids, ensure_ascii=False),
             "lang_json": json.dumps(selected_language),
             "practice_loop_enabled": PRACTICE_LOOP_ENABLED,
+            "badge_compact_threshold": settings.badge_compact_threshold,
             "firebase_web_config_json": (settings.firebase_web_config_json),
         },
     )

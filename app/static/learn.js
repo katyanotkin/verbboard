@@ -137,6 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const finishBtn = document.createElement("button");
     finishBtn.className = "btn-pill-navy";
     finishBtn.textContent = UI["practice.finish"] || "Finish";
+    finishBtn.disabled = !isLast;
 
     const abandonBtn = document.createElement("button");
     abandonBtn.className = "practice-abandon-btn";
@@ -231,15 +232,28 @@ document.addEventListener("DOMContentLoaded", function () {
       } catch (_) {
         badges = [];
       }
+
+      // Append -- each completed session earns its own entry.
+      // Multiple badges of the same size are intentional (shows repeat completions).
       badges.push(session.size || session.ids.length);
       localStorage.setItem(badgesKey, JSON.stringify(badges));
 
-      if (
-	  window.VerbBoardPracticeLoopInstance &&
-	  window.VerbBoardPracticeLoopInstance.savePracticeBadgesToServer
-	) {
-	  await window.VerbBoardPracticeLoopInstance
-	    .savePracticeBadgesToServer(badges);
+      // Save to server here, on the learn page, before redirecting.
+      // VerbBoardPracticeLoopInstance is not available on this page.
+      if (window.VerbBoardAuth && window.VerbBoardAuth.getIdToken) {
+        try {
+          const token = await window.VerbBoardAuth.getIdToken();
+          if (token) {
+            await fetch("/api/progress/practice", {
+              method: "POST",
+              headers: {
+                Authorization: "Bearer " + token,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ language: language, badges: badges }),
+            });
+          }
+        } catch (_) {}
       }
 
       localStorage.setItem(

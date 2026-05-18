@@ -221,16 +221,88 @@ def test_practice_badges_round_trip_local_dev() -> None:
 
 
 def test_practice_badges_language_isolation() -> None:
+    """Writing badges to 'he' must not change the 'en' badge state."""
+    before_en = client.get(
+        "/api/progress/practice?language=en",
+        headers=AUTH,
+    ).json()["badges"]
+
     client.post(
         "/api/progress/practice",
         headers=AUTH,
-        json={"language": "he", "badges": [99]},
+        json={"language": "he", "badges": [6]},
     )
 
-    response_en = client.get(
+    after_en = client.get(
         "/api/progress/practice?language=en",
         headers=AUTH,
-    )
+    ).json()["badges"]
 
-    # Hebrew badges must not appear in English progress
-    assert 99 not in response_en.json()["badges"]
+    assert after_en == before_en, "he badges bled into en"
+
+
+# ---------------------------------------------------------------------------
+# Input validation (SECURITY: field length and badge-value constraints)
+# ---------------------------------------------------------------------------
+
+
+def test_seen_rejects_language_too_long() -> None:
+    response = client.post(
+        "/api/progress/seen",
+        headers=AUTH,
+        json={"language": "toolong", "verb_id": "en_go"},
+    )
+    assert response.status_code == 422
+
+
+def test_seen_rejects_verb_id_too_long() -> None:
+    response = client.post(
+        "/api/progress/seen",
+        headers=AUTH,
+        json={"language": "en", "verb_id": "x" * 121},
+    )
+    assert response.status_code == 422
+
+
+def test_known_rejects_language_too_long() -> None:
+    response = client.post(
+        "/api/progress/known",
+        headers=AUTH,
+        json={"language": "toolong", "verb_id": "en_go", "known": True},
+    )
+    assert response.status_code == 422
+
+
+def test_practice_rejects_invalid_badge_size() -> None:
+    """Badge values must be in {3, 6, 9}; arbitrary numbers are rejected."""
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={"language": "en", "badges": [5]},
+    )
+    assert response.status_code == 422
+
+
+def test_practice_rejects_empty_language() -> None:
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={"language": "", "badges": [3]},
+    )
+    assert response.status_code == 422
+
+
+def test_get_progress_rejects_language_too_long() -> None:
+    response = client.get(
+        "/api/progress?language=toolong",
+        headers=AUTH,
+    )
+    assert response.status_code == 422
+
+
+def test_get_practice_rejects_language_too_long() -> None:
+    response = client.get(
+        "/api/progress/practice?language=toolong",
+        headers=AUTH,
+    )
+    assert response.status_code == 422

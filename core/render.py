@@ -232,8 +232,7 @@ def render_board_html(
             "practice.learned_prompt": ui.get(
                 "practice.learned_prompt", "Which verbs did you learn?"
             ),
-            "practice.save": ui.get("practice.save", "Save"),
-            "practice.skip": ui.get("practice.skip", "Skip"),
+            "practice.done": ui.get("practice.done", "Done"),
         },
         ensure_ascii=False,
     )

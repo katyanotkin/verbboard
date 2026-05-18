@@ -17,7 +17,6 @@ from fastapi.testclient import TestClient
 from core.models import Board, VerbEntry
 from core.render import render_board_html
 
-
 # ── fixtures ─────────────────────────────────────────────────────────────────
 
 _PRACTICE_UI_KEYS = [
@@ -33,8 +32,7 @@ _PRACTICE_UI_KEYS = [
     "practice.next",
     "practice.wrap_up",
     "practice.learned_prompt",
-    "practice.save",
-    "practice.skip",
+    "practice.done",
     "practice.listen_first",
 ]
 
@@ -100,8 +98,7 @@ def test_verbs_page_ui_includes_practice_strings(
         "practice.abandon",
         "practice.wrap_up",
         "practice.learned_prompt",
-        "practice.save",
-        "practice.skip",
+        "practice.done",
     ]:
         assert key in ui, f"Missing UI key: {key}"
 
@@ -141,8 +138,7 @@ def test_board_ui_json_includes_practice_strings(mock_verb: VerbEntry) -> None:
         "practice.listen_first",
         "practice.wrap_up",
         "practice.learned_prompt",
-        "practice.save",
-        "practice.skip",
+        "practice.done",
     ]:
         assert key in ui, f"Missing board UI key: {key}"
         assert ui[key], f"Empty board UI key: {key}"

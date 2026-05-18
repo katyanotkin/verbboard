@@ -309,6 +309,27 @@
   margin-top: 14px;
 }
 
+/* compact grouped badge: count × medal, side by side */
+.practice-badge-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.practice-badge-count {
+  font-size: 22px;
+  font-weight: 800;
+  color: #374151;
+  line-height: 1;
+}
+
+.practice-badge-times {
+  font-size: 15px;
+  font-weight: 600;
+  color: #9ca3af;
+  line-height: 1;
+}
+
 /* ribbon above the medal circle */
 .practice-badge::before {
   content: '';

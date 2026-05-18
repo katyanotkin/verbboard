@@ -19,7 +19,11 @@
     const practiceWrapupKey = `practice_wrapup:${lang}`;
 
     const PRACTICE_SIZES = [3, 6, 9];
-    const PRACTICE_POOL = 20;
+    // Initial non-known pool size before mix-in warning is shown.
+    const PRACTICE_POOL_INIT = 20;
+    // Display threshold: below this count show one medal per session;
+    // at or above, switch to compact "N× size" grouped view.
+    const BADGE_COMPACT_THRESHOLD = window.VB_BADGE_COMPACT_THRESHOLD || 400;
 
     let activePracticeSize = parseInt(
       localStorage.getItem(practiceSizeKey) || '6',
@@ -46,51 +50,51 @@
       return storage.readJson(practiceBadgesKey, []);
     }
 
-    async function saveKnownVerbToServer(verbId, known) {
-	  if (!window.VerbBoardAuth || !window.VerbBoardAuth.getIdToken) {
-	    return;
-	  }
+    async function saveKnownVerbToServer(verbId, isKnown) {
+      if (!window.VerbBoardAuth || !window.VerbBoardAuth.getIdToken) {
+        return;
+      }
 
-	  const token = await window.VerbBoardAuth.getIdToken();
-	  if (!token) return;
+      const token = await window.VerbBoardAuth.getIdToken();
+      if (!token) return;
 
-	  await fetch('/api/progress/known', {
-	    method: 'POST',
-	    headers: {
-	      Authorization: `Bearer ${token}`,
-	      'Content-Type': 'application/json',
-	    },
-	    body: JSON.stringify({
-	      language: lang,
-	      verb_id: verbId,
-	      known: known,
-	    }),
-	  });
-	}
+      await fetch('/api/progress/known', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          language: lang,
+          verb_id: verbId,
+          known: isKnown,
+        }),
+      });
+    }
 
-	    async function savePracticeBadgesToServer(badges) {
-	      if (!window.VerbBoardAuth || !window.VerbBoardAuth.getIdToken) {
-		return;
-	      }
+    async function savePracticeBadgesToServer(badges) {
+      if (!window.VerbBoardAuth || !window.VerbBoardAuth.getIdToken) {
+        return;
+      }
 
-	      const token = await window.VerbBoardAuth.getIdToken();
+      const token = await window.VerbBoardAuth.getIdToken();
 
-	      if (!token) {
-		return;
-	      }
+      if (!token) {
+        return;
+      }
 
-	      await fetch('/api/progress/practice', {
-		method: 'POST',
-		headers: {
-		  Authorization: `Bearer ${token}`,
-		  'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-		  language: lang,
-		  badges,
-		}),
-	      });
-	    }
+      await fetch('/api/progress/practice', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          language: lang,
+          badges,
+        }),
+      });
+    }
 
     async function syncPracticeBadgesFromServer() {
       if (!window.VerbBoardAuth || !window.VerbBoardAuth.getIdToken) {
@@ -129,27 +133,21 @@
 
     function buildPool(size) {
       const knownSet = known();
-
-      const nonKnown = verbs
-        .filter(v => !knownSet.has(v.id))
-        .slice(0, PRACTICE_POOL);
+      const nonKnown = verbs.filter(v => !knownSet.has(v.id));
 
       if (nonKnown.length >= size) {
         return nonKnown;
       }
 
+      // Not enough non-known verbs -- pad with known ones.
       const knownVerbs = verbs.filter(v => knownSet.has(v.id));
-
       return [...nonKnown, ...knownVerbs];
     }
 
     function needsMixIn(size) {
-      const knownSet = known();
-
-      return verbs
-        .filter(v => !knownSet.has(v.id))
-        .slice(0, PRACTICE_POOL)
-        .length < size;
+      const nonKnownCount = verbs.filter(v => !known().has(v.id)).length;
+      // Warn when non-known pool is smaller than the minimum or the session size.
+      return nonKnownCount < Math.max(size, PRACTICE_POOL_INIT);
     }
 
     function renderPracticePanel() {
@@ -160,13 +158,32 @@
       const session = readPracticeSession();
       const badges = readPracticeBadges();
 
-      const badgesHtml = badges.length
-        ? `
-          <div class="practice-badges">
-            ${badges.map(n => `<span class="practice-badge">${n}</span>`).join('')}
-          </div>
-        `
-        : '';
+      let badgesHtml = '';
+      if (badges.length > 0) {
+        let inner;
+        if (badges.length < BADGE_COMPACT_THRESHOLD) {
+          // Below threshold: one medal per completed session.
+          inner = badges
+            .map(function (n) { return `<span class="practice-badge">${n}</span>`; })
+            .join('');
+        } else {
+          // At or above threshold: one group per size showing count.
+          const counts = {};
+          badges.forEach(function (n) { counts[n] = (counts[n] || 0) + 1; });
+          inner = Object.keys(counts)
+            .map(Number)
+            .sort(function (a, b) { return a - b; })
+            .map(function (size) {
+              return `<span class="practice-badge-group">` +
+                `<span class="practice-badge-count">${counts[size]}</span>` +
+                `<span class="practice-badge-times">×</span>` +
+                `<span class="practice-badge">${size}</span>` +
+                `</span>`;
+            })
+            .join('');
+        }
+        badgesHtml = `<div class="practice-badges">${inner}</div>`;
+      }
 
       if (session && Array.isArray(session.ids) && session.ids.length > 0) {
         const seenSet = seen();
@@ -275,6 +292,11 @@
     function startPractice() {
       const pool = buildPool(activePracticeSize);
 
+      // Guard: nothing to practice (all verbs missing or pool empty).
+      if (pool.length === 0) {
+        return;
+      }
+
       const shuffled = [...pool].sort(function () {
         return Math.random() - 0.5;
       });
@@ -369,65 +391,42 @@
       const actions = document.createElement('div');
       actions.className = 'practice-wrapup-actions';
 
-      const saveButton = document.createElement('button');
-      saveButton.className = 'btn-pill-navy';
-      saveButton.textContent = ui['practice.save'] || 'Save';
+      const doneButton = document.createElement('button');
+      doneButton.className = 'btn-pill-navy';
+      doneButton.textContent = ui['practice.done'] || 'Done';
 
-      const skipButton = document.createElement('button');
-      skipButton.className = 'practice-abandon-btn';
-      skipButton.textContent = ui['practice.skip'] || 'Skip';
-
-      actions.appendChild(saveButton);
-      actions.appendChild(skipButton);
+      actions.appendChild(doneButton);
 
       card.appendChild(actions);
 
       overlay.appendChild(card);
       document.body.appendChild(overlay);
 
-      saveButton.addEventListener('click', async function () {
-        const newKnown = known();
+      doneButton.addEventListener('click', async function () {
+        const checked = overlay.querySelectorAll("input[type='checkbox']:checked");
 
-        wrapupData.ids.forEach(function (id) {
-          newKnown.delete(id);
-        });
+        if (checked.length > 0) {
+          const newKnown = known();
 
-        overlay
-          .querySelectorAll("input[type='checkbox']:checked")
-          .forEach(function (checkbox) {
+          wrapupData.ids.forEach(function (id) {
+            newKnown.delete(id);
+          });
+
+          checked.forEach(function (checkbox) {
             newKnown.add(checkbox.dataset.id);
           });
 
+          storage.writeSet(`known:${lang}`, newKnown);
 
-	storage.writeSet(`known:${lang}`, newKnown);
-
-	for (const id of wrapupData.ids) {
-	  await saveKnownVerbToServer(
-	    id,
-	    newKnown.has(id)
-	  );
-	}
-
-	const updatedBadges = [...new Set([
-	  ...readPracticeBadges(),
-	  wrapupData.ids.length,
-	])].sort(function (left, right) {
-	  return left - right;
-	});
-
-	storage.writeJson(practiceBadgesKey, updatedBadges);
-
-	await savePracticeBadgesToServer(updatedBadges);
+          for (const id of wrapupData.ids) {
+            await saveKnownVerbToServer(id, newKnown.has(id));
+          }
+        }
 
         overlay.remove();
-
         render();
         updateProgress();
         renderPracticePanel();
-      });
-
-      skipButton.addEventListener('click', function () {
-        overlay.remove();
       });
     }
 

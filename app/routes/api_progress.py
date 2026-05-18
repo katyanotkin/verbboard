@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from core.auth.firebase_auth import get_optional_auth_user
 from core.progress.progress_service import (
@@ -14,21 +14,34 @@ from core.progress.progress_service import (
 
 router = APIRouter(prefix="/api/progress")
 
+_VALID_BADGE_SIZES = {3, 6, 9}
+
 
 class SeenRequest(BaseModel):
-    language: str
-    verb_id: str
+    language: str = Field(min_length=2, max_length=3)
+    verb_id: str = Field(min_length=1, max_length=120)
 
 
 class KnownRequest(BaseModel):
-    language: str
-    verb_id: str
+    language: str = Field(min_length=2, max_length=3)
+    verb_id: str = Field(min_length=1, max_length=120)
     known: bool
 
 
 class PracticeProgressRequest(BaseModel):
-    language: str
+    language: str = Field(min_length=2, max_length=3)
     badges: list[int]
+
+    @field_validator("badges")
+    @classmethod
+    def badges_must_be_valid_sizes(cls, v: list[int]) -> list[int]:
+        invalid = [b for b in v if b not in _VALID_BADGE_SIZES]
+        if invalid:
+            raise ValueError(
+                f"badges contains invalid sizes {invalid}; "
+                f"allowed: {sorted(_VALID_BADGE_SIZES)}"
+            )
+        return v
 
 
 def _require_user(request: Request):
@@ -43,7 +56,7 @@ def _require_user(request: Request):
 @router.get("")
 def get_progress(
     request: Request,
-    language: str = Query(...),
+    language: str = Query(..., min_length=2, max_length=3),
 ):
     user = _require_user(request)
 
@@ -66,7 +79,7 @@ def get_progress(
 @router.get("/practice")
 def get_practice_progress_route(
     request: Request,
-    language: str = Query(...),
+    language: str = Query(..., min_length=2, max_length=3),
 ):
     user = _require_user(request)
 
