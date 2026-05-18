@@ -2,25 +2,57 @@
 # ---------------------------------------------------------------------------
 # Manual curl smoke-test for the /api/progress endpoints.
 #
-# Two modes:
+# Four modes -- all use the same three env vars:
 #
-#   1. Local-dev bypass (no real Firebase needed):
-#      Requires ALLOW_LOCAL_DEV_AUTH=true + ENVIRONMENT=local on the server.
+#   BASE_URL      server base URL          (default: http://localhost:8000)
+#   TOKEN         Firebase ID token        (default: local-dev bypass)
+#   VERB_LANGUAGE language code to test    (default: en)
 #
-#        bash tests/curl_test_progress.sh
+# ── Mode 1: local-dev bypass (no Firebase needed) ──────────────────────────
+#   Requires ALLOW_LOCAL_DEV_AUTH=true + ENVIRONMENT=local on the server.
 #
-#   2. Real Firebase token (after signing in with Google in the browser):
-#      Open the browser console on any VerbBoard page and run:
+#     bash tests/curl_test_progress.sh
+#
+# ── Mode 2: local server with a real Firebase token ────────────────────────
+#   Start the local server (make local-run), log in via the browser, then
+#   open DevTools -> Console on http://localhost:<PORT> and run:
+#
+#     window.VerbBoardAuth.getIdToken().then(t => console.log(t))
+#
+#   Copy the printed JWT, then:
+#
+#     TOKEN="<paste>" BASE_URL="http://localhost:8001" \
+#       bash tests/curl_test_progress.sh
+#
+# ── Mode 3: stage ──────────────────────────────────────────────────────────
+#   a. Open https://stage.verbboard.com and log in with Google.
+#   b. Open DevTools -> Console and run:
 #
 #        window.VerbBoardAuth.getIdToken().then(t => console.log(t))
 #
-#      Copy the printed token, then:
+#   c. Copy the printed JWT, then:
 #
-#        TOKEN="<paste token here>" bash tests/curl_test_progress.sh
+#        TOKEN="<paste>" BASE_URL="https://stage.verbboard.com" \
+#          bash tests/curl_test_progress.sh
 #
-# Other env vars:
-#   BASE_URL      - server base URL (default: http://localhost:8000)
-#   VERB_LANGUAGE - language code to test against (default: en)
+# ── Mode 4: prod ───────────────────────────────────────────────────────────
+#   Same steps as stage, using the prod URL instead:
+#
+#        TOKEN="<paste>" BASE_URL="https://verbboard.com" \
+#          bash tests/curl_test_progress.sh
+#
+#   The script writes only synthetic verb IDs (en_curl_test_<PID>) and
+#   restores any badge state it temporarily overwrites, so it is safe to
+#   run against prod. No real verb data is modified.
+#
+# ── Optional: test a different language ────────────────────────────────────
+#   Add VERB_LANGUAGE=he (or ru / es) to any of the modes above:
+#
+#     TOKEN="..." BASE_URL="https://stage.verbboard.com" VERB_LANGUAGE=he \
+#       bash tests/curl_test_progress.sh
+#
+# Token expiry: Firebase ID tokens expire after 1 hour.
+# If you get 401 errors, refresh the token from the browser console.
 # ---------------------------------------------------------------------------
 
 set -euo pipefail

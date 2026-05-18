@@ -13,6 +13,29 @@ from core.settings import load_settings
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Dev bypass tokens
+#
+# Each token is accepted only when:
+#   - ALLOW_LOCAL_DEV_AUTH=true is set on the server, AND
+#   - ENVIRONMENT matches the token's required environment.
+#
+# This means user-stage only works on stage, user-prod only on prod, etc.
+# Neither token is accepted on an environment it was not intended for.
+# ---------------------------------------------------------------------------
+
+_DEV_BYPASS_TOKENS: dict[str, tuple[str, str, str, str]] = {
+    # token          -> (required_env, uid,               email,                    display_name)
+    "local-dev": ("local", "local-dev-user", "dev@example.com", "Local Dev"),
+    "user-stage": (
+        "stage",
+        "stage-mock-user",
+        "dev-stage@example.com",
+        "Stage Mock User",
+    ),
+    "user-prod": ("prod", "prod-mock-user", "dev-prod@example.com", "Prod Mock User"),
+}
+
 
 @lru_cache(maxsize=1)
 def initialize_firebase_admin() -> None:
@@ -24,17 +47,13 @@ def initialize_firebase_admin() -> None:
 
 def verify_firebase_token(token: str) -> AuthUser:
     settings = load_settings()
-    if (
-        settings.environment == "local"
-        and settings.allow_local_dev_auth
-        and token == "local-dev"
-    ):
-        return AuthUser(
-            uid="local-dev-user",
-            email="dev@example.com",
-            name="Local Dev",
-            picture="",
-        )
+
+    if settings.allow_local_dev_auth:
+        bypass = _DEV_BYPASS_TOKENS.get(token)
+        if bypass is not None:
+            required_env, uid, email, name = bypass
+            if settings.environment == required_env:
+                return AuthUser(uid=uid, email=email, name=name, picture="")
 
     initialize_firebase_admin()
 
