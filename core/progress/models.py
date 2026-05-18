@@ -9,3 +9,9 @@ class VerbProgress:
     verb_id: str
     seen: bool
     known: bool
+
+
+@dataclass
+class PracticeProgress:
+    language: str
+    badges: list[int]

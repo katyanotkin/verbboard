@@ -4,25 +4,33 @@ from typing import Any
 
 from google.cloud import firestore
 
-from core.progress.models import VerbProgress
+from core.progress.models import PracticeProgress, VerbProgress
 from core.storage.firestore_db import get_db
 
 USERS_COLLECTION = "users"
 USER_PROGRESS_COLLECTION = "user_progress"
 VERBS_SUBCOLLECTION = "verbs"
+USER_PRACTICE_COLLECTION = "user_practice"
+LANGUAGES_SUBCOLLECTION = "languages"
 
 
-def _progress_doc_id(language: str, verb_id: str) -> str:
-    return f"{language}_{verb_id}"
-
-
-def _progress_doc_ref(user_id: str, language: str, verb_id: str):
+def _progress_doc_ref(user_id: str, verb_id: str):
     db = get_db()
     return (
         db.collection(USER_PROGRESS_COLLECTION)
         .document(user_id)
         .collection(VERBS_SUBCOLLECTION)
-        .document(_progress_doc_id(language, verb_id))
+        .document(verb_id)
+    )
+
+
+def _practice_doc_ref(user_id: str, language: str):
+    db = get_db()
+    return (
+        db.collection(USER_PRACTICE_COLLECTION)
+        .document(user_id)
+        .collection(LANGUAGES_SUBCOLLECTION)
+        .document(language)
     )
 
 
@@ -52,7 +60,8 @@ def mark_seen(
     language: str,
     verb_id: str,
 ) -> None:
-    doc_ref = _progress_doc_ref(user_id, language, verb_id)
+    doc_ref = _progress_doc_ref(user_id, verb_id)
+
     doc_ref.set(
         {
             "language": language,
@@ -72,7 +81,8 @@ def set_known(
     verb_id: str,
     known: bool,
 ) -> None:
-    doc_ref = _progress_doc_ref(user_id, language, verb_id)
+    doc_ref = _progress_doc_ref(user_id, verb_id)
+
     doc_ref.set(
         {
             "language": language,
@@ -91,6 +101,7 @@ def list_progress_for_language(
     language: str,
 ) -> list[VerbProgress]:
     db = get_db()
+
     docs = (
         db.collection(USER_PROGRESS_COLLECTION)
         .document(user_id)
@@ -103,6 +114,7 @@ def list_progress_for_language(
 
     for doc in docs:
         payload: dict[str, Any] = doc.to_dict() or {}
+
         verb_id = str(payload.get("verb_id") or "")
         if not verb_id:
             continue
@@ -117,3 +129,34 @@ def list_progress_for_language(
         )
 
     return progress_rows
+
+
+def get_practice_progress(
+    *,
+    user_id: str,
+    language: str,
+) -> PracticeProgress:
+    doc = _practice_doc_ref(user_id, language).get()
+
+    payload: dict[str, Any] = doc.to_dict() or {}
+
+    return PracticeProgress(
+        language=language,
+        badges=list(payload.get("badges", [])),
+    )
+
+
+def save_practice_progress(
+    *,
+    user_id: str,
+    language: str,
+    badges: list[int],
+) -> None:
+    _practice_doc_ref(user_id, language).set(
+        {
+            "language": language,
+            "badges": badges,
+            "updated_at": firestore.SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )

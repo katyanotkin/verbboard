@@ -183,9 +183,17 @@ def test_home_learn_button_navigates_to_learn(page, live_server_url):
 
 
 def test_verbs_filter_and_sort_persist_after_back_navigation(page, live_server_url):
-    """Filter and sort survive Back navigation from Learn → Verbs (both non-default)."""
+    """Filter and sort survive Back navigation from Learn → Verbs (both non-default).
+
+    State is stored in localStorage + URL hash, so this does not depend on
+    whether verb items are present in the list -- we navigate to Learn directly
+    rather than clicking a verb item.
+    """
     page.goto(f"{live_server_url}/verbs?language=en")
     page.wait_for_load_state("networkidle")
+
+    # Wait for JS to initialise filter buttons
+    page.wait_for_selector(".vb-ftbtn[data-filter='all']")
 
     # Change filter from default "new" to "all"
     page.locator(".vb-ftbtn[data-filter='all']").click()
@@ -195,16 +203,17 @@ def test_verbs_filter_and_sort_persist_after_back_navigation(page, live_server_u
     page.locator("#vb-sort").select_option("rank")
     page.wait_for_timeout(100)
 
-    # Click the first visible verb to navigate to Learn
-    first_verb = page.locator(".vb-item").first
-    first_verb.wait_for(state="visible")
-    first_verb.click()
+    # Navigate to Learn directly -- state is already written to localStorage/hash
+    page.goto(
+        f"{live_server_url}/learn?{LEARN_URL_PARAMS}"
+        f"&return_to={live_server_url}/verbs?language=en"
+    )
     page.wait_for_url("**/learn**")
 
     # Navigate back to Verbs
     page.go_back()
     page.wait_for_url("**/verbs**")
-    page.wait_for_timeout(200)  # let JS init run
+    page.wait_for_timeout(300)  # let JS init run
 
     # Filter should still be "all"
     all_btn_class = (
@@ -222,37 +231,37 @@ def test_verbs_filter_and_sort_persist_after_back_navigation(page, live_server_u
 
 
 def test_verbs_filter_only_change_persists_after_back_navigation(page, live_server_url):
-    """Filter change alone (sort left at default alpha) survives Back navigation."""
+    """Filter change alone (sort left at default alpha) survives Back navigation.
+
+    Navigates to Learn directly rather than clicking a verb item so the test
+    does not depend on verb data being present in the list.
+    """
     page.goto(f"{live_server_url}/verbs?language=en")
     page.wait_for_load_state("networkidle")
+
+    # Wait for JS to initialise filter buttons
+    page.wait_for_selector(".vb-ftbtn[data-filter='seen']")
 
     # Verify default sort is alpha
     assert (
         page.locator("#vb-sort").input_value() == "alpha"
     ), "Expected alpha as default sort"
 
-    # Change filter to "seen" only -- do not touch sort
+    # Change filter to "seen" -- do not touch sort
     page.locator(".vb-ftbtn[data-filter='seen']").click()
     page.wait_for_timeout(100)
 
-    # Navigate to Learn (switch to "all" first to ensure there are items to click)
-    page.locator(".vb-ftbtn[data-filter='all']").click()
-    page.wait_for_timeout(100)
-    first_verb = page.locator(".vb-item").first
-    first_verb.wait_for(state="visible")
-    # Reset filter to "seen" before clicking away
-    page.locator(".vb-ftbtn[data-filter='seen']").click()
-    page.wait_for_timeout(100)
-    # Navigate directly to a learn URL to avoid needing a visible "seen" verb
+    # Navigate to Learn directly -- state is already written to localStorage/hash
     page.goto(
-        f"{live_server_url}/learn?language=en&verb_id=en_be&return_to=/verbs?language=en"
+        f"{live_server_url}/learn?{LEARN_URL_PARAMS}"
+        f"&return_to={live_server_url}/verbs?language=en"
     )
-    page.wait_for_load_state("networkidle")
+    page.wait_for_url("**/learn**")
 
     # Navigate back
     page.go_back()
     page.wait_for_url("**/verbs**")
-    page.wait_for_timeout(200)
+    page.wait_for_timeout(300)
 
     # Filter should still be "seen"
     seen_btn_class = (

@@ -5,18 +5,26 @@ import os
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 from core.i18n import get_strings, resolve_ui_language
 from core.registry import all_plugins
+from core.settings import load_settings
 from core.verb_loader import load_entries_for_language
 
 RECENT_VERBS_LIMIT = 8
 MAX_SYNTHETIC_RANK = 999999
-PRACTICE_LOOP_ENABLED = os.getenv("PRACTICE_LOOP_ENABLED", "false").lower() in (
+
+PRACTICE_LOOP_ENABLED = os.getenv(
+    "PRACTICE_LOOP_ENABLED",
+    "false",
+).lower() in (
     "true",
     "1",
     "yes",
 )
+
+templates = Jinja2Templates(directory="app/templates")
 
 router = APIRouter()
 
@@ -26,23 +34,33 @@ def verb_browser(
     request: Request,
     language: str | None = Query(None),
 ) -> HTMLResponse:
+    settings = load_settings()
+
     cookie_language = request.cookies.get("language")
     plugins = all_plugins()
 
     selected_language = language or cookie_language or "he"
+
     if selected_language not in plugins:
         selected_language = "he"
 
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
+
     html_dir = "rtl" if ui_lang == "he" else "ltr"
-    sort_az_label = get_strings(selected_language).get("verbs.sort_az", "A → Z")
+
+    sort_az_label = get_strings(selected_language).get(
+        "verbs.sort_az",
+        "A → Z",
+    )
 
     entries = load_entries_for_language(language=selected_language)
 
-    verbs_js = []
+    verbs_js: list[dict[str, object]] = []
+
     for entry in entries:
         lemma = entry.display_lemma or entry.lemma
+
         if isinstance(lemma, dict):
             lemma = lemma.get("imperfective") or lemma.get("perfective") or ""
 
@@ -50,11 +68,10 @@ def verb_browser(
             {
                 "id": entry.id,
                 "lemma": str(lemma),
-                "rank": entry.rank or 999999,
+                "rank": entry.rank or MAX_SYNTHETIC_RANK,
             }
         )
 
-    # Last 8 entries with a real rank = most recently added (proxy: highest rank number)
     recent_ids: list[str] = []
 
     for verb_row in reversed(verbs_js):
@@ -63,8 +80,10 @@ def verb_browser(
 
         if not isinstance(rank, int):
             continue
+
         if not isinstance(verb_id, str):
             continue
+
         if rank >= MAX_SYNTHETIC_RANK:
             continue
 
@@ -75,17 +94,16 @@ def verb_browser(
 
     recent_ids.reverse()
 
-    verbs_json = json.dumps(verbs_js, ensure_ascii=False)
-    recent_json = json.dumps(recent_ids, ensure_ascii=False)
-    lang_json = json.dumps(selected_language)
     ui_strings: dict[str, str] = {
         "verbs.count_one": ui["verbs.count_one"],
         "verbs.count_other": ui["verbs.count_other"],
         "verbs.empty_state": ui["verbs.empty_state"],
         "verbs.filter_recent": ui["verbs.filter_recent"],
     }
+
     if "verbs.count_few" in ui:
         ui_strings["verbs.count_few"] = ui["verbs.count_few"]
+
     if PRACTICE_LOOP_ENABLED:
         ui_strings.update(
             {
@@ -101,94 +119,38 @@ def verb_browser(
                 "practice.skip": ui["practice.skip"],
             }
         )
-    ui_json = json.dumps(ui_strings, ensure_ascii=False)
-    practice_panel_html = (
-        '<div id="practice-panel" class="practice-panel"></div>'
-        if PRACTICE_LOOP_ENABLED
-        else ""
+
+    response = templates.TemplateResponse(
+        request,
+        "verbs.html",
+        context={
+            "request": request,
+            "ui": ui,
+            "ui_json": json.dumps(ui_strings, ensure_ascii=False),
+            "ui_lang": ui_lang,
+            "html_dir": html_dir,
+            "selected_language": selected_language,
+            "sort_az_label": sort_az_label,
+            "verbs_json": json.dumps(verbs_js, ensure_ascii=False),
+            "recent_json": json.dumps(recent_ids, ensure_ascii=False),
+            "lang_json": json.dumps(selected_language),
+            "practice_loop_enabled": PRACTICE_LOOP_ENABLED,
+            "firebase_web_config_json": (settings.firebase_web_config_json),
+        },
     )
 
-    html = f"""<!doctype html>
-    <html lang="{ui_lang}" dir="{html_dir}">
-    <head>
-      <meta charset="utf-8"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      <title>{ui["verbs.title"]}</title>
-      <link rel="stylesheet" href="/static/common.css"/>
-      <link rel="stylesheet" href="/static/verbs.css"/>
-    </head>
-    <body>
-  <div class="vb-page">
+    response.set_cookie(
+        "language",
+        selected_language,
+        httponly=False,
+        samesite="lax",
+    )
 
-    <div class="vb-header">
-      <a href="/?language={selected_language}" class="vb-back">{ui["verbs.back_home"]}</a>
-      <h1 class="vb-title">{ui["verbs.heading"]}</h1>
-      <a
-        href="/feedback?page=verbs&language={selected_language}&return_to=/verbs?language={selected_language}"
-        class="feedback-link"
-        title="{ui["verbs.feedback_title"]}"
-      >{ui["verbs.feedback_link"]}</a>
-    </div>
+    response.set_cookie(
+        "ui_language",
+        ui_lang,
+        httponly=False,
+        samesite="lax",
+    )
 
-    <div class="vb-filter-row">
-      <div class="vb-filter-toggle" id="vb-filter-toggle">
-        <button type="button" class="vb-ftbtn active" data-filter="new">{ui["verbs.filter_new"]}</button>
-        <button type="button" class="vb-ftbtn" data-filter="seen">{ui["verbs.filter_seen"]}</button>
-        <button type="button" class="vb-ftbtn" data-filter="all">{ui["verbs.filter_all"]}</button>
-        <button type="button" class="vb-ftbtn" data-filter="known">{ui["verbs.filter_known"]}</button>
-      </div>
-    </div>
-
-    <form action="/search_verb" method="get" class="vb-toolbar">
-      <input type="hidden" name="language" value="{selected_language}" />
-      <div class="vb-search-row">
-        <input
-          id="vb-search"
-          name="q"
-          class="vb-search"
-          type="text"
-          placeholder="{ui["verbs.search_placeholder"]}"
-          autocomplete="off"
-        />
-        <button type="submit" class="vb-search-submit">
-          {ui["verbs.find_button"]}
-        </button>
-      </div>
-    </form>
-
-    <div class="vb-toolbar-meta">
-      <select id="vb-sort" class="vb-sort-select">
-        <option value="rank">{ui["verbs.sort_frequency"]}</option>
-        <option value="alpha">{sort_az_label}</option>
-      </select>
-      <span class="vb-legend-known"><span class="vb-badge known">★</span>{ui["verbs.filter_known"]}</span>
-      <div class="progress-row">
-        <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
-        <div class="progress-meta">
-          <span class="progress-star">★</span>
-          <span class="progress-count">0</span>
-          <span class="progress-total"></span>
-        </div>
-      </div>
-    </div>
-
-    {practice_panel_html}
-
-    <div id="vb-list" class="vb-list"></div>
-
-  </div>
-
-  <script>
-    window.VB_LANGUAGE = {lang_json};
-    window.VB_VERBS = {verbs_json};
-    window.VB_RECENT_IDS = {recent_json};
-    window.UI = {ui_json};
-  </script>
-  <script src="/static/verbs.js"></script>
-</body>
-</html>"""
-
-    response = HTMLResponse(html)
-    response.set_cookie("language", selected_language, httponly=False, samesite="lax")
-    response.set_cookie("ui_language", ui_lang, httponly=False, samesite="lax")
     return response

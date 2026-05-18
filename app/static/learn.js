@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
       navTo(session.ids[idx + 1]);
     });
 
-    finishBtn.addEventListener("click", function () {
+    finishBtn.addEventListener("click", async function () {
       if (!hasListened()) {
         showWarn();
         return;
@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  function _finishPractice(session) {
+  async function _finishPractice(session) {
     let accomplished = false;
     try {
       const seenSet = progress.readSet(seenKey);
@@ -233,6 +233,15 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       badges.push(session.size || session.ids.length);
       localStorage.setItem(badgesKey, JSON.stringify(badges));
+
+      if (
+	  window.VerbBoardPracticeLoopInstance &&
+	  window.VerbBoardPracticeLoopInstance.savePracticeBadgesToServer
+	) {
+	  await window.VerbBoardPracticeLoopInstance
+	    .savePracticeBadgesToServer(badges);
+      }
+
       localStorage.setItem(
         `practice_wrapup:${language}`,
         JSON.stringify({ ids: session.ids, lemmas: session.lemmas || {} })

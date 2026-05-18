@@ -9,12 +9,11 @@ from typing import Any
 import pytest
 import uvicorn
 
-from core.audio_backend.base import AudioBackend
-
 # The root tests/conftest.py runs first and imports app.main, which means
 # app.routes.learn has already bound `ensure_audio` as a local name.
 # Re-patch it here so the local live server never calls real TTS.
 import app.routes.learn as _learn_route
+from core.audio_backend.base import AudioBackend
 
 
 async def _noop_audio(
@@ -34,8 +33,13 @@ _learn_route.ensure_audio = _noop_audio  # type: ignore[assignment]
 
 from app.main import app  # noqa: E402
 
-TEST_PORT = 9753
-BASE_URL = f"http://127.0.0.1:{TEST_PORT}"
+
+def _free_port() -> int:
+    """Return a random OS-assigned free port."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
 
 
 def _wait_for_port(host: str, port: int, timeout: float = 10.0) -> bool:
@@ -55,15 +59,16 @@ def live_server_url() -> str:
     if external_base_url:
         return external_base_url.rstrip("/")
 
-    config = uvicorn.Config(app, host="127.0.0.1", port=TEST_PORT, log_level="error")
+    port = _free_port()
+    config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error")
     server = uvicorn.Server(config)
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
 
-    if not _wait_for_port("127.0.0.1", TEST_PORT):
-        raise RuntimeError(f"Test server did not start on port {TEST_PORT}")
+    if not _wait_for_port("127.0.0.1", port):
+        raise RuntimeError(f"Test server did not start on port {port}")
 
-    return BASE_URL
+    return f"http://127.0.0.1:{port}"
 
 
 @pytest.fixture(scope="session")
