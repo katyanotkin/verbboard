@@ -9,21 +9,45 @@ from core.storage.firestore_db import get_db
 
 USERS_COLLECTION = "users"
 USER_PROGRESS_COLLECTION = "user_progress"
+LANGUAGES_SUBCOLLECTION = "languages"
 VERBS_SUBCOLLECTION = "verbs"
 USER_PRACTICE_COLLECTION = "user_practice"
-LANGUAGES_SUBCOLLECTION = "languages"
+
+# Legacy subcollection used before the path restructure.
+# user_progress/{uid}/verbs/{verb_id}  (no language level)
+_LEGACY_VERBS_SUBCOLLECTION = "verbs"
 
 
-def _progress_doc_ref(user_id: str, verb_id: str):
+# ---------------------------------------------------------------------------
+# Internal path helpers
+# ---------------------------------------------------------------------------
+
+
+# user_progress/{uid}/languages/{lang}
+def _progress_language_ref(user_id: str, language: str):
     db = get_db()
     return (
         db.collection(USER_PROGRESS_COLLECTION)
         .document(user_id)
+        .collection(LANGUAGES_SUBCOLLECTION)
+        .document(language)
+    )
+
+
+# user_progress/{uid}/languages/{lang}/verbs/{verb_id}
+def _progress_verb_ref(user_id: str, language: str, verb_id: str):
+    db = get_db()
+    return (
+        db.collection(USER_PROGRESS_COLLECTION)
+        .document(user_id)
+        .collection(LANGUAGES_SUBCOLLECTION)
+        .document(language)
         .collection(VERBS_SUBCOLLECTION)
         .document(verb_id)
     )
 
 
+# user_practice/{uid}/languages/{lang}
 def _practice_doc_ref(user_id: str, language: str):
     db = get_db()
     return (
@@ -32,6 +56,11 @@ def _practice_doc_ref(user_id: str, language: str):
         .collection(LANGUAGES_SUBCOLLECTION)
         .document(language)
     )
+
+
+# ---------------------------------------------------------------------------
+# User profile
+# ---------------------------------------------------------------------------
 
 
 def upsert_user_profile(
@@ -54,15 +83,28 @@ def upsert_user_profile(
     )
 
 
+# ---------------------------------------------------------------------------
+# Verb progress  (user_progress/{uid}/languages/{lang}/verbs/{verb_id})
+# ---------------------------------------------------------------------------
+
+
+def _upsert_language_doc(user_id: str, language: str) -> None:
+    """Ensure the language container doc exists with user + language fields."""
+    _progress_language_ref(user_id, language).set(
+        {"user": user_id, "language": language},
+        merge=True,
+    )
+
+
 def mark_seen(
     *,
     user_id: str,
     language: str,
     verb_id: str,
 ) -> None:
-    doc_ref = _progress_doc_ref(user_id, verb_id)
+    _upsert_language_doc(user_id, language)
 
-    doc_ref.set(
+    _progress_verb_ref(user_id, language, verb_id).set(
         {
             "language": language,
             "verb_id": verb_id,
@@ -81,9 +123,9 @@ def set_known(
     verb_id: str,
     known: bool,
 ) -> None:
-    doc_ref = _progress_doc_ref(user_id, verb_id)
+    _upsert_language_doc(user_id, language)
 
-    doc_ref.set(
+    _progress_verb_ref(user_id, language, verb_id).set(
         {
             "language": language,
             "verb_id": verb_id,
@@ -102,17 +144,32 @@ def list_progress_for_language(
 ) -> list[VerbProgress]:
     db = get_db()
 
-    docs = (
+    # Current path: user_progress/{uid}/languages/{lang}/verbs
+    raw_docs = list(
         db.collection(USER_PROGRESS_COLLECTION)
         .document(user_id)
+        .collection(LANGUAGES_SUBCOLLECTION)
+        .document(language)
         .collection(VERBS_SUBCOLLECTION)
-        .where("language", "==", language)
         .stream()
     )
 
+    # Legacy path fallback: user_progress/{uid}/verbs (pre-restructure data).
+    # Only consulted when the new path is empty so there is no double-counting.
+    # Once a verb is written via mark_seen/set_known it moves to the new path
+    # and the fallback is no longer needed for that user.
+    if not raw_docs:
+        raw_docs = list(
+            db.collection(USER_PROGRESS_COLLECTION)
+            .document(user_id)
+            .collection(_LEGACY_VERBS_SUBCOLLECTION)
+            .where("language", "==", language)
+            .stream()
+        )
+
     progress_rows: list[VerbProgress] = []
 
-    for doc in docs:
+    for doc in raw_docs:
         payload: dict[str, Any] = doc.to_dict() or {}
 
         verb_id = str(payload.get("verb_id") or "")
@@ -129,6 +186,11 @@ def list_progress_for_language(
         )
 
     return progress_rows
+
+
+# ---------------------------------------------------------------------------
+# Practice progress  (user_practice/{uid}/languages/{lang})
+# ---------------------------------------------------------------------------
 
 
 def get_practice_progress(
@@ -152,11 +214,17 @@ def save_practice_progress(
     language: str,
     badges: list[int],
 ) -> None:
-    _practice_doc_ref(user_id, language).set(
-        {
-            "language": language,
-            "badges": badges,
-            "updated_at": firestore.SERVER_TIMESTAMP,
-        },
-        merge=True,
-    )
+    doc_ref = _practice_doc_ref(user_id, language)
+
+    data: dict[str, Any] = {
+        "language": language,
+        "badges": badges,
+        "updated_at": firestore.SERVER_TIMESTAMP,
+    }
+
+    # Set started_at only on the very first write (preserve original value afterwards).
+    existing = doc_ref.get()
+    if not existing.exists or not (existing.to_dict() or {}).get("started_at"):
+        data["started_at"] = firestore.SERVER_TIMESTAMP
+
+    doc_ref.set(data, merge=True)

@@ -47,5 +47,18 @@
 
   practiceLoop.renderPracticePanel();
   practiceLoop.maybeShowWrapUp();
-  practiceLoop.syncPracticeBadgesFromServer();
+  // NOTE: syncPracticeBadgesFromServer() is intentionally NOT called here.
+  // auth.js is deferred, so window.VerbBoardAuth does not exist yet at this
+  // point. The call is made inside the vb:progress-hydrated handler below,
+  // which fires only after Firebase auth has resolved and a token is available.
+
+  // After Firebase auth resolves and localStorage is hydrated: re-render the
+  // verb list, progress bar, and practice panel (including badges from server).
+  window.addEventListener('vb:progress-hydrated', function () {
+    filters.render();
+    filters.updateProgress();
+    practiceLoop.syncPracticeBadgesFromServer();
+    // syncPracticeBadgesFromServer fetches badges and calls renderPracticePanel()
+    // itself on success, so no separate renderPracticePanel() call needed here.
+  });
 })();

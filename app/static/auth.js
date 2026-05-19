@@ -88,6 +88,10 @@
       language = pageRoot.dataset.language || "";
     }
 
+    if (!language && window.VB_LANGUAGE) {
+      language = window.VB_LANGUAGE;
+    }
+
     if (!language) return;
 
     const response = await fetch(
@@ -133,6 +137,8 @@
 
       if (state.known) {
         known.add(verbId);
+      } else {
+        known.delete(verbId);
       }
     }
 
@@ -144,6 +150,10 @@
     localStorage.setItem(
       knownKey,
       JSON.stringify(Array.from(known))
+    );
+
+    window.dispatchEvent(
+      new CustomEvent('vb:progress-hydrated', { detail: { language } })
     );
   }
 
