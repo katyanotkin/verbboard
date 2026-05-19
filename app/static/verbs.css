@@ -105,21 +105,25 @@
 
 /* filter + size toggle (shared segmented control) */
 .vb-filter-toggle {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   border: 1px solid var(--card-border);
   border-radius: 10px;
   overflow: hidden;
   background: #f3f4f6;
 }
 .vb-ftbtn {
+  flex: 1 1 0;
+  min-width: 0;
   padding: 8px 12px;
   border: none;
   background: transparent;
   color: #6b7280;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
+  text-align: center;
   transition: background 0.1s, color 0.1s;
 }
 .vb-ftbtn + .vb-ftbtn        { border-left: 1px solid var(--card-border); }
