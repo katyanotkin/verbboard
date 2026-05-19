@@ -22,7 +22,7 @@ GCP_RUNTIME_SERVICE_ACCOUNT?=$(shell gcloud projects describe $(GCP_PROJECT) --f
 IMAGE_TAG=$(shell git rev-parse --short HEAD)
 GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
-COMMON_ENV_VARS=GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT)
+COMMON_ENV_VARS=GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),PRACTICE_LOOP_ENABLED=true
 COMMON_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest
 
 .DEFAULT_GOAL := help
@@ -185,7 +185,7 @@ gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
 		--image $(GCP_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=stage,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE),ALLOW_LOCAL_DEV_AUTH=true,PRACTICE_LOOP_ENABLED=true\
+		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=stage,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE),ALLOW_LOCAL_DEV_AUTH=true\
 		--set-secrets $(COMMON_SECRETS) \
 		--allow-unauthenticated
 
