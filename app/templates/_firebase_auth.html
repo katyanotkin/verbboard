@@ -1,0 +1,13 @@
+{# Shared Firebase auth bootstrap.
+   Emits window.FIREBASE_WEB_CONFIG in its own <script> block (isolated from
+   window.UI so a missing/empty config value never prevents window.UI from
+   being set).  Loads the Firebase compat SDK, then defers auth.js.
+
+   Each page must set window.UI (with auth.login / auth.logout) in its own
+   isolated script block BEFORE this include.
+   Requires firebase_web_config_json to be in the template context.
+#}
+<script>window.FIREBASE_WEB_CONFIG = {{ (firebase_web_config_json if firebase_web_config_json else "null") | safe }};</script>
+<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+<script defer src="/static/auth.js"></script>

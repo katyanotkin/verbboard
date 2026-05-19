@@ -13,6 +13,12 @@
   margin-bottom: 12px;
 }
 
+.vb-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .vb-back {
   color: var(--color-navy);
   text-decoration: none;

@@ -68,11 +68,10 @@ document.addEventListener("DOMContentLoaded", function () {
     updateKnownButton(false);
   });
 
-  // If the user signs out while on this page, clear their local state so the
-  // known button does not show a stale star from the previous session.
+
+  // If the user signs out while on this page, auth.js has already cleared
+  // all user-specific localStorage keys.  Just update the button.
   window.addEventListener('vb:auth-signed-out', function () {
-    localStorage.removeItem(`known:${language}`);
-    localStorage.removeItem(`seen:${language}`);
     updateKnownButton(false);
   });
 

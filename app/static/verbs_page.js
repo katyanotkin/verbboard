@@ -64,12 +64,9 @@
     // itself on success, so no separate renderPracticePanel() call needed here.
   });
 
-  // After sign-out: clear this language's localStorage state so stale
-  // achievements from the previous user are not shown.
+  // After sign-out: auth.js has already cleared all user-specific localStorage
+  // keys across all languages.  Just re-render so the UI reflects empty state.
   window.addEventListener('vb:auth-signed-out', function () {
-    localStorage.removeItem(`known:${lang}`);
-    localStorage.removeItem(`seen:${lang}`);
-    localStorage.removeItem(`practice_badges:${lang}`);
     filters.render();
     filters.updateProgress();
     practiceLoop.renderPracticePanel();

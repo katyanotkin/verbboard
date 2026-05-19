@@ -99,6 +99,10 @@ def verb_browser(
         "verbs.count_other": ui["verbs.count_other"],
         "verbs.empty_state": ui["verbs.empty_state"],
         "verbs.filter_recent": ui["verbs.filter_recent"],
+        # Auth button labels -- always included so auth.js can localize the
+        # Login/Logout button regardless of whether the practice loop is on.
+        "auth.login": ui["auth.login"],
+        "auth.logout": ui["auth.logout"],
     }
 
     if "verbs.count_few" in ui:

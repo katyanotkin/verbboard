@@ -13,10 +13,6 @@ LANGUAGES_SUBCOLLECTION = "languages"
 VERBS_SUBCOLLECTION = "verbs"
 USER_PRACTICE_COLLECTION = "user_practice"
 
-# Legacy subcollection used before the path restructure.
-# user_progress/{uid}/verbs/{verb_id}  (no language level)
-_LEGACY_VERBS_SUBCOLLECTION = "verbs"
-
 
 # ---------------------------------------------------------------------------
 # Internal path helpers
@@ -89,9 +85,9 @@ def upsert_user_profile(
 
 
 def _upsert_language_doc(user_id: str, language: str) -> None:
-    """Ensure the language container doc exists with user + language fields."""
+    """Ensure the language container doc exists with a language field."""
     _progress_language_ref(user_id, language).set(
-        {"user": user_id, "language": language},
+        {"language": language},
         merge=True,
     )
 
@@ -144,8 +140,7 @@ def list_progress_for_language(
 ) -> list[VerbProgress]:
     db = get_db()
 
-    # Current path: user_progress/{uid}/languages/{lang}/verbs
-    raw_docs = list(
+    docs = list(
         db.collection(USER_PROGRESS_COLLECTION)
         .document(user_id)
         .collection(LANGUAGES_SUBCOLLECTION)
@@ -154,28 +149,13 @@ def list_progress_for_language(
         .stream()
     )
 
-    # Legacy path fallback: user_progress/{uid}/verbs (pre-restructure data).
-    # Only consulted when the new path is empty so there is no double-counting.
-    # Once a verb is written via mark_seen/set_known it moves to the new path
-    # and the fallback is no longer needed for that user.
-    if not raw_docs:
-        raw_docs = list(
-            db.collection(USER_PROGRESS_COLLECTION)
-            .document(user_id)
-            .collection(_LEGACY_VERBS_SUBCOLLECTION)
-            .where("language", "==", language)
-            .stream()
-        )
-
     progress_rows: list[VerbProgress] = []
 
-    for doc in raw_docs:
+    for doc in docs:
         payload: dict[str, Any] = doc.to_dict() or {}
-
         verb_id = str(payload.get("verb_id") or "")
         if not verb_id:
             continue
-
         progress_rows.append(
             VerbProgress(
                 language=str(payload.get("language") or language),

@@ -2,9 +2,8 @@
 Unit tests for core/progress/progress_repository.py
 
 Structure under test:
-  user_progress/{uid}/languages/{lang}             <- language container {user, language}
+  user_progress/{uid}/languages/{lang}             <- language container {language}
   user_progress/{uid}/languages/{lang}/verbs/{vid} <- verb progress
-  user_progress/{uid}/verbs/{vid}                  <- LEGACY path (pre-restructure)
   user_practice/{uid}/languages/{lang}             <- practice badges
 """
 
@@ -146,7 +145,7 @@ def test_mark_seen_targets_correct_path() -> None:
 
 
 def test_mark_seen_writes_language_container_doc() -> None:
-    """mark_seen must upsert the language doc with user + language fields."""
+    """mark_seen must upsert the language container doc with a language field."""
     db = _make_db()
     lang_doc = _lang_ref(db)
 
@@ -155,8 +154,8 @@ def test_mark_seen_writes_language_container_doc() -> None:
 
     args, kwargs = lang_doc.set.call_args
     payload = args[0]
-    assert payload["user"] == "u1"
     assert payload["language"] == "en"
+    assert "user" not in payload, "user field is redundant (uid is in the path)"
     assert kwargs.get("merge") is True
 
 
@@ -197,7 +196,7 @@ def test_set_known_targets_correct_path() -> None:
 
 
 def test_set_known_writes_language_container_doc() -> None:
-    """set_known must also upsert the language container doc."""
+    """set_known must also upsert the language container doc with a language field."""
     db = _make_db()
     lang_doc = _lang_ref(db)
 
@@ -206,8 +205,8 @@ def test_set_known_writes_language_container_doc() -> None:
 
     args, kwargs = lang_doc.set.call_args
     payload = args[0]
-    assert payload["user"] == "u1"
     assert payload["language"] == "en"
+    assert "user" not in payload, "user field is redundant (uid is in the path)"
     assert kwargs.get("merge") is True
 
 
@@ -351,8 +350,8 @@ def test_get_practice_missing_doc_returns_empty_badges() -> None:
 
 
 # ---------------------------------------------------------------------------
-# list_progress_for_language -- primary path
-#   user_progress/{uid}/languages/{lang}/verbs  (stream, no .where needed)
+# list_progress_for_language
+#   path: user_progress/{uid}/languages/{lang}/verbs  (stream)
 # ---------------------------------------------------------------------------
 
 
@@ -365,8 +364,6 @@ def test_list_progress_queries_correct_path() -> None:
 
     db.collection.assert_called_with("user_progress")
     db.collection().document.assert_called_with("u1")
-    # Both "languages" (new path) and "verbs" (legacy fallback) are called;
-    # use assert_any_call so the new-path call is verified regardless of order.
     db.collection().document().collection.assert_any_call("languages")
     db.collection().document().collection().document.assert_called_with("en")
     db.collection().document().collection().document().collection.assert_called_with(
@@ -408,67 +405,50 @@ def test_list_progress_skips_docs_without_verb_id() -> None:
     assert results == []
 
 
-# ---------------------------------------------------------------------------
-# list_progress_for_language -- legacy path fallback
-#   user_progress/{uid}/verbs (pre-restructure data, .where language filter)
-# ---------------------------------------------------------------------------
-
-
-def test_list_progress_falls_back_to_legacy_path_when_new_path_empty() -> None:
-    """
-    If the new path returns no docs (old Firestore data predates the restructure),
-    the function must fall back to user_progress/{uid}/verbs with a language filter.
-    """
+def test_list_progress_empty_collection_returns_empty_list() -> None:
     db = _make_db()
-
-    # New path: empty
     _verbs_col(db).stream.return_value = iter([])
 
-    # Legacy path: one doc
-    legacy_doc = MagicMock()
-    legacy_doc.to_dict.return_value = {
+    with patch.object(repo, "get_db", return_value=db):
+        results = repo.list_progress_for_language(user_id="u1", language="en")
+
+    assert results == []
+
+
+def test_list_progress_multiple_verbs() -> None:
+    db = _make_db()
+    doc1 = MagicMock()
+    doc1.to_dict.return_value = {
+        "language": "en",
+        "verb_id": "en_go",
+        "seen": True,
+        "known": True,
+    }
+    doc2 = MagicMock()
+    doc2.to_dict.return_value = {
         "language": "en",
         "verb_id": "en_run",
         "seen": True,
         "known": False,
     }
-    # Legacy chain: collection().document().collection().where().stream()
-    # The 3rd-level collection() mock is the same object whether called with
-    # "languages" or "verbs" (MagicMock ignores args), so .where lives on it.
-    db.collection().document().collection().where.return_value.stream.return_value = (
-        iter([legacy_doc])
-    )
+    _verbs_col(db).stream.return_value = iter([doc1, doc2])
 
     with patch.object(repo, "get_db", return_value=db):
         results = repo.list_progress_for_language(user_id="u1", language="en")
 
-    assert len(results) == 1
-    assert results[0].verb_id == "en_run"
-    assert results[0].seen is True
-    assert results[0].known is False
+    verb_ids = {r.verb_id for r in results}
+    assert verb_ids == {"en_go", "en_run"}
+    assert len(results) == 2
 
 
-def test_list_progress_skips_legacy_path_when_new_path_has_data() -> None:
-    """
-    When the new path returns docs, the legacy .where() query must not be issued.
-    """
+def test_list_progress_uses_language_param_as_fallback() -> None:
+    """If the doc has no 'language' field, the function parameter is used."""
     db = _make_db()
-    # Capture the 3rd-level collection mock to check .where was not called.
-    third_level_col = db.collection().document().collection()
-
-    new_doc = MagicMock()
-    new_doc.to_dict.return_value = {
-        "language": "en",
-        "verb_id": "en_go",
-        "seen": False,
-        "known": True,
-    }
-    _verbs_col(db).stream.return_value = iter([new_doc])
+    doc = MagicMock()
+    doc.to_dict.return_value = {"verb_id": "en_go", "seen": True}
+    _verbs_col(db).stream.return_value = iter([doc])
 
     with patch.object(repo, "get_db", return_value=db):
         results = repo.list_progress_for_language(user_id="u1", language="en")
 
-    assert len(results) == 1
-    assert results[0].verb_id == "en_go"
-    # The legacy .where() branch must not have been taken.
-    assert not third_level_col.where.called
+    assert results[0].language == "en"

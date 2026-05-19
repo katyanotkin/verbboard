@@ -4,6 +4,8 @@ import json
 from html import escape
 from urllib.parse import quote
 
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
 from core.audio_service import build_hashed_audio_key
 from core.languages.config import LANGUAGE as LANG_CONFIG
 from core.models import Board
@@ -11,7 +13,10 @@ from core.paths import TEMPLATES_DIR
 
 NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}
 
-_BOARD_TEMPLATE = (TEMPLATES_DIR / "board.html").read_text(encoding="utf-8")
+_jinja_env = Environment(
+    loader=FileSystemLoader(str(TEMPLATES_DIR)),
+    autoescape=select_autoescape(["html"]),
+)
 
 
 def render_board_html(
@@ -109,8 +114,6 @@ def render_board_html(
         meta_section_html = ""
         conj_sections_html = "".join(sections_html)
 
-    template = _BOARD_TEMPLATE
-
     translation_dir = "rtl" if ui_lang == "he" else "ltr"
     has_any_translation = any(
         ui_lang in ex.translations and board.language != ui_lang
@@ -131,6 +134,9 @@ def render_board_html(
             f"audio_{board.language}_{board.verb.id}_{board.voice_key}_{hashed_key}"
         )
 
+        # dir and text-align on the sentence cell handle RTL languages correctly.
+        # The audio cell is always the adjacent column -- the table layout keeps
+        # them next to each other regardless of page/verb language direction.
         example_direction = "rtl" if board.language == "he" else "ltr"
         example_align = "right" if board.language == "he" else "left"
 
@@ -162,8 +168,6 @@ def render_board_html(
             "</td>"
             "</tr>"
         )
-
-    home_href = f"/?language={escape(board.language)}&verb_id={escape(board.verb.id)}"
 
     resolved_return_to = return_to or f"/?language={escape(board.language)}"
 
@@ -233,60 +237,42 @@ def render_board_html(
                 "practice.learned_prompt", "Which verbs did you learn?"
             ),
             "practice.done": ui.get("practice.done", "Done"),
+            "auth.login": ui.get("auth.login", "Login"),
+            "auth.logout": ui.get("auth.logout", "Logout"),
         },
         ensure_ascii=False,
     )
 
-    html = (
-        template.replace("{{title}}", escape(title))
-        .replace("{{html_lang}}", ui_lang)
-        .replace("{{html_dir}}", html_dir)
-        .replace("{{firebase_web_config_json}}", firebase_web_config_json)
-        .replace("{{candidate_banner_assets}}", candidate_banner_assets)
-        .replace("{{candidate_banner}}", candidate_banner)
-        .replace("{{voice_source_input}}", voice_source_input)
-        .replace("{{language | urlencode}}", quote(board.language, safe=""))
-        .replace("{{verb_id | urlencode}}", quote(board.verb.id, safe=""))
-        .replace("{{return_to | urlencode}}", quote(resolved_return_to, safe="/"))
-        .replace("{{learn_href | urlencode}}", quote(learn_href, safe="/"))
-        .replace("{{language}}", escape(board.language))
-        .replace("{{language_display}}", escape(language_display))
-        .replace("{{voice_key}}", escape(board.voice_key))
-        .replace("{{verb_id}}", escape(board.verb.id))
-        .replace("{{home_href}}", home_href)
-        .replace("{{return_to}}", escape(resolved_return_to))
-        .replace("{{female_active}}", female_active)
-        .replace("{{male_active}}", male_active)
-        .replace("{{sections_meta}}", meta_section_html)
-        .replace("{{sections_conj}}", conj_sections_html)
-        .replace("{{examples}}", "".join(examples_rows))
-        .replace("{{board_back}}", escape(ui.get("board.back", "Back")))
-        .replace(
-            "{{board_voice_female}}", escape(ui.get("board.voice_female", "Female"))
-        )
-        .replace("{{board_voice_male}}", escape(ui.get("board.voice_male", "Male")))
-        .replace(
-            "{{board_mark_known}}",
-            escape(ui.get("board.mark_known", "Mark as learned")),
-        )
-        .replace(
-            "{{board_send_feedback}}",
-            escape(ui.get("board.send_feedback", "Send feedback")),
-        )
-        .replace(
-            "{{board_language_label}}",
-            escape(ui.get("board.language_label", "Language:")),
-        )
-        .replace(
-            "{{board_examples_heading}}",
-            escape(ui.get("board.examples_heading", "Examples")),
-        )
-        .replace(
-            "{{board_col_sentence}}", escape(ui.get("board.col_sentence", "Sentence"))
-        )
-        .replace("{{board_col_audio}}", escape(ui.get("board.col_audio", "Audio")))
-        .replace("{{board_ui_json}}", board_ui_json)
-        .replace("{{board_examples_toggle}}", examples_toggle)
+    template = _jinja_env.get_template("board.html")
+    return template.render(
+        html_lang=ui_lang,
+        html_dir=html_dir,
+        title=title,
+        candidate_banner_assets=candidate_banner_assets,
+        board_ui_json=board_ui_json,
+        firebase_web_config_json=firebase_web_config_json,
+        candidate_banner=candidate_banner,
+        language=board.language,
+        verb_id=board.verb.id,
+        language_display=language_display,
+        board_language_label=ui.get("board.language_label", "Language:"),
+        return_to=resolved_return_to,
+        board_back=ui.get("board.back", "Back"),
+        voice_source_input=voice_source_input,
+        female_active=female_active,
+        male_active=male_active,
+        board_voice_female=ui.get("board.voice_female", "Female"),
+        board_voice_male=ui.get("board.voice_male", "Male"),
+        board_mark_known=ui.get("board.mark_known", "Mark as learned"),
+        board_send_feedback=ui.get("board.send_feedback", "Send feedback"),
+        language_urlencode=quote(board.language, safe=""),
+        verb_id_urlencode=quote(board.verb.id, safe=""),
+        learn_href_urlencode=quote(learn_href, safe="/"),
+        sections_meta=meta_section_html,
+        board_examples_heading=ui.get("board.examples_heading", "Examples"),
+        board_examples_toggle=examples_toggle,
+        board_col_sentence=ui.get("board.col_sentence", "Sentence"),
+        board_col_audio=ui.get("board.col_audio", "Audio"),
+        examples="".join(examples_rows),
+        sections_conj=conj_sections_html,
     )
-
-    return html

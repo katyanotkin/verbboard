@@ -1,94 +1,88 @@
 <!doctype html>
-<html lang="{{html_lang}}" dir="{{html_dir}}">
+<html lang="{{ html_lang }}" dir="{{ html_dir }}">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>{{title}}</title>
+<title>{{ title }}</title>
 <link rel="stylesheet" href="/static/common.css"/>
 <link rel="stylesheet" href="/static/learn.css"/>
-{{candidate_banner_assets}}
+{{ candidate_banner_assets | safe }}
 
-<script>window.UI = {{board_ui_json}};</script>
-<script>
-window.FIREBASE_WEB_CONFIG = {{firebase_web_config_json}};
-</script>
+<script>window.UI = {{ board_ui_json | safe }};</script>
 
-<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+{% include '_firebase_auth.html' %}
 
-<script defer src="/static/auth.js"></script>
 <script defer src="/static/progress.js"></script>
 <script defer src="/static/learn.js"></script>
 </head>
 
 <body>
-{{candidate_banner}}
-<div id="learn-page" data-language="{{language}}" data-verb-id="{{verb_id}}">
+{{ candidate_banner | safe }}
+<div id="learn-page" data-language="{{ language }}" data-verb-id="{{ verb_id }}">
   <div class="topbar">
     <div>
-      <h1>{{title}}</h1>
+      <h1>{{ title }}</h1>
       <div class="meta">
-        {{board_language_label}} <b>{{language_display}}</b>
+        {{ board_language_label }} <b>{{ language_display }}</b>
       </div>
     </div>
 
     <div class="topbar-actions">
-	  <a href="{{return_to}}" class="nav-btn">
-	    <span class="nav-arrow">⟵</span>
-	    <span>{{board_back}}</span>
-	  </a>
+      <a href="{{ return_to }}" class="nav-btn">
+        <span class="nav-arrow">⟵</span>
+        <span>{{ board_back }}</span>
+      </a>
 
-	  <form method="get" action="/learn" class="voice-control">
-		  <input type="hidden" name="language" value="{{language}}">
-		  <input type="hidden" name="verb_id" value="{{verb_id}}">
-		  {{voice_source_input}}
+      <form method="get" action="/learn" class="voice-control">
+        <input type="hidden" name="language" value="{{ language }}">
+        <input type="hidden" name="verb_id" value="{{ verb_id }}">
+        {{ voice_source_input | safe }}
 
-		 <span class="voice-icon">🔊</span>
-		 <div class="voice-toggle">
-		    <button type="submit" name="voice" value="female" class="voice-btn {{female_active}}">
-		      ♀ {{board_voice_female}}
-		    </button>
+        <span class="voice-icon">🔊</span>
+        <div class="voice-toggle">
+          <button type="submit" name="voice" value="female" class="voice-btn {{ female_active }}">
+            ♀ {{ board_voice_female }}
+          </button>
 
-		    <button type="submit" name="voice" value="male" class="voice-btn {{male_active}}">
-		      ♂ {{board_voice_male}}
-		    </button>
-		 </div>
+          <button type="submit" name="voice" value="male" class="voice-btn {{ male_active }}">
+            ♂ {{ board_voice_male }}
+          </button>
+        </div>
+      </form>
 
-	</form>
+      <button class="known-btn" id="known-btn" title="{{ board_mark_known }}" aria-pressed="false">
+        <svg class="known-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      </button>
 
-	  <button class="known-btn" id="known-btn" title="{{board_mark_known}}" aria-pressed="false">
-	    <svg class="known-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-    </svg>
-	  </button>
-
-	  <a
-	    href="/feedback?page=learn&amp;language={{language | urlencode}}&amp;verb_id={{verb_id | urlencode}}&amp;return_to={{learn_href | urlencode}}"
-  	    class="feedback-link"
-  	    title="{{board_send_feedback}}"
-	  >
-  	    <span>💬</span>
-  	    <span>{{board_send_feedback}}</span>
-	  </a>
-	</div>
+      <a
+        href="/feedback?page=learn&amp;language={{ language_urlencode }}&amp;verb_id={{ verb_id_urlencode }}&amp;return_to={{ learn_href_urlencode }}"
+        class="feedback-link"
+        title="{{ board_send_feedback }}"
+      >
+        <span>💬</span>
+        <span>{{ board_send_feedback }}</span>
+      </a>
+    </div>
   </div>
 
   <div class="section-block">
-    {{sections_meta}}
+    {{ sections_meta | safe }}
   </div>
 
   <div class="examples-heading-row">
-    <h2>{{board_examples_heading}}</h2>
-    {{board_examples_toggle}}
+    <h2>{{ board_examples_heading }}</h2>
+    {{ board_examples_toggle | safe }}
   </div>
 
   <table class="examples-table">
-    <tr><th>{{board_col_sentence}}</th><th>{{board_col_audio}}</th></tr>
-    {{examples}}
+    <tr><th>{{ board_col_sentence }}</th><th>{{ board_col_audio }}</th></tr>
+    {{ examples | safe }}
   </table>
 
   <div class="section-block">
-    {{sections_conj}}
+    {{ sections_conj | safe }}
   </div>
 </div>
 </body>

@@ -6,11 +6,12 @@
   });
 
   let currentUser = null;
-  // Tracks whether the user was authenticated on the previous auth-state event.
-  // Used to distinguish "user signed out" (transition logged-in -> null) from
-  // "user was never logged in" (initial page load with null user).
-  // Initialised to false; set to true after first non-null onAuthStateChanged.
-  let _wasAuthenticated = false;
+
+  // sessionStorage key used to detect sign-out across page navigations.
+  // Set to the uid on login; removed on sign-out.  sessionStorage persists
+  // within a browser tab across navigations but is cleared when the tab closes,
+  // so it correctly tracks per-tab auth state.
+  var SESSION_UID_KEY = 'vb:uid';
 
   function config() {
     return window.FIREBASE_WEB_CONFIG || null;
@@ -28,6 +29,9 @@
 
   async function signIn() {
     const provider = new firebase.auth.GoogleAuthProvider();
+    // Always show the account chooser, even when the browser has a cached
+    // Google session -- prevents silent single-account auto-sign-in.
+    provider.setCustomParameters({ prompt: 'select_account' });
     await firebase.auth().signInWithPopup(provider);
   }
 
@@ -35,8 +39,33 @@
     await firebase.auth().signOut();
   }
 
+  // Remove all user-specific progress keys from localStorage across all
+  // languages.  Called by auth.js on sign-out so cleanup happens even if the
+  // user navigates to a different page before signing out.
+  function clearProgressLocalStorage() {
+    var toRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && (
+        k.startsWith('known:') ||
+        k.startsWith('seen:') ||
+        k.startsWith('practice_badges:') ||
+        k.startsWith('practice_session:') ||
+        k.startsWith('practice_wrapup:') ||
+        k.startsWith('audio_plays:')
+      )) {
+        toRemove.push(k);
+      }
+    }
+    toRemove.forEach(function (k) { localStorage.removeItem(k); });
+  }
+
   function mountAuthButton() {
+    // Prefer the dedicated auth slot (verbs page) so the button lands in the
+    // right layout position.  Fall back to the generic header targets on pages
+    // that don't have an explicit slot.
     const target =
+      document.getElementById("auth-slot") ||
       document.querySelector(".page-header") ||
       document.querySelector(".topbar-actions");
 
@@ -48,19 +77,40 @@
       existing.remove();
     }
 
+    // Read localized labels from window.UI (set by each page's server render).
+    // Fall back to English strings so the button is always usable even on pages
+    // that don't (yet) expose window.UI.
+    var _ui = window.UI || {};
+    var loginLabel = _ui['auth.login'] || 'Login';
+    var logoutLabel = _ui['auth.logout'] || 'Logout';
+
     const button = document.createElement("button");
 
     button.id = "auth-btn";
     button.className = "btn-secondary auth-btn";
 
     if (currentUser) {
-      button.textContent = "Logout";
+      const photoURL = currentUser.photoURL;
+
+      if (photoURL) {
+        const img = document.createElement("img");
+        img.src = photoURL;
+        img.alt = "";
+        img.className = "auth-avatar";
+        // referrerpolicy required for Google profile image URLs to load
+        // correctly when the page origin differs from accounts.google.com.
+        img.referrerPolicy = "no-referrer";
+        img.onerror = function () { this.remove(); };
+        button.appendChild(img);
+      }
+
+      button.appendChild(document.createTextNode(logoutLabel));
 
       button.addEventListener("click", async function () {
         await signOut();
       });
     } else {
-      button.textContent = "Login";
+      button.textContent = loginLabel;
 
       button.addEventListener("click", async function () {
         await signIn();
@@ -171,19 +221,30 @@
     firebase.initializeApp(config());
 
     firebase.auth().onAuthStateChanged(async function (user) {
-      const signingOut = _wasAuthenticated && !user;
-      _wasAuthenticated = !!user;
       currentUser = user;
 
       mountAuthButton();
 
       if (currentUser) {
+        // Record that this tab has an authenticated session.
+        sessionStorage.setItem(SESSION_UID_KEY, currentUser.uid);
         await hydrateProgress();
-      } else if (signingOut) {
-        // Only dispatch when transitioning from logged-in to logged-out.
-        // Not dispatched on initial page load for anonymous users, which would
-        // otherwise incorrectly clear localStorage progress for non-auth users.
-        window.dispatchEvent(new CustomEvent('vb:auth-signed-out'));
+      } else {
+        // Detect sign-out by checking whether we had a uid recorded.
+        // This works across page navigations (sessionStorage persists within
+        // the tab), unlike a JS variable which resets on each page load.
+        var wasAuthenticated = !!sessionStorage.getItem(SESSION_UID_KEY);
+        sessionStorage.removeItem(SESSION_UID_KEY);
+
+        if (wasAuthenticated) {
+          // Clear all user-specific progress from localStorage across all
+          // languages before notifying pages, so they re-render cleanly
+          // even if the user navigated away from the page that had listeners.
+          clearProgressLocalStorage();
+          window.dispatchEvent(new CustomEvent('vb:auth-signed-out'));
+        }
+        // If wasAuthenticated is false the user was never logged in during
+        // this tab session -- do not clear anonymous localStorage progress.
       }
 
       authReadyResolve();

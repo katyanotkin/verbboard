@@ -55,6 +55,9 @@
   "practice.done": "Вперёд",
   "practice.listen_first": "Сначала прослушайте аудио",
 
+  "auth.login": "Войти",
+  "auth.logout": "Выйти",
+
   "board.back": "Назад",
   "board.voice_female": "Женский",
   "board.voice_male": "Мужской",

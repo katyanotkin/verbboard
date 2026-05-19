@@ -55,6 +55,9 @@
   "practice.done": "Go ahead",
   "practice.listen_first": "Listen to the audio first",
 
+  "auth.login": "Login",
+  "auth.logout": "Logout",
+
   "board.back": "Back",
   "board.voice_female": "Female",
   "board.voice_male": "Male",

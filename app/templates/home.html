@@ -6,12 +6,22 @@
   <title>VerbBoard</title>
   <link rel="stylesheet" href="/static/common.css"/>
   <link rel="stylesheet" href="/static/home.css"/>
+
+  <script>
+    window.UI = {
+      "auth.login": {{ ui['auth.login'] | tojson }},
+      "auth.logout": {{ ui['auth.logout'] | tojson }}
+    };
+  </script>
+
+  {% include '_firebase_auth.html' %}
 </head>
 <body>
   <div class="page">
     <div class="page-header">
       <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
       <a href="/about?ui_language={{ lang }}" class="about-link">{{ ui['home.about'] }}</a>
+      <div id="auth-slot" class="auth-slot"></div>
     </div>
 
     <div class="ui-lang-block">
@@ -98,15 +108,6 @@
           </button>
         </div>
       </div>
-
-      <script>
-        window.FIREBASE_WEB_CONFIG = {{ firebase_web_config_json | safe }};
-      </script>
-
-      <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
-      <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
-
-      <script defer src="/static/auth.js"></script>
 
       <div class="progress-row">
         <div class="progress-bar">

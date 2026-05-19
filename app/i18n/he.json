@@ -55,6 +55,9 @@
   "practice.done": "קדימה",
   "practice.listen_first": "האזן לשמע קודם",
 
+  "auth.login": "כניסה",
+  "auth.logout": "יציאה",
+
   "board.back": "חזרה",
   "board.voice_female": "נקבה",
   "board.voice_male": "זכר",
