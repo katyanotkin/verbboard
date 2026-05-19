@@ -6,6 +6,11 @@
   });
 
   let currentUser = null;
+  // Tracks whether the user was authenticated on the previous auth-state event.
+  // Used to distinguish "user signed out" (transition logged-in -> null) from
+  // "user was never logged in" (initial page load with null user).
+  // Initialised to false; set to true after first non-null onAuthStateChanged.
+  let _wasAuthenticated = false;
 
   function config() {
     return window.FIREBASE_WEB_CONFIG || null;
@@ -166,12 +171,19 @@
     firebase.initializeApp(config());
 
     firebase.auth().onAuthStateChanged(async function (user) {
+      const signingOut = _wasAuthenticated && !user;
+      _wasAuthenticated = !!user;
       currentUser = user;
 
       mountAuthButton();
 
       if (currentUser) {
         await hydrateProgress();
+      } else if (signingOut) {
+        // Only dispatch when transitioning from logged-in to logged-out.
+        // Not dispatched on initial page load for anonymous users, which would
+        // otherwise incorrectly clear localStorage progress for non-auth users.
+        window.dispatchEvent(new CustomEvent('vb:auth-signed-out'));
       }
 
       authReadyResolve();

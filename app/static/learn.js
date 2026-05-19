@@ -61,6 +61,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   initializeProgress();
 
+  // If the user logs in while already on this page, hydrateProgress() fires
+  // and writes updated known state to localStorage.  Re-read it so the button
+  // reflects the server's authoritative value without requiring a page reload.
+  window.addEventListener('vb:progress-hydrated', function () {
+    updateKnownButton(false);
+  });
+
+  // If the user signs out while on this page, clear their local state so the
+  // known button does not show a stale star from the previous session.
+  window.addEventListener('vb:auth-signed-out', function () {
+    localStorage.removeItem(`known:${language}`);
+    localStorage.removeItem(`seen:${language}`);
+    updateKnownButton(false);
+  });
+
   // ── audio play tracking ────────────────────────────────────────────────────
   document.querySelectorAll("audio").forEach(function (audio) {
     audio.addEventListener("play", function () {
