@@ -100,14 +100,24 @@ def mark_seen(
 ) -> None:
     _upsert_language_doc(user_id, language)
 
-    _progress_verb_ref(user_id, language, verb_id).set(
-        {
-            "language": language,
-            "verb_id": verb_id,
-            "seen": True,
-            "seen_updated_at": firestore.SERVER_TIMESTAMP,
-            "updated_at": firestore.SERVER_TIMESTAMP,
-        },
+    doc_ref = _progress_verb_ref(user_id, language, verb_id)
+    existing = doc_ref.get()
+    existing_payload: dict[str, Any] = existing.to_dict() or {}
+
+    payload: dict[str, Any] = {
+        "language": language,
+        "verb_id": verb_id,
+        "seen": True,
+        "updated_at": firestore.SERVER_TIMESTAMP,
+    }
+
+    # Preserve original first-seen timestamp.
+    # Repeated syncs/page loads should not rewrite history.
+    if not existing_payload.get("seen"):
+        payload["first_seen_at"] = firestore.SERVER_TIMESTAMP
+
+    doc_ref.set(
+        payload,
         merge=True,
     )
 
