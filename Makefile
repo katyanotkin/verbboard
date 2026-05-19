@@ -27,13 +27,12 @@ COMMON_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest
 
 .DEFAULT_GOAL := help
 
-.PHONY: help lexicon \
+.PHONY: help \
 	local-run local-refresh local-dev \
 	docker-build docker-run docker-stop docker-rm docker-dev docker-url \
-	gcp-check gcp-login gcp-auth gcp-build gcp-push \
+	gcp-check gcp-login gcp-auth \
 	gcp-image gcp-open gcp-open-stage gcp-open-prod \
-	gcp-deploy-stage \
-	gcp-release-stage gcp-release-prod \
+	gcp-release-prod \
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
 	audit-examples audit-en audit-ru audit-he audit-es \
@@ -56,7 +55,6 @@ help:
 	@echo "  make local-dev"
 	@echo "  make docker-dev"
 	@echo "  make docker-run HOST_PORT=8001"
-	@echo "  make gcp-release-stage"
 	@echo ""
 
 ## QA: run all tests (unit + browser e2e)
@@ -86,35 +84,9 @@ test-progress-prod: ## QA: progress API integration tests vs prod
 test-demand: ## QA: run demand regression tests
 	PYTHONPATH=. pytest -q tests/test_recommendation_regression.py
 
-
-## LOCAL: regenerate English lexicon
-lexicon-en: ## LOCAL: regenerate English lexicon
-	$(PYTHON) -m tools.generate_lexicon --language en
-
-## LOCAL: regenerate Russian lexicon
-lexicon-ru: ## LOCAL: regenerate Russian lexicon
-	$(PYTHON) -m tools.generate_lexicon --language ru
-
-## LOCAL: regenerate Hebrew lexicon
-lexicon-he: ## LOCAL: regenerate Hebrew lexicon
-	$(PYTHON) -m tools.generate_lexicon --language he
-
-## LOCAL: regenerate Spanish lexicon
-lexicon-es: ## LOCAL: regenerate Spanish lexicon
-	$(PYTHON) -m tools.generate_lexicon --language es
-
-lexicon: ## LOCAL: regenerate lexicons for all languages
-	$(PYTHON) -m tools.generate_lexicon --language all
-
 ## LOCAL: run app without Docker
 local-run: ## LOCAL: run uvicorn with reload
 	set -a && . $(PWD)/.env && set +a && $(PYTHON) -m uvicorn app.main:app --reload --port $(HOST_PORT)
-
-## LOCAL: refresh runtime lexicons
-local-refresh: lexicon ## LOCAL: refresh lexicons only
-
-## LOCAL: full local dev loop
-local-dev: lexicon local-run ## LOCAL: regenerate lexicons and run app
 
 ## LOCAL DOCKER: build image
 docker-build: ## LOCAL DOCKER: build image
@@ -145,7 +117,7 @@ gcp-image: ## GCP: show image reference
 
 ## GCP: ensure GCP_PROJECT is set
 gcp-check: ## GCP: validate required variables
-	@test -n "$(GCP_PROJECT)" || (echo "ERROR: set GCP_PROJECT, e.g. make gcp-release-stage GCP_PROJECT=my-project" && exit 1)
+	@test -n "$(GCP_PROJECT)" || (echo "ERROR: set GCP_PROJECT, e.g. make gcp-<...> GCP_PROJECT=my-project" && exit 1)
 
 ## GCP: login to gcloud
 gcp-login: gcp-check ## GCP: login with gcloud
@@ -155,14 +127,6 @@ gcp-login: gcp-check ## GCP: login with gcloud
 ## GCP: configure Docker auth for Artifact Registry
 gcp-auth: gcp-check ## GCP: configure docker auth
 	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev
-
-## GCP: build container using Cloud Build
-gcp-build: gcp-check ## GCP: build image in Cloud Build
-	gcloud builds submit --tag $(GCP_IMAGE)
-
-## GCP: push image to Artifact Registry
-gcp-push: gcp-check ## GCP: push local image
-	docker push $(GCP_IMAGE)
 
 ## GCP: show deployed prod service URL
 gcp-open-prod: gcp-check ## GCP: print prod Cloud Run service URL
@@ -178,19 +142,6 @@ gcp-open-stage: gcp-check ## GCP: print stage Cloud Run service URL
 
 ## GCP: backward-compatible alias for prod URL
 gcp-open: gcp-open-prod ## GCP: print Cloud Run service URL
-
-## GCP: deploy image to stage Cloud Run service
-gcp-deploy-stage: gcp-check ## GCP: deploy current image tag to stage
-	gcloud run deploy $(GCP_STAGE_SERVICE) \
-		--image $(GCP_IMAGE) \
-		--region $(GCP_REGION) \
-		--platform managed \
-		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=stage,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE),ALLOW_LOCAL_DEV_AUTH=true\
-		--set-secrets $(COMMON_SECRETS) \
-		--allow-unauthenticated
-
-## GCP: build + deploy to stage
-gcp-release-stage: test gcp-build gcp-setup-stage-firestore gcp-setup-stage-verb-signal gcp-setup-stage-audio gcp-deploy-stage ## GCP: build + deploy to stage
 
 ## GCP: map stage domain to stage service
 gcp-map-stage: gcp-check ## GCP: create domain mapping for stage.verbboard.com
@@ -218,7 +169,7 @@ gcp-stage-image: gcp-check ## GCP: print stage image reference
 		--format='value(spec.template.spec.containers[0].image)'
 
 ## GCP: promote currently deployed stage image to prod
-gcp-promote-stage-to-prod: gcp-check smoke-nav-stage test-e2e-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
+gcp-promote-stage-to-prod: audit-verb-ids gcp-check smoke-nav-stage test-e2e-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
 	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
 	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
 	@echo "Promoting stage image to prod:"
@@ -376,3 +327,7 @@ audit-he: ## QA: run example audit for Hebrew
 ## QA: audit Spanish examples
 audit-es: ## QA: run example audit for Spanish
 	$(PYTHON) -m tools.audit_examples --language es
+
+## QA: audit generated verb ID collisions
+audit-verb-ids: ## QA: audit generated verb ID collisions
+	PYTHONPATH=. ${PYTHON} tools/audit_verb_id_collisions.py
