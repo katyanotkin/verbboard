@@ -13,13 +13,11 @@ steps:
 
   - name: gcr.io/cloud-builders/docker
     args:
-      - run
-      - --rm
-      - -e
-      - GOOGLE_CLOUD_PROJECT=$PROJECT_ID
-      - us-east1-docker.pkg.dev/$PROJECT_ID/verbboard/verbboard:$COMMIT_SHA
-      - python
-      - tools/audit_verb_id_collisions.py
+      - -c
+      - |
+        pip install uv
+        uv sync --forzen --no-dev
+        PYTHONPATH=. .venv/bin/python tools/audit_verb_id_collisions.py
 
   - name: gcr.io/cloud-builders/docker
     args:
