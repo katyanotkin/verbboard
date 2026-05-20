@@ -1,6 +1,6 @@
 # CLAUDE.md — VerbBoard Project Context
 
-VerbBoard is a language learning app focused on verbs: conjugation tables, real usage examples, audio, and repetition. FastAPI + server-rendered UI, GCP backend.
+VerbBoard is a verb-focused language learning app: conjugation tables, real usage examples, audio, and practice loops. Unknown searches become demand signals that drive future verb coverage. FastAPI + server-rendered UI, GCP backend.
 
 ---
 
@@ -10,7 +10,8 @@ VerbBoard is a language learning app focused on verbs: conjugation tables, real 
 - **Frontend:** Vanilla JS + CSS (no framework -- do not introduce one)
 - **Data:** GCP Firestore (single source of truth in all environments)
 - **Audio:** GCS-only (`AUDIO_BUCKET`); pluggable backend abstraction in `core/audio_backend/`
-- **AI generation:** Anthropic Claude -- Haiku (`claude-haiku-4-5-20251001`) for English, Sonnet (`claude-sonnet-4-6`) for all other languages
+- **AI generation:** Anthropic Claude -- Haiku (`claude-haiku-4-5-20251001`) for English, Sonnet (`claude-sonnet-4-6`) for all others; GCP Gemini for translation workflows
+- **Auth:** Firebase Auth (Google sign-in); server validates ID tokens on `/api/progress/*`
 - **Secrets:** GCP Secret Manager (prod/stage) or `.env` (local)
 - **Infrastructure:** GCP -- Cloud Run + Firestore + GCS
 - **App entry point:** `app.main:app`
@@ -21,10 +22,11 @@ VerbBoard is a language learning app focused on verbs: conjugation tables, real 
 
 ```bash
 make local-run
-# or: set -a && . $(PWD)/.env && set +a && $(PYTHON) -m uvicorn app.main:app --reload --port $(HOST_PORT)
 ```
 
 Local base URL: `http://localhost:${HOST_PORT}` (set in `.env`)
+
+Pre-commit linting: `pip install pre-commit && pre-commit install`
 
 ---
 
@@ -34,7 +36,15 @@ Local base URL: `http://localhost:${HOST_PORT}` (set in `.env`)
 app/
   main.py          # FastAPI app, routers, plugin imports, startup
   routes/          # home, verbs, learn, audio, feedback, health, about, admin*
+                   # api_progress.py -- /api/progress/* endpoints
   static/          # Vanilla JS + CSS
+                   # auth.js          -- Firebase auth, hydrateProgress, vb:* events
+                   # progress.js      -- VerbBoardProgress (localStorage known/seen)
+                   # storage.js       -- VerbBoardStorage (readSet/writeSet/readJson/writeJson)
+                   # practice_loop.js -- practice session + badge sync
+                   # verbs_filters.js -- verb list filter/sort/render
+                   # verbs_page.js    -- wires filters + practice loop + auth events
+                   # learn.js         -- known button, audio tracking, practice bar
   templates/       # Jinja2 templates (home.html + admin views)
 
 core/
@@ -47,6 +57,7 @@ core/
   audio_backend/   # base, factory, local, gcs
   languages/       # en, ru, he, es -- each plugin self-registers
   storage/         # firestore_db, verb_repository, verb_document
+  progress/        # models.py, progress_repository.py, progress_service.py
   tts.py           # VOICES dict, TTS integration
 
 tests/             # pytest suite
@@ -61,21 +72,40 @@ Use the **Explore** agent for detailed file navigation.
 **Language plugins:** `core/languages/{lang}/plugin.py` self-registers on import (triggered in `app/main.py`). Each implements `build_board(verb, voice_key, voice_label) -> Board`.
 
 **Firestore data model:**
-- Collections: `verbs`, `verb_candidates`, `demand_signal`, `demand_signal_labels`
+- Verb collections: `verbs`, `verb_candidates`, `demand_signal`, `demand_signal_labels`
 - Doc ID: `{language}_{transliterated_lemma}` (e.g. `en_go`, `ru_idti`) -- Cyrillic/Hebrew transliterated to ASCII
 - Key fields: `language`, `verb_id`, `lemma`, `rank`, `forms`, `examples`, `search_extract` (array), `morph`, `display_lemma`, `display_forms`
 - Search: `find_verb_by_search_extract()` uses `array_contains` on normalized query
+- User progress: `user_progress/{uid}/languages/{lang}/verbs/{verb_id}` -- `seen`, `known`, timestamps
+- User practice: `user_practice/{uid}/languages/{lang}` -- `badges` (list of ints), `started_at`, `updated_at`
+- Legacy fallback: old data at `user_progress/{uid}/verbs/{verb_id}` is read if new path is empty
 
-**AI generation:** Admin triggers `_call_claude(language, query)` in `admin_candidates.py` (async, awaited) -> strict JSON -> stored as candidate -> previewable at `/learn` -> promoted to `verbs` via admin. All AI config (prompts, model, tokens, async client) lives in `core/settings_ai.py`. Per-language system prompt via `get_cached_system(language)` with `cache_control: ephemeral` for Anthropic prompt caching. English uses Haiku, others use Sonnet; Hebrew gets `max_tokens=4096`, others 2048.
+**Demand-driven generation pipeline:** Unknown searches are logged as demand signals. Admin flow: review signals -> generate structured verb data via Claude + Gemini -> preview candidate on live `/learn` page -> promote to `verbs`. Admin triggers `_call_claude(language, query)` in `admin_candidates.py` (async) -> strict JSON -> stored as candidate. All AI config lives in `core/settings_ai.py`. Per-language system prompt via `get_cached_system(language)` with `cache_control: ephemeral`. Hebrew gets `max_tokens=4096`, others 2048.
 
 **Audio:**
 - URL: `/audio/{language}/{verb_id}/{voice}/{form_key}.mp3`
-- `form_key` = `build_hashed_audio_key(base_key, text)` = `{base_key}_{sha1(text)[:10]}` -- content-addressed, text not recoverable from hash
+- `form_key` = `build_hashed_audio_key(base_key, text)` = `{base_key}_{sha1(text)[:10]}` -- content-addressed
 - On-demand: endpoint loads verb, walks board rows/examples to find matching hash, calls `ensure_audio()`
 - Pre-warm: `_warm_verb_audio()` in `admin_candidates.py` generates both voices on verb add/regenerate
-- `_NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}` -- these rows get no audio button
+- `_NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}` -- no audio button for these rows
+
+**Auth and progress sync:**
+- Firebase Auth via `auth.js` (deferred); `authReadyPromise` resolves once per page load
+- On login: `hydrateProgress()` merges server state into localStorage, dispatches `vb:progress-hydrated`
+- On sign-out: dispatches `vb:auth-signed-out` -- only when transitioning from logged-in to null
+- Badge merge: keep whichever list (local vs server) is longer; `syncPracticeBadgesFromServer()` called inside `vb:progress-hydrated` handler
+
+**Practice loop:**
+- Session: `localStorage` key `practice_session:{lang}` -- `{ids, lemmas, size}`; sizes 3/6/9
+- Requires 5 audio plays before Next/Finish; completion earns a badge
+- `BADGE_COMPACT_THRESHOLD` (from `VB_BADGE_COMPACT_THRESHOLD`) switches to compact grouped badge display
+- Wrap-up modal on return to verbs page (`practice_wrapup:{lang}`)
+
+**Inline translations:** `Example.translations` dict; Claude/Gemini routing per language; shown when UI language differs from verb language.
 
 **Localization:** UI in EN / RU / HE / ES. Language + voice persist via cookies. Hebrew RTL supported.
+
+**Lexicon JSON:** As of 2026-04-30, retained for local development and Firestore import/backfill only. Runtime (stage/prod) reads exclusively from Firestore.
 
 ---
 
@@ -100,11 +130,3 @@ make test    # check Makefile first
 - Tests live in `tests/`
 - Use the **qa-engineer** agent for writing and maintaining tests
 - Playwright e2e tests leave a running asyncio loop -- run async test coroutines in a `ThreadPoolExecutor` worker thread (see `tests/test_audio.py` for the pattern)
-
----
-
-## What's Coming Next
-
-- **Practice loop** on Browse Verbs page with completion badges
-- **Login / server-side state** -- cross-device progress sync
-- **Expand language coverage**

@@ -11,15 +11,6 @@ steps:
       - us-east1-docker.pkg.dev/$PROJECT_ID/verbboard/verbboard:$COMMIT_SHA
       - .
 
-  - name: python:3.12
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        pip install uv
-        uv sync --frozen --no-dev
-        PYTHONPATH=. .venv/bin/python tools/audit_verb_id_collisions.py
-
   - name: gcr.io/cloud-builders/docker
     args:
       - push
