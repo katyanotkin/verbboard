@@ -7,7 +7,6 @@ from typing import Any
 
 from core.search_utils import flatten_values, normalize_text
 
-
 _CYRILLIC_TO_LATIN = {
     "а": "a",
     "б": "b",
@@ -46,7 +45,7 @@ _CYRILLIC_TO_LATIN = {
 
 
 _HEBREW_TO_LATIN = {
-    "א": "",
+    "א": "a",
     "ב": "b",
     "ג": "g",
     "ד": "d",
@@ -54,7 +53,7 @@ _HEBREW_TO_LATIN = {
     "ו": "v",
     "ז": "z",
     "ח": "kh",
-    "ט": "t",
+    "ט": "tt",
     "י": "y",
     "כ": "k",
     "ך": "k",
@@ -64,12 +63,12 @@ _HEBREW_TO_LATIN = {
     "נ": "n",
     "ן": "n",
     "ס": "s",
-    "ע": "",
+    "ע": "y",
     "פ": "p",
     "ף": "p",
     "צ": "ts",
     "ץ": "ts",
-    "ק": "k",
+    "ק": "q",
     "ר": "r",
     "ש": "sh",
     "ת": "t",
