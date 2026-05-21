@@ -1,11 +1,9 @@
 from __future__ import annotations
 
+import json
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-import json
-
-from core.analytics.client_context import detect_device_type
 
 logger = logging.getLogger(__name__)
 
@@ -17,17 +15,10 @@ def log_missing_verb_search(
     page: str = "",
     source: str = "search",
     verb_id: str = "",
-    user_agent: str = "",
-    device_type: str = "unknown",
-    viewport_width: int | None = None,
 ) -> None:
     normalized_query = query.strip().casefold()
     if not normalized_query:
         return
-
-    resolved_device_type = device_type
-    if resolved_device_type == "unknown":
-        resolved_device_type = detect_device_type(user_agent)
 
     now = datetime.now(UTC)
     record = {
@@ -35,13 +26,9 @@ def log_missing_verb_search(
         "language": language,
         "query": normalized_query,
         "status": None,
-        # metadata
         "page": page or "",
         "source": source or "",
         "verb_id": verb_id or "",
-        "user_agent": user_agent or "",
-        "device_type": resolved_device_type,
-        "viewport_width": viewport_width,
     }
 
     _append_local(record)

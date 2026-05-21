@@ -3,7 +3,8 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.staticfiles import StaticFiles
 from starlette.types import Scope
 
@@ -44,7 +45,26 @@ class _CachedStaticFiles(StaticFiles):
         return response
 
 
+class _PageViewMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        if request.method == "GET":
+            from core.analytics.page_view import record
+
+            language = request.query_params.get("language") or request.cookies.get(
+                "language", ""
+            )
+            ui_lang = request.query_params.get("ui_language") or request.cookies.get(
+                "ui_language", ""
+            )
+            await record(
+                request.url.path, language, ui_lang, request.headers.get("user-agent")
+            )
+        return response
+
+
 app = FastAPI(lifespan=lifespan, title="VerbBoard")
+app.add_middleware(_PageViewMiddleware)
 app.mount("/static", _CachedStaticFiles(directory="app/static"), name="static")
 
 app.include_router(about_router)

@@ -10,7 +10,12 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from core.analytics.client_context import detect_device_type
 from core.feedback_store import save_feedback
 from core.i18n import get_strings, resolve_ui_language
-from core.polls import ACTIVE_POLL_ID, get_poll_question
+from core.polls import (
+    ACTIVE_POLL_ID,
+    get_poll_options,
+    get_poll_question,
+    get_poll_valid_answers,
+)
 from core.settings import load_settings
 
 router = APIRouter()
@@ -44,6 +49,7 @@ def feedback_form(
     firebase_cfg = settings.firebase_web_config_json or "null"
 
     poll_question = get_poll_question(ACTIVE_POLL_ID, ui_lang) if ACTIVE_POLL_ID else ""
+    poll_options = get_poll_options(ACTIVE_POLL_ID, ui_lang) if ACTIVE_POLL_ID else []
 
     success_html = ""
     if success == "1":
@@ -62,20 +68,18 @@ def feedback_form(
         """
 
     poll_block = ""
-    if poll_question:
+    if poll_question and poll_options:
+        options_html = "".join(
+            f"""
+            <label class="choice-label">
+              <input type="radio" name="poll_answer" value="{escape(value)}"> {escape(label)}
+            </label>"""
+            for value, label in poll_options
+        )
         poll_block = f"""
         <div class="question-block">
           <div class="question-title">{escape(poll_question)}</div>
-          <div class="choice-row">
-            <label class="choice-label">
-              <input type="radio" name="poll_answer" value="yes"> {escape(ui["feedback.poll_yes"])}
-            </label>
-            <label class="choice-label">
-              <input type="radio" name="poll_answer" value="no"> {escape(ui["feedback.poll_no"])}
-            </label>
-            <label class="choice-label">
-              <input type="radio" name="poll_answer" value="no_preference"> {escape(ui["feedback.poll_no_pref"])}
-            </label>
+          <div class="choice-row">{options_html}
           </div>
         </div>
         """
@@ -213,7 +217,7 @@ def submit_feedback(
     return_to = _safe_return_to(return_to)
     clean_comment = comment.strip()
 
-    if poll_answer not in {"yes", "no", "no_preference"}:
+    if poll_answer not in get_poll_valid_answers(ACTIVE_POLL_ID or ""):
         poll_answer = ""
 
     poll_id = ACTIVE_POLL_ID if poll_answer else None

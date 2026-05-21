@@ -81,39 +81,25 @@
     populateSelect("source", "All sources", payload.sources || []);
   }
 
-  function answerLabel(answer) {
-    if (answer === "yes") return "yes";
-    if (answer === "no") return "no";
-    if (answer === "no_preference") return "no preference";
-    return "-";
+  function answerLabel(answer, pollMeta) {
+    const options = pollMeta?.options || [];
+    const found = options.find(o => o.value === answer);
+    return found ? found.label : (answer || "-");
   }
 
-  function renderPollSummary(rows, pollMeta) {
-    const activePollId = pollMeta?.poll_id || "";
-    const filtered = rows.filter(
-      (r) =>
-	r.poll_id === activePollId &&
-        ["yes", "no", "no_preference"].includes(r.poll_answer)
-    );
-
+  // For future yes/no/no_preference polls -- not used by the current poll.
+  function renderYesNoPollSummary(filtered, pollLabel) {
     const yes = filtered.filter(r => r.poll_answer === "yes").length;
     const no = filtered.filter(r => r.poll_answer === "no").length;
     const noPref = filtered.filter(r => r.poll_answer === "no_preference").length;
-
     const total = yes + no + noPref;
     if (!total) return "";
-
     const yesPct = Math.round((yes / total) * 100);
     const noPct = Math.round((no / total) * 100);
     const noPrefPct = Math.round((noPref / total) * 100);
-
-    const pollLabel = pollMeta?.question_en || "";
-
     return `
       <div class="card" style="padding:14px 16px;margin-bottom:12px;background:#f8fafc;">
-        <div style="font-weight:700;margin-bottom:6px;">
-          Poll: ${escapeHtml(pollLabel)}
-        </div>
+        <div style="font-weight:700;margin-bottom:6px;">Poll: ${escapeHtml(pollLabel)}</div>
         <div style="font-size:13px;color:#374151;">
           Answers: ${total} ·
           Yes: ${yes} (${yesPct}%) ·
@@ -124,14 +110,49 @@
     `;
   }
 
+  function renderPollSummary(rows, pollMeta) {
+    const activePollId = pollMeta?.poll_id || "";
+    const options = pollMeta?.options || [];
+    const validValues = new Set(options.map(o => o.value));
+    const filtered = rows.filter(
+      (r) => r.poll_id === activePollId && validValues.has(r.poll_answer)
+    );
+
+    const total = filtered.length;
+    if (!total) return "";
+
+    const counts = {};
+    for (const opt of options) counts[opt.value] = 0;
+    for (const r of filtered) if (r.poll_answer in counts) counts[r.poll_answer]++;
+
+    const breakdown = options.map(opt => {
+      const count = counts[opt.value] || 0;
+      const pct = Math.round((count / total) * 100);
+      return `${escapeHtml(opt.label)}: ${count} (${pct}%)`;
+    }).join(" · ");
+
+    const pollLabel = pollMeta?.question_en || "";
+
+    return `
+      <div class="card" style="padding:14px 16px;margin-bottom:12px;background:#f8fafc;">
+        <div style="font-weight:700;margin-bottom:6px;">
+          Poll: ${escapeHtml(pollLabel)}
+        </div>
+        <div style="font-size:13px;color:#374151;">
+          Answers: ${total} · ${breakdown}
+        </div>
+      </div>
+    `;
+  }
+
   function renderDeviceMix(deviceMix) {
-    const combined = deviceMix?.combined || {};
-    const total = Object.values(combined).reduce((sum, value) => sum + value, 0);
+    const counts = deviceMix?.page_views || {};
+    const total = (counts.mobile || 0) + (counts.desktop || 0) + (counts.tablet || 0);
 
     if (!total) return "";
 
     function countAndPct(key) {
-      const count = combined[key] || 0;
+      const count = counts[key] || 0;
       const percent = Math.round((count / total) * 100);
       return `${count} (${percent}%)`;
     }
@@ -139,14 +160,13 @@
     return `
       <div class="card" style="padding:14px 16px;margin-bottom:12px;background:#f1f5f9;">
         <div style="font-weight:700;margin-bottom:6px;">
-          Device mix, last ${escapeHtml(deviceMix.days || 90)} days
+          Page views by device, last ${escapeHtml(deviceMix.days || 60)} days
         </div>
         <div style="font-size:13px;color:#374151;">
           Total: ${total} ·
           Mobile: ${countAndPct("mobile")} ·
           Desktop: ${countAndPct("desktop")} ·
-          Tablet: ${countAndPct("tablet")} ·
-          Unknown: ${countAndPct("unknown")}
+          Tablet: ${countAndPct("tablet")}
         </div>
       </div>
     `;

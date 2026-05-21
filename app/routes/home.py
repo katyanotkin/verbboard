@@ -98,7 +98,6 @@ def search_verb(
         query=query,
         page="home",
         source="search",
-        user_agent=request.headers.get("user-agent", ""),
     )
 
     response = RedirectResponse(

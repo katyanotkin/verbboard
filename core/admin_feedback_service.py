@@ -4,9 +4,8 @@ from collections import Counter
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from core.settings import load_settings
+from core.polls import ACTIVE_POLL_ID, POLL_OPTIONS, POLL_QUESTIONS
 from core.storage.firestore_db import get_db
-from core.polls import ACTIVE_POLL_ID, POLL_QUESTIONS
 
 
 def _normalize_feedback_doc(doc: Any) -> dict[str, Any]:
@@ -176,13 +175,18 @@ def unhide_feedback_by_id(doc_id: str) -> bool:
     return True
 
 
-def get_active_poll_meta() -> dict[str, str]:
+def get_active_poll_meta() -> dict:
     if not ACTIVE_POLL_ID:
         return {}
 
+    options = [
+        {"value": value, "label": labels.get("en") or value}
+        for value, labels in POLL_OPTIONS.get(ACTIVE_POLL_ID, [])
+    ]
     return {
         "poll_id": ACTIVE_POLL_ID,
         "question_en": POLL_QUESTIONS.get(ACTIVE_POLL_ID, {}).get("en", ""),
+        "options": options,
     }
 
 
@@ -214,23 +218,21 @@ def _count_device_types(
 
 
 def get_device_mix(*, days: int = 60) -> dict[str, Any]:
-    settings = load_settings()
-
     feedback_counts = _count_device_types(
         collection_name="feedback",
         days=days,
     )
-    demand_counts = _count_device_types(
-        collection_name=settings.verb_signals_collection,
+    page_view_counts = _count_device_types(
+        collection_name="page_views",
         days=days,
     )
 
     combined = Counter(feedback_counts)
-    combined.update(demand_counts)
+    combined.update(page_view_counts)
 
     return {
         "days": days,
         "feedback": feedback_counts,
-        "demand_signal": demand_counts,
+        "page_views": page_view_counts,
         "combined": dict(combined),
     }
