@@ -46,15 +46,14 @@ RUSSIAN (ru)
   lemma: infinitive form
   morph:
     aspect: "perfective" | "imperfective" | "biaspectual"
-      Use "biaspectual" for быть (it has both present and full future paradigms)
-      and for verbs that function as both aspects (e.g. организовать, использовать).
+      Use "biaspectual" for verbs that function as both aspects (e.g. организовать, использовать).
     pair: aspect partner's infinitive (e.g. "поймать" ↔ "ловить"). "" if none — never invent.
       Biaspectual verbs have no pair — use "".
 
   forms — tense slots depend on aspect:
-    imperfective         → present, past, imperative
-    perfective           → future, past, imperative
-    biaspectual / быть   → present, future, past, imperative
+    imperfective  → present, past, imperative
+    perfective    → future, past, imperative
+    biaspectual   → present, future, past, imperative
 
     present / future: { 1sg, 2sg, 3sg, 1pl, 2pl, 3pl }
     past:             { m, f, n, pl }
@@ -65,15 +64,16 @@ RUSSIAN (ru)
     Examples: зависеть → завись / зависьте, уведомить → уведомь / уведомьте,
     ехать → езжай, давать → давай, бежать → беги, вставать → вставай.
 
-  pronoun_forms — past prefixed with subject pronoun, for TTS:
+  pronoun_forms — top-level output key (alongside "forms"); past forms prefixed with subject pronoun, for TTS:
     m: "он <past_m>", f: "она <past_f>", n: "оно <past_n>", pl: "они <past_pl>"
     Plain text only — no stress marks or diacritics.
 
   examples:
-    single-aspect verb (has a pair): 4-5 sentences
-    biaspectual verb, быть, or unpaired verb: exactly 6 sentences
-    One example must use the past neuter singular naturally
-    (subject is grammatically neuter, e.g. "Солнце начало садиться.", "Молоко закипело.")."""
+    paired verb: 5 sentences
+    biaspectual or unpaired verb: 6 sentences
+    Aim to include one past neuter singular example (subject is grammatically neuter,
+    e.g. "Солнце начало садиться.", "Молоко закипело."), but skip it if it would feel
+    forced or unnatural. Never use more than one."""
 
 _PROMPT_ES = """\
 ────────────────────────────────────────
