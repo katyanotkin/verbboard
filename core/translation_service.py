@@ -42,7 +42,7 @@ Verb: {lemma}
 Each sentence demonstrates a conjugated form of this verb.
 
 Rules:
-- Translate the verb "{lemma}" using the SAME word in every sentence — pick the one most common direct translation and use it consistently across all sentences. Do not use synonyms or alternate words even if they fit the context.
+- Prefer to translate the verb "{lemma}" using the same root word across all sentences, inflected naturally for each sentence's tense and person. Use a different word only if the primary translation genuinely doesn't fit — due to meaning, register, or idiom.
 - Preserve the grammatical tense and aspect of the source sentence.
 - Keep translations natural and short — match the register of the source.
 
