@@ -365,10 +365,10 @@ def test_home_empty_firebase_config_renders_null(client: TestClient) -> None:
 
 
 def test_board_has_topbar_actions_auth_mount() -> None:
-    """learn page must have .topbar-actions where auth.js appends the button."""
+    """learn page must have #auth-slot where auth.js appends the button."""
     verb = _minimal_verb("en")
     html = render_board_html(_board(verb, "en"), ui_strings=get_strings("en"))
-    assert 'class="topbar-actions"' in html
+    assert 'id="auth-slot"' in html
 
 
 def test_verbs_has_auth_slot(client: TestClient) -> None:

@@ -6,31 +6,10 @@
 }
 
 /* ── header ──────────────────────────────────────────────────────────────── */
-.vb-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.vb-header-right {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.vb-back {
-  color: var(--color-navy);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 15px;
-  white-space: nowrap;
-}
-.vb-back:hover { text-decoration: underline; }
+/* Nav row uses shared .topbar-nav / .topbar-nav-right / .nav-btn from common.css */
 
 .vb-title {
-  flex: 1;
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 20px;
   font-weight: 700;
   color: #111827;

@@ -1,8 +1,7 @@
 {
   "about.title": "אודות VerbBoard",
-  "about.back": "חזרה",
+  "about.back": "חזרה ⟶",
   "about.feedback": "משוב",
-
   "home.about": "אודות",
   "home.intro_hint": "🌐 שפה → 🧩 פועל → ▶ למד",
   "home.language_label": "אני לומד·ת",
@@ -17,7 +16,6 @@
   "home.feedback_link": "💬 משוב",
   "home.no_match": "לא נמצא בסט הנוכחי:",
   "home.ui_language_label": "שפת האפליקציה",
-
   "verbs.title": "VerbBoard — פעלים",
   "verbs.back_home": "ראשי ⟶",
   "verbs.heading": "פעלים",
@@ -36,7 +34,6 @@
   "verbs.count_few": "פעלים",
   "verbs.count_other": "פעלים",
   "verbs.empty_state": "אין תוצאות",
-
   "practice.label": "תרגול",
   "practice.start": "התחל",
   "practice.start_mixed": "התחל (עם נלמדים)",
@@ -54,11 +51,9 @@
   "practice.skip": "דלג",
   "practice.done": "קדימה",
   "practice.listen_first": "האזן לשמע קודם",
-
   "auth.login": "כניסה",
   "auth.logout": "יציאה",
-
-  "board.back": "חזרה",
+  "board.back": "חזרה ⟶",
   "board.voice_female": "נקבה",
   "board.voice_male": "זכר",
   "board.mark_known": "סמן כנלמד",
@@ -72,7 +67,6 @@
   "board.col_sentence": "דוגמה",
   "board.show_translations": "עם תרגום",
   "board.hide_translations": "× תרגום",
-
   "feedback.title": "VerbBoard — משוב",
   "feedback.heading": "משוב",
   "feedback.poll_yes": "כן",
@@ -82,5 +76,9 @@
   "feedback.submit_button": "שלח",
   "feedback.success": "תודה — המשוב התקבל.",
   "feedback.error_empty": "אנא כתוב הערה או ענה כן/לא.",
-  "feedback.back": "חזרה"
+  "feedback.back": "חזרה ⟶",
+  "lang.en": "אנגלית",
+  "lang.ru": "רוסית",
+  "lang.he": "עברית",
+  "lang.es": "ספרדית"
 }

@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel
+
+from core.auth.firebase_auth import get_optional_auth_user
+from core.languages.config import LANGUAGE
+from core.progress.progress_repository import (
+    get_preferences,
+    set_preferences,
+)
+from core.registry import all_plugins
+
+router = APIRouter(prefix="/api/preferences")
+
+_VALID_UI_LANGUAGES = set(LANGUAGE.keys())
+
+
+class PreferencesPayload(BaseModel):
+    ui_language: str | None = None
+    learning_language: str | None = None
+
+
+def _require_user(request: Request):
+    user = get_optional_auth_user(request)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return user
+
+
+@router.get("")
+def get_prefs(request: Request):
+    user = _require_user(request)
+    return get_preferences(user_id=user.uid)
+
+
+@router.post("")
+def set_prefs(request: Request, payload: PreferencesPayload):
+    user = _require_user(request)
+    if (
+        payload.ui_language is not None
+        and payload.ui_language not in _VALID_UI_LANGUAGES
+    ):
+        raise HTTPException(status_code=422, detail="Invalid ui_language")
+    if (
+        payload.learning_language is not None
+        and payload.learning_language not in all_plugins()
+    ):
+        raise HTTPException(status_code=422, detail="Invalid learning_language")
+    set_preferences(user_id=user.uid, prefs=payload.model_dump(exclude_none=True))
+    return {"ok": True}

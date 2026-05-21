@@ -39,7 +39,7 @@ def test_feedback_link_on_verbs(page, live_server_url):
 def test_feedback_link_on_home(page, live_server_url):
     """Home page feedback link navigates to /feedback?page=home."""
     page.goto(f"{live_server_url}/?language=en")
-    link = page.locator("a.feedback-link").first
+    link = page.locator("a.feedback-link[href*='feedback']").first
     link.wait_for(state="visible")
 
     href = link.get_attribute("href") or ""
@@ -72,7 +72,7 @@ def test_feedback_back_navigates(page, live_server_url):
     encoded = return_path.replace("?", "%3F").replace("=", "%3D")
     page.goto(f"{live_server_url}/feedback?page=verbs&language=en&return_to={encoded}")
 
-    back = page.locator("a.secondary-link").first
+    back = page.locator("a.feedback-link[href*='verbs']").first
     back.wait_for(state="visible")
     back.click()
 

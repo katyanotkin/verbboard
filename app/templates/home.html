@@ -20,20 +20,17 @@
   <div class="page">
     <div class="page-header">
       <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
-      <a href="/about?ui_language={{ lang }}" class="about-link">{{ ui['home.about'] }}</a>
-      <div id="auth-slot" class="auth-slot"></div>
     </div>
 
-    <div class="ui-lang-block">
-      <div class="ui-lang-label">
-        {{ ui_language_labels | join(" | ") }}
-      </div>
-      <div class="ui-lang-pills">
-        {% for code in ui_lang_codes %}
-        <a href="/?ui_language={{ code }}&language={{ learning_lang }}"
-           class="ui-lang-pill{% if code == lang %} active{% endif %}">{{ code | upper }}</a>
-        {% endfor %}
-      </div>
+    <div class="ui-lang-grid" title="App language / Язык приложения / Idioma de la app / שפת האפליקציה">
+      {% for code in ui_lang_codes %}
+      <a href="/?ui_language={{ code }}&language={{ learning_lang }}"
+         class="ui-lang-cell{% if code == lang %} active{% endif %}">
+        <span class="ui-lang-cell-label">{{ ui_lang_labels[code] }}</span>
+        <span class="ui-lang-cell-sep"></span>
+        <span class="ui-lang-cell-native">{{ ui_lang_native[code] }}</span>
+      </a>
+      {% endfor %}
     </div>
 
     <form action="/learn" method="get" class="controls" id="home-form">
@@ -121,10 +118,13 @@
         </div>
       </div>
 
-      <div class="feedback-row">
+      <div class="card-footer">
+        <a href="/about?ui_language={{ lang }}" class="feedback-link card-footer-link">{{ ui['home.about'] }}</a>
         <a href="/feedback?page=home&language={{ learning_lang }}&return_to=/?language={{ learning_lang }}"
-           class="feedback-link">{{ ui['home.feedback_link'] }}</a>
+           class="feedback-link card-footer-link">{{ ui['home.feedback_link'] }}</a>
+        <div id="auth-slot" class="card-footer-slot"></div>
       </div>
+
     </form>
   </div>
 

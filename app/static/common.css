@@ -42,11 +42,10 @@
   flex-direction: row-reverse;
 }
 
-[dir="rtl"] .topbar-actions {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .vb-header {
+[dir="rtl"] .topbar-nav,
+[dir="rtl"] .topbar-nav-right,
+[dir="rtl"] .topbar-body,
+[dir="rtl"] .func-panel {
   flex-direction: row-reverse;
 }
 
@@ -89,6 +88,16 @@
   gap: 6px;
 }
 
+/* In nav rows and action rows, auth button matches the pill size of siblings */
+.topbar-nav-right .auth-btn,
+.actions .auth-btn {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border-color: #d1d5db;
+  font-size: inherit;
+  font-weight: 600;
+}
+
 .auth-avatar {
   width: 20px;
   height: 20px;
@@ -123,6 +132,20 @@
 
 .nav-btn:active {
   transform: translateY(0);
+}
+
+/* Ghost variant: matches .feedback-link weight — for the Back link in topbar-nav */
+.nav-btn--ghost {
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  font-weight: 600;
+}
+
+.nav-btn--ghost:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  filter: none;
 }
 
 .nav-arrow {
@@ -172,6 +195,7 @@
   color: #374151;
   text-decoration: none;
   font-weight: 600;
+  cursor: pointer;
   transition: all 0.12s ease;
 }
 
@@ -179,6 +203,40 @@
   background: #f8fafc;
   border-color: #cbd5e1;
   transform: translateY(-1px);
+}
+
+/* ===== Shared page nav row ===== */
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--card-border);
+  margin-bottom: 14px;
+}
+
+.topbar-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ===== Learn-page content row + function panel ===== */
+
+.topbar-body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 14px;
+}
+
+.func-panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 /* ===== Progress bar (shared: home + verbs) ===== */

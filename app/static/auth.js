@@ -88,6 +88,7 @@
 
     button.id = "auth-btn";
     button.className = "btn-secondary auth-btn";
+    button.type = "button";
 
     if (currentUser) {
       const photoURL = currentUser.photoURL;
@@ -212,6 +213,63 @@
     );
   }
 
+  async function applyPreferences() {
+    if (!currentUser) return;
+    const token = await getIdToken();
+    if (!token) return;
+
+    const currentUiLang = document.documentElement.lang || '';
+    const langSelect = document.querySelector('select[name="language"]');
+    const currentLearningLang = langSelect ? langSelect.value : (window.VB_LANGUAGE || '');
+    const onHome = window.location.pathname === '/';
+
+    try {
+      const resp = await fetch('/api/preferences', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!resp.ok) return;
+
+      const prefs = await resp.json();
+      const toSave = {};
+
+      // UI language
+      if (!prefs.ui_language && currentUiLang) {
+        toSave.ui_language = currentUiLang;
+      }
+
+      // Learning language
+      if (!prefs.learning_language && currentLearningLang) {
+        toSave.learning_language = currentLearningLang;
+      }
+
+      if (Object.keys(toSave).length) {
+        await fetch('/api/preferences', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(toSave),
+        });
+      }
+
+      // Apply — build redirect params if anything differs
+      const url = new URL(window.location.href);
+      let needsRedirect = false;
+
+      if (prefs.ui_language && currentUiLang && prefs.ui_language !== currentUiLang) {
+        url.searchParams.set('ui_language', prefs.ui_language);
+        needsRedirect = true;
+      }
+
+      if (onHome && prefs.learning_language && currentLearningLang && prefs.learning_language !== currentLearningLang) {
+        url.searchParams.set('language', prefs.learning_language);
+        needsRedirect = true;
+      }
+
+      if (needsRedirect) {
+        window.location.replace(url.toString());
+      }
+    } catch (_) {}
+  }
+
   function initializeFirebase() {
     if (!hasFirebaseConfig()) {
       authReadyResolve();
@@ -229,6 +287,7 @@
         // Record that this tab has an authenticated session.
         sessionStorage.setItem(SESSION_UID_KEY, currentUser.uid);
         await hydrateProgress();
+        await applyPreferences();
       } else {
         // Detect sign-out by checking whether we had a uid recorded.
         // This works across page navigations (sessionStorage persists within

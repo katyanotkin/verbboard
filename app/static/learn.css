@@ -115,16 +115,21 @@ button {
 
 .topbar {
   display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
   margin-bottom: 16px;
-  flex-wrap: wrap;
-  padding: 16px 18px;
+  padding: 14px 18px;
   background: white;
   border: 1px solid var(--card-border);
   border-radius: 16px;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+/* .topbar-nav, .topbar-nav-right, .topbar-body, .func-panel live in common.css */
+
+/* Inside the learn-page card, the nav row needs no bottom margin — .topbar-body
+   provides the gap via padding-top. */
+.topbar .topbar-nav {
+  margin-bottom: 0;
 }
 
 .meta {
@@ -132,12 +137,6 @@ button {
   font-size: 14px;
 }
 
-.topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
 
 .voice-control {
   display: inline-flex;

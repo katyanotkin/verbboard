@@ -79,6 +79,23 @@ def upsert_user_profile(
     )
 
 
+def get_preferences(*, user_id: str) -> dict:
+    db = get_db()
+    doc = db.collection(USERS_COLLECTION).document(user_id).get()
+    payload = (doc.to_dict() or {}) if doc.exists else {}
+    return {
+        "ui_language": payload.get("ui_language") or None,
+        "learning_language": payload.get("learning_language") or None,
+    }
+
+
+def set_preferences(*, user_id: str, prefs: dict) -> None:
+    db = get_db()
+    data = {k: v for k, v in prefs.items() if v is not None}
+    data["updated_at"] = firestore.SERVER_TIMESTAMP
+    db.collection(USERS_COLLECTION).document(user_id).set(data, merge=True)
+
+
 # ---------------------------------------------------------------------------
 # Verb progress  (user_progress/{uid}/languages/{lang}/verbs/{verb_id})
 # ---------------------------------------------------------------------------

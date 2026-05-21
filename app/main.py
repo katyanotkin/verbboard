@@ -14,6 +14,7 @@ import core.languages.he.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
 from app.routes.about import router as about_router
 from app.routes.admin import router as admin_router
+from app.routes.api_preferences import router as api_preferences_router
 from app.routes.api_progress import router as api_progress_router
 from app.routes.audio import router as audio_router
 from app.routes.feedback import router as feedback_router
@@ -54,4 +55,5 @@ app.include_router(health_router)
 app.include_router(home_router)
 app.include_router(learn_router)
 app.include_router(verbs_router)
+app.include_router(api_preferences_router)
 app.include_router(api_progress_router)

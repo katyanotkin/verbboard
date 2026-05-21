@@ -22,19 +22,15 @@
 <body>
   <div class="vb-page">
 
-    <div class="vb-header page-header">
+    <div class="topbar-nav">
       <a
         href="/?language={{ selected_language }}"
-        class="vb-back"
+        class="nav-btn nav-btn--ghost"
       >
-        {{ ui['verbs.back_home'] }}
+        <span>{{ ui['verbs.back_home'] }}</span>
       </a>
 
-      <h1 class="vb-title">
-        {{ ui['verbs.heading'] }}
-      </h1>
-
-      <div class="vb-header-right">
+      <div class="topbar-nav-right">
         <a
           href="/feedback?page=verbs&language={{ selected_language }}&return_to=/verbs?language={{ selected_language }}"
           class="feedback-link"
@@ -46,6 +42,10 @@
         <div id="auth-slot" class="auth-slot"></div>
       </div>
     </div>
+
+    <h1 class="vb-title">
+      {{ ui['verbs.heading'] }}
+    </h1>
 
     <div class="vb-filter-row">
       <div class="vb-filter-toggle" id="vb-filter-toggle">

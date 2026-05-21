@@ -341,73 +341,112 @@ input[type="text"]:focus {
 
 .page-header {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 8px;
 }
 
-.about-link {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #64748b;
-  text-decoration: none;
-  white-space: nowrap;
+
+/* ===== UI language selector (2×2 grid) ===== */
+
+.ui-lang-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  max-width: 420px;
+  margin: 0 auto 14px;
 }
 
-.about-link:hover {
-  color: #334155;
-}
-
-/* ===== UI language selector ===== */
-
-.ui-lang-block {
-  text-align: center;
-  margin: 0 0 14px;
-}
-
-.ui-lang-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #64748b;
-  margin-bottom: 6px;
-}
-
-.ui-lang-pills {
+.ui-lang-cell {
   display: flex;
-  justify-content: center;
-  gap: 4px;
-  margin-bottom: 18px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-
-.ui-lang-pill {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: 22px;
-  padding: 0 7px;
-  border-radius: 6px;
+  gap: 5px;
+  padding: 7px 10px;
   border: 1px solid #e2e8f0;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  border-radius: 10px;
   text-decoration: none;
-  color: #64748b;
-  background: transparent;
-  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  color: var(--text-muted);
+  background: #f1f5f9;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+  overflow: hidden;
 }
 
-.ui-lang-pill:hover {
+.ui-lang-cell:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
 }
 
-.ui-lang-pill.active {
+.ui-lang-cell.active {
   background: #1e3a8a;
   color: white;
   border-color: #1e3a8a;
+}
+
+.ui-lang-cell-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+
+.ui-lang-cell-sep {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 1.5px solid #94a3b8;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.ui-lang-cell.active .ui-lang-cell-sep {
+  background: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.ui-lang-cell-native {
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ===== Card footer (About / Feedback / Login) ===== */
+
+.card-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.card-footer-link {
+  flex: 1;
+  justify-content: center;
+}
+
+.card-footer-slot {
+  flex: 1;
+  display: flex;
+}
+
+.card-footer-slot .btn-secondary {
+  flex: 1;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: inherit;
+  font-weight: 600;
+  border-color: #d1d5db;
+  margin-left: 0;
+  background: white;
+  color: #374151;
 }
 
 /* ===== Buttons states ===== */

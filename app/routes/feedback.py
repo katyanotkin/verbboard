@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from html import escape
 from urllib.parse import unquote, urlencode
 
@@ -10,6 +11,7 @@ from core.analytics.client_context import detect_device_type
 from core.feedback_store import save_feedback
 from core.i18n import get_strings, resolve_ui_language
 from core.polls import ACTIVE_POLL_ID, get_poll_question
+from core.settings import load_settings
 
 router = APIRouter()
 
@@ -38,6 +40,8 @@ def feedback_form(
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
     html_dir = "rtl" if ui_lang == "he" else "ltr"
+    settings = load_settings()
+    firebase_cfg = settings.firebase_web_config_json or "null"
 
     poll_question = get_poll_question(ACTIVE_POLL_ID, ui_lang) if ACTIVE_POLL_ID else ""
 
@@ -82,6 +86,12 @@ def feedback_form(
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>{escape(ui["feedback.title"])}</title>
+  <link rel="stylesheet" href="/static/common.css"/>
+  <script>window.UI ={json.dumps({"auth.login": ui.get("auth.login", "Login"), "auth.logout": ui.get("auth.logout", "Logout")})};</script>
+  <script>window.FIREBASE_WEB_CONFIG = {firebase_cfg};</script>
+  <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+  <script defer src="/static/auth.js"></script>
   <style>
     body {{
       font-family: system-ui, sans-serif;
@@ -138,36 +148,32 @@ def feedback_form(
       color: #374151;
     }}
 
+    .card-nav {{
+      margin-bottom: 16px;
+    }}
+
+    .card-nav h1 {{
+      margin: 0;
+      font-size: 22px;
+    }}
+
     .actions {{
       margin-top: 16px;
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }}
-
-    .primary-btn {{
-      border: none;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
-      padding: 10px 16px;
-      border-radius: 999px;
-      font-weight: 700;
-    }}
-
-    .secondary-link {{
-      border: 1px solid #d1d5db;
-      padding: 10px 16px;
-      border-radius: 999px;
-      text-decoration: none;
-      color: #374151;
+      justify-content: center;
     }}
 
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>{escape(ui["feedback.heading"])}</h1>
+    <div class="topbar-nav card-nav">
+      <h1>{escape(ui["feedback.heading"])}</h1>
+      <div class="topbar-nav-right">
+        <a href="{escape(return_to)}" class="feedback-link">{escape(ui["feedback.back"])}</a>
+        <div id="auth-slot" style="display:contents"></div>
+      </div>
+    </div>
 
     {success_html}
     {error_html}
@@ -184,8 +190,7 @@ def feedback_form(
       <textarea name="comment" placeholder="{escape(ui["feedback.comment_placeholder"])}"></textarea>
 
       <div class="actions">
-        <button type="submit" class="primary-btn">{escape(ui["feedback.submit_button"])}</button>
-        <a href="{escape(return_to)}" class="secondary-link">{escape(ui["feedback.back"])}</a>
+        <button type="submit" class="feedback-link">💬 {escape(ui["feedback.submit_button"])}</button>
       </div>
     </form>
   </div>

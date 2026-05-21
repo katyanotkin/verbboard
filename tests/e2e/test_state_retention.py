@@ -24,7 +24,7 @@ def test_feedback_blocks_external_return_to(page, live_server_url):
     )
     page.wait_for_load_state("networkidle")
 
-    back = page.locator("a.secondary-link").first
+    back = page.locator("a.feedback-link").first
     href = back.get_attribute("href") or ""
 
     assert "malicious.example.com" not in href

@@ -1,8 +1,7 @@
 {
   "about.title": "О приложении VerbBoard",
-  "about.back": "Назад",
+  "about.back": "⟵ Назад",
   "about.feedback": "Отзыв",
-
   "home.about": "О приложении",
   "home.intro_hint": "🌐 Язык → 🧩 Глагол → ▶ Учить",
   "home.language_label": "Я изучаю",
@@ -17,9 +16,8 @@
   "home.feedback_link": "💬 Отзыв",
   "home.no_match": "Не найдено в текущем наборе:",
   "home.ui_language_label": "Язык приложения",
-
   "verbs.title": "VerbBoard — Глаголы",
-  "verbs.back_home": "⟵ Главная",
+  "verbs.back_home": "⟵ Назад",
   "verbs.heading": "Глаголы",
   "verbs.feedback_link": "💬 Отзыв",
   "verbs.feedback_title": "Отправить отзыв",
@@ -36,7 +34,6 @@
   "verbs.count_few": "глагола",
   "verbs.count_other": "глаголов",
   "verbs.empty_state": "Нет совпадений",
-
   "practice.label": "Тренировка",
   "practice.start": "Начать",
   "practice.start_mixed": "Начать (с выученными)",
@@ -54,11 +51,9 @@
   "practice.skip": "Пропустить",
   "practice.done": "Вперёд",
   "practice.listen_first": "Сначала прослушайте аудио",
-
   "auth.login": "Войти",
   "auth.logout": "Выйти",
-
-  "board.back": "Назад",
+  "board.back": "⟵ Назад",
   "board.voice_female": "Женский",
   "board.voice_male": "Мужской",
   "board.mark_known": "Отметить как выученный",
@@ -72,7 +67,6 @@
   "board.col_sentence": "Пример",
   "board.show_translations": "С переводом",
   "board.hide_translations": "× Перевод",
-
   "feedback.title": "VerbBoard — Отзыв",
   "feedback.heading": "Отзыв",
   "feedback.poll_yes": "Да",
@@ -82,5 +76,9 @@
   "feedback.submit_button": "Отправить",
   "feedback.success": "Спасибо — отзыв получен.",
   "feedback.error_empty": "Пожалуйста, напишите комментарий или ответьте Да/Нет.",
-  "feedback.back": "Назад"
+  "feedback.back": "⟵ Назад",
+  "lang.en": "Английский",
+  "lang.ru": "Русский",
+  "lang.he": "Иврит",
+  "lang.es": "Испанский"
 }

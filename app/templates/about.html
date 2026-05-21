@@ -5,6 +5,10 @@
   <title>{{ title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/static/common.css"/>
+
+<script>window.UI = { "auth.login": {{ auth_login | tojson }}, "auth.logout": {{ auth_logout | tojson }} };</script>
+{% include '_firebase_auth.html' %}
+
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -42,8 +46,19 @@
       margin-top: 24px;
       display: flex;
       justify-content: center;
+      align-items: center;
       gap: 12px;
       flex-wrap: wrap;
+    }
+
+    /* Auth button sits alongside feedback-link pills — match their shape */
+    .back .btn-secondary {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: white;
+      color: #374151;
+      font-size: 1rem;
     }
   </style>
 </head>
@@ -153,7 +168,6 @@
 
   <div class="back">
     <a href="/" class="feedback-link">
-      <span>⟵</span>
       <span>{{ back_label }}</span>
     </a>
 
@@ -161,6 +175,8 @@
       <span>💬</span>
       <span>{{ feedback_label }}</span>
     </a>
+
+    <div id="auth-slot" class="auth-slot" style="display:contents"></div>
   </div>
 </div>
 

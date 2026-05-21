@@ -1,8 +1,7 @@
 {
   "about.title": "Sobre la app VerbBoard",
-  "about.back": "Volver",
+  "about.back": "⟵ Volver",
   "about.feedback": "Comentarios",
-
   "home.about": "Sobre la app",
   "home.intro_hint": "🌐 Idioma → 🧩 Verbo → ▶ Aprender",
   "home.language_label": "Estoy aprendiendo",
@@ -17,9 +16,8 @@
   "home.feedback_link": "💬 Comentarios",
   "home.no_match": "Sin coincidencias en el conjunto actual:",
   "home.ui_language_label": "Idioma de la app",
-
   "verbs.title": "VerbBoard — Explorar verbos",
-  "verbs.back_home": "⟵ Inicio",
+  "verbs.back_home": "⟵ Volver",
   "verbs.heading": "Verbos",
   "verbs.feedback_link": "💬 Comentarios",
   "verbs.feedback_title": "Enviar comentarios",
@@ -36,7 +34,6 @@
   "verbs.count_few": "verbos",
   "verbs.count_other": "verbos",
   "verbs.empty_state": "Sin coincidencias",
-
   "practice.label": "Práctica",
   "practice.start": "Empezar",
   "practice.start_mixed": "Empezar (con aprendidos)",
@@ -54,11 +51,9 @@
   "practice.skip": "Omitir",
   "practice.done": "Adelante",
   "practice.listen_first": "Escucha el audio primero",
-
   "auth.login": "Iniciar sesión",
   "auth.logout": "Cerrar sesión",
-
-  "board.back": "Volver",
+  "board.back": "⟵ Volver",
   "board.voice_female": "Femenino",
   "board.voice_male": "Masculino",
   "board.mark_known": "Marcar como aprendido",
@@ -72,7 +67,6 @@
   "board.col_sentence": "Ejemplo",
   "board.show_translations": "Con traducción",
   "board.hide_translations": "× Traducción",
-
   "feedback.title": "VerbBoard — Comentarios",
   "feedback.heading": "Comentarios",
   "feedback.poll_yes": "Sí",
@@ -82,5 +76,9 @@
   "feedback.submit_button": "Enviar",
   "feedback.success": "Gracias — comentario recibido.",
   "feedback.error_empty": "Por favor escribe un comentario o responde Sí/No.",
-  "feedback.back": "Volver"
+  "feedback.back": "⟵ Volver",
+  "lang.en": "Inglés",
+  "lang.ru": "Ruso",
+  "lang.he": "Hebreo",
+  "lang.es": "Español"
 }

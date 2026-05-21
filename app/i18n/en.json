@@ -1,8 +1,7 @@
 {
   "about.title": "About VerbBoard",
-  "about.back": "Back",
+  "about.back": "⟵ Back",
   "about.feedback": "Feedback",
-
   "home.about": "About",
   "home.intro_hint": "🌐 Language → 🧩 Verb → ▶ Learn",
   "home.language_label": "I'm studying",
@@ -17,9 +16,8 @@
   "home.feedback_link": "💬 Feedback",
   "home.no_match": "No match in the current set:",
   "home.ui_language_label": "App language",
-
   "verbs.title": "VerbBoard — Browse verbs",
-  "verbs.back_home": "⟵ Home",
+  "verbs.back_home": "⟵ Back",
   "verbs.heading": "Browse verbs",
   "verbs.feedback_link": "💬 Feedback",
   "verbs.feedback_title": "Send feedback",
@@ -36,7 +34,6 @@
   "verbs.count_few": "verbs",
   "verbs.count_other": "verbs",
   "verbs.empty_state": "No verbs match",
-
   "practice.label": "Practice",
   "practice.start": "Start",
   "practice.start_mixed": "Start (includes learned)",
@@ -54,11 +51,9 @@
   "practice.skip": "Skip",
   "practice.done": "Go ahead",
   "practice.listen_first": "Listen to the audio first",
-
   "auth.login": "Login",
   "auth.logout": "Logout",
-
-  "board.back": "Back",
+  "board.back": "⟵ Back",
   "board.voice_female": "Female",
   "board.voice_male": "Male",
   "board.mark_known": "Mark as learned",
@@ -72,7 +67,6 @@
   "board.col_sentence": "Example",
   "board.show_translations": "With translation",
   "board.hide_translations": "× Translation",
-
   "feedback.title": "VerbBoard feedback",
   "feedback.heading": "Feedback",
   "feedback.poll_yes": "Yes",
@@ -82,5 +76,9 @@
   "feedback.submit_button": "Send feedback",
   "feedback.success": "Thanks — feedback received.",
   "feedback.error_empty": "Please write a comment or answer Yes/No.",
-  "feedback.back": "Back"
+  "feedback.back": "⟵ Back",
+  "lang.en": "English",
+  "lang.ru": "Russian",
+  "lang.he": "Hebrew",
+  "lang.es": "Spanish"
 }

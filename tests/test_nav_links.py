@@ -13,7 +13,6 @@ from fastapi.testclient import TestClient
 
 from core.models import Board, VerbEntry
 
-
 # ── helpers ────────────────────────────────────────────────────────────────
 
 
@@ -117,7 +116,7 @@ def test_feedback_back_link_for_learn_return_to(client: TestClient) -> None:
     html = client.get(
         f"/feedback?page=learn&language=en&verb_id=en_go&return_to={return_to}"
     ).text
-    assert "secondary-link" in html
+    assert "feedback-link" in html
     assert "/learn" in html
 
 
@@ -215,7 +214,7 @@ def test_learn_board_has_back_button(mock_verb: VerbEntry) -> None:
 
     html = render_board_html(_make_board(mock_verb), return_to="/?language=en")
     assert "nav-btn" in html
-    assert "nav-arrow" in html
+    assert "nav-btn--ghost" in html
 
 
 def test_learn_board_has_voice_toggle(mock_verb: VerbEntry) -> None:
