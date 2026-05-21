@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from core.auth.firebase_auth import get_optional_auth_user
 from core.languages.config import LANGUAGE
+from core.progress.models import PracticeSessionSize
 from core.progress.progress_repository import (
     get_preferences,
     set_preferences,
@@ -19,6 +20,7 @@ _VALID_UI_LANGUAGES = set(LANGUAGE.keys())
 class PreferencesPayload(BaseModel):
     ui_language: str | None = None
     learning_language: str | None = None
+    practice_session_size: int | None = None
 
 
 def _require_user(request: Request):
@@ -47,5 +49,9 @@ def set_prefs(request: Request, payload: PreferencesPayload):
         and payload.learning_language not in all_plugins()
     ):
         raise HTTPException(status_code=422, detail="Invalid learning_language")
+    if payload.practice_session_size is not None and not any(
+        payload.practice_session_size == s for s in PracticeSessionSize
+    ):
+        raise HTTPException(status_code=422, detail="Invalid practice_session_size")
     set_preferences(user_id=user.uid, prefs=payload.model_dump(exclude_none=True))
     return {"ok": True}

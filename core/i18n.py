@@ -37,3 +37,12 @@ def resolve_ui_language(request: Request) -> str:
             return code
 
     return DEFAULT_UI_LANG
+
+
+def ui_language_source(request: Request) -> str:
+    """Return where the UI language came from: 'param', 'cookie', or 'default'."""
+    if request.query_params.get("ui_language", "") in SUPPORTED_UI_LANGS:
+        return "param"
+    if request.cookies.get("ui_language", "") in SUPPORTED_UI_LANGS:
+        return "cookie"
+    return "default"

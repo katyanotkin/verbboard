@@ -19,12 +19,12 @@ _VALID_BADGE_SIZES = {3, 6, 9}
 
 class SeenRequest(BaseModel):
     language: str = Field(min_length=2, max_length=3)
-    verb_id: str = Field(min_length=1, max_length=120)
+    verb_id: str = Field(min_length=1, max_length=80)
 
 
 class KnownRequest(BaseModel):
     language: str = Field(min_length=2, max_length=3)
-    verb_id: str = Field(min_length=1, max_length=120)
+    verb_id: str = Field(min_length=1, max_length=80)
     known: bool
 
 

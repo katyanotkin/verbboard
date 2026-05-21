@@ -3,12 +3,21 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from app.routes.admin_utils import (
+    CANDIDATE_STATUSES,
+    CANDIDATES_COLLECTION,
+    VERBS_COLLECTION,
+    logger,
+    require_admin_api,
+)
+from core.search_utils import normalize_text
 from core.settings import _load_anthropic_api_key
 from core.settings_ai import (
     _MAX_TOKENS,
@@ -19,19 +28,13 @@ from core.settings_ai import (
     get_cached_system,
 )
 from core.storage.firestore_db import get_db
-from core.storage.verb_repository import find_verb_by_search_extract
 from core.storage.verb_document import (
-    build_storage_verb_id,
     build_search_extract_from_entry,
+    build_storage_verb_id,
 )
+from core.storage.verb_repository import find_verb_by_search_extract
 from core.translation_service import translate_examples
-from app.routes.admin_utils import (
-    CANDIDATES_COLLECTION,
-    CANDIDATE_STATUSES,
-    VERBS_COLLECTION,
-    logger,
-    require_admin_api,
-)
+from core.utils import json_safe
 
 _GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
 
@@ -156,10 +159,13 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
                     f"raw query (may be any inflected form): {query}"
                 ),
             },
-            {"role": "assistant", "content": "{"},
         ],
     )
-    raw = "{" + message.content[0].text
+    raw = message.content[0].text.strip()
+    # Strip markdown fences if present (e.g. ```json ... ```)
+    if raw.startswith("```"):
+        raw = re.sub(r"^```[a-z]*\n?", "", raw)
+        raw = re.sub(r"\n?```$", "", raw).strip()
 
     try:
         return json.loads(raw)
@@ -379,7 +385,7 @@ async def search_live_verbs(
     request: Request, query: str = "", language: str = ""
 ) -> JSONResponse:
     require_admin_api(request)
-    normalized = query.strip().casefold()
+    normalized = normalize_text(query)
     if not normalized:
         raise HTTPException(status_code=400, detail="query parameter is required")
 
@@ -390,7 +396,7 @@ async def search_live_verbs(
     if language:
         q = q.where("language", "==", language)
 
-    results = [doc.to_dict() for doc in q.stream()]
+    results = [json_safe(doc.to_dict()) for doc in q.stream()]
     results.sort(key=lambda v: (v.get("language", ""), v.get("rank") or 9999))
     return JSONResponse({"verbs": results})
 
@@ -404,7 +410,7 @@ async def get_live_verb(request: Request, verb_id: str) -> JSONResponse:
         raise HTTPException(
             status_code=404, detail="Verb not found in live verbs collection"
         )
-    return JSONResponse(doc.to_dict())
+    return JSONResponse(json_safe(doc.to_dict()))
 
 
 @router.post("/api/verbs/{verb_id}/regenerate")

@@ -1,6 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import IntEnum
+
+
+class PracticeSessionSize(IntEnum):
+    SIZE_THREE = 3
+    SIZE_SIX = 6
+    SIZE_NINE = 9
 
 
 @dataclass(frozen=True)

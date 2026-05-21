@@ -222,6 +222,8 @@
     const langSelect = document.querySelector('select[name="language"]');
     const currentLearningLang = langSelect ? langSelect.value : (window.VB_LANGUAGE || '');
     const onHome = window.location.pathname === '/';
+    const urlParams = new URLSearchParams(window.location.search);
+    const explicitUiLang = urlParams.has('ui_language');
 
     try {
       const resp = await fetch('/api/preferences', {
@@ -232,8 +234,10 @@
       const prefs = await resp.json();
       const toSave = {};
 
-      // UI language
-      if (!prefs.ui_language && currentUiLang) {
+      // UI language: if the user just explicitly switched (ui_language in URL),
+      // their choice is authoritative — save it to the server.
+      // Otherwise only save when the server has no preference yet.
+      if (currentUiLang && (explicitUiLang || !prefs.ui_language) && prefs.ui_language !== currentUiLang) {
         toSave.ui_language = currentUiLang;
       }
 
@@ -250,11 +254,12 @@
         });
       }
 
-      // Apply — build redirect params if anything differs
+      // Apply — redirect to server preferences only when the user did not just
+      // explicitly switch (otherwise we'd immediately undo their choice).
       const url = new URL(window.location.href);
       let needsRedirect = false;
 
-      if (prefs.ui_language && currentUiLang && prefs.ui_language !== currentUiLang) {
+      if (!explicitUiLang && prefs.ui_language && currentUiLang && prefs.ui_language !== currentUiLang) {
         url.searchParams.set('ui_language', prefs.ui_language);
         needsRedirect = true;
       }
@@ -266,6 +271,16 @@
 
       if (needsRedirect) {
         window.location.replace(url.toString());
+        return;
+      }
+
+      // Apply practice session size from server profile.
+      const serverSize = prefs.practice_session_size;
+      if (serverSize) {
+        const lang = currentLearningLang;
+        if (lang) localStorage.setItem(`practice_size:${lang}`, String(serverSize));
+        const loop = window.VerbBoardPracticeLoopInstance;
+        if (loop && loop.setSize) loop.setSize(serverSize);
       }
     } catch (_) {}
   }

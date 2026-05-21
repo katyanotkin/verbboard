@@ -18,7 +18,10 @@
     const practiceBadgesKey = `practice_badges:${lang}`;
     const practiceWrapupKey = `practice_wrapup:${lang}`;
 
-    const PRACTICE_SIZES = [3, 6, 9];
+    const SIZE_THREE = 3;
+    const SIZE_SIX = 6;
+    const SIZE_NINE = 9;
+    const PRACTICE_SIZES = [SIZE_THREE, SIZE_SIX, SIZE_NINE];
     // Initial non-known pool size before mix-in warning is shown.
     const PRACTICE_POOL_INIT = 20;
     // Display threshold: below this count show one medal per session;
@@ -26,12 +29,12 @@
     const BADGE_COMPACT_THRESHOLD = window.VB_BADGE_COMPACT_THRESHOLD || 400;
 
     let activePracticeSize = parseInt(
-      localStorage.getItem(practiceSizeKey) || '6',
+      localStorage.getItem(practiceSizeKey) || String(SIZE_THREE),
       10
     );
 
     if (!PRACTICE_SIZES.includes(activePracticeSize)) {
-      activePracticeSize = 6;
+      activePracticeSize = SIZE_THREE;
     }
 
     function known() {
@@ -282,12 +285,8 @@
         .forEach(function (button) {
           button.addEventListener('click', function () {
             activePracticeSize = parseInt(button.dataset.size, 10);
-
-            localStorage.setItem(
-              practiceSizeKey,
-              String(activePracticeSize)
-            );
-
+            localStorage.setItem(practiceSizeKey, String(activePracticeSize));
+            _saveSessionSizeToServer(activePracticeSize);
             renderPracticePanel();
           });
         });
@@ -438,11 +437,31 @@
       });
     }
 
+    function _saveSessionSizeToServer(size) {
+      if (!window.VerbBoardAuth) return;
+      window.VerbBoardAuth.getIdToken().then(function (token) {
+        if (!token) return;
+        fetch('/api/preferences', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ practice_session_size: size }),
+        });
+      });
+    }
+
+    function setSize(size) {
+      if (!PRACTICE_SIZES.includes(size)) return;
+      activePracticeSize = size;
+      localStorage.setItem(practiceSizeKey, String(size));
+      renderPracticePanel();
+    }
+
     return {
       renderPracticePanel,
       maybeShowWrapUp,
       syncPracticeBadgesFromServer,
       savePracticeBadgesToServer,
+      setSize,
     };
   }
 

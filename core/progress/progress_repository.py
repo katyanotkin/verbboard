@@ -4,7 +4,7 @@ from typing import Any
 
 from google.cloud import firestore
 
-from core.progress.models import PracticeProgress, VerbProgress
+from core.progress.models import PracticeProgress, PracticeSessionSize, VerbProgress
 from core.storage.firestore_db import get_db
 
 USERS_COLLECTION = "users"
@@ -83,9 +83,18 @@ def get_preferences(*, user_id: str) -> dict:
     db = get_db()
     doc = db.collection(USERS_COLLECTION).document(user_id).get()
     payload = (doc.to_dict() or {}) if doc.exists else {}
+    raw_size = payload.get("practice_session_size")
+    try:
+        practice_session_size = (
+            PracticeSessionSize(raw_size).value if raw_size is not None else None
+        )
+    except ValueError:
+        practice_session_size = None
+
     return {
         "ui_language": payload.get("ui_language") or None,
         "learning_language": payload.get("learning_language") or None,
+        "practice_session_size": practice_session_size,
     }
 
 

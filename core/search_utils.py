@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from typing import Any
 
 
@@ -21,9 +22,14 @@ def flatten_values(value: Any) -> list[str]:
     return result
 
 
+def _strip_combining(text: str) -> str:
+    nfkd = unicodedata.normalize("NFKD", text)
+    return "".join(c for c in nfkd if not unicodedata.combining(c))
+
+
 def normalize_text(text: str) -> str:
-    """Normalize text for matching."""
-    return re.sub(r"\s+", " ", text.strip().casefold())
+    """Normalize text for matching. Strips combining marks (e.g. Hebrew nikud)."""
+    return re.sub(r"\s+", " ", _strip_combining(text).strip().casefold())
 
 
 def tokenize_text(text: str) -> list[str]:
@@ -36,7 +42,7 @@ def tokenize_text(text: str) -> list[str]:
         return []
 
     return [
-        token for token in re.split(r"[^0-9a-zа-яё\u0590-\u05FF]+", normalized) if token
+        token for token in re.split(r"[^0-9a-zа-я\u0590-\u05FF]+", normalized) if token
     ]
 
 

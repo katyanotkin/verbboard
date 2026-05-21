@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from core.search_utils import normalize_text
 from core.settings import load_settings
 from core.storage.firestore_db import get_db
 from core.storage.verb_document import build_verb_doc_id
@@ -42,21 +43,30 @@ def upsert_verb(
 
 
 def find_verb_by_search_extract(language: str, query: str) -> dict[str, Any] | None:
-    normalized = query.strip().casefold()
-    if not normalized:
+    stripped = normalize_text(query)
+    if not stripped:
         return None
 
-    db = get_db()
-    docs = (
-        db.collection(COLLECTION)
-        .where("language", "==", language)
-        .where("search_extract", "array_contains", normalized)
-        .limit(1)
-        .stream()
-    )
+    original = query.strip().casefold()
 
-    for doc in docs:
-        return doc.to_dict()
+    queries_to_try = [stripped]
+    # Fallback for stored data that predates nikud-stripping normalization
+    if original != stripped:
+        queries_to_try.append(original)
+
+    db = get_db()
+    for q in queries_to_try:
+        if not q:
+            continue
+        docs = (
+            db.collection(COLLECTION)
+            .where("language", "==", language)
+            .where("search_extract", "array_contains", q)
+            .limit(1)
+            .stream()
+        )
+        for doc in docs:
+            return doc.to_dict()
 
     return None
 

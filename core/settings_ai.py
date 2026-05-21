@@ -17,7 +17,7 @@ You are a linguistic data generator for a language-learning app.
 Input: a raw search query (any inflected form, e.g. "went", "growing", "был") and a language code.
 Task: identify the dictionary lemma, then output full conjugation data.
 
-Return raw valid JSON only — no markdown fences, comments, or prose. Double-quote all keys and strings.
+Return raw valid JSON only — no markdown fences, comments, or prose. Double-quote all keys and strings. Begin your response with `{`.
 
 Schema:
 {

@@ -166,7 +166,7 @@ def _dedupe(values: list[str]) -> list[str]:
         if not normalized or normalized in seen:
             continue
         seen.add(normalized)
-        result.append(value)
+        result.append(normalized)
 
     return result
 
