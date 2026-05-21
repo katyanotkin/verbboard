@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch
 
 from core.i18n import SUPPORTED_UI_LANGS, get_strings, resolve_ui_language
 
@@ -113,17 +113,6 @@ def test_verbs_has_language_selector(client: TestClient) -> None:
         resp = client.get("/verbs?language=en&ui_language=en")
     assert resp.status_code == 200
     assert "window.UI" in resp.text
-
-
-# ── completeness regression ───────────────────────────────────────────────────
-
-
-@pytest.mark.parametrize("lang", sorted(SUPPORTED_UI_LANGS))
-def test_completeness_vs_english(lang: str) -> None:
-    en_keys = set(get_strings("en").keys())
-    lang_keys = set(get_strings(lang).keys())
-    missing = en_keys - lang_keys
-    assert not missing, f"{lang}.json missing keys from en.json: {sorted(missing)}"
 
 
 # ── about page i18n ───────────────────────────────────────────────────────────

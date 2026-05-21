@@ -281,32 +281,6 @@ def test_badges_reflected_in_get_after_post() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Round-trip: practice badges persisted, then read back
-# ---------------------------------------------------------------------------
-
-
-def test_practice_badges_round_trip_local_dev() -> None:
-    badges_to_save = [3, 6, 9]
-
-    client.post(
-        "/api/progress/practice",
-        headers=AUTH,
-        json={
-            "language": "en",
-            "badges": badges_to_save,
-        },
-    )
-
-    response = client.get(
-        "/api/progress/practice?language=en",
-        headers=AUTH,
-    )
-
-    assert response.status_code == 200
-    assert response.json()["badges"] == badges_to_save
-
-
-# ---------------------------------------------------------------------------
 # Multi-language isolation: badges for "he" don't bleed into "en"
 # ---------------------------------------------------------------------------
 

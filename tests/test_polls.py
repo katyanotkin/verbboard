@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from core.polls import ACTIVE_POLL_ID, get_poll_question
 
 
@@ -7,23 +9,9 @@ def test_active_poll_id_is_set() -> None:
     assert ACTIVE_POLL_ID
 
 
-def test_poll_question_english() -> None:
-    q = get_poll_question(ACTIVE_POLL_ID, "en")
-    assert len(q) > 5
-
-
-def test_poll_question_russian() -> None:
-    q = get_poll_question(ACTIVE_POLL_ID, "ru")
-    assert len(q) > 5
-
-
-def test_poll_question_spanish() -> None:
-    q = get_poll_question(ACTIVE_POLL_ID, "es")
-    assert len(q) > 5
-
-
-def test_poll_question_hebrew() -> None:
-    q = get_poll_question(ACTIVE_POLL_ID, "he")
+@pytest.mark.parametrize("lang", ["en", "ru", "es", "he"])
+def test_poll_question_supported_language(lang: str) -> None:
+    q = get_poll_question(ACTIVE_POLL_ID, lang)
     assert len(q) > 5
 
 

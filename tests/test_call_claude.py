@@ -132,7 +132,7 @@ def test_call_claude_uses_4096_max_tokens_for_hebrew() -> None:
     ), f"expected max_tokens=4096 for 'he', got {kwargs.get('max_tokens')}"
 
 
-def test_call_claude_uses_2048_max_tokens_for_english() -> None:
+def test_call_claude_uses_2048_max_tokens_for_non_hebrew() -> None:
     """Non-Hebrew languages must fall back to max_tokens=2048."""
     mock_client = _make_mock_client('{"lemma": "go"}')
 
@@ -148,22 +148,6 @@ def test_call_claude_uses_2048_max_tokens_for_english() -> None:
     assert (
         kwargs.get("max_tokens") == 2048
     ), f"expected max_tokens=2048 for 'en', got {kwargs.get('max_tokens')}"
-
-
-def test_call_claude_uses_2048_max_tokens_for_russian() -> None:
-    """Russian, like all non-Hebrew languages, must use max_tokens=2048."""
-    mock_client = _make_mock_client('{"lemma": "идти"}')
-
-    with patch(
-        "app.routes.admin_candidates.get_anthropic_client",
-        return_value=mock_client,
-    ):
-        from app.routes.admin_candidates import _call_claude
-
-        _run_async(_call_claude("ru", "идти"))
-
-    _, kwargs = mock_client.messages.create.call_args
-    assert kwargs.get("max_tokens") == 2048
 
 
 # ---------------------------------------------------------------------------

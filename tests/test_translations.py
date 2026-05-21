@@ -1,8 +1,12 @@
 """
 Tests for the inline translation feature:
   - verb_loader reads translations from Firestore documents
-  - render_board_html shows/hides toggle and populates spans correctly
+  - render_board_html populates spans and RTL attribute correctly
   - generate_and_promote_verb persists translations for all 4 languages
+
+Toggle show/hide logic (absent when no translations, absent when ui_lang==verb_lang,
+absent when translation key missing, present when available) is covered by
+test_auth_localization.py::test_toggle_* parametrized tests.
 """
 
 from __future__ import annotations
@@ -93,41 +97,8 @@ def test_firestore_document_ignores_non_string_translation_values() -> None:
 
 
 # ---------------------------------------------------------------------------
-# render_board_html — toggle button and translation spans
+# render_board_html — translation span content and RTL attribute
 # ---------------------------------------------------------------------------
-
-
-def test_toggle_absent_when_no_translations() -> None:
-    html = _render("ru", "en", [Example(dst="Я иду домой.")])
-    assert "toggle-translations" not in html
-
-
-def test_toggle_absent_when_ui_lang_equals_verb_lang() -> None:
-    html = _render(
-        "ru",
-        "ru",
-        [Example(dst="Я иду домой.", translations={"en": "I'm going home."})],
-    )
-    assert "toggle-translations" not in html
-
-
-def test_toggle_absent_when_translation_key_missing_for_ui_lang() -> None:
-    # example has 'en' translation but ui_lang is 'he' — no toggle should appear
-    html = _render(
-        "ru",
-        "he",
-        [Example(dst="Я иду домой.", translations={"en": "I'm going home."})],
-    )
-    assert "toggle-translations" not in html
-
-
-def test_toggle_present_when_translation_available() -> None:
-    html = _render(
-        "ru",
-        "en",
-        [Example(dst="Я иду домой.", translations={"en": "I'm going home."})],
-    )
-    assert "toggle-translations" in html
 
 
 def test_translation_text_rendered_in_span() -> None:
