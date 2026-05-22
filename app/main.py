@@ -49,7 +49,7 @@ class _PageViewMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         if request.method == "GET":
-            from core.analytics.page_view import record
+            from core.analytics.daily_counters import record
 
             language = request.query_params.get("language") or request.cookies.get(
                 "language", ""

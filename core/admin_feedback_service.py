@@ -190,49 +190,68 @@ def get_active_poll_meta() -> dict:
     }
 
 
-def _count_device_types(
-    *,
-    collection_name: str,
-    days: int = 60,
-    limit: int = 2000,
+def _count_device_types_feedback(
+    *, days: int = 60, limit: int = 2000
 ) -> dict[str, int]:
     db = get_db()
     cutoff = datetime.now(UTC) - timedelta(days=days)
-
     docs = (
-        db.collection(collection_name)
+        db.collection("feedback")
         .where("created_at", ">=", cutoff)
         .order_by("created_at", direction="DESCENDING")
         .limit(limit)
         .stream()
     )
-
     counter: Counter[str] = Counter()
-
     for doc in docs:
         data = doc.to_dict() or {}
         device_type = str(data.get("device_type") or "unknown").lower()
         counter[device_type] += 1
-
     return dict(counter)
 
 
+def _read_analytics_counters(*, days: int = 60) -> dict[str, Any]:
+    db = get_db()
+    cutoff_date = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%d")
+    docs = db.collection("analytics_daily").where("date", ">=", cutoff_date).stream()
+
+    by_page: Counter[str] = Counter()
+    by_device: Counter[str] = Counter()
+    by_language: Counter[str] = Counter()
+    by_ui_lang: Counter[str] = Counter()
+
+    for doc in docs:
+        data = doc.to_dict() or {}
+        n = int(data.get("count") or 0)
+        by_page[str(data.get("page") or "unknown")] += n
+        by_device[str(data.get("device_type") or "unknown").lower()] += n
+        lang = str(data.get("language") or "none")
+        by_language[lang] += n
+        ui = str(data.get("ui_lang") or "none")
+        by_ui_lang[ui] += n
+
+    return {
+        "by_page": dict(by_page),
+        "by_device": dict(by_device),
+        "by_language": dict(by_language),
+        "by_ui_lang": dict(by_ui_lang),
+    }
+
+
 def get_device_mix(*, days: int = 60) -> dict[str, Any]:
-    feedback_counts = _count_device_types(
-        collection_name="feedback",
-        days=days,
-    )
-    page_view_counts = _count_device_types(
-        collection_name="page_views",
-        days=days,
-    )
+    feedback_counts = _count_device_types_feedback(days=days)
+    analytics = _read_analytics_counters(days=days)
 
     combined = Counter(feedback_counts)
-    combined.update(page_view_counts)
+    combined.update(analytics["by_device"])
 
     return {
         "days": days,
         "feedback": feedback_counts,
-        "page_views": page_view_counts,
+        "page_views": analytics["by_device"],
+        "by_page": analytics["by_page"],
+        "by_device": analytics["by_device"],
+        "by_language": analytics["by_language"],
+        "by_ui_lang": analytics["by_ui_lang"],
         "combined": dict(combined),
     }

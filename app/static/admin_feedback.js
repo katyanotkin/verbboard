@@ -145,28 +145,45 @@
     `;
   }
 
-  function renderDeviceMix(deviceMix) {
-    const counts = deviceMix?.page_views || {};
-    const total = (counts.mobile || 0) + (counts.desktop || 0) + (counts.tablet || 0);
+  function renderUsageSummary(deviceMix) {
+    const dims = [
+      { label: "Pages",             data: deviceMix?.by_page     || {} },
+      { label: "Devices",           data: deviceMix?.by_device   || {} },
+      { label: "Language studied",  data: deviceMix?.by_language || {} },
+      { label: "UI language",       data: deviceMix?.by_ui_lang  || {} },
+    ];
 
-    if (!total) return "";
+    const grandTotal = Object.values(deviceMix?.by_page || {}).reduce((s, n) => s + n, 0);
+    if (!grandTotal) return "";
 
-    function countAndPct(key) {
-      const count = counts[key] || 0;
-      const percent = Math.round((count / total) * 100);
-      return `${count} (${percent}%)`;
+    function dimTable(data) {
+      const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+      const total = sorted.reduce((s, [, n]) => s + n, 0);
+      const rows = sorted.map(([key, n]) => {
+        const pct = total ? Math.round((n / total) * 100) : 0;
+        return `<tr>
+          <td style="padding:1px 8px 1px 0;color:#374151;">${escapeHtml(key)}</td>
+          <td style="padding:1px 8px 1px 0;text-align:right;color:#374151;">${n}</td>
+          <td style="padding:1px 0;color:#6b7280;">${pct}%</td>
+        </tr>`;
+      }).join("");
+      return `<table style="border-collapse:collapse;font-size:12px;">${rows}</table>`;
     }
+
+    const sections = dims.map(({ label, data }) => `
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">${label}</div>
+        ${dimTable(data)}
+      </div>
+    `).join("");
 
     return `
       <div class="card" style="padding:14px 16px;margin-bottom:12px;background:#f1f5f9;">
-        <div style="font-weight:700;margin-bottom:6px;">
-          Page views by device, last ${escapeHtml(deviceMix.days || 60)} days
+        <div style="font-weight:700;margin-bottom:10px;">
+          Usage summary · last ${escapeHtml(String(deviceMix.days || 60))} days · ${grandTotal} page views
         </div>
-        <div style="font-size:13px;color:#374151;">
-          Total: ${total} ·
-          Mobile: ${countAndPct("mobile")} ·
-          Desktop: ${countAndPct("desktop")} ·
-          Tablet: ${countAndPct("tablet")}
+        <div style="display:grid;grid-template-columns:repeat(4,auto);gap:16px 24px;">
+          ${sections}
         </div>
       </div>
     `;
@@ -186,7 +203,7 @@
     }
 
     const pollSummary = renderPollSummary(pollRows, pollMeta);
-    const deviceSummary = renderDeviceMix(deviceMix);
+    const deviceSummary = renderUsageSummary(deviceMix);
 
     feedbackList.innerHTML =
       deviceSummary +
