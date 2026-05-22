@@ -261,6 +261,7 @@ def render_board_html(
         voice_source_input=voice_source_input,
         female_active=female_active,
         male_active=male_active,
+        board_voice_label=ui.get("board.voice_label", "Audio voice"),
         board_voice_female=ui.get("board.voice_female", "Female"),
         board_voice_male=ui.get("board.voice_male", "Male"),
         board_mark_known=ui.get("board.mark_known", "Mark as learned"),

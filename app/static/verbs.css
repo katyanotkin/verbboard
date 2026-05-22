@@ -132,6 +132,21 @@
   cursor: pointer;
 }
 
+/* ── tap hint ────────────────────────────────────────────────────────────── */
+.vb-tap-hint {
+  margin: 0 0 2px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.vb-known-legend {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 /* ── grid ────────────────────────────────────────────────────────────────── */
 .vb-list {
   display: grid;
@@ -146,7 +161,6 @@
 .vb-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 10px 12px;
   background: white;
   border: 1px solid var(--card-border);
@@ -157,8 +171,8 @@
   min-height: 44px;
   transition: background 0.1s, border-color 0.1s;
 }
-.vb-item:hover    { background: #f0f4ff; border-color: #c7d7f9; }
-.vb-item:active   { background: #e0eaff; }
+.vb-item:hover    { background: #f0f4ff; border-color: #c7d7f9; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.10); }
+.vb-item:active   { background: #e0eaff; box-shadow: none; }
 .vb-item.is-known { background: #eff6ff; border-color: #bfdbfe; }
 .vb-item.is-seen {
   background: #f8fafc;
@@ -166,10 +180,29 @@
 }
 
 .vb-lemma {
+  flex: 1;
+  min-width: 0;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.vb-item::after {
+  content: "›";
+  flex-shrink: 0;
+  margin-left: 4px;
+  font-size: 0.95rem;
+  color: #6b7280;
+  transition: color 0.1s;
+}
+
+.vb-item:hover::after {
+  color: #3b82f6;
+}
+
+[dir="rtl"] .vb-item::after {
+  content: "‹";
 }
 
 .vb-badge        { font-size: 13px; flex-shrink: 0; margin-left: 4px; }

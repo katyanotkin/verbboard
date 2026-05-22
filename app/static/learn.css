@@ -144,6 +144,19 @@ button {
   gap: 8px;
 }
 
+.voice-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.voice-gender-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  margin-right: 3px;
+}
+
 .voice-icon {
   display: inline-flex;
   align-items: center;
@@ -193,6 +206,27 @@ button {
 }
 
 /* ── known (star) button ──────────────────────────────────────────────────── */
+.func-panel {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.known-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.known-caption {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-body);
+  white-space: nowrap;
+  line-height: 1;
+}
+
 .known-btn {
   width: 42px;
   height: 42px;
