@@ -10,103 +10,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const searchInput = document.getElementById("search-input");
   const searchButton = document.getElementById("search-btn");
-  const learnButton = document.getElementById("learn-btn");
-  const verbSelect = document.getElementById("verb-select");
   const suggestionsBox = document.getElementById("search-suggestions");
   let blurHideTimer = null;
 
   function updatePrimaryAction() {
-    if (!searchInput || !searchButton || !learnButton) return;
-
+    if (!searchInput || !searchButton) return;
     const hasText = searchInput.value.trim().length > 0;
-
     searchButton.classList.toggle("is-primary", hasText);
-    learnButton.classList.toggle("is-primary", !hasText);
-
-    learnButton.classList.toggle("is-dimmed", hasText);
-    learnButton.disabled = hasText;
-
     searchButton.disabled = !hasText;
   }
 
   function getLanguage() {
     const languageSelect = document.querySelector('select[name="language"]');
     return languageSelect ? languageSelect.value : "";
-  }
-
-  function readSet(storageKey) {
-    return new Set(JSON.parse(localStorage.getItem(storageKey) || "[]"));
-  }
-
-  function sortAndMarkVerbs() {
-    if (!verbSelect) return;
-
-    const language = getLanguage();
-    if (!language) return;
-
-    const seen = readSet(`seen:${language}`);
-    const known = readSet(`known:${language}`);
-    const selectedValue = verbSelect.value;
-
-    const options = Array.from(verbSelect.options).map((option) => {
-      const baseLabel = option.textContent.replace(/^[★]\s+/, "");
-      const isKnown = known.has(option.value);
-      const isSeen = !isKnown && seen.has(option.value);
-
-      return {
-	value: option.value,
-	baseLabel,
-	isKnown,
-	isSeen,
-	selected: option.value === selectedValue,
-      };
-    });
-
-    options.sort((left, right) => {
-      if (left.isKnown !== right.isKnown) {
-	return left.isKnown ? 1 : -1;
-      }
-
-      return left.baseLabel.localeCompare(
-	right.baseLabel,
-	language
-      );
-    });
-
-    verbSelect.innerHTML = "";
-
-    for (const optionData of options) {
-      const option = document.createElement("option");
-
-      option.value = optionData.value;
-
-      let prefix = "";
-      if (optionData.isKnown) {
-	prefix = "★ ";
-      }
-
-      option.textContent = `${prefix}${optionData.baseLabel}`;
-      option.selected = optionData.selected;
-
-      verbSelect.appendChild(option);
-    }
-  }
-
-  function updateProgress() {
-    const language = getLanguage();
-    const total = window.VB_TOTAL || 0;
-    if (!language || total === 0) return;
-
-    const count = readSet(`known:${language}`).size;
-    const percent = (count / total) * 100;
-
-    const fill = document.querySelector(".progress-fill");
-    const countEl = document.querySelector(".progress-count");
-    const totalEl = document.querySelector(".progress-total");
-
-    if (fill) fill.style.width = `${percent}%`;
-    if (countEl) countEl.textContent = String(count);
-    if (totalEl) totalEl.textContent = ` / ${total}`;
   }
 
   function hideSuggestions() {
@@ -145,45 +61,24 @@ document.addEventListener("DOMContentLoaded", function () {
     return null;
   }
 
-  /** Verb dropdown labels only (infinitive / display lemma). */
   function buildSuggestions(query) {
-    if (!verbSelect) return [];
-
-    const options = Array.from(verbSelect.options);
+    const verbs = window.VB_VERBS || [];
     const ranked = [];
-
-    for (const option of options) {
-      const cleanLabel = option.textContent.replace(/^[★]\s+/, "");
-      const score = scoreSuggestion(query, cleanLabel);
+    for (const verb of verbs) {
+      const score = scoreSuggestion(query, verb.label);
       if (score === null) continue;
-
-      ranked.push({
-        id: option.value,
-        label: cleanLabel,
-        score,
-      });
+      ranked.push({ id: verb.id, label: verb.label, score });
     }
-
     ranked.sort((left, right) => {
-      if (left.score !== right.score) {
-        return right.score - left.score;
-      }
+      if (left.score !== right.score) return right.score - left.score;
       return left.label.localeCompare(right.label);
     });
-
     return ranked.slice(0, 8);
   }
 
   function buildBrowseSuggestions() {
-    if (!verbSelect) return [];
-
-    const options = Array.from(verbSelect.options).slice(0, 8);
-    return options.map(function (option) {
-      return {
-        id: option.value,
-        label: option.textContent.replace(/^[★]\s+/, ""),
-        score: 0,
-      };
+    return (window.VB_VERBS || []).slice(0, 8).map(function (verb) {
+      return { id: verb.id, label: verb.label, score: 0 };
     });
   }
 
@@ -293,34 +188,4 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   updatePrimaryAction();
-  sortAndMarkVerbs();
-  updateProgress();
-
-  const form = document.getElementById("home-form");
-  if (form) {
-    form.addEventListener("submit", function (event) {
-      if (event.submitter && event.submitter.name === "search_submit") return;
-      const btn = this.querySelector(".learn-btn");
-      if (!btn) return;
-      btn.disabled = true;
-      btn.classList.add("loading");
-      const label = btn.querySelector(".learn-label");
-      const icon = btn.querySelector(".learn-icon");
-      if (label) label.textContent = btn.dataset.loading;
-      if (icon) icon.textContent = "•••";
-    });
-  }
-
-  window.addEventListener("pageshow", function (event) {
-    if (!event.persisted) return;
-    const btn = document.getElementById("learn-btn");
-    if (!btn || !btn.classList.contains("loading")) return;
-    btn.disabled = false;
-    btn.classList.remove("loading");
-    const label = btn.querySelector(".learn-label");
-    const icon = btn.querySelector(".learn-icon");
-    if (label) label.textContent = btn.dataset.label || "";
-    if (icon) icon.textContent = btn.dataset.icon || "▶";
-    updatePrimaryAction();
-  });
 });

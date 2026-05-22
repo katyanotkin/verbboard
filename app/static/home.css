@@ -26,6 +26,33 @@ h1 {
   letter-spacing: -0.01em;
 }
 
+/* ===== Hints ===== */
+
+.home-hints {
+  max-width: 420px;
+  margin: 0 auto 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 24px;
+}
+
+.home-hint {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.home-hint::before {
+  content: "•";
+  flex-shrink: 0;
+  opacity: 0.4;
+  font-size: 0.7rem;
+}
+
 /* ===== Card ===== */
 
 form.controls {
@@ -112,12 +139,6 @@ input[type="text"]:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-/* ===== Progress ===== */
-
-.progress-row {
-  margin-top: 8px;
-}
-
 /* ===== Browse ===== */
 
 .browse-row {
@@ -161,6 +182,26 @@ input[type="text"]:focus {
 .browse-icon {
   font-size: 0.78rem;
   opacity: 0.85;
+}
+
+.browse-btn-labels {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.browse-primary {
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.browse-secondary {
+  font-size: 0.76rem;
+  font-weight: 500;
+  opacity: 0.72;
+  line-height: 1.2;
 }
 
 /* ===== Search ===== */
@@ -249,25 +290,6 @@ input[type="text"]:focus {
   font-weight: 500;
 }
 
-/* ===== Learn ===== */
-
-.learn-row {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line-soft);
-}
-
-.learn-input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.learn-input-row select {
-  flex: 1;
-  min-width: 0;
-}
-
 /* ===== Notice ===== */
 
 .notice {
@@ -286,34 +308,6 @@ input[type="text"]:focus {
 }
 
 /* ===== Buttons ===== */
-
-.learn-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-
-  min-width: 92px;
-  min-height: 42px;
-  padding: 9px 14px;
-
-  border-radius: 999px;
-  border: 1px solid #e2e8f0;
-
-  background: #f1f5f9;
-  color: #1f2937;
-
-  font-weight: 600;
-  font-size: 0.9rem;
-
-  cursor: pointer;
-
-  transition:
-    transform 0.12s ease,
-    filter 0.12s ease,
-    background 0.12s ease,
-    box-shadow 0.12s ease;
-}
 
 .search-btn {
   display: inline-flex;
@@ -425,13 +419,6 @@ input[type="text"]:focus {
 
 /* ===== Buttons states ===== */
 
-.learn-btn.is-primary {
-  background: #dbe7fb;
-  color: #1e3a8a;
-  border-color: #c7d7f5;
-  box-shadow: none;
-}
-
 .search-btn.is-primary {
   background: var(--button-primary-bg);
   color: var(--button-primary-text);
@@ -446,32 +433,11 @@ input[type="text"]:focus {
   transform: translateY(-1px);
 }
 
-.learn-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.01);
-}
-
 /* ===== Disabled ===== */
 
-.learn-btn:disabled,
 .search-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
-}
-
-/* ===== Loading ===== */
-
-.learn-btn.loading {
-  opacity: 0.72;
-  filter: grayscale(0.25);
-  transform: none;
-  box-shadow: none;
-}
-
-/* ===== Dimmed ===== */
-
-.learn-btn.is-dimmed {
-  opacity: 0.7;
 }

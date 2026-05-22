@@ -139,45 +139,6 @@ def test_voice_toggle_submits_correct_voice(page, live_server_url):
 
 
 # ---------------------------------------------------------------------------
-# Home → Learn navigation
-# ---------------------------------------------------------------------------
-
-
-def _select_preferred_or_first_verb(page, preferred_verb_id: str = "en_be") -> str:
-    verb_select = page.locator("select[name='verb_id']")
-    verb_select.wait_for(state="visible")
-
-    if verb_select.locator(f"option[value='{preferred_verb_id}']").count() > 0:
-        verb_select.select_option(preferred_verb_id)
-        return preferred_verb_id
-
-    options = verb_select.locator("option")
-    for index in range(options.count()):
-        value = options.nth(index).get_attribute("value")
-        if value:
-            verb_select.select_option(value)
-            return value
-
-    raise AssertionError("No selectable verb found")
-
-
-def test_home_learn_button_navigates_to_learn(page, live_server_url):
-    """Clicking Learn on the home page submits the form and lands on /learn."""
-    page.goto(f"{live_server_url}/?language=en")
-    page.wait_for_load_state("networkidle")
-
-    selected_verb_id = _select_preferred_or_first_verb(page, "en_be")
-
-    learn_btn = page.locator("button.learn-btn")
-    learn_btn.wait_for(state="visible")
-    learn_btn.click()
-
-    page.wait_for_url("**/learn**")
-    assert "language=en" in page.url
-    assert f"verb_id={selected_verb_id}" in page.url
-
-
-# ---------------------------------------------------------------------------
 # Verbs page: filter + sort state persistence across Back navigation
 # ---------------------------------------------------------------------------
 

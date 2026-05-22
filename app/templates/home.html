@@ -12,7 +12,7 @@
       "auth.login": {{ ui['auth.login'] | tojson }},
       "auth.logout": {{ ui['auth.logout'] | tojson }}
     };
-  </script>
+</script>
 
   {% include '_firebase_auth.html' %}
 </head>
@@ -42,6 +42,11 @@
       {% endfor %}
     </div>
 
+    <div class="home-hints">
+      <span class="home-hint">{{ ui['home.hint_browse'] }}</span>
+      <span class="home-hint">{{ ui['home.hint_known'] }}</span>
+    </div>
+
     <form action="/learn" method="get" class="controls" id="home-form">
       <div class="row">
         <label><span class="label-icon">🌐</span> {{ ui['home.language_label'] }}</label>
@@ -55,7 +60,10 @@
       <div class="row browse-row">
         <a href="/verbs?language={{ learning_lang }}" class="browse-main-link" id="browse-btn">
           <span class="browse-icon">🧩</span>
-          <span>{{ ui['home.browse_link'] }}</span>
+          <span class="browse-btn-labels">
+            <span class="browse-primary">{{ ui['home.browse_link'] }}</span>
+            <span class="browse-secondary">{{ ui['home.browse_sub'] }}</span>
+          </span>
         </a>
       </div>
 
@@ -91,46 +99,9 @@
         {% endif %}
       </div>
 
-      <div class="row learn-row">
-        <label><span class="label-icon">🧩</span> {{ ui['home.verb_label'] }}</label>
-
-        <div class="learn-input-row">
-          <select name="verb_id" id="verb-select">
-            {% for verb_id, label, selected in verb_options %}
-            <option value="{{ verb_id }}"{% if selected %} selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-
-          <button
-            type="submit"
-            class="learn-btn"
-            id="learn-btn"
-            data-loading="{{ ui['home.loading'] }}"
-            data-label="{{ ui['home.learn_button'] }}"
-            data-icon="▶"
-          >
-            <span class="learn-icon">▶</span>
-            <span class="learn-label">{{ ui['home.learn_button'] }}</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="progress-row">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: 0%"></div>
-        </div>
-
-        <div class="progress-meta">
-          <span class="progress-star">★</span>
-          <span class="progress-count">0</span>
-          <span class="progress-total"></span>
-        </div>
-      </div>
-
     </form>
   </div>
 
-  <script>window.VB_TOTAL = {{ total_verbs }};</script>
   <script src="/static/home.js"></script>
 </body>
 </html>

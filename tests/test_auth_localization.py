@@ -197,7 +197,7 @@ def test_verbs_auth_labels_are_not_hardcoded_english(client: TestClient) -> None
 def test_home_window_ui_has_auth_login(client: TestClient, ui_lang: str) -> None:
     with (
         patch("app.routes.home.list_verbs_recent", return_value=[]),
-        patch("app.routes.home.load_entries_for_language", return_value=[]),
+        patch("app.routes.home.list_verbs_recent", return_value=[]),
     ):
         resp = client.get(f"/?ui_language={ui_lang}")
     assert resp.status_code == 200
@@ -213,7 +213,7 @@ def test_home_window_ui_has_auth_login(client: TestClient, ui_lang: str) -> None
 def test_home_window_ui_has_auth_logout(client: TestClient, ui_lang: str) -> None:
     with (
         patch("app.routes.home.list_verbs_recent", return_value=[]),
-        patch("app.routes.home.load_entries_for_language", return_value=[]),
+        patch("app.routes.home.list_verbs_recent", return_value=[]),
     ):
         resp = client.get(f"/?ui_language={ui_lang}")
     assert resp.status_code == 200
@@ -230,7 +230,7 @@ def test_home_auth_labels_are_not_hardcoded_english(client: TestClient) -> None:
     es = get_strings("es")
     with (
         patch("app.routes.home.list_verbs_recent", return_value=[]),
-        patch("app.routes.home.load_entries_for_language", return_value=[]),
+        patch("app.routes.home.list_verbs_recent", return_value=[]),
     ):
         resp = client.get("/?ui_language=es")
     assert resp.status_code == 200
@@ -267,7 +267,7 @@ def test_verbs_uses_shared_firebase_include(client: TestClient) -> None:
 def test_home_uses_shared_firebase_include(client: TestClient) -> None:
     with (
         patch("app.routes.home.list_verbs_recent", return_value=[]),
-        patch("app.routes.home.load_entries_for_language", return_value=[]),
+        patch("app.routes.home.list_verbs_recent", return_value=[]),
     ):
         resp = client.get("/")
     assert resp.status_code == 200
@@ -306,7 +306,7 @@ def test_home_ui_and_firebase_config_in_separate_script_blocks(
 ) -> None:
     with (
         patch("app.routes.home.list_verbs_recent", return_value=[]),
-        patch("app.routes.home.load_entries_for_language", return_value=[]),
+        patch("app.routes.home.list_verbs_recent", return_value=[]),
     ):
         resp = client.get("/")
     assert resp.status_code == 200
@@ -348,7 +348,7 @@ def test_verbs_empty_firebase_config_renders_null(client: TestClient) -> None:
 def test_home_empty_firebase_config_renders_null(client: TestClient) -> None:
     with (
         patch("app.routes.home.list_verbs_recent", return_value=[]),
-        patch("app.routes.home.load_entries_for_language", return_value=[]),
+        patch("app.routes.home.list_verbs_recent", return_value=[]),
         patch("app.routes.home.load_settings", side_effect=_settings_no_firebase),
     ):
         resp = client.get("/")
@@ -381,7 +381,7 @@ def test_verbs_has_auth_slot(client: TestClient) -> None:
 def test_home_has_auth_slot(client: TestClient) -> None:
     with (
         patch("app.routes.home.list_verbs_recent", return_value=[]),
-        patch("app.routes.home.load_entries_for_language", return_value=[]),
+        patch("app.routes.home.list_verbs_recent", return_value=[]),
     ):
         resp = client.get("/")
     assert resp.status_code == 200
