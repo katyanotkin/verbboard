@@ -42,6 +42,52 @@
   });
   window.VerbBoardPracticeLoopInstance = practiceLoop;
 
+  // Search mode pill toggle
+  const vbPills = document.getElementById('vb-search-mode-pills');
+  const vbSourceLang = document.getElementById('vb-source-lang-input');
+  const vbSubmitBtn = document.getElementById('vb-search-submit-btn');
+
+  if (vbPills && vbSubmitBtn) {
+    const nativePlaceholder = searchEl ? searchEl.placeholder : '';
+    const enPlaceholder = searchEl ? (searchEl.dataset.placeholderEn || '') : '';
+
+    function applyVbMode(mode) {
+      vbPills.querySelectorAll('.search-mode-pill').forEach(function (p) {
+        p.classList.toggle('active', p.dataset.mode === mode);
+      });
+      if (vbSourceLang) vbSourceLang.value = mode === 'native' ? '' : mode;
+      vbSubmitBtn.setAttribute('formaction', mode === 'native' ? '/search_verb' : '/search_verb_by_lang');
+      if (searchEl) searchEl.placeholder = mode === 'en' ? enPlaceholder : nativePlaceholder;
+    }
+
+    // Restore mode from server state (e.g. after failed translated search)
+    const initialVbMode = (vbSourceLang && vbSourceLang.value) ? vbSourceLang.value : 'native';
+    applyVbMode(initialVbMode);
+
+    vbPills.querySelectorAll('.search-mode-pill').forEach(function (pill) {
+      pill.addEventListener('click', function () {
+        applyVbMode(pill.dataset.mode);
+      });
+    });
+  }
+
+  // Disable submit button when search field is empty
+  if (vbSubmitBtn && searchEl) {
+    function updateVbSubmit() {
+      vbSubmitBtn.disabled = searchEl.value.trim().length === 0;
+    }
+    updateVbSubmit();
+    searchEl.addEventListener('input', updateVbSubmit);
+  }
+
+  // Clear no-match notice on first keystroke
+  const vbNotice = document.getElementById('vb-notice');
+  if (vbNotice && searchEl) {
+    searchEl.addEventListener('input', function () {
+      vbNotice.style.display = 'none';
+    }, { once: true });
+  }
+
   filters.render();
   filters.updateProgress();
 

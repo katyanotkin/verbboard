@@ -40,12 +40,13 @@
   "verbs.known_legend": "★ = נלמד",
   "verbs.empty_state": "אין תוצאות",
   "practice.label": "תרגול",
+  "practice.size_unit": "# פעלים",
   "practice.start": "התחל",
   "practice.start_mixed": "התחל (עם נלמדים)",
   "practice.finish": "סיים",
   "practice.of": "מתוך",
   "practice.not_enough": "אין מספיק פעלים",
-  "practice.in_progress": "בתהליך",
+  "practice.in_progress": "תרגול בתהליך",
   "practice.continue": "המשך",
   "practice.abandon": "בטל",
   "practice.prev": "קודם",
@@ -86,5 +87,7 @@
   "lang.en": "אנגלית",
   "lang.ru": "רוסית",
   "lang.he": "עברית",
-  "lang.es": "ספרדית"
+  "lang.es": "ספרדית",
+  "home.search_placeholder_en": "הקלד באנגלית…",
+  "board.translated_from": "נמצא דרך"
 }

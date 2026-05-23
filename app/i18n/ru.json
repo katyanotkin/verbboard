@@ -40,12 +40,13 @@
   "verbs.known_legend": "★ = выучен",
   "verbs.empty_state": "Нет совпадений",
   "practice.label": "Тренировка",
+  "practice.size_unit": "кол-во гл.",
   "practice.start": "Начать",
   "practice.start_mixed": "Начать (с выученными)",
   "practice.finish": "Завершить",
   "practice.of": "из",
   "practice.not_enough": "Недостаточно глаголов",
-  "practice.in_progress": "В процессе",
+  "practice.in_progress": "Тренировка в процессе",
   "practice.continue": "Продолжить",
   "practice.abandon": "Прервать",
   "practice.prev": "Назад",
@@ -86,5 +87,7 @@
   "lang.en": "Английский",
   "lang.ru": "Русский",
   "lang.he": "Иврит",
-  "lang.es": "Испанский"
+  "lang.es": "Испанский",
+  "home.search_placeholder_en": "Введите по-английски…",
+  "board.translated_from": "Найдено через"
 }

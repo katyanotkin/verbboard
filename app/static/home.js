@@ -188,4 +188,35 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   updatePrimaryAction();
+
+  // Search mode pill toggle
+  const searchModePills = document.getElementById("search-mode-pills");
+  const sourceLangInput = document.getElementById("source-lang-input");
+
+  if (searchModePills && searchButton) {
+    const nativePlaceholder = searchInput ? searchInput.placeholder : "";
+    const enPlaceholder = searchInput ? (searchInput.dataset.placeholderEn || "") : "";
+
+    function applyMode(mode) {
+      searchModePills.querySelectorAll(".search-mode-pill").forEach(function (p) {
+        p.classList.toggle("active", p.dataset.mode === mode);
+      });
+      if (sourceLangInput) {
+        sourceLangInput.value = mode === "native" ? "" : mode;
+      }
+      searchButton.setAttribute("formaction", mode === "native" ? "/search_verb" : "/search_verb_by_lang");
+      if (searchInput) {
+        searchInput.placeholder = mode === "en" ? enPlaceholder : nativePlaceholder;
+      }
+    }
+
+    const initialMode = sourceLangInput && sourceLangInput.value ? sourceLangInput.value : "native";
+    applyMode(initialMode);
+
+    searchModePills.querySelectorAll(".search-mode-pill").forEach(function (pill) {
+      pill.addEventListener("click", function () {
+        applyMode(pill.dataset.mode);
+      });
+    });
+  }
 });

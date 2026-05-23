@@ -33,6 +33,9 @@ router = APIRouter()
 def verb_browser(
     request: Request,
     language: str | None = Query(None),
+    not_available: int | None = Query(None),
+    search: str | None = Query(None),
+    search_mode: str | None = Query(None),
 ) -> HTMLResponse:
     settings = load_settings()
 
@@ -123,6 +126,10 @@ def verb_browser(
             }
         )
 
+    raw_search = (search or "").strip()
+    notice_text = raw_search if str(not_available) == "1" else None
+    search_value = raw_search if str(not_available) == "1" else ""
+
     response = templates.TemplateResponse(
         request,
         "verbs.html",
@@ -137,6 +144,9 @@ def verb_browser(
             "verbs_json": json.dumps(verbs_js, ensure_ascii=False),
             "recent_json": json.dumps(recent_ids, ensure_ascii=False),
             "lang_json": json.dumps(selected_language),
+            "notice_text": notice_text,
+            "search_value": search_value,
+            "search_mode": search_mode or "native",
             "practice_loop_enabled": PRACTICE_LOOP_ENABLED,
             "badge_compact_threshold": settings.badge_compact_threshold,
             "firebase_web_config_json": (settings.firebase_web_config_json),

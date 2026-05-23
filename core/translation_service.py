@@ -97,6 +97,41 @@ def _call_claude(
     return json.loads(message.content[0].text.strip())
 
 
+def translate_search_query(
+    query: str,
+    source_lang: str,
+    target_lang: str,
+    project: str,
+    location: str = "us-central1",
+) -> str | None:
+    """Translate a single search query word to the target language verb lemma.
+
+    Returns the native-script verb string, or None on failure.
+    """
+    src_name = _LANG_NAMES.get(source_lang, source_lang)
+    tgt_name = _LANG_NAMES.get(target_lang, target_lang)
+    prompt = (
+        f"You are a language-learning dictionary. "
+        f"Given a {src_name} word (any inflected form), find its base verb, then return its {tgt_name} infinitive.\n"
+        f'Word: "{query}"\n'
+        f"Rules: reply with exactly one word in {tgt_name} script, no punctuation, no explanation."
+    )
+    try:
+        vertexai.init(project=project, location=location)
+        model = GenerativeModel(GEMINI_MODEL)
+        response = model.generate_content(prompt)
+        text = (response.text or "").strip()
+        return text or None
+    except Exception:
+        logger.exception(
+            "Gemini search translation failed query=%r %s->%s",
+            query,
+            source_lang,
+            target_lang,
+        )
+        return None
+
+
 def translate_examples(
     *,
     verb_lang: str,

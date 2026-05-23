@@ -40,12 +40,13 @@
   "verbs.known_legend": "★ = aprendido",
   "verbs.empty_state": "Sin coincidencias",
   "practice.label": "Práctica",
+  "practice.size_unit": "# verbos",
   "practice.start": "Empezar",
   "practice.start_mixed": "Empezar (con aprendidos)",
   "practice.finish": "Terminar",
   "practice.of": "de",
   "practice.not_enough": "No hay suficientes verbos",
-  "practice.in_progress": "En curso",
+  "practice.in_progress": "Práctica en curso",
   "practice.continue": "Continuar",
   "practice.abandon": "Abandonar",
   "practice.prev": "Anterior",
@@ -86,5 +87,7 @@
   "lang.en": "Inglés",
   "lang.ru": "Ruso",
   "lang.he": "Hebreo",
-  "lang.es": "Español"
+  "lang.es": "Español",
+  "home.search_placeholder_en": "Escribe en inglés…",
+  "board.translated_from": "Encontrado vía"
 }

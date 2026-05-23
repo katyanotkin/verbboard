@@ -88,11 +88,21 @@
       method="get"
       class="vb-toolbar"
     >
-      <input
-        type="hidden"
-        name="language"
-        value="{{ selected_language }}"
-      />
+      <input type="hidden" name="language" value="{{ selected_language }}"/>
+      <input type="hidden" name="return_to" value="/verbs?language={{ selected_language }}"/>
+      {% if selected_language != 'en' %}
+      <input type="hidden" id="vb-source-lang-input" name="source_lang" value="{{ 'en' if search_mode == 'en' else '' }}"/>
+      {% endif %}
+
+      <div class="search-row-header vb-search-header">
+        <label for="vb-search">{{ ui['home.search_label'] }}</label>
+        {% if selected_language != 'en' %}
+        <div class="search-mode-pills" id="vb-search-mode-pills">
+          <button type="button" class="search-mode-pill{% if search_mode != 'en' %} active{% endif %}" data-mode="native">{{ ui['lang.' + selected_language] }}</button>
+          <button type="button" class="search-mode-pill{% if search_mode == 'en' %} active{% endif %}" data-mode="en" data-source-lang="en">{{ ui['lang.en'] }}</button>
+        </div>
+        {% endif %}
+      </div>
 
       <div class="vb-search-row">
         <input
@@ -100,17 +110,23 @@
           name="q"
           class="vb-search"
           type="text"
-          placeholder="{{ ui['verbs.search_placeholder'] }}"
+          value="{{ search_value }}"
+          placeholder="{{ ui['home.search_placeholder_en'] if search_mode == 'en' else ui['verbs.search_placeholder'] }}"
+          data-placeholder-en="{{ ui['home.search_placeholder_en'] }}"
           autocomplete="off"
         />
-
         <button
           type="submit"
-          class="vb-search-submit"
+          id="vb-search-submit-btn"
+          class="search-btn"
         >
           {{ ui['verbs.find_button'] }}
         </button>
       </div>
+
+      {% if notice_text %}
+      <div class="notice" id="vb-notice">{{ ui['home.no_match'] }} <b>{{ notice_text }}</b></div>
+      {% endif %}
     </form>
 
     <div class="vb-toolbar-meta">

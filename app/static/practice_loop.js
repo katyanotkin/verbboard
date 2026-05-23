@@ -175,7 +175,7 @@
         if (badges.length < BADGE_COMPACT_THRESHOLD) {
           // Below threshold: one medal per completed session.
           inner = badges
-            .map(function (n) { return `<span class="practice-badge">${n}</span>`; })
+            .map(function (n) { return `<span class="practice-badge"><span class="practice-badge-ribbon"></span>${n}</span>`; })
             .join('');
         } else {
           // At or above threshold: one group per size showing count.
@@ -188,7 +188,7 @@
               return `<span class="practice-badge-group">` +
                 `<span class="practice-badge-count">${counts[size]}</span>` +
                 `<span class="practice-badge-times">×</span>` +
-                `<span class="practice-badge">${size}</span>` +
+                `<span class="practice-badge"><span class="practice-badge-ribbon"></span>${size}</span>` +
                 `</span>`;
             })
             .join('');
@@ -215,22 +215,24 @@
           `&return_to=${encodeURIComponent(verbsUrl)}`;
 
         practiceEl.innerHTML = `
-          <div class="practice-inprogress">
-            <span class="practice-inprogress-label">
-              ${ui['practice.in_progress'] || 'In progress'}:
-              ${visitedCount}/${session.ids.length}
-            </span>
+          <div class="practice-panel-card">
+            <div class="practice-inprogress">
+              <span class="practice-inprogress-label">
+                ${ui['practice.in_progress'] || 'In progress'}:
+                ${visitedCount}/${session.ids.length}
+              </span>
 
-            <a href="${continueUrl}" class="btn-pill-navy">
-              ${ui['practice.continue'] || 'Continue'}
-            </a>
+              <a href="${continueUrl}" class="btn-pill-navy">
+                ${ui['practice.continue'] || 'Continue'}
+              </a>
 
-            <button class="practice-abandon-btn" id="practice-abandon">
-              ${ui['practice.abandon'] || 'Abandon'}
-            </button>
+              <button class="practice-abandon-btn" id="practice-abandon">
+                ${ui['practice.abandon'] || 'Abandon'}
+              </button>
+            </div>
+
+            ${badgesHtml}
           </div>
-
-          ${badgesHtml}
         `;
 
         document
@@ -263,21 +265,25 @@
         .join('');
 
       practiceEl.innerHTML = `
-        <div class="practice-picker">
-          <span class="practice-label">
-            ${ui['practice.label'] || 'Practice'}
-          </span>
+        <div class="practice-panel-card">
+          <div class="practice-picker">
+            <span class="practice-label">
+              ${ui['practice.label'] || 'Practice'}
+            </span>
 
-          <div class="vb-filter-toggle">
-            ${sizeButtons}
+            <div class="vb-filter-toggle">
+              ${sizeButtons}
+            </div>
+
+            <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
+
+            <button class="btn-pill-navy" id="practice-start">
+              ${startLabel}
+            </button>
           </div>
 
-          <button class="btn-pill-navy" id="practice-start">
-            ${startLabel}
-          </button>
+          ${badgesHtml}
         </div>
-
-        ${badgesHtml}
       `;
 
       practiceEl

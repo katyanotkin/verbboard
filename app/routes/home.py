@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -14,6 +16,7 @@ from core.registry import all_plugins
 from core.search_utils import find_best_entry
 from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
+from core.translation_service import translate_search_query
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -52,11 +55,79 @@ def set_language(language: str):
     return response
 
 
+def _safe_return_to(return_to: str | None) -> str | None:
+    """Only allow same-origin relative paths as redirect targets."""
+    if not return_to:
+        return None
+    if not return_to.startswith("/") or "://" in return_to:
+        return None
+    return return_to
+
+
+@router.get("/search_verb_by_lang", response_model=None)
+async def search_verb_by_lang(
+    request: Request,
+    language: str,
+    q: str = "",
+    source_lang: str = "en",
+    return_to: str | None = None,
+):
+    query = (q or "").strip()
+    if not query:
+        return RedirectResponse(url=f"/?language={language}")
+
+    settings = load_settings()
+    translated = await asyncio.to_thread(
+        translate_search_query,
+        query,
+        source_lang,
+        language,
+        settings.google_cloud_project,
+    )
+
+    if translated:
+        doc = find_verb_by_search_extract(language, translated)
+        if not doc:
+            entries = _load_entries(language)
+            matched = find_best_entry(entries, translated)
+            if matched:
+                doc = {"verb_id": matched.id}
+
+        if doc:
+            matched_verb_id = doc.get("verb_id")
+            response = RedirectResponse(
+                url=(
+                    f"/learn?language={language}&verb_id={matched_verb_id}"
+                    f"&translated_from={quote(query, safe='')}&source_lang={source_lang}"
+                )
+            )
+            response.set_cookie("language", language, httponly=False, samesite="lax")
+            response.set_cookie(
+                "verb_id", matched_verb_id, httponly=False, samesite="lax"
+            )
+            return response
+
+    log_missing_verb_search(
+        language=language,
+        query=query,
+        page="home",
+        source="search_by_lang",
+    )
+    base = _safe_return_to(return_to) or f"/?language={language}"
+    sep = "&" if "?" in base else "?"
+    response = RedirectResponse(
+        url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&search_mode={source_lang}"
+    )
+    response.set_cookie("language", language, httponly=False, samesite="lax")
+    return response
+
+
 @router.get("/search_verb", response_model=None)
 def search_verb(
     request: Request,
     language: str,
     q: str = "",
+    return_to: str | None = None,
 ):
     query = (q or "").strip()
     if not query:
@@ -94,8 +165,10 @@ def search_verb(
         source="search",
     )
 
+    base = _safe_return_to(return_to) or f"/?language={language}"
+    sep = "&" if "?" in base else "?"
     response = RedirectResponse(
-        url=f"/?language={language}&search={query}&not_available=1"
+        url=f"{base}{sep}not_available=1&search={quote(query, safe='')}"
     )
     response.set_cookie("language", language, httponly=False, samesite="lax")
     return response
@@ -107,6 +180,7 @@ def home(
     language: str | None = Query(None),
     search: str | None = Query(None),
     not_available: int | None = Query(None),
+    search_mode: str | None = Query(None),
 ) -> HTMLResponse:
     plugins = all_plugins()
 
@@ -154,6 +228,7 @@ def home(
             "lang_options": lang_options,
             "search_value": search_value,
             "notice_text": notice_text,
+            "search_mode": search_mode or "native",
             "firebase_web_config_json": settings.firebase_web_config_json,
         },
     )

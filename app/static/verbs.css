@@ -30,6 +30,10 @@
   margin-bottom: 4px;
 }
 
+.vb-search-header {
+  margin-top: 14px;
+}
+
 .vb-search-row {
   display: flex;
   gap: 8px;
@@ -58,24 +62,6 @@
   box-shadow: 0 0 0 2px rgba(74,144,226,0.15);
 }
 
-.vb-search-submit {
-  height: 40px;
-  padding: 0 18px;
-  border: none;
-  border-radius: 10px;
-  background: var(--button-primary-bg);
-  color: var(--button-primary-text);
-  font-size: 14px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.vb-search-submit:hover {
-  filter: brightness(1.05);
-}
 
 /* search form */
 .vb-toolbar {
@@ -255,30 +241,44 @@
   margin-bottom: 14px;
 }
 
+.practice-panel-card {
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+
 .practice-picker,
 .practice-inprogress {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  border-radius: 12px;
   flex-wrap: wrap;
 }
 
 .practice-picker {
   background: var(--page-bg);
-  border: 1px solid var(--card-border);
 }
 
 .practice-inprogress {
   background: var(--notice-bg);
-  border: 1px solid var(--notice-border);
 }
 
 .practice-label {
   font-size: 13px;
   font-weight: 700;
   color: #374151;
+  white-space: nowrap;
+}
+
+.practice-picker .vb-filter-toggle {
+  width: auto;
+}
+
+.practice-size-hint {
+  font-size: 12px;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -309,8 +309,7 @@
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  margin-top: 8px;
-  padding: 0 2px;
+  padding: 4px 14px 10px;
   flex-wrap: wrap;
 }
 
@@ -353,8 +352,7 @@
 }
 
 /* ribbon above the medal circle */
-.practice-badge::before {
-  content: '';
+.practice-badge-ribbon {
   position: absolute;
   top: -13px;
   left: 50%;
@@ -363,6 +361,7 @@
   height: 13px;
   background: linear-gradient(180deg, #7B9ED9 0%, #4A6FA5 100%);
   border-radius: 2px 2px 0 0;
+  display: block;
 }
 
 /* ── practice wrap-up overlay ────────────────────────────────────────────── */

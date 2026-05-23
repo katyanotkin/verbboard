@@ -49,7 +49,7 @@
 
     let activeFilter = fromHash.filter || fromStorage.filter || 'new';
     let activeSort = fromHash.sort || fromStorage.sort || 'alpha';
-    let searchQuery = '';
+    let searchQuery = (searchEl && searchEl.value) ? searchEl.value.trim() : '';
 
     function writeState() {
       const params = new URLSearchParams();

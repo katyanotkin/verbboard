@@ -27,6 +27,8 @@ def render_board_html(
     ui_strings: dict[str, str] | None = None,
     ui_lang: str = "en",
     firebase_web_config_json: str = "",
+    translated_from: str | None = None,
+    source_lang: str | None = None,
 ) -> str:
     ui = ui_strings or {}
     html_dir = "rtl" if ui_lang == "he" else "ltr"
@@ -181,6 +183,19 @@ def render_board_html(
     female_active = "active" if voice_key == "female" else ""
     male_active = "active" if voice_key == "male" else ""
 
+    if translated_from and source_lang:
+        lang_name = escape(ui.get(f"lang.{source_lang}", source_lang))
+        tf_label = escape(ui.get("board.translated_from", "Found via"))
+        translated_from_banner = (
+            f'<div class="translated-from-banner" id="translated-from-banner">'
+            f"<span>{tf_label} {lang_name}: <b>{escape(translated_from)}</b></span>"
+            f'<button type="button" class="translated-from-dismiss" '
+            f'onclick="this.parentElement.remove()" aria-label="Dismiss">×</button>'
+            f"</div>"
+        )
+    else:
+        translated_from_banner = ""
+
     if candidate_verb_id:
         candidate_banner_assets = (
             '<link rel="stylesheet" href="/static/candidate_banner.css">'
@@ -245,6 +260,7 @@ def render_board_html(
 
     template = _jinja_env.get_template("board.html")
     return template.render(
+        translated_from_banner=translated_from_banner,
         html_lang=ui_lang,
         html_dir=html_dir,
         title=title,

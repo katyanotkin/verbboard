@@ -44,6 +44,8 @@ async def learn(
     voice: str | None = Query(None),
     source: str | None = Query(None),
     return_to: str | None = Query(None),
+    translated_from: str | None = Query(None),
+    source_lang: str | None = Query(None),
 ) -> HTMLResponse:
     logger.debug("lookup source %s -> verb %s", source, verb_id)
     if source == "candidate":
@@ -143,6 +145,8 @@ async def learn(
         ui_strings=ui_strings,
         ui_lang=ui_lang,
         firebase_web_config_json=settings.firebase_web_config_json,
+        translated_from=translated_from,
+        source_lang=source_lang,
     )
 
     return HTMLResponse(html)
