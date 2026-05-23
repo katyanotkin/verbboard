@@ -20,31 +20,49 @@
   <div class="page">
     <div class="topbar-nav">
       <div class="topbar-nav-right">
-        <a href="/about?ui_language={{ lang }}" class="feedback-link">{{ ui['home.about'] }}</a>
         <a href="/feedback?page=home&language={{ learning_lang }}&return_to=/?language={{ learning_lang }}"
            class="feedback-link">{{ ui['home.feedback_link'] }}</a>
+
+        <div class="ui-lang-menu" id="ui-lang-menu">
+          <button class="ui-lang-trigger" id="ui-lang-trigger"
+                  aria-haspopup="menu" aria-expanded="false"
+                  aria-label="{{ ui['home.ui_lang_label'] }}">
+            <svg class="ui-lang-globe" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span class="ui-lang-current">{{ lang | upper }}</span>
+            <svg class="ui-lang-chevron" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ui-lang-hint">
+            <span>{{ ui['home.ui_lang_label'] }}</span>
+            <button class="ui-lang-hint-close" id="ui-lang-hint-close" aria-label="Dismiss">×</button>
+          </div>
+          <div class="ui-lang-dropdown" id="ui-lang-dropdown" role="menu" hidden>
+            {% for code in ui_lang_codes %}
+            <a class="ui-lang-option{% if code == lang %} active{% endif %}"
+               href="/?ui_language={{ code }}&language={{ learning_lang }}"
+               role="menuitem"
+               aria-current="{{ 'true' if code == lang else 'false' }}">
+              <span class="ui-lang-option-code">{{ code | upper }}</span>
+              <span class="ui-lang-option-native">{{ ui_lang_native[code] }}</span>
+              {% if code == lang %}
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ui-lang-check" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              {% endif %}
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+
         <div id="auth-slot" class="auth-slot"></div>
       </div>
     </div>
 
     <div class="page-header">
       <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
-    </div>
-
-    <div class="ui-lang-grid" title="App language / Язык приложения / Idioma de la app / שפת האפליקציה">
-      {% for code in ui_lang_codes %}
-      <a href="/?ui_language={{ code }}&language={{ learning_lang }}"
-         class="ui-lang-cell{% if code == lang %} active{% endif %}">
-        <span class="ui-lang-cell-label">{{ ui_lang_labels[code] }}</span>
-        <span class="ui-lang-cell-sep"></span>
-        <span class="ui-lang-cell-native">{{ ui_lang_native[code] }}</span>
-      </a>
-      {% endfor %}
+      <a href="/about?ui_language={{ lang }}" class="about-page-link">{{ ui['home.about'] }}</a>
     </div>
 
     <form action="/learn" method="get" class="controls" id="home-form">
       <div class="row">
-        <label><span class="label-icon">🌐</span> {{ ui['home.language_label'] }}</label>
+        <label>{{ ui['home.language_label'] }}</label>
         <select name="language" onchange="window.location='/set_language?language=' + this.value;">
           {% for code, label, selected in lang_options %}
           <option value="{{ code }}"{% if selected %} selected{% endif %}>{{ label }}</option>

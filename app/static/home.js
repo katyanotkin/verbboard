@@ -219,4 +219,84 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   }
+
+  // UI language dropdown
+  const uiLangMenu = document.getElementById('ui-lang-menu');
+  const uiLangTrigger = document.getElementById('ui-lang-trigger');
+  const uiLangDropdown = document.getElementById('ui-lang-dropdown');
+  if (uiLangTrigger && uiLangDropdown) {
+    uiLangTrigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      uiLangTrigger.classList.remove('ui-lang-trigger--highlight');
+      const opening = uiLangDropdown.hidden;
+      uiLangDropdown.hidden = !opening;
+      uiLangTrigger.setAttribute('aria-expanded', String(opening));
+    });
+    document.addEventListener('click', function (e) {
+      if (uiLangMenu && uiLangMenu.contains(e.target)) return;
+      uiLangDropdown.hidden = true;
+      uiLangTrigger.setAttribute('aria-expanded', 'false');
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !uiLangDropdown.hidden) {
+        uiLangDropdown.hidden = true;
+        uiLangTrigger.setAttribute('aria-expanded', 'false');
+        uiLangTrigger.focus();
+      }
+    });
+  }
+
+  // Highlight globe trigger when browser language differs from the served UI language.
+  // After acknowledging (× or picking a language) it stays quiet.
+  (function () {
+    var SEEN_KEY = 'vb_ui_lang_seen';
+    var currentLang = document.documentElement.lang || '';
+    var rawBrowser = (navigator.language || '').slice(0, 2).toLowerCase();
+    var NORM = { iw: 'he' };
+    var browserLang = NORM[rawBrowser] || rawBrowser;
+
+    var seenLang = localStorage.getItem(SEEN_KEY);
+    var hasMismatch = !!(browserLang && browserLang !== currentLang);
+    // Prompt once for new users (no flag yet) and whenever there's a mismatch
+    var shouldHighlight = (!seenLang || hasMismatch) && seenLang !== currentLang + '_m';
+
+    function clearHighlight() {
+      if (uiLangTrigger) uiLangTrigger.classList.remove('ui-lang-trigger--highlight');
+      localStorage.setItem(SEEN_KEY, currentLang + '_m');
+    }
+
+    if (shouldHighlight && uiLangTrigger) {
+      // Suppress for logged-in users -- they already chose their language
+      var auth = window.VerbBoardAuth;
+      if (auth) {
+        auth.ready().then(function () {
+          if (auth.currentUser()) return;
+          uiLangTrigger.classList.add('ui-lang-trigger--highlight');
+        });
+      } else {
+        uiLangTrigger.classList.add('ui-lang-trigger--highlight');
+      }
+    }
+
+    // × button: dismiss and don't show again for this UI lang
+    var hintClose = document.getElementById('ui-lang-hint-close');
+    if (hintClose) {
+      hintClose.addEventListener('click', function (e) {
+        e.stopPropagation();
+        clearHighlight();
+      });
+    }
+
+    // Pre-flag before navigating to a chosen language so the new page stays quiet
+    if (uiLangDropdown) {
+      uiLangDropdown.querySelectorAll('.ui-lang-option').forEach(function (a) {
+        a.addEventListener('click', function () {
+          try {
+            var chosenLang = new URL(a.href).searchParams.get('ui_language') || currentLang;
+            localStorage.setItem(SEEN_KEY, chosenLang + '_m');
+          } catch (_) {}
+        });
+      });
+    }
+  }());
 });
