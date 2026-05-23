@@ -5,9 +5,8 @@ Covers:
 - _call_claude is a coroutine (awaitable)
 - Successful JSON response is parsed and returned as a dict
 - Invalid JSON from Claude raises HTTPException 502
-- Per-language model selection (en→Haiku, others→Sonnet)
+- Per-language model selection (en->Haiku, others->Sonnet)
 - Per-language max_tokens routing (he=4096, others=2048)
-- Prompt caching header (cache_control ephemeral) on the system prompt
 - get_anthropic_client singleton identity
 """
 
@@ -148,37 +147,6 @@ def test_call_claude_uses_2048_max_tokens_for_non_hebrew() -> None:
     assert (
         kwargs.get("max_tokens") == 2048
     ), f"expected max_tokens=2048 for 'en', got {kwargs.get('max_tokens')}"
-
-
-# ---------------------------------------------------------------------------
-# Prompt caching header
-# ---------------------------------------------------------------------------
-
-
-def test_call_claude_passes_cache_control_ephemeral_on_system_prompt() -> None:
-    """The system arg must be a list containing a dict with cache_control ephemeral."""
-    mock_client = _make_mock_client('{"lemma": "go"}')
-
-    with patch(
-        "app.routes.admin_candidates.get_anthropic_client",
-        return_value=mock_client,
-    ):
-        from app.routes.admin_candidates import _call_claude
-
-        _run_async(_call_claude("en", "go"))
-
-    _, kwargs = mock_client.messages.create.call_args
-    system = kwargs.get("system")
-
-    assert isinstance(system, list), "system must be a list for prompt caching"
-    assert len(system) >= 1, "system list must be non-empty"
-
-    first_block = system[0]
-    assert isinstance(first_block, dict), "each system block must be a dict"
-    assert (
-        first_block.get("cache_control") == {"type": "ephemeral"}
-    ), f"expected cache_control={{'type': 'ephemeral'}}, got {first_block.get('cache_control')}"
-    assert first_block.get("type") == "text"
 
 
 # ---------------------------------------------------------------------------

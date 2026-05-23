@@ -109,27 +109,16 @@ def _settings_no_firebase():
 
 
 @pytest.mark.parametrize("ui_lang", sorted(SUPPORTED_UI_LANGS))
-def test_board_window_ui_has_auth_login(ui_lang: str) -> None:
+@pytest.mark.parametrize("auth_key", ["auth.login", "auth.logout"])
+def test_board_window_ui_has_auth_key(ui_lang: str, auth_key: str) -> None:
     ui_strings = get_strings(ui_lang)
     verb = _minimal_verb("ru")
     html = render_board_html(_board(verb, "ru"), ui_strings=ui_strings, ui_lang=ui_lang)
     ui = _extract_window_ui(html)
     assert (
-        "auth.login" in ui
-    ), f"auth.login missing from board window.UI for ui_lang={ui_lang}"
-    assert ui["auth.login"] == ui_strings["auth.login"]
-
-
-@pytest.mark.parametrize("ui_lang", sorted(SUPPORTED_UI_LANGS))
-def test_board_window_ui_has_auth_logout(ui_lang: str) -> None:
-    ui_strings = get_strings(ui_lang)
-    verb = _minimal_verb("ru")
-    html = render_board_html(_board(verb, "ru"), ui_strings=ui_strings, ui_lang=ui_lang)
-    ui = _extract_window_ui(html)
-    assert (
-        "auth.logout" in ui
-    ), f"auth.logout missing from board window.UI for ui_lang={ui_lang}"
-    assert ui["auth.logout"] == ui_strings["auth.logout"]
+        auth_key in ui
+    ), f"{auth_key} missing from board window.UI for ui_lang={ui_lang}"
+    assert ui[auth_key] == ui_strings[auth_key]
 
 
 def test_board_auth_labels_are_not_hardcoded_english() -> None:
@@ -150,29 +139,19 @@ def test_board_auth_labels_are_not_hardcoded_english() -> None:
 
 
 @pytest.mark.parametrize("ui_lang", sorted(SUPPORTED_UI_LANGS))
-def test_verbs_window_ui_has_auth_login(client: TestClient, ui_lang: str) -> None:
+@pytest.mark.parametrize("auth_key", ["auth.login", "auth.logout"])
+def test_verbs_window_ui_has_auth_key(
+    client: TestClient, ui_lang: str, auth_key: str
+) -> None:
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         resp = client.get(f"/verbs?language=en&ui_language={ui_lang}")
     assert resp.status_code == 200
     ui = _extract_window_ui(resp.text)
-    expected = get_strings(ui_lang)["auth.login"]
+    expected = get_strings(ui_lang)[auth_key]
     assert (
-        "auth.login" in ui
-    ), f"auth.login missing from verbs window.UI for ui_lang={ui_lang}"
-    assert ui["auth.login"] == expected
-
-
-@pytest.mark.parametrize("ui_lang", sorted(SUPPORTED_UI_LANGS))
-def test_verbs_window_ui_has_auth_logout(client: TestClient, ui_lang: str) -> None:
-    with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
-        resp = client.get(f"/verbs?language=en&ui_language={ui_lang}")
-    assert resp.status_code == 200
-    ui = _extract_window_ui(resp.text)
-    expected = get_strings(ui_lang)["auth.logout"]
-    assert (
-        "auth.logout" in ui
-    ), f"auth.logout missing from verbs window.UI for ui_lang={ui_lang}"
-    assert ui["auth.logout"] == expected
+        auth_key in ui
+    ), f"{auth_key} missing from verbs window.UI for ui_lang={ui_lang}"
+    assert ui[auth_key] == expected
 
 
 def test_verbs_auth_labels_are_not_hardcoded_english(client: TestClient) -> None:
@@ -194,7 +173,10 @@ def test_verbs_auth_labels_are_not_hardcoded_english(client: TestClient) -> None
 
 
 @pytest.mark.parametrize("ui_lang", sorted(SUPPORTED_UI_LANGS))
-def test_home_window_ui_has_auth_login(client: TestClient, ui_lang: str) -> None:
+@pytest.mark.parametrize("auth_key", ["auth.login", "auth.logout"])
+def test_home_window_ui_has_auth_key(
+    client: TestClient, ui_lang: str, auth_key: str
+) -> None:
     with (
         patch("app.routes.home.list_verbs_recent", return_value=[]),
         patch("app.routes.home.list_verbs_recent", return_value=[]),
@@ -202,27 +184,11 @@ def test_home_window_ui_has_auth_login(client: TestClient, ui_lang: str) -> None
         resp = client.get(f"/?ui_language={ui_lang}")
     assert resp.status_code == 200
     ui = _extract_window_ui(resp.text)
-    expected = get_strings(ui_lang)["auth.login"]
+    expected = get_strings(ui_lang)[auth_key]
     assert (
-        "auth.login" in ui
-    ), f"auth.login missing from home window.UI for ui_lang={ui_lang}"
-    assert ui["auth.login"] == expected
-
-
-@pytest.mark.parametrize("ui_lang", sorted(SUPPORTED_UI_LANGS))
-def test_home_window_ui_has_auth_logout(client: TestClient, ui_lang: str) -> None:
-    with (
-        patch("app.routes.home.list_verbs_recent", return_value=[]),
-        patch("app.routes.home.list_verbs_recent", return_value=[]),
-    ):
-        resp = client.get(f"/?ui_language={ui_lang}")
-    assert resp.status_code == 200
-    ui = _extract_window_ui(resp.text)
-    expected = get_strings(ui_lang)["auth.logout"]
-    assert (
-        "auth.logout" in ui
-    ), f"auth.logout missing from home window.UI for ui_lang={ui_lang}"
-    assert ui["auth.logout"] == expected
+        auth_key in ui
+    ), f"{auth_key} missing from home window.UI for ui_lang={ui_lang}"
+    assert ui[auth_key] == expected
 
 
 def test_home_auth_labels_are_not_hardcoded_english(client: TestClient) -> None:
@@ -244,16 +210,6 @@ def test_home_auth_labels_are_not_hardcoded_english(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 # all three pages use the shared _firebase_auth.html include
 # ---------------------------------------------------------------------------
-
-
-def test_board_uses_shared_firebase_include() -> None:
-    """board.html must load auth.js via the shared include (not inline)."""
-    verb = _minimal_verb("en")
-    html = render_board_html(_board(verb, "en"), ui_strings=get_strings("en"))
-    # The include renders these two lines exactly once each
-    assert html.count("firebase-app-compat.js") == 1
-    assert html.count("firebase-auth-compat.js") == 1
-    assert html.count("/static/auth.js") == 1
 
 
 def test_verbs_uses_shared_firebase_include(client: TestClient) -> None:

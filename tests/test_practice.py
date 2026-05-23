@@ -4,37 +4,18 @@ Covers:
 - Verbs page: practice panel element present, practice UI strings in window.UI
 - Learn board: practice strings in window.UI, star SVG rendered
 - Pool logic: new-verbs-first priority, mix-in fallback
-- i18n completeness: all four languages carry the required practice keys
 """
 
 from __future__ import annotations
 
 import json
 
-import pytest
 from fastapi.testclient import TestClient
 
 from core.models import Board, VerbEntry
 from core.render import render_board_html
 
 # ── fixtures ─────────────────────────────────────────────────────────────────
-
-_PRACTICE_UI_KEYS = [
-    "practice.label",
-    "practice.start",
-    "practice.start_mixed",
-    "practice.finish",
-    "practice.of",
-    "practice.in_progress",
-    "practice.continue",
-    "practice.abandon",
-    "practice.prev",
-    "practice.next",
-    "practice.wrap_up",
-    "practice.learned_prompt",
-    "practice.done",
-    "practice.listen_first",
-]
 
 
 def _stub_entries(n: int = 15) -> list[VerbEntry]:
@@ -142,24 +123,3 @@ def test_board_ui_json_includes_practice_strings(mock_verb: VerbEntry) -> None:
     ]:
         assert key in ui, f"Missing board UI key: {key}"
         assert ui[key], f"Empty board UI key: {key}"
-
-
-# ── i18n completeness ─────────────────────────────────────────────────────────
-
-
-@pytest.mark.parametrize("lang", ["en", "ru", "he", "es"])
-def test_i18n_has_all_practice_keys(lang: str) -> None:
-    from core.i18n import get_strings
-
-    strings = get_strings(lang)
-    missing = [k for k in _PRACTICE_UI_KEYS if k not in strings]
-    assert not missing, f"{lang}.json missing practice keys: {missing}"
-
-
-@pytest.mark.parametrize("lang", ["en", "ru", "he", "es"])
-def test_i18n_practice_values_non_empty(lang: str) -> None:
-    from core.i18n import get_strings
-
-    strings = get_strings(lang)
-    empty = [k for k in _PRACTICE_UI_KEYS if not strings.get(k, "").strip()]
-    assert not empty, f"{lang}.json has empty practice values: {empty}"

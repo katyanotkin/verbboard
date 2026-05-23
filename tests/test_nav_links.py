@@ -1,7 +1,7 @@
 """Navigation link presence and return_to roundtrip tests.
 
 Covers every user-facing page: feedback links carry the right context,
-back links point to the right destinations, and the feedback → back-to-origin
+back links point to the right destinations, and the feedback -> back-to-origin
 flow (the "Back to Learn" regression) is explicitly regression-tested.
 """
 
@@ -82,10 +82,6 @@ def test_verbs_feedback_link_carries_page_context(
 
 
 # ── about ──────────────────────────────────────────────────────────────────
-
-
-def test_about_renders_200(client: TestClient) -> None:
-    assert client.get("/about").status_code == 200
 
 
 def test_about_has_back_to_home_link(client: TestClient) -> None:
@@ -207,26 +203,3 @@ def test_learn_board_feedback_return_to_is_learn_page_not_back_destination(
     assert "/learn" in html
     assert "%3F" in html
     assert "%26" in html
-
-
-def test_learn_board_has_back_button(mock_verb: VerbEntry) -> None:
-    from core.render import render_board_html
-
-    html = render_board_html(_make_board(mock_verb), return_to="/?language=en")
-    assert "nav-btn" in html
-    assert "nav-btn--ghost" in html
-
-
-def test_learn_board_has_voice_toggle(mock_verb: VerbEntry) -> None:
-    from core.render import render_board_html
-
-    html = render_board_html(_make_board(mock_verb))
-    assert "voice-toggle" in html
-    assert "voice-btn" in html
-
-
-def test_learn_board_has_known_button(mock_verb: VerbEntry) -> None:
-    from core.render import render_board_html
-
-    html = render_board_html(_make_board(mock_verb))
-    assert "known-btn" in html

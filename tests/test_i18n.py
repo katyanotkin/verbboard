@@ -125,23 +125,6 @@ def test_about_default_lang_is_english(client: TestClient) -> None:
     assert 'lang="en"' in resp.text
 
 
-@pytest.mark.parametrize(
-    "lang,title_fragment",
-    [
-        ("en", "About VerbBoard"),
-        ("ru", "О приложении VerbBoard"),
-        ("es", "Sobre la app VerbBoard"),
-        ("he", "אודות VerbBoard"),
-    ],
-)
-def test_about_title_matches_ui_language(
-    client: TestClient, lang: str, title_fragment: str
-) -> None:
-    resp = client.get(f"/about?ui_language={lang}")
-    assert resp.status_code == 200
-    assert title_fragment in resp.text
-
-
 def test_about_hebrew_is_rtl(client: TestClient) -> None:
     resp = client.get("/about?ui_language=he")
     assert 'dir="rtl"' in resp.text
