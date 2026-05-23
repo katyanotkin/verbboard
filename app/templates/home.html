@@ -62,8 +62,8 @@
 
     <form action="/learn" method="get" class="controls" id="home-form">
       <div class="row">
-        <label>{{ ui['home.language_label'] }}</label>
-        <select name="language" onchange="window.location='/set_language?language=' + this.value;">
+        <label for="language-select">{{ ui['home.language_label'] }}</label>
+        <select id="language-select" name="language" onchange="window.location='/set_language?language=' + this.value;">
           {% for code, label, selected in lang_options %}
           <option value="{{ code }}"{% if selected %} selected{% endif %}>{{ label }}</option>
           {% endfor %}

@@ -197,11 +197,11 @@
   padding: 10px 18px;
 
   border-radius: 999px;
-  border: 1px solid var(--button-primary-bg);
+  border: 1.5px solid var(--button-primary-bg);
 
-  background: var(--button-primary-bg);
-  color: var(--button-primary-text);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+  background: transparent;
+  color: var(--button-primary-bg);
+  box-shadow: none;
 
   font-family: inherit;
   font-size: 0.94rem;
@@ -212,9 +212,17 @@
   flex-shrink: 0;
 
   transition:
+    background 0.15s ease,
+    color 0.15s ease,
     transform 0.12s ease,
     filter 0.12s ease,
     box-shadow 0.12s ease;
+}
+
+.search-btn.is-primary {
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
 }
 
 .search-btn:hover:not(:disabled) {
@@ -223,7 +231,7 @@
 }
 
 .search-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
