@@ -255,7 +255,7 @@
         .map(function (size) {
           return `
             <button
-              class="vb-ftbtn${size === activePracticeSize ? ' active' : ''}"
+              class="practice-size-btn${size === activePracticeSize ? ' active' : ''}"
               data-size="${size}"
             >
               ${size}
@@ -271,7 +271,7 @@
               ${ui['practice.label'] || 'Practice'}
             </span>
 
-            <div class="vb-filter-toggle">
+            <div class="practice-size-group">
               ${sizeButtons}
             </div>
 
@@ -287,7 +287,7 @@
       `;
 
       practiceEl
-        .querySelectorAll('.vb-ftbtn[data-size]')
+        .querySelectorAll('.practice-size-btn[data-size]')
         .forEach(function (button) {
           button.addEventListener('click', function () {
             activePracticeSize = parseInt(button.dataset.size, 10);

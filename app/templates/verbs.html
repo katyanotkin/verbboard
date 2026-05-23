@@ -47,42 +47,6 @@
       {{ ui['verbs.heading'] }}
     </h1>
 
-    <div class="vb-filter-row">
-      <div class="vb-filter-toggle" id="vb-filter-toggle">
-        <button
-          type="button"
-          class="vb-ftbtn active"
-          data-filter="new"
-        >
-          {{ ui['verbs.filter_new'] }}
-        </button>
-
-        <button
-          type="button"
-          class="vb-ftbtn"
-          data-filter="seen"
-        >
-          {{ ui['verbs.filter_seen'] }}
-        </button>
-
-        <button
-          type="button"
-          class="vb-ftbtn"
-          data-filter="all"
-        >
-          {{ ui['verbs.filter_all'] }}
-        </button>
-
-        <button
-          type="button"
-          class="vb-ftbtn"
-          data-filter="known"
-        >
-          {{ ui['verbs.filter_known'] }}
-        </button>
-      </div>
-    </div>
-
     <form
       action="/search_verb"
       method="get"
@@ -129,7 +93,60 @@
       {% endif %}
     </form>
 
-    <div class="vb-toolbar-meta">
+    {% if practice_loop_enabled %}
+    <div id="practice-panel" class="practice-panel"></div>
+    {% endif %}
+
+    <div class="progress-row vb-progress-row">
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:0%"></div>
+      </div>
+
+      <div class="progress-meta">
+        <span class="progress-star">★</span>
+        <span class="progress-count">0</span>
+        <span class="progress-total"></span>
+      </div>
+    </div>
+
+    <p class="vb-tap-hint">{{ ui['verbs.tap_hint'] }}</p>
+    <p class="vb-known-legend">{{ ui['verbs.known_legend'] }}</p>
+
+    <div class="vb-filter-row">
+      <div class="vb-filter-toggle" id="vb-filter-toggle">
+        <button
+          type="button"
+          class="vb-ftbtn active"
+          data-filter="new"
+        >
+          {{ ui['verbs.filter_new'] }}
+        </button>
+
+        <button
+          type="button"
+          class="vb-ftbtn"
+          data-filter="seen"
+        >
+          {{ ui['verbs.filter_seen'] }}
+        </button>
+
+        <button
+          type="button"
+          class="vb-ftbtn"
+          data-filter="known"
+        >
+          {{ ui['verbs.filter_known'] }}
+        </button>
+
+        <button
+          type="button"
+          class="vb-ftbtn"
+          data-filter="all"
+        >
+          {{ ui['verbs.filter_all'] }}
+        </button>
+      </div>
+
       <select id="vb-sort" class="vb-sort-select">
         <option value="rank">
           {{ ui['verbs.sort_frequency'] }}
@@ -139,31 +156,7 @@
           {{ sort_az_label }}
         </option>
       </select>
-
-      <span class="vb-legend-known">
-        <span class="vb-badge known">★</span>
-        {{ ui['verbs.filter_known'] }}
-      </span>
-
-      <div class="progress-row">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width:0%"></div>
-        </div>
-
-        <div class="progress-meta">
-          <span class="progress-star">★</span>
-          <span class="progress-count">0</span>
-          <span class="progress-total"></span>
-        </div>
-      </div>
     </div>
-
-    {% if practice_loop_enabled %}
-    <div id="practice-panel" class="practice-panel"></div>
-    {% endif %}
-
-    <p class="vb-tap-hint">{{ ui['verbs.tap_hint'] }}</p>
-    <p class="vb-known-legend">{{ ui['verbs.known_legend'] }}</p>
 
     <div id="vb-list" class="vb-list"></div>
 
