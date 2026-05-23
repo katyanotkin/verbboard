@@ -92,7 +92,10 @@ def render_board_html(
         col_label = escape(ui.get("board.col_label", "Label"))
         col_form = escape(ui.get("board.col_form", "Form"))
 
-        section_title = section.get("title", "")
+        section_title_raw = section.get("title", "")
+        section_title = (
+            ui.get(section_title_raw, section_title_raw) if section_title_raw else ""
+        )
         title_html = f"<h2>{escape(str(section_title))}</h2>" if section_title else ""
 
         show_headers = bool(section_title)

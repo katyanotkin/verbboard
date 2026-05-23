@@ -33,7 +33,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
         {
-            "title": "Present",
+            "title": "board.tense_present",
             "rows": [
                 {
                     "key": "pres_m_sg",
@@ -58,7 +58,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
         {
-            "title": "Past",
+            "title": "board.tense_past",
             "rows": [
                 {
                     "key": "past_1sg",
@@ -108,7 +108,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
         {
-            "title": "Future",
+            "title": "board.tense_future",
             "rows": [
                 {
                     "key": "fut_1sg",

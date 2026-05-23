@@ -224,6 +224,7 @@
     const onHome = window.location.pathname === '/';
     const urlParams = new URLSearchParams(window.location.search);
     const explicitUiLang = urlParams.has('ui_language');
+    const explicitLearningLang = urlParams.has('language');
 
     try {
       const resp = await fetch('/api/preferences', {
@@ -241,8 +242,8 @@
         toSave.ui_language = currentUiLang;
       }
 
-      // Learning language
-      if (!prefs.learning_language && currentLearningLang) {
+      // Learning language: same pattern — explicit switch is authoritative.
+      if (currentLearningLang && (explicitLearningLang || !prefs.learning_language) && prefs.learning_language !== currentLearningLang) {
         toSave.learning_language = currentLearningLang;
       }
 
@@ -264,7 +265,7 @@
         needsRedirect = true;
       }
 
-      if (onHome && prefs.learning_language && currentLearningLang && prefs.learning_language !== currentLearningLang) {
+      if (onHome && !explicitLearningLang && prefs.learning_language && currentLearningLang && prefs.learning_language !== currentLearningLang) {
         url.searchParams.set('language', prefs.learning_language);
         needsRedirect = true;
       }
