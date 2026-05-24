@@ -1,4 +1,5 @@
 import sys
+
 import requests
 
 
@@ -23,6 +24,8 @@ def main(base_url: str) -> None:
     # pick a known verb that must exist
     check(f"{base_url}/learn?language=en&verb_id=en_go", "learn en_go")
     check(f"{base_url}/learn?language=ru&verb_id=ru_delat", "learn ru_delat")
+    check(f"{base_url}/learn?language=he&verb_id=he_lgdvl", "learn he_lgdvl")
+    check(f"{base_url}/learn?language=he&verb_id=he_lbva", "learn he_lbva")
 
     print("\nAll smoke tests passed\n")
 
