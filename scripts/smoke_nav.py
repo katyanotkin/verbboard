@@ -80,7 +80,7 @@ def main(base: str) -> None:
     _check(
         f"{base}/feedback?page=learn&language=en&verb_id=en_go&return_to={learn_url}",
         "feedback: back link survives learn return_to",
-        require=("secondary-link", "/learn"),
+        require=("feedback-link", "/learn"),
     )
 
     # ── feedback: open redirect guard ──────────────────────────────────────
