@@ -21,7 +21,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             "rows": [
                 {
                     "key": "infinitive",
-                    "label": "שם פועל / infinitive",
+                    "label": "שם פועל",
                     "text": infinitive,
                 },
                 {
@@ -37,22 +37,22 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             "rows": [
                 {
                     "key": "pres_m_sg",
-                    "label": "he / הוא",
+                    "label": "הוא",
                     "text": present.get("m_sg", ""),
                 },
                 {
                     "key": "pres_f_sg",
-                    "label": "she / היא",
+                    "label": "היא",
                     "text": present.get("f_sg", ""),
                 },
                 {
                     "key": "pres_m_pl",
-                    "label": "they (m.) / הם",
+                    "label": "הם",
                     "text": present.get("m_pl", ""),
                 },
                 {
                     "key": "pres_f_pl",
-                    "label": "they (f.) / הן",
+                    "label": "הן",
                     "text": present.get("f_pl", ""),
                 },
             ],
@@ -62,47 +62,47 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             "rows": [
                 {
                     "key": "past_1sg",
-                    "label": "I / אני",
+                    "label": "אני",
                     "text": past.get("1sg", ""),
                 },
                 {
                     "key": "past_2msg",
-                    "label": "you (m.sg.) / אתה",
+                    "label": "אתה",
                     "text": past.get("2msg", ""),
                 },
                 {
                     "key": "past_2fsg",
-                    "label": "you (f.sg.) / את",
+                    "label": "את",
                     "text": past.get("2fsg", ""),
                 },
                 {
                     "key": "past_3msg",
-                    "label": "he / הוא",
+                    "label": "הוא",
                     "text": past.get("3msg", ""),
                 },
                 {
                     "key": "past_3fsg",
-                    "label": "she / היא",
+                    "label": "היא",
                     "text": past.get("3fsg", ""),
                 },
                 {
                     "key": "past_1pl",
-                    "label": "we / אנחנו",
+                    "label": "אנחנו",
                     "text": past.get("1pl", ""),
                 },
                 {
                     "key": "past_2mpl",
-                    "label": "you (m.pl.) / אתם",
+                    "label": "אתם",
                     "text": past.get("2mpl", ""),
                 },
                 {
                     "key": "past_2fpl",
-                    "label": "you (f.pl.) / אתן",
+                    "label": "אתן",
                     "text": past.get("2fpl", ""),
                 },
                 {
                     "key": "past_3pl",
-                    "label": "they / הם, הן",
+                    "label": "הם / הן",
                     "text": past.get("3pl", ""),
                 },
             ],
@@ -112,47 +112,47 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             "rows": [
                 {
                     "key": "fut_1sg",
-                    "label": "I / אני",
+                    "label": "אני",
                     "text": future.get("1sg", ""),
                 },
                 {
                     "key": "fut_2msg",
-                    "label": "you (m.sg.) / אתה",
+                    "label": "אתה",
                     "text": future.get("2msg", ""),
                 },
                 {
                     "key": "fut_2fsg",
-                    "label": "you (f.sg.) / את",
+                    "label": "את",
                     "text": future.get("2fsg", ""),
                 },
                 {
                     "key": "fut_3msg",
-                    "label": "he / הוא",
+                    "label": "הוא",
                     "text": future.get("3msg", ""),
                 },
                 {
                     "key": "fut_3fsg",
-                    "label": "she / היא",
+                    "label": "היא",
                     "text": future.get("3fsg", ""),
                 },
                 {
                     "key": "fut_1pl",
-                    "label": "we / אנחנו",
+                    "label": "אנחנו",
                     "text": future.get("1pl", ""),
                 },
                 {
                     "key": "fut_2mpl",
-                    "label": "you (m.pl.) / אתם",
+                    "label": "אתם",
                     "text": future.get("2mpl", ""),
                 },
                 {
                     "key": "fut_2fpl",
-                    "label": "you (f.pl.) / אתן",
+                    "label": "אתן",
                     "text": future.get("2fpl", ""),
                 },
                 {
                     "key": "fut_3pl",
-                    "label": "they / הם, הן",
+                    "label": "הם / הן",
                     "text": future.get("3pl", ""),
                 },
             ],

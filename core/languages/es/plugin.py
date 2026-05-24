@@ -5,12 +5,24 @@ from core.models import Board, VerbEntry
 from core.registry import LanguagePlugin, register
 
 
+def _tense_rows(prefix: str, tense: dict) -> list:
+    return [
+        {"key": f"{prefix}_yo", "label": "yo", "text": tense.get("yo", "")},
+        {"key": f"{prefix}_tu", "label": "tú", "text": tense.get("tu", "")},
+        {"key": f"{prefix}_el", "label": "él/ella", "text": tense.get("el", "")},
+        {"key": f"{prefix}_nos", "label": "nosotros", "text": tense.get("nos", "")},
+        {"key": f"{prefix}_ellos", "label": "ellos", "text": tense.get("ellos", "")},
+    ]
+
+
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     lemma = str(verb.lemma)
     forms = verb.forms or {}
 
     present = forms.get("present", {}) or {}
     preterite = forms.get("preterite", {}) or {}
+    imperfect = forms.get("imperfect", {}) or {}
+    future = forms.get("future", {}) or {}
     imperative = forms.get("imperative", {}) or {}
 
     sections = [
@@ -20,81 +32,30 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
                 {"key": "lemma", "label": "infinitivo", "text": lemma},
             ],
         },
-        {
-            "title": "Presente",
-            "rows": [
-                {"key": "pres_yo", "label": "yo", "text": present.get("yo", "")},
-                {"key": "pres_tu", "label": "tú", "text": present.get("tu", "")},
-                {"key": "pres_el", "label": "él/ella", "text": present.get("el", "")},
-                {
-                    "key": "pres_nos",
-                    "label": "nosotros",
-                    "text": present.get("nos", ""),
-                },
-                {
-                    "key": "pres_ellos",
-                    "label": "ellos",
-                    "text": present.get("ellos", ""),
-                },
-            ],
-        },
-        {
-            "title": "Pretérito",
-            "rows": [
-                {"key": "pret_yo", "label": "yo", "text": preterite.get("yo", "")},
-                {"key": "pret_tu", "label": "tú", "text": preterite.get("tu", "")},
-                {"key": "pret_el", "label": "él/ella", "text": preterite.get("el", "")},
-                {
-                    "key": "pret_nos",
-                    "label": "nosotros",
-                    "text": preterite.get("nos", ""),
-                },
-                {
-                    "key": "pret_ellos",
-                    "label": "ellos",
-                    "text": preterite.get("ellos", ""),
-                },
-            ],
-        },
+        {"title": "Presente", "rows": _tense_rows("pres", present)},
+        {"title": "Pretérito", "rows": _tense_rows("pret", preterite)},
     ]
 
+    if imperfect:
+        sections.append({"title": "Imperfecto", "rows": _tense_rows("imp", imperfect)})
+
+    if future:
+        sections.append({"title": "Futuro", "rows": _tense_rows("fut", future)})
+
     if imperative:
-        imperative_rows = []
-        if imperative.get("tu"):
-            imperative_rows.append(
-                {"key": "imp_tu", "label": "tú", "text": imperative.get("tu", "")}
-            )
-        if imperative.get("vosotros"):
-            imperative_rows.append(
-                {
-                    "key": "imp_vosotros",
-                    "label": "vosotros",
-                    "text": imperative.get("vosotros", ""),
-                }
-            )
-        if imperative.get("usted"):
-            imperative_rows.append(
-                {
-                    "key": "imp_usted",
-                    "label": "usted",
-                    "text": imperative.get("usted", ""),
-                }
-            )
-        if imperative.get("ustedes"):
-            imperative_rows.append(
-                {
-                    "key": "imp_ustedes",
-                    "label": "ustedes",
-                    "text": imperative.get("ustedes", ""),
-                }
-            )
+        imp_slots = [
+            ("tu", "tú"),
+            ("vosotros", "vosotros"),
+            ("usted", "usted"),
+            ("ustedes", "ustedes"),
+        ]
+        imperative_rows = [
+            {"key": f"imper_{slot}", "label": label, "text": imperative.get(slot, "")}
+            for slot, label in imp_slots
+            if imperative.get(slot)
+        ]
         if imperative_rows:
-            sections.append(
-                {
-                    "title": "Imperativo",
-                    "rows": imperative_rows,
-                }
-            )
+            sections.append({"title": "Imperativo", "rows": imperative_rows})
 
     sections.append(
         {

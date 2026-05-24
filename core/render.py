@@ -44,6 +44,10 @@ def render_board_html(
 
     button_class = "btn"
 
+    # When studying Hebrew with a non-Hebrew UI, label cells need explicit RTL
+    # so Hebrew-script pronouns render correctly in a LTR page context.
+    label_dir = ' dir="rtl"' if board.language == "he" and ui_lang != "he" else ""
+
     sections_html = []
     for section_index, section in enumerate(board.sections, start=1):
         rows = []
@@ -85,7 +89,7 @@ def render_board_html(
             )
             rows.append(
                 "<tr>"
-                f"<td class='conj-label'>{label}</td>"
+                f"<td class='conj-label'{label_dir}>{label}</td>"
                 f"<td class='conj-form'>{form_cell}</td>"
                 "</tr>"
             )

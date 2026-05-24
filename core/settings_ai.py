@@ -81,14 +81,15 @@ SPANISH (es)
   lemma: infinitive form
   morph: {}
   forms (all nested):
-    present:   { yo, tu, el, nos, ellos }
-    preterite: { yo, tu, el, nos, ellos }
-    imperative: { tu, vosotros, usted, ustedes }
-    gerund: "<gerund>"            (string)
+    present:    { yo, tu, el, nos, ellos }
+    preterite:  { yo, tu, el, nos, ellos }
+    imperfect:  { yo, tu, el, nos, ellos }
+    future:     { yo, tu, el, nos, ellos }
+    imperative: { tu, vosotros, usted, ustedes }  ← always include all four slots
+    gerund: "<gerund>"              (string)
     participle: "<past participle>" (string)
   examples: 4 to 6 sentences in Spanish, each using a distinct grammatical form:
-    at least one present, one preterite, one imperative or subjunctive,
-    and others from different tenses/persons."""
+    at least one present, one preterite, one imperfect or future, one imperative or subjunctive."""
 
 _PROMPT_HE = """\
 ────────────────────────────────────────
