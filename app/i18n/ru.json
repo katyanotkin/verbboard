@@ -32,7 +32,7 @@
   "verbs.filter_all": "Все",
   "verbs.filter_known": "Выученные",
   "verbs.filter_recent": "Недавно добавлены",
-  "verbs.sort_frequency": "Новые в конце",
+  "verbs.sort_newest": "Новые в начале",
   "board.tense_present": "Настоящее",
   "board.tense_past": "Прошедшее",
   "board.tense_future": "Будущее",

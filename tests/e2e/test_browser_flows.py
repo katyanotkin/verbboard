@@ -160,8 +160,8 @@ def test_verbs_filter_and_sort_persist_after_back_navigation(page, live_server_u
     page.locator(".vb-ftbtn[data-filter='all']").click()
     page.wait_for_timeout(100)
 
-    # Change sort from default "alpha" to "rank" (frequency)
-    page.locator("#vb-sort").select_option("rank")
+    # Change sort from default "alpha" to "newest"
+    page.locator("#vb-sort").select_option("newest")
     page.wait_for_timeout(100)
 
     # Navigate to Learn directly -- state is already written to localStorage/hash
@@ -184,11 +184,11 @@ def test_verbs_filter_and_sort_persist_after_back_navigation(page, live_server_u
         "active" in all_btn_class
     ), f"Expected 'all' filter to remain active after Back, got class: {all_btn_class!r}"
 
-    # Sort should still be "rank"
+    # Sort should still be "newest"
     sort_value = page.locator("#vb-sort").input_value()
     assert (
-        sort_value == "rank"
-    ), f"Expected sort='rank' after Back navigation, got: {sort_value!r}"
+        sort_value == "newest"
+    ), f"Expected sort='newest' after Back navigation, got: {sort_value!r}"
 
 
 def test_verbs_filter_only_change_persists_after_back_navigation(page, live_server_url):

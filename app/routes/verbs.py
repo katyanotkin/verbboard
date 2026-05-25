@@ -10,10 +10,10 @@ from fastapi.templating import Jinja2Templates
 from core.i18n import get_strings, resolve_ui_language
 from core.registry import all_plugins
 from core.settings import load_settings
+from core.storage.verb_repository import list_verbs_recent
 from core.verb_loader import load_entries_for_language
 
 RECENT_VERBS_LIMIT = 8
-MAX_SYNTHETIC_RANK = 999999
 
 PRACTICE_LOOP_ENABLED = os.getenv(
     "PRACTICE_LOOP_ENABLED",
@@ -71,31 +71,15 @@ def verb_browser(
             {
                 "id": entry.id,
                 "lemma": str(lemma),
-                "rank": entry.rank or MAX_SYNTHETIC_RANK,
+                "created_at": entry.created_at,
             }
         )
 
-    recent_ids: list[str] = []
-
-    for verb_row in reversed(verbs_js):
-        rank = verb_row.get("rank")
-        verb_id = verb_row.get("id")
-
-        if not isinstance(rank, int):
-            continue
-
-        if not isinstance(verb_id, str):
-            continue
-
-        if rank >= MAX_SYNTHETIC_RANK:
-            continue
-
-        recent_ids.append(verb_id)
-
-        if len(recent_ids) >= RECENT_VERBS_LIMIT:
-            break
-
-    recent_ids.reverse()
+    recent_docs = list_verbs_recent(
+        language=selected_language, limit=RECENT_VERBS_LIMIT
+    )
+    known_ids = {v["id"] for v in verbs_js}
+    recent_ids = [d["verb_id"] for d in recent_docs if d.get("verb_id") in known_ids]
 
     ui_strings: dict[str, str] = {
         "verbs.count_one": ui["verbs.count_one"],

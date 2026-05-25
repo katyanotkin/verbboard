@@ -22,6 +22,7 @@ class VerbEntry:
     tags: Optional[List[str]] = None
     display_lemma: Optional[str] = None
     display_forms: Optional[Dict[str, Any]] = None
+    created_at: str = ""
 
 
 @dataclass(frozen=True)

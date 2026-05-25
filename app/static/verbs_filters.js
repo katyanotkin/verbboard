@@ -47,8 +47,13 @@
     const fromHash = readHash();
     const fromStorage = readStorageState();
 
+    const VALID_SORTS = new Set(['alpha', 'newest']);
+
     let activeFilter = fromHash.filter || fromStorage.filter || 'new';
     let activeSort = fromHash.sort || fromStorage.sort || 'alpha';
+    if (!VALID_SORTS.has(activeSort)) {
+      activeSort = 'alpha';
+    }
     let searchQuery = (searchEl && searchEl.value) ? searchEl.value.trim() : '';
 
     function writeState() {
@@ -102,6 +107,10 @@
         rows = [...rows].sort(function (left, right) {
           return left.lemma.localeCompare(right.lemma, lang);
         });
+      } else if (activeSort === 'newest') {
+        rows = [...rows].sort(function (left, right) {
+          return (right.created_at || '').localeCompare(left.created_at || '');
+        });
       }
 
       return rows;
@@ -148,7 +157,7 @@
         return;
       }
 
-      const showRecent = !searchQuery.trim() && (
+      const showRecent = !searchQuery.trim() && activeSort === 'alpha' && (
         activeFilter === 'all' || activeFilter === 'new'
       );
 

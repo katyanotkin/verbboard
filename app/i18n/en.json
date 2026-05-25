@@ -32,7 +32,7 @@
   "verbs.filter_all": "All",
   "verbs.filter_known": "Learned",
   "verbs.filter_recent": "Recently added",
-  "verbs.sort_frequency": "Newest last",
+  "verbs.sort_newest": "Newest first",
   "board.tense_present": "Present",
   "board.tense_past": "Past",
   "board.tense_future": "Future",
