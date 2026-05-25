@@ -378,6 +378,26 @@ button {
   color: var(--color-navy);
 }
 
+/* ── audio loading state ──────────────────────────────────────────────────── */
+
+@keyframes audio-pulse {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.45; }
+  100% { opacity: 1; }
+}
+
+.btn.is-loading,
+.slow-btn.is-loading {
+  animation: audio-pulse 0.9s ease-in-out infinite;
+  cursor: wait;
+}
+
+/* Override the shared disabled style: we want the button visible but inert. */
+.btn.is-loading,
+.slow-btn.is-loading {
+  opacity: 1;
+}
+
 /* ── misc ─────────────────────────────────────────────────────────────────── */
 .section-block {
   margin-bottom: 10px;

@@ -32,18 +32,23 @@ async def _generate_on_demand(
 
     voice_meta = VOICES[language][voice]
 
-    verb = load_entry_by_id(language=language, verb_id=verb_id)
+    verb = await asyncio.to_thread(load_entry_by_id, language=language, verb_id=verb_id)
     if verb is None:
-        verb = load_entry_by_id(language=language, verb_id=verb_id, source="candidate")
+        verb = await asyncio.to_thread(
+            load_entry_by_id, language=language, verb_id=verb_id, source="candidate"
+        )
     if verb is None:
         return None
 
     plugin = get_plugin(language)
     board = plugin.build_board(verb, voice, voice_meta.label)
 
+    _NO_AUDIO_ROW_KEYS = frozenset({"aspect", "pair", "binyan", "root"})
     text: str | None = None
     for section in board.sections:
         for row in section["rows"]:
+            if str(row["key"]) in _NO_AUDIO_ROW_KEYS:
+                continue
             row_text = str(row["text"] or "").strip()
             if not row_text:
                 continue
@@ -119,7 +124,7 @@ async def get_audio(
                 voice,
                 form_key,
             )
-            raise
+            return None
 
     if audio_bytes is None:
         return PlainTextResponse("Audio not found", status_code=404)

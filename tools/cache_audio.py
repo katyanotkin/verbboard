@@ -20,20 +20,28 @@ import logging
 import os
 import sys
 
+# Snapshot env vars before any core import triggers load_dotenv(override=True).
+_ENV_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
+_ENV_BUCKET = os.getenv("AUDIO_BUCKET", "")
+
 # Register all language plugins before registry lookups.
-import core.languages.en.plugin  # noqa: F401
-import core.languages.es.plugin  # noqa: F401
-import core.languages.he.plugin  # noqa: F401
-import core.languages.ru.plugin  # noqa: F401
-from core.audio_backend.gcs import GCSAudioBackend
-from core.audio_service import build_audio_key, build_hashed_audio_key, ensure_audio
-from core.registry import get as get_plugin
-from core.supported_languages import (
+import core.languages.en.plugin  # noqa: E402, F401
+import core.languages.es.plugin  # noqa: E402, F401
+import core.languages.he.plugin  # noqa: E402, F401
+import core.languages.ru.plugin  # noqa: E402, F401
+from core.audio_backend.gcs import GCSAudioBackend  # noqa: E402
+from core.audio_service import (  # noqa: E402
+    build_audio_key,
+    build_hashed_audio_key,
+    ensure_audio,
+)
+from core.registry import get as get_plugin  # noqa: E402
+from core.supported_languages import (  # noqa: E402
     supported_languages_list,
     supported_languages_with_all,
 )
-from core.tts import VOICES
-from core.verb_loader import load_entries_for_language
+from core.tts import VOICES  # noqa: E402
+from core.verb_loader import load_entries_for_language  # noqa: E402
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
 
@@ -188,12 +196,12 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--project",
-        default=os.getenv("GOOGLE_CLOUD_PROJECT", ""),
+        default=_ENV_PROJECT,
         help="GCP project ID (or set GOOGLE_CLOUD_PROJECT)",
     )
     parser.add_argument(
         "--bucket",
-        default=os.getenv("AUDIO_BUCKET", ""),
+        default=_ENV_BUCKET,
         help="GCS bucket name (or set AUDIO_BUCKET)",
     )
     parser.add_argument(
