@@ -45,6 +45,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+  flex-wrap: wrap;
 }
 
 .vb-search {
@@ -92,10 +93,23 @@
   white-space: nowrap;
   text-align: center;
   transition: background 0.1s, color 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .vb-ftbtn + .vb-ftbtn        { border-left: 1px solid var(--card-border); }
 .vb-ftbtn.active              { background: var(--color-navy); color: white; }
 .vb-ftbtn:not(.active):hover  { background: #e5e7eb; }
+
+@media (max-width: 480px) {
+  .vb-ftbtn {
+    padding: 6px 4px;
+    font-size: 11px;
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.2;
+  }
+}
 
 /* standalone progress row (above hints, below practice) */
 .vb-progress-row {
@@ -111,6 +125,7 @@
   font-size: 13px;
   color: #374151;
   cursor: pointer;
+  max-width: 160px;
 }
 
 /* ── tap hint ────────────────────────────────────────────────────────────── */
