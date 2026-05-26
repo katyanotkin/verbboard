@@ -2,8 +2,11 @@
 <html lang="{{ lang }}" dir="{{ html_dir }}">
 <head>
   <meta charset="utf-8"/>
-  <title>{{ title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#2d6a4f"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <link rel="manifest" href="/static/manifest.json"/>
+  <title>{{ title }}</title>
   <link rel="stylesheet" href="/static/common.css"/>
 
 <script>window.UI = { "auth.login": {{ auth_login | tojson }}, "auth.logout": {{ auth_logout | tojson }} };</script>
@@ -181,5 +184,6 @@
   </div>
 </div>
 
+<script defer src="/static/pwa.js"></script>
 </body>
 </html>

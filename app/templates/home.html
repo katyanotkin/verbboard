@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#2d6a4f"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <link rel="manifest" href="/static/manifest.json"/>
   <title>VerbBoard</title>
   <link rel="stylesheet" href="/static/common.css"/>
   <link rel="stylesheet" href="/static/home.css"/>
@@ -125,8 +128,13 @@
       </div>
 
     </form>
+
+    <button id="install-btn" hidden onclick="vbInstall()" class="install-btn">
+      Install VerbBoard
+    </button>
   </div>
 
   <script src="/static/home.js"></script>
+  <script defer src="/static/pwa.js"></script>
 </body>
 </html>

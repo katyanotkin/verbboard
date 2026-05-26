@@ -465,3 +465,25 @@ input[type="text"]:focus {
   flex-shrink: 0;
   color: var(--color-navy);
 }
+
+/* ===== PWA install prompt ===== */
+
+.install-btn {
+  display: block;
+  margin: 20px auto 0;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1.5px solid #2d6a4f;
+  background: transparent;
+  color: #2d6a4f;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.install-btn:hover {
+  background: #2d6a4f;
+  color: #ffffff;
+}
