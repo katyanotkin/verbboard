@@ -440,3 +440,26 @@ button {
   border-color: #94a3b8;
   font-weight: 500;
 }
+
+/* ===== Mobile layout ===== */
+
+@media (max-width: 639px) {
+  body {
+    margin-top: 0;
+    /* Preserve horizontal padding from the base rule; add clearance for bottom nav */
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    margin: 0 -16px 16px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    padding: 10px 16px;
+  }
+}

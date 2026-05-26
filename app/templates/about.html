@@ -30,6 +30,12 @@
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
     }
 
+    @media (max-width: 639px) {
+      .container {
+        margin-bottom: calc(56px + env(safe-area-inset-bottom) + 16px);
+      }
+    }
+
     h1 {
       text-align: center;
       margin-bottom: 20px;
@@ -183,6 +189,8 @@
     <div id="auth-slot" class="auth-slot" style="display:contents"></div>
   </div>
 </div>
+
+{% set bnav_lang = '' %}{% set bnav_active = '' %}{% include '_bottom_nav.html' %}
 
 <script defer src="/static/pwa.js"></script>
 </body>
