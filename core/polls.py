@@ -15,15 +15,6 @@ POLL_QUESTIONS: dict[str, dict[str, str]] = {
 POLL_OPTIONS: dict[str, list[tuple[str, dict[str, str]]]] = {
     "feature_priority": [
         (
-            "search_english",
-            {
-                "en": "Search by English verb for any language",
-                "ru": "Поиск по английскому глаголу в любом языке",
-                "he": "חיפוש לפי פועל באנגלית בכל שפה",
-                "es": "Buscar por verbo en inglés en cualquier idioma",
-            },
-        ),
-        (
             "word_families",
             {
                 "en": "Related words / word families",

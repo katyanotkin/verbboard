@@ -59,11 +59,11 @@ def test_feedback_submit_poll_answer_saved(client: TestClient, monkeypatch) -> N
 
     response = client.post(
         "/feedback",
-        data={"poll_answer": "search_english", "return_to": "/"},
+        data={"poll_answer": "more_verbs", "return_to": "/"},
         follow_redirects=False,
     )
     assert response.status_code == 303
-    assert saved[0]["poll_answer"] == "search_english"
+    assert saved[0]["poll_answer"] == "more_verbs"
 
 
 def test_feedback_submit_empty_redirects_with_error(client: TestClient) -> None:

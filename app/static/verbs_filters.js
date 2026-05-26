@@ -18,7 +18,6 @@
       searchEl,
       sortEl,
       toggleEl,
-      filterSelectEl,
       progressFillEl,
       progressCountEl,
       progressTotalEl,
@@ -225,10 +224,6 @@
         node.classList.toggle('active', node.dataset.filter === newFilter);
       });
 
-      if (filterSelectEl) {
-        filterSelectEl.value = newFilter;
-      }
-
       writeState();
       render();
     }
@@ -247,12 +242,6 @@
 
         applyFilter(button.dataset.filter);
       });
-
-      if (filterSelectEl) {
-        filterSelectEl.addEventListener('change', function () {
-          applyFilter(filterSelectEl.value);
-        });
-      }
 
       sortEl.addEventListener('change', function () {
         activeSort = sortEl.value;

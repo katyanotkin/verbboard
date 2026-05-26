@@ -11,7 +11,6 @@
   const searchEl = document.getElementById('vb-search');
   const listEl = document.getElementById('vb-list');
   const toggleEl = document.getElementById('vb-filter-toggle');
-  const filterSelectEl = document.getElementById('vb-filter-select');
   const sortEl = document.getElementById('vb-sort');
   const practiceEl = document.getElementById('practice-panel');
 
@@ -27,7 +26,6 @@
     searchEl,
     sortEl,
     toggleEl,
-    filterSelectEl,
     progressFillEl,
     progressCountEl,
     progressTotalEl,
