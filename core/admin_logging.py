@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import json
 import logging
 from datetime import UTC, datetime
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -31,22 +29,7 @@ def log_missing_verb_search(
         "verb_id": verb_id or "",
     }
 
-    _append_local(record)
     _write_firestore_signal(record)
-
-
-def _append_local(record: dict) -> None:
-    log_dir = Path("runtime/admin_logs")
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / "missing_verb_searches.jsonl"
-    with log_path.open("a", encoding="utf-8") as f:
-        json_safe = {
-            **record,
-            "created_at": record["created_at"].isoformat()
-            if hasattr(record.get("created_at"), "isoformat")
-            else record.get("created_at"),
-        }
-        f.write(json.dumps(json_safe, ensure_ascii=False) + "\n")
 
 
 def _write_firestore_signal(record: dict) -> None:

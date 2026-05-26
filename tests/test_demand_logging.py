@@ -5,8 +5,7 @@ from core.admin_logging import log_missing_verb_search
 
 def test_empty_query_is_skipped(monkeypatch) -> None:
     calls: list[dict] = []
-    monkeypatch.setattr("core.admin_logging._append_local", lambda r: calls.append(r))
-    monkeypatch.setattr("core.admin_logging._write_firestore_signal", lambda r: None)
+    monkeypatch.setattr("core.admin_logging._write_firestore_signal", lambda r: calls.append(r))
 
     log_missing_verb_search(language="en", query="")
     log_missing_verb_search(language="en", query="   ")
@@ -16,8 +15,7 @@ def test_empty_query_is_skipped(monkeypatch) -> None:
 
 def test_query_is_normalized(monkeypatch) -> None:
     calls: list[dict] = []
-    monkeypatch.setattr("core.admin_logging._append_local", lambda r: calls.append(r))
-    monkeypatch.setattr("core.admin_logging._write_firestore_signal", lambda r: None)
+    monkeypatch.setattr("core.admin_logging._write_firestore_signal", lambda r: calls.append(r))
 
     log_missing_verb_search(language="en", query="  Go  ")
 
@@ -27,8 +25,7 @@ def test_query_is_normalized(monkeypatch) -> None:
 
 def test_language_is_recorded(monkeypatch) -> None:
     calls: list[dict] = []
-    monkeypatch.setattr("core.admin_logging._append_local", lambda r: calls.append(r))
-    monkeypatch.setattr("core.admin_logging._write_firestore_signal", lambda r: None)
+    monkeypatch.setattr("core.admin_logging._write_firestore_signal", lambda r: calls.append(r))
 
     log_missing_verb_search(language="ru", query="идти")
 
@@ -36,7 +33,6 @@ def test_language_is_recorded(monkeypatch) -> None:
 
 
 def test_firestore_signal_is_attempted(monkeypatch) -> None:
-    monkeypatch.setattr("core.admin_logging._append_local", lambda r: None)
     firestore_calls: list[dict] = []
     monkeypatch.setattr(
         "core.admin_logging._write_firestore_signal",
