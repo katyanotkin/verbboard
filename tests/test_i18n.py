@@ -86,11 +86,27 @@ def test_resolve_unsupported_qp_falls_through_to_cookie() -> None:
 
 def test_verbs_russian_ui(client: TestClient) -> None:
     ru = get_strings("ru")
-    with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
+    with (
+        patch("app.routes.verbs.load_entries_for_language", return_value=[]),
+        patch("app.routes.verbs.list_verbs_recent", return_value=[]),
+    ):
         resp = client.get("/verbs?language=en&ui_language=ru")
     assert resp.status_code == 200
     assert ru["verbs.heading"] in resp.text
     assert ru["verbs.find_button"] in resp.text
+
+
+def test_verbs_filter_buttons_all_present(client: TestClient) -> None:
+    with (
+        patch("app.routes.verbs.load_entries_for_language", return_value=[]),
+        patch("app.routes.verbs.list_verbs_recent", return_value=[]),
+    ):
+        resp = client.get("/verbs?language=ru&ui_language=ru")
+    assert resp.status_code == 200
+    for f in ("new", "seen", "known", "all"):
+        assert (
+            f'data-filter="{f}"' in resp.text
+        ), f"filter button '{f}' missing from HTML"
 
 
 def test_verbs_hebrew_has_rtl(client: TestClient) -> None:
