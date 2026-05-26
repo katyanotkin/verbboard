@@ -1,10 +1,13 @@
 """
 Pre-cache verb audio to GCS for a given language.
 
+Pass --bucket once for a single target or multiple times to write to several
+buckets with a single TTS call per file (stage + prod in one run).
+
 Run from project root (needs GCP auth):
 
     python -m tools.cache_audio --language he \\
-        --project knotmem26 --bucket verbboard-audio-prod
+        --bucket verbboard-audio-stage --bucket verbboard-audio-prod
 
     GOOGLE_CLOUD_PROJECT=knotmem26 AUDIO_BUCKET=verbboard-audio-prod \\
         python -m tools.cache_audio --language all
@@ -19,6 +22,8 @@ import asyncio
 import logging
 import os
 import sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 # Snapshot env vars before any core import triggers load_dotenv(override=True).
 _ENV_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
@@ -30,17 +35,13 @@ import core.languages.es.plugin  # noqa: E402, F401
 import core.languages.he.plugin  # noqa: E402, F401
 import core.languages.ru.plugin  # noqa: E402, F401
 from core.audio_backend.gcs import GCSAudioBackend  # noqa: E402
-from core.audio_service import (  # noqa: E402
-    build_audio_key,
-    build_hashed_audio_key,
-    ensure_audio,
-)
+from core.audio_service import build_audio_key, build_hashed_audio_key  # noqa: E402
 from core.registry import get as get_plugin  # noqa: E402
 from core.supported_languages import (  # noqa: E402
     supported_languages_list,
     supported_languages_with_all,
 )
-from core.tts import VOICES  # noqa: E402
+from core.tts import VOICES, tts_to_mp3  # noqa: E402
 from core.verb_loader import load_entries_for_language  # noqa: E402
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
@@ -64,67 +65,97 @@ def _iter_form_items(verb, language: str, voice_key: str):
             yield f"example_{index}", text
 
 
+async def _generate_and_upload(
+    backends: list[GCSAudioBackend],
+    missing_indices: list[int],
+    text: str,
+    gcs_key: str,
+    voice_edge_id: str,
+) -> None:
+    """Call TTS once, upload resulting bytes to every backend in missing_indices."""
+    with TemporaryDirectory() as tmpdir:
+        out_path = Path(tmpdir) / "audio.mp3"
+        await tts_to_mp3(text, out_path, voice_edge_id)
+        audio_bytes = out_path.read_bytes()
+
+    await asyncio.gather(
+        *[
+            asyncio.to_thread(backends[i].write_bytes, gcs_key, audio_bytes)
+            for i in missing_indices
+        ]
+    )
+
+
 async def _cache_language(
     language: str,
     voices: list[str],
-    audio_backend: GCSAudioBackend,
+    backends: list[GCSAudioBackend],
     dry_run: bool,
 ) -> dict[str, int]:
     print(f"\n[{language}] Loading verbs from Firestore...")
     entries = load_entries_for_language(language=language)
     print(f"[{language}] {len(entries)} verbs")
 
-    # Bulk-list existing blobs once per language — much faster than N exists() calls.
-    prefix = f"audio/{language}/"
-    print(f"[{language}] Listing existing GCS keys under {prefix}...")
-    existing: set[str] = {
-        blob.name for blob in audio_backend.bucket.list_blobs(prefix=prefix)
-    }
-    print(f"[{language}] {len(existing)} files already cached")
+    # Bulk-list each backend once -- avoids N exists() calls per file.
+    existing_per_backend: list[set[str]] = []
+    for backend in backends:
+        prefix = f"audio/{language}/"
+        print(
+            f"[{language}] [{backend.bucket.name}] listing GCS keys under {prefix}..."
+        )
+        existing: set[str] = {
+            blob.name for blob in backend.bucket.list_blobs(prefix=prefix)
+        }
+        print(f"[{language}] [{backend.bucket.name}] {len(existing)} cached")
+        existing_per_backend.append(existing)
 
     counts: dict[str, int] = {"total": 0, "cached": 0, "generated": 0, "failed": 0}
 
     for verb in entries:
         for voice_key in voices:
             voice_meta = VOICES[language][voice_key]
-            pending: list[tuple[str, str, str]] = []  # (form_key, text, edge_id)
+            # (form_key, text, edge_id, gcs_key, indices of backends missing this key)
+            pending: list[tuple[str, str, str, str, list[int]]] = []
 
             for base_key, text in _iter_form_items(verb, language, voice_key):
                 form_key = build_hashed_audio_key(base_key, text)
                 gcs_key = build_audio_key(language, verb.id, voice_key, form_key)
                 counts["total"] += 1
-                if gcs_key in existing:
+
+                missing = [
+                    i
+                    for i, existing in enumerate(existing_per_backend)
+                    if gcs_key not in existing
+                ]
+
+                if not missing:
                     counts["cached"] += 1
                 else:
-                    pending.append((form_key, text, voice_meta.edge_id))
+                    pending.append(
+                        (form_key, text, voice_meta.edge_id, gcs_key, missing)
+                    )
 
             if not pending:
                 continue
 
             if dry_run:
+                targets = ", ".join(backends[i].bucket.name for i in pending[0][4])
                 print(
-                    f"  DRY-RUN {verb.id} [{voice_key}]: would generate {len(pending)}"
+                    f"  DRY-RUN {verb.id} [{voice_key}]: "
+                    f"would generate {len(pending)} to [{targets}]"
                 )
                 counts["generated"] += len(pending)
                 continue
 
             tasks = [
-                ensure_audio(
-                    audio_backend=audio_backend,
-                    text=text,
-                    language=language,
-                    verb_id=verb.id,
-                    voice=voice_key,
-                    form_key=form_key,
-                    voice_edge_id=edge_id,
-                )
-                for form_key, text, edge_id in pending
+                _generate_and_upload(backends, missing, text, gcs_key, edge_id)
+                for _, text, edge_id, gcs_key, missing in pending
             ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             for i, result in enumerate(results):
                 if isinstance(result, Exception):
-                    form_key, text, _ = pending[i]
+                    form_key = pending[i][0]
                     print(f"  ERROR {verb.id}/{voice_key}/{form_key}: {result}")
                     counts["failed"] += 1
                 else:
@@ -140,7 +171,7 @@ async def _cache_language(
 async def _run(
     languages: list[str],
     voices_filter: str,
-    audio_backend: GCSAudioBackend,
+    backends: list[GCSAudioBackend],
     dry_run: bool,
 ) -> None:
     totals: dict[str, int] = {"total": 0, "cached": 0, "generated": 0, "failed": 0}
@@ -155,7 +186,7 @@ async def _run(
             print(f"[{language}] voice '{voices_filter}' not available, skipping")
             continue
 
-        counts = await _cache_language(language, voices, audio_backend, dry_run)
+        counts = await _cache_language(language, voices, backends, dry_run)
         for k in totals:
             totals[k] += counts[k]
         print(
@@ -163,8 +194,10 @@ async def _run(
             f"generated={counts['generated']}  failed={counts['failed']}"
         )
 
+    bucket_names = ", ".join(b.bucket.name for b in backends)
     print(
-        f"\nSUMMARY: total={totals['total']}  cached={totals['cached']}  "
+        f"\nSUMMARY [{bucket_names}]: "
+        f"total={totals['total']}  cached={totals['cached']}  "
         f"generated={totals['generated']}  failed={totals['failed']}"
     )
     if totals["failed"]:
@@ -180,6 +213,8 @@ def _parse_args() -> argparse.Namespace:
             "  python -m tools.cache_audio --language he\n"
             "  python -m tools.cache_audio --language all --voice female\n"
             "  python -m tools.cache_audio --language ru --dry-run\n"
+            "  python -m tools.cache_audio --language all \\\n"
+            "      --bucket verbboard-audio-stage --bucket verbboard-audio-prod\n"
         ),
     )
     parser.add_argument(
@@ -201,8 +236,13 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--bucket",
-        default=_ENV_BUCKET,
-        help="GCS bucket name (or set AUDIO_BUCKET)",
+        action="append",
+        dest="buckets",
+        metavar="BUCKET",
+        help=(
+            "GCS bucket name; repeat for multiple buckets "
+            "(default: AUDIO_BUCKET env var)"
+        ),
     )
     parser.add_argument(
         "--dry-run",
@@ -217,14 +257,16 @@ def main() -> None:
 
     if not args.project:
         sys.exit("ERROR: --project or GOOGLE_CLOUD_PROJECT is required")
-    if not args.bucket:
+
+    buckets = args.buckets or ([_ENV_BUCKET] if _ENV_BUCKET else [])
+    if not buckets:
         sys.exit("ERROR: --bucket or AUDIO_BUCKET is required")
 
     languages = (
         supported_languages_list() if args.language == "all" else [args.language]
     )
-    audio_backend = GCSAudioBackend(project=args.project, bucket=args.bucket)
-    asyncio.run(_run(languages, args.voice, audio_backend, args.dry_run))
+    backends = [GCSAudioBackend(project=args.project, bucket=b) for b in buckets]
+    asyncio.run(_run(languages, args.voice, backends, args.dry_run))
 
 
 if __name__ == "__main__":

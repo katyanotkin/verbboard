@@ -10,15 +10,12 @@ Missing check (--missing): loads Firestore verbs, builds expected GCS keys
 
 Examples:
 
-    python -m tools.audit_audio \\
-        --project knotmem26 \\
-        --bucket verbboard-audio-stage \\
-        --language all --voice all --missing
+    python -m tools.audit_audio --language all        # missing check (default)
+    python -m tools.audit_audio --language he --suspects --no-missing
+    python -m tools.audit_audio --language ru --suspects --missing-csv my.csv
 
-    python -m tools.audit_audio --language he --bottom-n 12
-
-    python -m tools.audit_audio \\
-        --language ru --missing --missing-csv missing.csv
+    GOOGLE_CLOUD_PROJECT=knotmem26 AUDIO_BUCKET=verbboard-audio-prod \\
+        python -m tools.audit_audio --language all
 """
 
 from __future__ import annotations
@@ -84,6 +81,24 @@ def _parse_args() -> argparse.Namespace:
         help="GCS bucket name (or set AUDIO_BUCKET)",
     )
     parser.add_argument(
+        "--no-missing",
+        action="store_true",
+        help="Skip the missing-file check (missing is on by default)",
+    )
+    parser.add_argument(
+        "--missing-csv",
+        default=None,
+        help=(
+            "Missing audio CSV output path "
+            "(default: audio_missing_{env}.csv derived from bucket name)"
+        ),
+    )
+    parser.add_argument(
+        "--suspects",
+        action="store_true",
+        help="Also report size-suspect blobs (off by default)",
+    )
+    parser.add_argument(
         "--bottom-n",
         type=int,
         default=12,
@@ -95,19 +110,6 @@ def _parse_args() -> argparse.Namespace:
         help=(
             "Suspects CSV output path "
             "(default: audio_suspects_{env}.csv derived from bucket name)"
-        ),
-    )
-    parser.add_argument(
-        "--missing",
-        action="store_true",
-        help="Also report expected audio files absent from GCS",
-    )
-    parser.add_argument(
-        "--missing-csv",
-        default=None,
-        help=(
-            "Missing audio CSV output path "
-            "(default: audio_missing_{env}.csv derived from bucket name)"
         ),
     )
     return parser.parse_args()
@@ -281,81 +283,82 @@ def main() -> None:
                 }
             )
 
-    # --- Suspects ---
-    suspect_rows: list[dict[str, Any]] = []
-    print()
-
-    for (language, voice), rows in sorted(rows_by_lang_voice.items()):
-        # Fit size ~ intercept + slope * text_len using rows where text is known.
-        fit_pairs = [
-            (row["text_len"], row["size_bytes"]) for row in rows if row["text_len"] > 0
-        ]
-        intercept, slope = _linear_fit(fit_pairs) if fit_pairs else (0.0, 1.0)
-
-        def expected_size(
-            text_len: int, _ic: float = intercept, _sl: float = slope
-        ) -> float:
-            if text_len == 0:
-                # No text data: use intercept as a rough baseline
-                return max(1.0, _ic)
-            return max(1.0, _ic + _sl * text_len)
-
-        scored: list[dict[str, Any]] = []
-        for row in rows:
-            exp = expected_size(row["text_len"])
-            residual_pct = ((row["size_bytes"] - exp) / exp) * 100
-            scored.append(
-                {
-                    **row,
-                    "expected_size_bytes": round(exp),
-                    "residual_pct": round(residual_pct, 2),
-                }
-            )
-
-        scored.sort(key=lambda r: r["residual_pct"])
-        bottom = scored[: args.bottom_n]
-
-        print(
-            f"[{language}/{voice}]  "
-            f"blobs={len(rows)}  "
-            f"fit: intercept={round(intercept)} slope={round(slope, 1)}  "
-            f"bottom={len(bottom)}"
-        )
-        for row in bottom:
-            print(
-                f"  size={row['size_bytes']:>8}  "
-                f"exp={row['expected_size_bytes']:>8}  "
-                f"{row['residual_pct']:>8.2f}%  "
-                f"len={row['text_len']:>4}  "
-                f"{row['blob_name']}"
-            )
-            suspect_rows.append(row)
-
+    # --- Suspects (opt-in) ---
+    if args.suspects:
+        suspect_rows: list[dict[str, Any]] = []
         print()
 
-    with open(suspects_csv, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(
-            fh,
-            fieldnames=[
-                "language",
-                "voice",
-                "verb_id",
-                "form_key",
-                "text",
-                "text_len",
-                "size_bytes",
-                "expected_size_bytes",
-                "residual_pct",
-                "updated",
-                "blob_name",
-            ],
-        )
-        writer.writeheader()
-        writer.writerows(suspect_rows)
+        for (language, voice), rows in sorted(rows_by_lang_voice.items()):
+            fit_pairs = [
+                (row["text_len"], row["size_bytes"])
+                for row in rows
+                if row["text_len"] > 0
+            ]
+            intercept, slope = _linear_fit(fit_pairs) if fit_pairs else (0.0, 1.0)
 
-    print(f"Wrote {len(suspect_rows)} suspect rows to {suspects_csv}")
+            def expected_size(
+                text_len: int, _ic: float = intercept, _sl: float = slope
+            ) -> float:
+                if text_len == 0:
+                    return max(1.0, _ic)
+                return max(1.0, _ic + _sl * text_len)
 
-    if not args.missing:
+            scored: list[dict[str, Any]] = []
+            for row in rows:
+                exp = expected_size(row["text_len"])
+                residual_pct = ((row["size_bytes"] - exp) / exp) * 100
+                scored.append(
+                    {
+                        **row,
+                        "expected_size_bytes": round(exp),
+                        "residual_pct": round(residual_pct, 2),
+                    }
+                )
+
+            scored.sort(key=lambda r: r["residual_pct"])
+            bottom = scored[: args.bottom_n]
+
+            print(
+                f"[{language}/{voice}]  "
+                f"blobs={len(rows)}  "
+                f"fit: intercept={round(intercept)} slope={round(slope, 1)}  "
+                f"bottom={len(bottom)}"
+            )
+            for row in bottom:
+                print(
+                    f"  size={row['size_bytes']:>8}  "
+                    f"exp={row['expected_size_bytes']:>8}  "
+                    f"{row['residual_pct']:>8.2f}%  "
+                    f"len={row['text_len']:>4}  "
+                    f"{row['blob_name']}"
+                )
+                suspect_rows.append(row)
+
+            print()
+
+        with open(suspects_csv, "w", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(
+                fh,
+                fieldnames=[
+                    "language",
+                    "voice",
+                    "verb_id",
+                    "form_key",
+                    "text",
+                    "text_len",
+                    "size_bytes",
+                    "expected_size_bytes",
+                    "residual_pct",
+                    "updated",
+                    "blob_name",
+                ],
+            )
+            writer.writeheader()
+            writer.writerows(suspect_rows)
+
+        print(f"Wrote {len(suspect_rows)} suspect rows to {suspects_csv}")
+
+    if args.no_missing:
         return
 
     # --- Missing ---
