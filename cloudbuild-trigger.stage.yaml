@@ -1,0 +1,17 @@
+name: stage-release
+description: release stage on push
+filename: cloudbuild.stage.yaml
+serviceAccount: projects/knotmem26/serviceAccounts/cloudbuild-deployer@knotmem26.iam.gserviceaccount.com
+
+github:
+  owner: katyanotkin
+  name: verbboard
+  push:
+    branch: ^main$
+
+ignoredFiles:
+  - "*.md"
+  - "*.txt"
+  - ".gitignore"
+  - "LICENSE"
+  - "docs/**"

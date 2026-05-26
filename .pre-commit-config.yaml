@@ -45,3 +45,4 @@ repos:
         entry: bash -c 'PYTHONPATH=. .venv/bin/pytest -q -x --tb=short tests/'
         language: system
         pass_filenames: false
+        files: \.(py|js|css|html|json)$
