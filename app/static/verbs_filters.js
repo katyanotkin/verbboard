@@ -18,6 +18,7 @@
       searchEl,
       sortEl,
       toggleEl,
+      filterSelectEl,
       progressFillEl,
       progressCountEl,
       progressTotalEl,
@@ -217,15 +218,25 @@
       }
     }
 
+    function applyFilter(newFilter) {
+      activeFilter = newFilter;
+
+      toggleEl.querySelectorAll('.vb-ftbtn').forEach(function (node) {
+        node.classList.toggle('active', node.dataset.filter === newFilter);
+      });
+
+      if (filterSelectEl) {
+        filterSelectEl.value = newFilter;
+      }
+
+      writeState();
+      render();
+    }
+
     function bindEvents() {
       sortEl.value = activeSort;
 
-      toggleEl.querySelectorAll('.vb-ftbtn').forEach(function (button) {
-        button.classList.toggle(
-          'active',
-          button.dataset.filter === activeFilter
-        );
-      });
+      applyFilter(activeFilter);
 
       toggleEl.addEventListener('click', function (event) {
         const button = event.target.closest('.vb-ftbtn');
@@ -234,17 +245,14 @@
           return;
         }
 
-        toggleEl.querySelectorAll('.vb-ftbtn').forEach(function (node) {
-          node.classList.remove('active');
-        });
-
-        button.classList.add('active');
-
-        activeFilter = button.dataset.filter;
-
-        writeState();
-        render();
+        applyFilter(button.dataset.filter);
       });
+
+      if (filterSelectEl) {
+        filterSelectEl.addEventListener('change', function () {
+          applyFilter(filterSelectEl.value);
+        });
+      }
 
       sortEl.addEventListener('change', function () {
         activeSort = sortEl.value;
