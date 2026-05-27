@@ -93,5 +93,12 @@
   "lang.he": "Hebreo",
   "lang.es": "Español",
   "home.search_placeholder_en": "Escribe en inglés…",
-  "board.translated_from": "Encontrado vía"
+  "board.translated_from": "Encontrado vía",
+  "board.filter_gender": "Género",
+  "board.filter_number": "Número",
+  "board.persona_all": "Todo",
+  "board.persona_m": "M",
+  "board.persona_f": "F",
+  "board.number_sg": "Sg",
+  "board.number_pl": "Pl"
 }

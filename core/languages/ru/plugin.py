@@ -19,20 +19,21 @@ def _format_aspect(aspect_value: str) -> str:
 
 def _tense_rows(tense_key: str, tense_forms: dict) -> list:
     labels = [
-        ("1sg", "я"),
-        ("2sg", "ты"),
-        ("3sg", "он/она/оно"),
-        ("1pl", "мы"),
-        ("2pl", "вы"),
-        ("3pl", "они"),
+        ("1sg", "я",          "sg"),
+        ("2sg", "ты",         "sg"),
+        ("3sg", "он/она/оно", "sg"),
+        ("1pl", "мы",         "pl"),
+        ("2pl", "вы",         "pl"),
+        ("3pl", "они",        "pl"),
     ]
     return [
         {
             "key": f"{tense_key}_{slot}",
             "label": label,
             "text": tense_forms.get(slot, ""),
+            "number": number,
         }
-        for slot, label in labels
+        for slot, label, number in labels
     ]
 
 
@@ -114,17 +115,17 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
         {
             "title": "Прошедшее время",
             "rows": [
-                {"key": "past_m", "label": "он", "text": past.get("m", "")},
-                {"key": "past_f", "label": "она", "text": past.get("f", "")},
-                {"key": "past_n", "label": "оно", "text": past.get("n", "")},
-                {"key": "past_pl", "label": "они", "text": past.get("pl", "")},
+                {"key": "past_m",  "label": "он",  "text": past.get("m", ""),  "gender": "m", "number": "sg"},
+                {"key": "past_f",  "label": "она", "text": past.get("f", ""),  "gender": "f", "number": "sg"},
+                {"key": "past_n",  "label": "оно", "text": past.get("n", ""),  "gender": "n", "number": "sg"},
+                {"key": "past_pl", "label": "они", "text": past.get("pl", ""), "number": "pl"},
             ],
         },
         {
             "title": "Повелительное наклонение",
             "rows": [
-                {"key": "imp_sg", "label": "ты", "text": imperative.get("sg", "")},
-                {"key": "imp_pl", "label": "вы", "text": imperative.get("pl", "")},
+                {"key": "imp_sg", "label": "ты", "text": imperative.get("sg", ""), "number": "sg"},
+                {"key": "imp_pl", "label": "вы", "text": imperative.get("pl", ""), "number": "pl"},
             ],
         },
     ]

@@ -89,6 +89,30 @@
     {{ examples | safe }}
   </table>
 
+  {% if show_gender_filter or show_number_filter %}
+  <div class="persona-control" id="persona-control">
+    {% if show_gender_filter %}
+    <div class="filter-group">
+      <span class="filter-label">{{ board_filter_gender }}</span>
+      <div class="persona-toggle">
+        <button type="button" class="persona-btn active" data-value="all">{{ board_persona_all }}</button>
+        <button type="button" class="persona-btn" data-value="m">{{ board_persona_m }}</button>
+        <button type="button" class="persona-btn" data-value="f">{{ board_persona_f }}</button>
+      </div>
+    </div>
+    {% endif %}
+    {% if show_number_filter %}
+    <div class="filter-group">
+      <span class="filter-label">{{ board_filter_number }}</span>
+      <div class="number-toggle">
+        <button type="button" class="number-btn active" data-value="all">{{ board_persona_all }}</button>
+        <button type="button" class="number-btn" data-value="sg">{{ board_number_sg }}</button>
+        <button type="button" class="number-btn" data-value="pl">{{ board_number_pl }}</button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
   <div class="section-block">
     {{ sections_conj | safe }}
   </div>

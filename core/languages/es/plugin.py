@@ -7,11 +7,11 @@ from core.registry import LanguagePlugin, register
 
 def _tense_rows(prefix: str, tense: dict) -> list:
     return [
-        {"key": f"{prefix}_yo", "label": "yo", "text": tense.get("yo", "")},
-        {"key": f"{prefix}_tu", "label": "tú", "text": tense.get("tu", "")},
-        {"key": f"{prefix}_el", "label": "él/ella", "text": tense.get("el", "")},
-        {"key": f"{prefix}_nos", "label": "nosotros", "text": tense.get("nos", "")},
-        {"key": f"{prefix}_ellos", "label": "ellos", "text": tense.get("ellos", "")},
+        {"key": f"{prefix}_yo",    "label": "yo",       "text": tense.get("yo", ""),    "number": "sg"},
+        {"key": f"{prefix}_tu",    "label": "tú",       "text": tense.get("tu", ""),    "number": "sg"},
+        {"key": f"{prefix}_el",    "label": "él/ella",  "text": tense.get("el", ""),    "number": "sg"},
+        {"key": f"{prefix}_nos",   "label": "nosotros", "text": tense.get("nos", ""),   "number": "pl"},
+        {"key": f"{prefix}_ellos", "label": "ellos",    "text": tense.get("ellos", ""), "number": "pl"},
     ]
 
 
@@ -44,14 +44,14 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
 
     if imperative:
         imp_slots = [
-            ("tu", "tú"),
-            ("vosotros", "vosotros"),
-            ("usted", "usted"),
-            ("ustedes", "ustedes"),
+            ("tu",       "tú",       "sg"),
+            ("vosotros", "vosotros", "pl"),
+            ("usted",    "usted",    "sg"),
+            ("ustedes",  "ustedes",  "pl"),
         ]
         imperative_rows = [
-            {"key": f"imper_{slot}", "label": label, "text": imperative.get(slot, "")}
-            for slot, label in imp_slots
+            {"key": f"imper_{slot}", "label": label, "text": imperative.get(slot, ""), "number": number}
+            for slot, label, number in imp_slots
             if imperative.get(slot)
         ]
         if imperative_rows:

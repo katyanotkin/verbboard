@@ -93,5 +93,12 @@
   "lang.he": "Иврит",
   "lang.es": "Испанский",
   "home.search_placeholder_en": "Введите по-английски…",
-  "board.translated_from": "Найдено через"
+  "board.translated_from": "Найдено через",
+  "board.filter_gender": "Род",
+  "board.filter_number": "Число",
+  "board.persona_all": "Все",
+  "board.persona_m": "М",
+  "board.persona_f": "Ж",
+  "board.number_sg": "Ед",
+  "board.number_pl": "Мн"
 }

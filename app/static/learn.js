@@ -89,6 +89,50 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // ── persona / number filter ────────────────────────────────────────────────
+  const personaControl = document.getElementById("persona-control");
+  if (personaControl) {
+    const personaStorageKey = `persona_filter:${language}`;
+    const numberStorageKey = `number_filter:${language}`;
+
+    let currentPersona = localStorage.getItem(personaStorageKey) || "all";
+    let currentNumber  = localStorage.getItem(numberStorageKey)  || "all";
+
+    function applyFilters() {
+      document.querySelectorAll(".conj-table tr").forEach(function (tr) {
+        var g = tr.dataset.gender;
+        var n = tr.dataset.number;
+        var gMatch = !g || currentPersona === "all" || g === currentPersona;
+        var nMatch = !n || currentNumber  === "all" || n === currentNumber;
+        tr.hidden = !(gMatch && nMatch);
+      });
+      personaControl.querySelectorAll(".persona-btn").forEach(function (btn) {
+        btn.classList.toggle("active", btn.dataset.value === currentPersona);
+      });
+      personaControl.querySelectorAll(".number-btn").forEach(function (btn) {
+        btn.classList.toggle("active", btn.dataset.value === currentNumber);
+      });
+    }
+
+    personaControl.querySelectorAll(".persona-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        currentPersona = btn.dataset.value;
+        localStorage.setItem(personaStorageKey, currentPersona);
+        applyFilters();
+      });
+    });
+
+    personaControl.querySelectorAll(".number-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        currentNumber = btn.dataset.value;
+        localStorage.setItem(numberStorageKey, currentNumber);
+        applyFilters();
+      });
+    });
+
+    applyFilters();
+  }
+
   // ── translations toggle ────────────────────────────────────────────────────
   const toggleBtn = document.getElementById("toggle-translations");
   if (toggleBtn) {

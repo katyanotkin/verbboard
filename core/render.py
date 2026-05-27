@@ -87,8 +87,17 @@ def render_board_html(
                 f"<span style='font-size:{value_font_size}'>{value_html}</span>"
                 f"{audio_html}"
             )
+
+            gender = str(row.get("gender", ""))
+            number_val = str(row.get("number", ""))
+            tr_attrs = ""
+            if gender:
+                tr_attrs += f" data-gender='{escape(gender)}'"
+            if number_val:
+                tr_attrs += f" data-number='{escape(number_val)}'"
+
             rows.append(
-                "<tr>"
+                f"<tr{tr_attrs}>"
                 f"<td class='conj-label'{label_dir}>{label}</td>"
                 f"<td class='conj-form'>{form_cell}</td>"
                 "</tr>"
@@ -299,4 +308,13 @@ def render_board_html(
         board_col_audio=ui.get("board.col_audio", "Audio"),
         examples="".join(examples_rows),
         sections_conj=conj_sections_html,
+        show_gender_filter=board.language in {"he", "ru"},
+        show_number_filter=board.language in {"he", "ru", "es"},
+        board_filter_gender=ui.get("board.filter_gender", "Gender"),
+        board_filter_number=ui.get("board.filter_number", "Number"),
+        board_persona_all=ui.get("board.persona_all", "All"),
+        board_persona_m=ui.get("board.persona_m", "M"),
+        board_persona_f=ui.get("board.persona_f", "F"),
+        board_number_sg=ui.get("board.number_sg", "Sg"),
+        board_number_pl=ui.get("board.number_pl", "Pl"),
     )
