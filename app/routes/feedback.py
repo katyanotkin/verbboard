@@ -84,11 +84,15 @@ def feedback_form(
         </div>
         """
 
+    bnav_lang = escape(language)
     return f"""<!doctype html>
 <html lang="{ui_lang}" dir="{html_dir}">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#2d6a4f"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <link rel="manifest" href="/static/manifest.json"/>
   <title>{escape(ui["feedback.title"])}</title>
   <link rel="stylesheet" href="/static/common.css"/>
   <script>window.UI ={json.dumps({"auth.login": ui.get("auth.login", "Login"), "auth.logout": ui.get("auth.logout", "Logout")})};</script>
@@ -167,6 +171,13 @@ def feedback_form(
       justify-content: center;
     }}
 
+    @media (max-width: 639px) {{
+      body {{
+        margin-top: 12px;
+        padding-bottom: calc(56px + env(safe-area-inset-bottom) + 16px);
+      }}
+    }}
+
   </style>
 </head>
 <body>
@@ -198,6 +209,39 @@ def feedback_form(
       </div>
     </form>
   </div>
+<nav class="bottom-nav" aria-label="Main navigation">
+  <a href="/?language={bnav_lang}" class="bnav-tab" aria-current="false">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <span>Search</span>
+  </a>
+  <a href="/verbs?language={bnav_lang}" class="bnav-tab" aria-current="false">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="8" y1="6" x2="21" y2="6"/>
+      <line x1="8" y1="12" x2="21" y2="12"/>
+      <line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/>
+      <line x1="3" y1="12" x2="3.01" y2="12"/>
+      <line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>
+    <span>Browse</span>
+  </a>
+  <button class="bnav-tab" onclick="document.querySelector('#auth-slot button')?.click()" aria-label="Profile">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+    <span>Profile</span>
+  </button>
+</nav>
+<script defer src="/static/pwa.js"></script>
 </body>
 </html>
 """

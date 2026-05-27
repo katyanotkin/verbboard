@@ -125,7 +125,12 @@
       button.textContent = loginLabel;
 
       button.addEventListener("click", async function () {
-        await signIn();
+        try {
+          await signIn();
+        } catch (err) {
+          console.error('VB sign-in error:', err);
+          alert('Sign-in error: ' + (err.message || err.code || err));
+        }
       });
     }
 
