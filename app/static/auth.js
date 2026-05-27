@@ -38,9 +38,11 @@
     // Google session -- prevents silent single-account auto-sign-in.
     provider.setCustomParameters({ prompt: 'select_account' });
     if (isStandalone()) {
-      // signInWithPopup blocks in PWA standalone mode (popup can't communicate
-      // back to the standalone shell on Android/iOS). Use redirect flow instead.
-      await firebase.auth().signInWithRedirect(provider);
+      // In standalone PWA mode signInWithPopup/Redirect can't return auth state
+      // to the shell. Open a regular Chrome tab that does the popup there; Firebase
+      // syncs the resulting auth state back via IndexedDB, which fires
+      // onAuthStateChanged in the standalone shell when the user returns.
+      window.open('/auth/signin', '_blank');
     } else {
       await firebase.auth().signInWithPopup(provider);
     }
@@ -309,11 +311,6 @@
     }
 
     firebase.initializeApp(config());
-
-    // After signInWithRedirect returns to the page, consume the redirect result.
-    // onAuthStateChanged will fire with the user once this resolves, so no extra
-    // handling needed -- just suppress unhandled-promise warnings.
-    firebase.auth().getRedirectResult().catch(function () {});
 
     firebase.auth().onAuthStateChanged(async function (user) {
       currentUser = user;

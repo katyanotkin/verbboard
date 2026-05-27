@@ -19,6 +19,7 @@ from app.routes.api_analytics import router as api_analytics_router
 from app.routes.api_preferences import router as api_preferences_router
 from app.routes.api_progress import router as api_progress_router
 from app.routes.audio import router as audio_router
+from app.routes.auth_pages import router as auth_pages_router
 from app.routes.feedback import router as feedback_router
 from app.routes.health import router as health_router
 from app.routes.home import router as home_router
@@ -83,7 +84,9 @@ class _PageViewMiddleware(BaseHTTPMiddleware):
 
         if is_new_session:
             response.set_cookie("vb_sid", sid, httponly=True, samesite="lax")
-            await start_session(sid, date, detect_device_type(user_agent), language, ui_lang)
+            await start_session(
+                sid, date, detect_device_type(user_agent), language, ui_lang
+            )
 
         if page not in seen:
             await record(request.url.path, language, ui_lang, user_agent)
@@ -98,6 +101,7 @@ app.add_middleware(_PageViewMiddleware)
 app.mount("/static", _CachedStaticFiles(directory="app/static"), name="static")
 
 app.include_router(about_router)
+app.include_router(auth_pages_router)
 app.include_router(well_known_router)
 app.include_router(admin_router)
 app.include_router(api_analytics_router)

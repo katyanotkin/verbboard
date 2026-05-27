@@ -2,6 +2,11 @@
   box-sizing: border-box;
 }
 
+/* Ensure [hidden] always hides regardless of other display rules */
+[hidden] {
+  display: none !important;
+}
+
 @view-transition {
   navigation: auto;
 }
