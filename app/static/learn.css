@@ -234,6 +234,80 @@ button {
   color: white;
 }
 
+/* ── persona / number filter ─────────────────────────────────────────────── */
+.persona-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+}
+
+.filter-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+.persona-toggle,
+.number-toggle {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+  background: var(--button-secondary-bg);
+}
+
+.persona-btn,
+.number-btn {
+  padding: 5px 13px;
+  border: none;
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.persona-btn:hover:not(.active),
+.number-btn:hover:not(.active) {
+  background: var(--card-border);
+  color: var(--text-body);
+}
+
+.persona-btn + .persona-btn,
+.number-btn + .number-btn {
+  border-left: 1px solid var(--card-border);
+}
+
+.persona-btn.active,
+.number-btn.active {
+  background: var(--color-navy);
+  color: white;
+}
+
+.filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+[dir="rtl"] .persona-btn + .persona-btn,
+[dir="rtl"] .number-btn + .number-btn {
+  border-left: none;
+  border-right: 1px solid var(--card-border);
+}
+
 /* ── known (star) button ──────────────────────────────────────────────────── */
 .func-panel {
   flex-direction: column;

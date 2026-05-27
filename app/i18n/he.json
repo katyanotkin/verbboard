@@ -93,5 +93,12 @@
   "lang.he": "עברית",
   "lang.es": "ספרדית",
   "home.search_placeholder_en": "הקלד באנגלית…",
-  "board.translated_from": "נמצא דרך"
+  "board.translated_from": "נמצא דרך",
+  "board.filter_gender": "מין",
+  "board.filter_number": "מספר",
+  "board.persona_all": "הכל",
+  "board.persona_m": "ז",
+  "board.persona_f": "נ",
+  "board.number_sg": "יח׳",
+  "board.number_pl": "רב׳"
 }

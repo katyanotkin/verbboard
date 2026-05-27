@@ -93,5 +93,12 @@
   "lang.he": "Hebrew",
   "lang.es": "Spanish",
   "home.search_placeholder_en": "Type in English…",
-  "board.translated_from": "Found via"
+  "board.translated_from": "Found via",
+  "board.filter_gender": "Gender",
+  "board.filter_number": "Number",
+  "board.persona_all": "All",
+  "board.persona_m": "M",
+  "board.persona_f": "F",
+  "board.number_sg": "Sg",
+  "board.number_pl": "Pl"
 }
