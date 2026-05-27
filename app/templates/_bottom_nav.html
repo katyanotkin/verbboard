@@ -28,7 +28,7 @@
   </a>
 
   <button class="bnav-tab{% if bnav_active == 'profile' %} bnav-tab--active{% endif %}"
-          onclick="document.querySelector('#auth-slot button')?.click()"
+          onclick="window.VerbBoardAuth?.tapProfile()"
           aria-label="Profile">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" stroke-width="2"

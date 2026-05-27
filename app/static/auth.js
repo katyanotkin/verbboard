@@ -376,6 +376,22 @@
     });
   }
 
+  // Called directly from the bottom-nav Profile tab so the user's tap is the
+  // trusted gesture -- programmatic .click() on the auth button loses isTrusted,
+  // which causes window.open() to be blocked by popup blockers in standalone mode.
+  async function tapProfile() {
+    try {
+      if (currentUser) {
+        await signOut();
+      } else {
+        await signIn();
+      }
+    } catch (err) {
+      console.error('VB tapProfile error:', err);
+      alert('Sign-in error: ' + (err.message || err.code || err));
+    }
+  }
+
   window.VerbBoardAuth = {
     ready: function () {
       return authReadyPromise;
@@ -383,6 +399,7 @@
 
     signIn: signIn,
     signOut: signOut,
+    tapProfile: tapProfile,
 
     getIdToken: getIdToken,
 
