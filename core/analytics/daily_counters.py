@@ -19,6 +19,10 @@ _PAGE_NAMES = {
     "/feedback": "feedback",
 }
 
+
+def tracked_page(path: str) -> str | None:
+    return _PAGE_NAMES.get(path)
+
 _pending: set[asyncio.Task] = set()
 
 

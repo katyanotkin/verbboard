@@ -302,6 +302,19 @@
       if (currentUser) {
         // Record that this tab has an authenticated session.
         sessionStorage.setItem(SESSION_UID_KEY, currentUser.uid);
+
+        // Attach UID to the analytics session once per browser-session per login.
+        if (!sessionStorage.getItem('vb:session_uid_sent')) {
+          sessionStorage.setItem('vb:session_uid_sent', '1');
+          getIdToken().then(function (token) {
+            if (!token) return;
+            fetch('/api/analytics/session', {
+              method: 'POST',
+              headers: { Authorization: 'Bearer ' + token },
+            }).catch(function () {});
+          });
+        }
+
         await hydrateProgress();
         await applyPreferences();
       } else {
@@ -310,6 +323,7 @@
         // the tab), unlike a JS variable which resets on each page load.
         var wasAuthenticated = !!sessionStorage.getItem(SESSION_UID_KEY);
         sessionStorage.removeItem(SESSION_UID_KEY);
+        sessionStorage.removeItem('vb:session_uid_sent');
 
         if (wasAuthenticated) {
           // Clear all user-specific progress from localStorage across all

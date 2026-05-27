@@ -15,6 +15,7 @@ import core.languages.he.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
 from app.routes.about import router as about_router
 from app.routes.admin import router as admin_router
+from app.routes.api_analytics import router as api_analytics_router
 from app.routes.api_preferences import router as api_preferences_router
 from app.routes.api_progress import router as api_progress_router
 from app.routes.audio import router as audio_router
@@ -48,18 +49,46 @@ class _CachedStaticFiles(StaticFiles):
 class _PageViewMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        if request.method == "GET":
-            from core.analytics.daily_counters import record
 
-            language = request.query_params.get("language") or request.cookies.get(
-                "language", ""
-            )
-            ui_lang = request.query_params.get("ui_language") or request.cookies.get(
-                "ui_language", ""
-            )
-            await record(
-                request.url.path, language, ui_lang, request.headers.get("user-agent")
-            )
+        if request.method != "GET":
+            return response
+
+        from datetime import UTC, datetime
+
+        from core.analytics.client_context import detect_device_type
+        from core.analytics.daily_counters import record, tracked_page
+        from core.analytics.session_tracker import (
+            ensure_sid,
+            get_seen_pages,
+            set_seen_cookie,
+            start_session,
+        )
+
+        page = tracked_page(request.url.path)
+        if page is None:
+            return response
+
+        language = request.query_params.get("language") or request.cookies.get(
+            "language", ""
+        )
+        ui_lang = request.query_params.get("ui_language") or request.cookies.get(
+            "ui_language", ""
+        )
+        user_agent = request.headers.get("user-agent")
+        date = datetime.now(UTC).strftime("%Y-%m-%d")
+
+        sid, is_new_session = ensure_sid(request)
+        seen = get_seen_pages(request, date)
+
+        if is_new_session:
+            response.set_cookie("vb_sid", sid, httponly=True, samesite="lax")
+            await start_session(sid, date, detect_device_type(user_agent), language, ui_lang)
+
+        if page not in seen:
+            await record(request.url.path, language, ui_lang, user_agent)
+            seen.add(page)
+            set_seen_cookie(response, date, seen)
+
         return response
 
 
@@ -69,6 +98,7 @@ app.mount("/static", _CachedStaticFiles(directory="app/static"), name="static")
 
 app.include_router(about_router)
 app.include_router(admin_router)
+app.include_router(api_analytics_router)
 app.include_router(audio_router)
 app.include_router(feedback_router)
 app.include_router(health_router)
