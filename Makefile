@@ -32,7 +32,7 @@ COMMON_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest
 	docker-build docker-run docker-stop docker-rm docker-dev docker-url \
 	gcp-check gcp-login gcp-auth \
 	gcp-image gcp-open gcp-open-stage gcp-open-prod \
-	gcp-release-prod \
+	gcp-release-prod gcp-deploy-stage \
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
 	audit-examples audit-en audit-ru audit-he audit-es \
@@ -167,6 +167,23 @@ gcp-stage-image: gcp-check ## GCP: print stage image reference
 	@gcloud run services describe $(GCP_STAGE_SERVICE) \
 		--region $(GCP_REGION) \
 		--format='value(spec.template.spec.containers[0].image)'
+
+## GCP: build current branch locally and deploy to stage (any branch, no Cloud Build trigger needed)
+gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branch to stage
+	$(eval SHA := $(shell git rev-parse HEAD))
+	$(eval IMG := $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(SHA))
+	@echo "Deploying $(shell git rev-parse --abbrev-ref HEAD) -> stage"
+	@echo "Image: $(IMG)"
+	docker build -t $(IMG) .
+	docker push $(IMG)
+	gcloud run deploy $(GCP_STAGE_SERVICE) \
+		--image=$(IMG) \
+		--region=$(GCP_REGION) \
+		--platform=managed \
+		--allow-unauthenticated \
+		--project=$(GCP_PROJECT) \
+		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE) \
+		--set-secrets=$(COMMON_SECRETS)
 
 ## GCP: promote currently deployed stage image to prod
 gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
