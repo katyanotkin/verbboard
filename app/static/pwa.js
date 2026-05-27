@@ -7,7 +7,10 @@ let _installPrompt = null;
 window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault();
   _installPrompt = e;
-  document.getElementById("install-btn")?.removeAttribute("hidden");
+  // Install button is for mobile only; desktop can install via the browser menu
+  if (window.matchMedia("(max-width: 767px)").matches) {
+    document.getElementById("install-btn")?.removeAttribute("hidden");
+  }
 });
 
 window.addEventListener("appinstalled", () => {
