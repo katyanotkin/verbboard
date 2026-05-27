@@ -45,13 +45,20 @@ def auth_signin_page() -> str:
       status.textContent = 'Auth not configured.';
     }} else {{
       firebase.initializeApp(cfg);
-      const provider = new firebase.auth.GoogleAuthProvider();
-      provider.setCustomParameters({{ prompt: 'select_account' }});
-      firebase.auth().signInWithPopup(provider)
-        .then(() => {{
-          status.textContent = 'Signed in!';
-          hint.textContent = 'You can close this tab and return to VerbBoard.';
-          window.close();
+      // Check if we are returning from a completed redirect sign-in.
+      // If so, show success and close. Otherwise start the redirect flow.
+      firebase.auth().getRedirectResult()
+        .then(result => {{
+          if (result && result.user) {{
+            status.textContent = 'Signed in!';
+            hint.textContent = 'You can close this tab and return to VerbBoard.';
+            window.close();
+          }} else {{
+            // First visit to this page — start the redirect to Google.
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.setCustomParameters({{ prompt: 'select_account' }});
+            return firebase.auth().signInWithRedirect(provider);
+          }}
         }})
         .catch(err => {{
           status.textContent = 'Sign-in failed.';

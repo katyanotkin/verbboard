@@ -32,17 +32,27 @@
       || window.navigator.standalone === true;
   }
 
+  function isMobile() {
+    // Popups become full tabs on mobile and lose window.opener, breaking
+    // Firebase's popup auth flow. Use redirect for any touch/narrow-screen device.
+    return navigator.maxTouchPoints > 1 || window.innerWidth < 768;
+  }
+
   async function signIn() {
     const provider = new firebase.auth.GoogleAuthProvider();
     // Always show the account chooser, even when the browser has a cached
     // Google session -- prevents silent single-account auto-sign-in.
     provider.setCustomParameters({ prompt: 'select_account' });
     if (isStandalone()) {
-      // In standalone PWA mode signInWithPopup/Redirect can't return auth state
-      // to the shell. Open a regular Chrome tab that does the popup there; Firebase
-      // syncs the resulting auth state back via IndexedDB, which fires
-      // onAuthStateChanged in the standalone shell when the user returns.
+      // In standalone PWA mode the redirect never comes back to the shell.
+      // Open a regular browser tab that handles sign-in there; Firebase syncs
+      // the auth state back via shared IndexedDB, firing onAuthStateChanged
+      // in the standalone shell when the user returns.
       window.open('/auth/signin', '_blank');
+    } else if (isMobile()) {
+      // On mobile browsers popups become tabs and lose window.opener, so
+      // Firebase can't pass the token back. Use full-page redirect instead.
+      await firebase.auth().signInWithRedirect(provider);
     } else {
       await firebase.auth().signInWithPopup(provider);
     }
@@ -311,6 +321,13 @@
     }
 
     firebase.initializeApp(config());
+
+    // Complete any pending redirect sign-in (mobile browsers use signInWithRedirect).
+    // Errors are logged so auth failures are diagnosable; onAuthStateChanged fires
+    // independently once the redirect result is processed.
+    firebase.auth().getRedirectResult().catch(function (err) {
+      console.error('VB getRedirectResult:', err.code, err.message);
+    });
 
     firebase.auth().onAuthStateChanged(async function (user) {
       currentUser = user;
