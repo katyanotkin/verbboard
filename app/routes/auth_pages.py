@@ -26,12 +26,19 @@ def auth_signin_page() -> str:
     }}
     .msg {{ text-align: center; padding: 24px; }}
     .msg p {{ margin: 8px 0; font-size: 1rem; }}
-    .msg small {{ color: #6b7280; font-size: 0.85rem; }}
+    .msg small {{ display: block; color: #6b7280; font-size: 0.85rem; margin-top: 8px; }}
+    #signin-btn {{
+      margin-top: 16px; padding: 12px 24px; font-size: 1rem; font-weight: 600;
+      background: #2d6a4f; color: white; border: none; border-radius: 999px;
+      cursor: pointer;
+    }}
+    #signin-btn:disabled {{ opacity: 0.6; cursor: default; }}
   </style>
 </head>
 <body>
   <div class="msg">
-    <p id="status">Signing in&hellip;</p>
+    <p id="status">Tap the button to sign in to VerbBoard.</p>
+    <button id="signin-btn" onclick="doSignIn()">Sign in with Google</button>
     <small id="hint"></small>
   </div>
   <script>window.FIREBASE_WEB_CONFIG = {firebase_cfg};</script>
@@ -41,29 +48,29 @@ def auth_signin_page() -> str:
     const cfg = window.FIREBASE_WEB_CONFIG;
     const status = document.getElementById('status');
     const hint = document.getElementById('hint');
+    const btn = document.getElementById('signin-btn');
     if (!cfg || !cfg.apiKey) {{
       status.textContent = 'Auth not configured.';
+      btn.hidden = true;
     }} else {{
       firebase.initializeApp(cfg);
-      // Check if we are returning from a completed redirect sign-in.
-      // If so, show success and close. Otherwise start the redirect flow.
-      firebase.auth().getRedirectResult()
-        .then(result => {{
-          if (result && result.user) {{
-            status.textContent = 'Signed in!';
-            hint.textContent = 'You can close this tab and return to VerbBoard.';
-            window.close();
-          }} else {{
-            // First visit to this page — start the redirect to Google.
-            const provider = new firebase.auth.GoogleAuthProvider();
-            provider.setCustomParameters({{ prompt: 'select_account' }});
-            return firebase.auth().signInWithRedirect(provider);
-          }}
-        }})
-        .catch(err => {{
-          status.textContent = 'Sign-in failed.';
-          hint.textContent = err.message || String(err);
-        }});
+    }}
+    async function doSignIn() {{
+      btn.disabled = true;
+      status.textContent = 'Signing in…';
+      try {{
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({{ prompt: 'select_account' }});
+        await firebase.auth().signInWithPopup(provider);
+        status.textContent = 'Signed in!';
+        hint.textContent = 'You can close this tab and return to VerbBoard.';
+        btn.hidden = true;
+        window.close();
+      }} catch (err) {{
+        status.textContent = 'Sign-in failed.';
+        hint.textContent = err.message || String(err);
+        btn.disabled = false;
+      }}
     }}
   </script>
 </body>

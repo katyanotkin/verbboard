@@ -35,7 +35,9 @@
   function isMobile() {
     // Popups become full tabs on mobile and lose window.opener, breaking
     // Firebase's popup auth flow. Use redirect for any touch/narrow-screen device.
-    return navigator.maxTouchPoints > 1 || window.innerWidth < 768;
+    return navigator.maxTouchPoints > 0
+      || window.innerWidth < 1024
+      || /Mobi|Android|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
   }
 
   async function signIn() {
@@ -323,10 +325,9 @@
     firebase.initializeApp(config());
 
     // Complete any pending redirect sign-in (mobile browsers use signInWithRedirect).
-    // Errors are logged so auth failures are diagnosable; onAuthStateChanged fires
-    // independently once the redirect result is processed.
     firebase.auth().getRedirectResult().catch(function (err) {
       console.error('VB getRedirectResult:', err.code, err.message);
+      alert('Sign-in error: ' + (err.code || err.message || err));
     });
 
     firebase.auth().onAuthStateChanged(async function (user) {
