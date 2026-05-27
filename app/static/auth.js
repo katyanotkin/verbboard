@@ -27,12 +27,23 @@
     return await currentUser.getIdToken();
   }
 
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+  }
+
   async function signIn() {
     const provider = new firebase.auth.GoogleAuthProvider();
     // Always show the account chooser, even when the browser has a cached
     // Google session -- prevents silent single-account auto-sign-in.
     provider.setCustomParameters({ prompt: 'select_account' });
-    await firebase.auth().signInWithPopup(provider);
+    if (isStandalone()) {
+      // signInWithPopup blocks in PWA standalone mode (popup can't communicate
+      // back to the standalone shell on Android/iOS). Use redirect flow instead.
+      await firebase.auth().signInWithRedirect(provider);
+    } else {
+      await firebase.auth().signInWithPopup(provider);
+    }
   }
 
   async function signOut() {
@@ -293,6 +304,11 @@
     }
 
     firebase.initializeApp(config());
+
+    // After signInWithRedirect returns to the page, consume the redirect result.
+    // onAuthStateChanged will fire with the user once this resolves, so no extra
+    // handling needed -- just suppress unhandled-promise warnings.
+    firebase.auth().getRedirectResult().catch(function () {});
 
     firebase.auth().onAuthStateChanged(async function (user) {
       currentUser = user;
