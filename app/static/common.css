@@ -7,8 +7,14 @@
   display: none !important;
 }
 
-@view-transition {
-  navigation: auto;
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+body {
+  overscroll-behavior-y: contain;
 }
 
 :root {
@@ -219,6 +225,7 @@
 
   cursor: pointer;
   flex-shrink: 0;
+  touch-action: manipulation;
 
   transition:
     background 0.15s ease,
@@ -463,10 +470,11 @@
     text-decoration: none;
     color: var(--text-muted);
     font: inherit;
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 500;
     letter-spacing: 0.01em;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     transition: color 0.12s ease;
   }
 
@@ -474,14 +482,25 @@
     color: #2d6a4f;
   }
 
-  .bnav-tab:hover,
+  .bnav-tab:hover {
+    color: #2d6a4f;
+  }
+
   .bnav-tab:active {
     color: #2d6a4f;
+    background: rgba(45, 106, 79, 0.08);
   }
 
   /* Per-page bottom clearance so content doesn't hide under the nav */
   .page,
   .vb-page {
     padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
   }
 }

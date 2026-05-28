@@ -88,8 +88,8 @@ button {
 }
 
 .btn {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: none;
   background-color: #4a90e2;
@@ -100,6 +100,7 @@ button {
   align-items: center;
   justify-content: center;
   padding: 0;
+  touch-action: manipulation;
 }
 
 .btn:hover {
@@ -110,8 +111,8 @@ button {
 /* .nav-btn and .nav-arrow live in common.css */
 
 .slow-btn {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   margin-left: 6px;
   padding: 0;
   border: 1px solid #ddd;
@@ -123,6 +124,7 @@ button {
   align-items: center;
   justify-content: center;
   vertical-align: middle;
+  touch-action: manipulation;
 }
 
 .slow-btn:hover {
@@ -269,6 +271,7 @@ button {
 .persona-btn,
 .number-btn {
   padding: 5px 13px;
+  min-height: 44px;
   border: none;
   background: transparent;
   color: var(--text-subtle);
@@ -276,6 +279,7 @@ button {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease;
+  touch-action: manipulation;
 }
 
 .persona-btn:hover:not(.active),
@@ -331,8 +335,8 @@ button {
 }
 
 .known-btn {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: 1px solid #ddd;
   border-radius: 50%;
@@ -342,6 +346,7 @@ button {
   align-items: center;
   justify-content: center;
   transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  touch-action: manipulation;
 }
 
 .known-btn:hover {
@@ -526,7 +531,7 @@ button {
 
   .topbar {
     position: sticky;
-    top: 0;
+    top: env(safe-area-inset-top);
     z-index: 50;
     margin: 0 -16px 16px;
     border-radius: 0;
@@ -534,6 +539,6 @@ button {
     border-right: none;
     border-top: none;
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-    padding: 10px 16px;
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
   }
 }
