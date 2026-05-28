@@ -14,10 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
   let blurHideTimer = null;
 
   function updatePrimaryAction() {
-    if (!searchInput || !searchButton) return;
-    const hasText = searchInput.value.trim().length > 0;
-    searchButton.classList.toggle("is-primary", hasText);
-    searchButton.disabled = !hasText;
   }
 
   function getLanguage() {

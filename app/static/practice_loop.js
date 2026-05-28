@@ -169,31 +169,31 @@
       const session = readPracticeSession();
       const badges = readPracticeBadges();
 
-      let badgesHtml = '';
-      if (badges.length > 0) {
-        let inner;
-        if (badges.length < BADGE_COMPACT_THRESHOLD) {
-          // Below threshold: one medal per completed session.
-          inner = badges
-            .map(function (n) { return `<span class="practice-badge"><span class="practice-badge-ribbon"></span>${n}</span>`; })
-            .join('');
-        } else {
-          // At or above threshold: one group per size showing count.
-          const counts = {};
-          badges.forEach(function (n) { counts[n] = (counts[n] || 0) + 1; });
-          inner = Object.keys(counts)
-            .map(Number)
-            .sort(function (a, b) { return a - b; })
-            .map(function (size) {
-              return `<span class="practice-badge-group">` +
-                `<span class="practice-badge-count">${counts[size]}</span>` +
-                `<span class="practice-badge-times">×</span>` +
-                `<span class="practice-badge"><span class="practice-badge-ribbon"></span>${size}</span>` +
-                `</span>`;
-            })
-            .join('');
-        }
+      const ghostBadge = '<span class="practice-badge practice-badge--ghost"><span class="practice-badge-ribbon"></span></span>';
+      let badgesHtml;
+      if (badges.length >= BADGE_COMPACT_THRESHOLD) {
+        // At or above threshold: compact grouped view, no ghost slots needed.
+        const counts = {};
+        badges.forEach(function (n) { counts[n] = (counts[n] || 0) + 1; });
+        const inner = Object.keys(counts)
+          .map(Number)
+          .sort(function (a, b) { return a - b; })
+          .map(function (size) {
+            return `<span class="practice-badge-group">` +
+              `<span class="practice-badge-count">${counts[size]}</span>` +
+              `<span class="practice-badge-times">×</span>` +
+              `<span class="practice-badge"><span class="practice-badge-ribbon"></span>${size}</span>` +
+              `</span>`;
+          })
+          .join('');
         badgesHtml = `<div class="practice-badges">${inner}</div>`;
+      } else {
+        // Below threshold: fill earned badges left-to-right, ghosts fill remaining slots up to 5.
+        const earned = badges
+          .map(function (n) { return `<span class="practice-badge"><span class="practice-badge-ribbon"></span>${n}</span>`; })
+          .join('');
+        const ghosts = ghostBadge.repeat(Math.max(0, 5 - badges.length));
+        badgesHtml = `<div class="practice-badges">${earned}${ghosts}</div>`;
       }
 
       if (session && Array.isArray(session.ids) && session.ids.length > 0) {
@@ -216,6 +216,10 @@
 
         practiceEl.innerHTML = `
           <div class="practice-panel-card">
+            <div class="practice-card-header">
+              <span class="practice-label">${ui['practice.label'] || 'Practice'}</span>
+              ${badgesHtml}
+            </div>
             <div class="practice-inprogress">
               <span class="practice-inprogress-label">
                 ${ui['practice.in_progress'] || 'In progress'}:
@@ -230,8 +234,6 @@
                 ${ui['practice.abandon'] || 'Abandon'}
               </button>
             </div>
-
-            ${badgesHtml}
           </div>
         `;
 
@@ -266,11 +268,11 @@
 
       practiceEl.innerHTML = `
         <div class="practice-panel-card">
+          <div class="practice-card-header">
+            <span class="practice-label">${ui['practice.label'] || 'Practice'}</span>
+            ${badgesHtml}
+          </div>
           <div class="practice-picker">
-            <span class="practice-label">
-              ${ui['practice.label'] || 'Practice'}
-            </span>
-
             <div class="practice-size-group">
               ${sizeButtons}
             </div>
@@ -281,8 +283,6 @@
               ${startLabel}
             </button>
           </div>
-
-          ${badgesHtml}
         </div>
       `;
 

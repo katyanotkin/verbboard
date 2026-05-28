@@ -34,6 +34,13 @@
       </a>
 
       <div class="topbar-nav-right">
+        {% if practice_loop_enabled %}
+        <a href="#practice-panel" class="practice-nav-chip">
+          <span>▶</span>
+          <span>{{ ui['practice.label'] }}</span>
+        </a>
+        {% endif %}
+
         <a
           href="/feedback?page=verbs&language={{ selected_language }}&return_to=/verbs?language={{ selected_language }}"
           class="feedback-link"
@@ -78,7 +85,7 @@
           class="vb-search"
           type="text"
           value="{{ search_value }}"
-          placeholder="{{ ui['home.search_placeholder_en'] if search_mode == 'en' else ui['verbs.search_placeholder'] }}"
+          placeholder="{{ ui['home.search_placeholder_en'] if search_mode == 'en' else ui['home.search_placeholder'] }}"
           data-placeholder-en="{{ ui['home.search_placeholder_en'] }}"
           autocomplete="off"
         />

@@ -71,15 +71,6 @@
     });
   }
 
-  // Disable submit button when search field is empty
-  if (vbSubmitBtn && searchEl) {
-    function updateVbSubmit() {
-      vbSubmitBtn.disabled = searchEl.value.trim().length === 0;
-    }
-    updateVbSubmit();
-    searchEl.addEventListener('input', updateVbSubmit);
-  }
-
   // Clear no-match notice on first keystroke
   const vbNotice = document.getElementById('vb-notice');
   if (vbNotice && searchEl) {
@@ -93,6 +84,13 @@
 
   practiceLoop.renderPracticePanel();
   practiceLoop.maybeShowWrapUp();
+
+  if (window.location.hash === '#practice-panel' && practiceEl) {
+    setTimeout(function () {
+      var chip = document.querySelector('a[href="#practice-panel"]');
+      if (chip) chip.click();
+    }, 50);
+  }
   // NOTE: syncPracticeBadgesFromServer() is intentionally NOT called here.
   // auth.js is deferred, so window.VerbBoardAuth does not exist yet at this
   // point. The call is made inside the vb:progress-hydrated handler below,
