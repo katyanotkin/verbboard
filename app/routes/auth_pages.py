@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
@@ -11,7 +13,14 @@ router = APIRouter()
 @router.get("/auth/signin", response_class=HTMLResponse, include_in_schema=False)
 def auth_signin_page() -> str:
     settings = load_settings()
-    firebase_cfg = settings.firebase_web_config_json or "null"
+    # Re-serialize through json.loads/dumps to guarantee well-formed JSON with no
+    # </script> injection risk, even if the raw secret value is malformed.
+    try:
+        firebase_cfg = json.dumps(
+            json.loads(settings.firebase_web_config_json or "null")
+        )
+    except (TypeError, ValueError):
+        firebase_cfg = "null"
     return f"""<!doctype html>
 <html>
 <head>

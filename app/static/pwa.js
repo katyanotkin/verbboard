@@ -1,5 +1,7 @@
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/static/sw.js");
+  // Register from /sw.js (root path, Service-Worker-Allowed: / header) so the
+  // SW scope covers all pages, not just /static/*.
+  navigator.serviceWorker.register("/sw.js");
 }
 
 let _installPrompt = null;

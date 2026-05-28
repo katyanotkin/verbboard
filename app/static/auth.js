@@ -55,6 +55,8 @@
     } else if (isMobile()) {
       // On mobile browsers popups become tabs and lose window.opener, so
       // Firebase can't pass the token back. Use full-page redirect instead.
+      // Flag so getRedirectResult() knows to surface errors on return.
+      sessionStorage.setItem('vb:redirect-pending', '1');
       await firebase.auth().signInWithRedirect(provider);
     } else {
       await firebase.auth().signInWithPopup(provider);
@@ -326,9 +328,16 @@
     firebase.initializeApp(config());
 
     // Complete any pending redirect sign-in (mobile browsers use signInWithRedirect).
-    firebase.auth().getRedirectResult().catch(function (err) {
+    // Only surface errors to the user when a redirect was actually initiated this
+    // session; otherwise every desktop page load would risk an unexpected alert.
+    firebase.auth().getRedirectResult().then(function () {
+      sessionStorage.removeItem('vb:redirect-pending');
+    }).catch(function (err) {
       console.error('VB getRedirectResult:', err.code, err.message);
-      alert('Sign-in error: ' + (err.code || err.message || err));
+      if (sessionStorage.getItem('vb:redirect-pending')) {
+        sessionStorage.removeItem('vb:redirect-pending');
+        alert('Sign-in error: ' + (err.code || err.message || err));
+      }
     });
 
     firebase.auth().onAuthStateChanged(async function (user) {
