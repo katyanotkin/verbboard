@@ -250,7 +250,7 @@ def test_home_bottom_nav_search_tab_active(client: TestClient) -> None:
         html = client.get("/?language=en").text
     # The Search tab must carry the active class; Browse must not precede it
     assert "bnav-tab--active" in html
-    browse_idx = html.index(">Browse<")
+    browse_idx = html.index(">List<")
     active_idx = html.index("bnav-tab--active")
     # Active marker appears before the Browse label in the Search tab block
     assert active_idx < browse_idx
@@ -260,7 +260,7 @@ def test_verbs_bottom_nav_browse_tab_active(client: TestClient) -> None:
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         html = client.get("/verbs?language=en").text
     # The Browse tab should be active; find it and confirm the class
-    browse_idx = html.index(">Browse<")
+    browse_idx = html.index(">List<")
     # Find the bnav-tab--active that precedes the Browse label
     nav_fragment = html[:browse_idx]
     assert "bnav-tab--active" in nav_fragment

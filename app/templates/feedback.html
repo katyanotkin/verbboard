@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="{{ lang }}" dir="{{ html_dir }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#2d6a4f"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <link rel="manifest" href="/static/manifest.json"/>
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/common.css"/>
+
+<script>window.UI = { "auth.login": {{ auth_login | tojson }}, "auth.logout": {{ auth_logout | tojson }} };</script>
+{% include '_firebase_auth.html' %}
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 24px auto;
+      max-width: 720px;
+      padding: 0 16px;
+      background: #f8fafc;
+      color: #1f2937;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      box-sizing: border-box;
+      font: inherit;
+      resize: vertical;
+    }
+
+    .question-block {
+      margin: 16px 0;
+      padding: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+    .choice-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .choice-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 999px;
+      background: white;
+      cursor: pointer;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .card-nav {
+      margin-bottom: 16px;
+    }
+
+    .card-nav h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    @media (max-width: 639px) {
+      body {
+        margin-top: 12px;
+        padding-bottom: calc(56px + env(safe-area-inset-bottom) + 16px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="topbar-nav card-nav">
+      <h1>{{ heading }}</h1>
+      <div class="topbar-nav-right">
+        <a href="{{ return_to }}" class="feedback-link">{{ back_label }}</a>
+        <div id="auth-slot" style="display:contents"></div>
+      </div>
+    </div>
+
+    {% if success %}
+    <div style="margin-bottom:16px;padding:12px 14px;background:#ecfdf5;border:1px solid #86efac;border-radius:12px;color:#166534;">
+      {{ success_msg }}
+    </div>
+    {% endif %}
+
+    {% if error_empty %}
+    <div style="margin-bottom:16px;padding:12px 14px;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;color:#991b1b;">
+      {{ error_empty_msg }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/feedback">
+      <input type="hidden" name="page" value="{{ page }}">
+      <input type="hidden" name="language" value="{{ language }}">
+      <input type="hidden" name="verb_id" value="{{ verb_id }}">
+      <input type="hidden" name="return_to" value="{{ return_to }}">
+      <input type="hidden" name="ui_language" value="{{ lang }}">
+
+      {% if poll_question and poll_options %}
+      <div class="question-block">
+        <div class="question-title">{{ poll_question }}</div>
+        <div class="choice-row">
+          {% for value, label in poll_options %}
+          <label class="choice-label">
+            <input type="radio" name="poll_answer" value="{{ value }}"> {{ label }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <textarea name="comment" placeholder="{{ comment_placeholder }}"></textarea>
+
+      <div class="actions">
+        <button type="submit" class="feedback-link">💬 {{ submit_label }}</button>
+      </div>
+    </form>
+  </div>
+
+{% set bnav_lang = language %}{% set bnav_active = '' %}{% set bnav_back_href = return_to %}{% include '_bottom_nav.html' %}
+
+<script defer src="/static/pwa.js"></script>
+</body>
+</html>
