@@ -565,3 +565,55 @@ def test_is_mobile_does_not_match_desktop_ua(
     is_mobile_re: _re.Pattern, ua: str
 ) -> None:
     assert not is_mobile_re.search(ua), f"Expected desktop UA NOT to match: {ua}"
+
+
+# ---------------------------------------------------------------------------
+# isOpera() UA regex — regression guard
+#
+# Opera uses the new-tab sign-in flow regardless of standalone/mobile mode
+# because signInWithRedirect is unreliable in Opera's engine. This regex
+# must match Opera for Android but NOT Chrome/Firefox/Safari desktop.
+# ---------------------------------------------------------------------------
+
+
+def _is_opera_pattern() -> str:
+    """Extract the isOpera() token from auth.js and verify it targets OPR/."""
+    auth_js = __import__("pathlib").Path("app/static/auth.js").read_text()
+    assert "isOpera" in auth_js, "isOpera() function not found in auth.js"
+    # Verify the function targets Opera's OPR/ token (the distinguishing UA marker).
+    assert "OPR" in auth_js, "isOpera() must test for OPR UA token"
+    return r"OPR/"
+
+
+@pytest.fixture(scope="module")
+def is_opera_re() -> _re.Pattern:
+    return _re.compile(_is_opera_pattern(), _re.IGNORECASE)
+
+
+_OPERA_UAS = [
+    # Opera for Android
+    "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.135 Mobile Safari/537.36 OPR/78.0.4093.184",
+    # Opera for Android (older)
+    "Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.74 Mobile Safari/537.36 OPR/67.1.3508.61297",
+]
+
+_NOT_OPERA_UAS = [
+    # Android Chrome (must NOT be caught by isOpera)
+    "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.135 Mobile Safari/537.36",
+    # Windows Chrome
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
+    # Opera Mini (handled separately by isMobile)
+    "Opera/9.80 (Android; Opera Mini/8.0.1807/36.1609; U; en) Presto/2.12.407 Version/12.50",
+]
+
+
+@pytest.mark.parametrize("ua", _OPERA_UAS)
+def test_is_opera_matches_opera_ua(is_opera_re: _re.Pattern, ua: str) -> None:
+    assert is_opera_re.search(ua), f"Expected Opera UA to match: {ua}"
+
+
+@pytest.mark.parametrize("ua", _NOT_OPERA_UAS)
+def test_is_opera_does_not_match_non_opera_ua(
+    is_opera_re: _re.Pattern, ua: str
+) -> None:
+    assert not is_opera_re.search(ua), f"Expected non-Opera UA NOT to match: {ua}"

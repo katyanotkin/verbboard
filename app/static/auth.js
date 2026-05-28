@@ -40,16 +40,22 @@
     return /Mobi|Android|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
   }
 
+  function isOpera() {
+    // Opera's redirect flow is unreliable across browser and home-screen
+    // contexts. Use the new-tab sign-in for all Opera users instead.
+    return /OPR\//i.test(navigator.userAgent);
+  }
+
   async function signIn() {
     const provider = new firebase.auth.GoogleAuthProvider();
     // Always show the account chooser, even when the browser has a cached
     // Google session -- prevents silent single-account auto-sign-in.
     provider.setCustomParameters({ prompt: 'select_account' });
-    if (isStandalone()) {
-      // In standalone PWA mode the redirect never comes back to the shell.
-      // Open a regular browser tab that handles sign-in there; Firebase syncs
-      // the auth state back via shared IndexedDB, firing onAuthStateChanged
-      // in the standalone shell when the user returns.
+    if (isStandalone() || isOpera()) {
+      // Standalone PWA: redirect never comes back to the shell.
+      // Opera: signInWithRedirect is unreliable in both browser and home-screen
+      // contexts. In both cases open a regular browser tab that does the sign-in
+      // there; Firebase syncs auth state back via shared IndexedDB.
       window.open('/auth/signin', '_blank');
     } else if (isMobile()) {
       // On mobile browsers popups become tabs and lose window.opener, so
