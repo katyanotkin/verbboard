@@ -182,7 +182,7 @@ gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-pro
 		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
                 --set-secrets $(COMMON_SECRETS) \
 		--allow-unauthenticated
-	$(eval _PROD_LABEL := $(if $(TAG),$(TAG),$(shell date +%Y%m%d)))
+	$(eval _PROD_LABEL := $(if $(TAG),release-$(TAG),prod-$(shell date +%Y%m%d)))
 	gcloud artifacts docker tags add $(STAGE_IMAGE) \
 		$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(_PROD_LABEL)
 	@echo "Tagged: $(_PROD_LABEL)"
