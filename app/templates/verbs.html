@@ -172,7 +172,7 @@
 
   </div>
 
-  {% set bnav_lang = selected_language %}{% set bnav_active = 'browse' %}{% include '_bottom_nav.html' %}
+  {% set bnav_lang = selected_language %}{% set bnav_active = 'browse' %}{% set bnav_back_href = '/?language=' ~ selected_language %}{% include '_bottom_nav.html' %}
 
   <script src="/static/storage.js"></script>
   <script src="/static/verbs_filters.js"></script>

@@ -210,6 +210,14 @@ def feedback_form(
     </form>
   </div>
 <nav class="bottom-nav" aria-label="Main navigation">
+  <a href="{escape(return_to)}" class="bnav-tab" aria-label="Back">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    <span>Back</span>
+  </a>
   <a href="/?language={bnav_lang}" class="bnav-tab" aria-current="false">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" stroke-width="2"
@@ -231,14 +239,22 @@ def feedback_form(
     </svg>
     <span>Browse</span>
   </a>
-  <button class="bnav-tab" onclick="window.VerbBoardAuth?.tapProfile()" aria-label="Profile">
+  <a href="/verbs?language={bnav_lang}#practice-panel" class="bnav-tab" aria-current="false">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polygon points="5 3 19 12 5 21 5 3"/>
+    </svg>
+    <span>Practice</span>
+  </a>
+  <button class="bnav-tab" onclick="window.VerbBoardAuth?.tapProfile()" aria-label="Login">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" stroke-width="2"
          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
       <circle cx="12" cy="7" r="4"/>
     </svg>
-    <span>Profile</span>
+    <span id="bnav-login-label">Login</span>
   </button>
 </nav>
 <script defer src="/static/pwa.js"></script>

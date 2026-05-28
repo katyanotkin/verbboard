@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
@@ -9,9 +10,20 @@ from core.settings import load_settings
 
 router = APIRouter()
 
+_SAFE_RETURN_RE = re.compile(r"^/[^/\\]")
+
+
+def _safe_return_to(url: str) -> str:
+    """Allow only relative paths starting with a single slash."""
+    if url == "/":
+        return "/"
+    if url and _SAFE_RETURN_RE.match(url):
+        return url
+    return ""
+
 
 @router.get("/auth/signin", response_class=HTMLResponse, include_in_schema=False)
-def auth_signin_page() -> str:
+def auth_signin_page(return_to: str = "") -> str:
     settings = load_settings()
     # Re-serialize through json.loads/dumps to guarantee well-formed JSON with no
     # </script> injection risk, even if the raw secret value is malformed.
@@ -21,6 +33,9 @@ def auth_signin_page() -> str:
         )
     except (TypeError, ValueError):
         firebase_cfg = "null"
+
+    safe_return = json.dumps(_safe_return_to(return_to))
+
     return f"""<!doctype html>
 <html>
 <head>
@@ -55,6 +70,7 @@ def auth_signin_page() -> str:
   <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
   <script>
     const cfg = window.FIREBASE_WEB_CONFIG;
+    const returnTo = {safe_return};
     const status = document.getElementById('status');
     const hint = document.getElementById('hint');
     const btn = document.getElementById('signin-btn');
@@ -72,9 +88,13 @@ def auth_signin_page() -> str:
         provider.setCustomParameters({{ prompt: 'select_account' }});
         await firebase.auth().signInWithPopup(provider);
         status.textContent = 'Signed in!';
-        hint.textContent = 'You can close this tab and return to VerbBoard.';
-        btn.hidden = true;
-        window.close();
+        if (returnTo) {{
+          window.location.href = returnTo;
+        }} else {{
+          hint.textContent = 'You can close this tab and return to VerbBoard.';
+          btn.hidden = true;
+          window.close();
+        }}
       }} catch (err) {{
         status.textContent = 'Sign-in failed.';
         hint.textContent = err.message || String(err);

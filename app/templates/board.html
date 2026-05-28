@@ -122,6 +122,6 @@
   </div>
 </div>
 
-{% set bnav_lang = language %}{% set bnav_active = 'browse' %}{% include '_bottom_nav.html' %}
+{% set bnav_lang = language %}{% set bnav_active = 'browse' %}{% set bnav_back_href = '/verbs?language=' ~ language %}{% include '_bottom_nav.html' %}
 </body>
 </html>

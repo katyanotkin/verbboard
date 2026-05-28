@@ -1,4 +1,18 @@
+{% set bnav_back_href = bnav_back_href if bnav_back_href is defined else '' %}
 <nav class="bottom-nav" aria-label="Main navigation">
+
+  {% if bnav_back_href %}
+  <a href="{{ bnav_back_href }}"
+     class="bnav-tab"
+     aria-label="Back">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    <span>Back</span>
+  </a>
+  {% endif %}
 
   <a href="/?language={{ bnav_lang }}"
      class="bnav-tab{% if bnav_active == 'search' %} bnav-tab--active{% endif %}"
@@ -27,16 +41,27 @@
     <span>Browse</span>
   </a>
 
+  <a href="/verbs?language={{ bnav_lang }}#practice-panel"
+     class="bnav-tab{% if bnav_active == 'practice' %} bnav-tab--active{% endif %}"
+     aria-current="{{ 'page' if bnav_active == 'practice' else 'false' }}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polygon points="5 3 19 12 5 21 5 3"/>
+    </svg>
+    <span>Practice</span>
+  </a>
+
   <button class="bnav-tab{% if bnav_active == 'profile' %} bnav-tab--active{% endif %}"
           onclick="window.VerbBoardAuth?.tapProfile()"
-          aria-label="Profile">
+          aria-label="Login">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" stroke-width="2"
          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
       <circle cx="12" cy="7" r="4"/>
     </svg>
-    <span>Profile</span>
+    <span id="bnav-login-label">Login</span>
   </button>
 
 </nav>

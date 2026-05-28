@@ -40,29 +40,22 @@
     return /Mobi|Android|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
   }
 
-  function isOpera() {
-    // Opera's redirect flow is unreliable across browser and home-screen
-    // contexts. Use the new-tab sign-in for all Opera users instead.
-    return /OPR\//i.test(navigator.userAgent);
-  }
-
   async function signIn() {
     const provider = new firebase.auth.GoogleAuthProvider();
     // Always show the account chooser, even when the browser has a cached
     // Google session -- prevents silent single-account auto-sign-in.
     provider.setCustomParameters({ prompt: 'select_account' });
-    if (isStandalone() || isOpera()) {
-      // Standalone PWA: redirect never comes back to the shell.
-      // Opera: signInWithRedirect is unreliable in both browser and home-screen
-      // contexts. In both cases open a regular browser tab that does the sign-in
-      // there; Firebase syncs auth state back via shared IndexedDB.
+    if (isStandalone()) {
+      // Standalone PWA: opening a browser tab crosses the PWA/browser
+      // boundary and focuses the new tab. Firebase syncs auth state back
+      // to the PWA shell via IndexedDB once sign-in completes.
       window.open('/auth/signin', '_blank');
     } else if (isMobile()) {
-      // On mobile browsers popups become tabs and lose window.opener, so
-      // Firebase can't pass the token back. Use full-page redirect instead.
-      // Flag so getRedirectResult() knows to surface errors on return.
-      sessionStorage.setItem('vb:redirect-pending', '1');
-      await firebase.auth().signInWithRedirect(provider);
+      // Mobile browser: window.open(_blank) opens in the background on
+      // Chrome Android (no focus switch). Navigate the current page to the
+      // sign-in page instead; it redirects back via return_to after success.
+      var returnTo = encodeURIComponent(location.pathname + location.search);
+      window.location.href = '/auth/signin?return_to=' + returnTo;
     } else {
       await firebase.auth().signInWithPopup(provider);
     }
@@ -157,6 +150,12 @@
     }
 
     target.appendChild(button);
+
+    const bnavLabel = document.getElementById('bnav-login-label');
+    if (bnavLabel) {
+      // Bottom nav uses English to match the other hardcoded nav labels.
+      bnavLabel.textContent = currentUser ? 'Logout' : 'Login';
+    }
   }
 
   async function hydrateProgress() {
@@ -331,19 +330,6 @@
     }
 
     firebase.initializeApp(config());
-
-    // Complete any pending redirect sign-in (mobile browsers use signInWithRedirect).
-    // Only surface errors to the user when a redirect was actually initiated this
-    // session; otherwise every desktop page load would risk an unexpected alert.
-    firebase.auth().getRedirectResult().then(function () {
-      sessionStorage.removeItem('vb:redirect-pending');
-    }).catch(function (err) {
-      console.error('VB getRedirectResult:', err.code, err.message);
-      if (sessionStorage.getItem('vb:redirect-pending')) {
-        sessionStorage.removeItem('vb:redirect-pending');
-        alert('Sign-in error: ' + (err.code || err.message || err));
-      }
-    });
 
     firebase.auth().onAuthStateChanged(async function (user) {
       currentUser = user;
