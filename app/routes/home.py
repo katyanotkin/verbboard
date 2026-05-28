@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import quote
@@ -13,10 +14,13 @@ from core.admin_logging import log_missing_verb_search
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
 from core.registry import all_plugins
-from core.search_utils import find_best_entry
+from core.search_utils import find_best_entry, tokenize_text
 from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 from core.translation_service import translate_search_query
+from core.verb_loader import load_entries_for_language
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -85,11 +89,23 @@ async def search_verb_by_lang(
         settings.google_cloud_project,
     )
 
+    logger.debug("search_verb_by_lang q=%r translated=%r lang=%s", query, translated, language)
+
     if translated:
         doc = find_verb_by_search_extract(language, translated)
+
         if not doc:
-            entries = _load_entries(language)
-            matched = find_best_entry(entries, translated)
+            # Gemini may return multi-word output despite the single-word prompt;
+            # try each token so "бегать/бежать" or "correr." still resolves.
+            for token in tokenize_text(translated):
+                doc = find_verb_by_search_extract(language, token)
+                if doc:
+                    break
+
+        if not doc:
+            # Fuzzy fallback against all cached verbs (60 s TTL).
+            all_entries = load_entries_for_language(language=language)
+            matched = find_best_entry(all_entries, translated)
             if matched:
                 doc = {"verb_id": matched.id}
 
