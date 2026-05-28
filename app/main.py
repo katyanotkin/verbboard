@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 class _CachedStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope: Scope):
         response = await super().get_response(path, scope)
-        response.headers["Cache-Control"] = "public, max-age=3600"
+        response.headers["Cache-Control"] = "no-cache"
         return response
 
 
