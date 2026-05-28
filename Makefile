@@ -41,7 +41,8 @@ COMMON_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
 	cache-audio-stage cache-audio-prod \
 	audit-audio-stage audit-audio-prod \
-	clean-audio-stage clean-audio-prod
+	clean-audio-stage clean-audio-prod \
+	docker-tag
 
 ## Show available commands
 help:
@@ -169,7 +170,7 @@ gcp-stage-image: gcp-check ## GCP: print stage image reference
 		--format='value(spec.template.spec.containers[0].image)'
 
 ## GCP: promote currently deployed stage image to prod
-gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod
+gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod (TAG=label, default: YYYYMMDD)
 	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
 	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
 	@echo "Promoting stage image to prod:"
@@ -181,6 +182,10 @@ gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-pro
 		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
                 --set-secrets $(COMMON_SECRETS) \
 		--allow-unauthenticated
+	$(eval _PROD_LABEL := $(if $(TAG),$(TAG),$(shell date +%Y%m%d)))
+	gcloud artifacts docker tags add $(STAGE_IMAGE) \
+		$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(_PROD_LABEL)
+	@echo "Tagged: $(_PROD_LABEL)"
 
 ## GCP: create bucket if missing
 gcp-ensure-bucket: gcp-check
