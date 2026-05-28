@@ -69,6 +69,11 @@
       color: #374151;
       font-size: 1rem;
     }
+
+    /* On mobile the bottom nav Profile tab handles auth — hide the duplicate */
+    @media (max-width: 639px) {
+      .back #auth-slot { display: none !important; }
+    }
   </style>
 </head>
 <body>

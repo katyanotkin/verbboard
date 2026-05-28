@@ -34,11 +34,10 @@
 
   function isMobile() {
     // Popups become full tabs on mobile and lose window.opener, breaking
-    // Firebase's popup auth flow. Use redirect for confirmed mobile devices only;
-    // do NOT use window.innerWidth (a narrow desktop window would trigger redirect
-    // which fails on unauthorized domains).
-    return navigator.maxTouchPoints > 0
-      || /Mobi|Android|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
+    // Firebase's popup auth flow. Use UA only -- maxTouchPoints fires on
+    // touchscreen laptops and window.innerWidth on narrow desktop windows,
+    // both of which should keep the popup flow.
+    return /Mobi|Android|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
   }
 
   async function signIn() {
