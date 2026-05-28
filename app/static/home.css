@@ -169,10 +169,10 @@ input[type="text"]:focus {
   margin-top: 10px;
 
   border-radius: 999px;
-  border: 1.5px solid var(--button-primary-bg);
+  border: 1.5px solid #93c5fd;
 
-  background: transparent;
-  color: var(--button-primary-bg);
+  background: #eff6ff;
+  color: var(--color-navy);
 
   font-size: 0.98rem;
   font-weight: 700;
@@ -180,13 +180,14 @@ input[type="text"]:focus {
 
   transition:
     background 0.12s ease,
+    border-color 0.12s ease,
     color 0.12s ease,
     transform 0.12s ease;
 }
 
 .browse-practice-btn:hover {
-  background: var(--button-primary-bg);
-  color: var(--button-primary-text);
+  background: #dbeafe;
+  border-color: var(--button-primary-bg);
   transform: translateY(-1px);
 }
 
