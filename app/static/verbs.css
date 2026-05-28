@@ -8,6 +8,27 @@
 /* ── header ──────────────────────────────────────────────────────────────── */
 /* Nav row uses shared .topbar-nav / .topbar-nav-right / .nav-btn from common.css */
 
+.practice-nav-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid #93c5fd;
+  background: #eff6ff;
+  color: var(--color-navy);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.practice-nav-chip:hover {
+  background: #dbeafe;
+  border-color: var(--button-primary-bg);
+}
+
 .vb-title {
   margin: 0 0 10px;
   font-size: 20px;
@@ -245,10 +266,21 @@
 }
 
 .practice-panel-card {
-  border: 1px solid #bfdbfe;
+  border: 1px solid #93c5fd;
+  border-top: 3px solid var(--button-primary-bg);
   border-radius: 12px;
   overflow: hidden;
   background: #eff6ff;
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.08);
+}
+
+.practice-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid #bfdbfe;
+  flex-wrap: wrap;
 }
 
 .practice-picker,
@@ -269,10 +301,12 @@
 }
 
 .practice-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-navy);
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .practice-size-group {
@@ -336,7 +370,7 @@
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding: 4px 14px 10px;
+  padding-top: 4px;
   flex-wrap: wrap;
 }
 

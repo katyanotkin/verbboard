@@ -216,6 +216,10 @@
 
         practiceEl.innerHTML = `
           <div class="practice-panel-card">
+            <div class="practice-card-header">
+              <span class="practice-label">${ui['practice.label'] || 'Practice'}</span>
+              ${badgesHtml}
+            </div>
             <div class="practice-inprogress">
               <span class="practice-inprogress-label">
                 ${ui['practice.in_progress'] || 'In progress'}:
@@ -230,8 +234,6 @@
                 ${ui['practice.abandon'] || 'Abandon'}
               </button>
             </div>
-
-            ${badgesHtml}
           </div>
         `;
 
@@ -266,11 +268,11 @@
 
       practiceEl.innerHTML = `
         <div class="practice-panel-card">
+          <div class="practice-card-header">
+            <span class="practice-label">${ui['practice.label'] || 'Practice'}</span>
+            ${badgesHtml}
+          </div>
           <div class="practice-picker">
-            <span class="practice-label">
-              ${ui['practice.label'] || 'Practice'}
-            </span>
-
             <div class="practice-size-group">
               ${sizeButtons}
             </div>
@@ -281,8 +283,6 @@
               ${startLabel}
             </button>
           </div>
-
-          ${badgesHtml}
         </div>
       `;
 

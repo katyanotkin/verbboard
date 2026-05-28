@@ -31,6 +31,13 @@
       </a>
 
       <div class="topbar-nav-right">
+        {% if practice_loop_enabled %}
+        <a href="#practice-panel" class="practice-nav-chip">
+          <span>▶</span>
+          <span>{{ ui['practice.label'] }}</span>
+        </a>
+        {% endif %}
+
         <a
           href="/feedback?page=verbs&language={{ selected_language }}&return_to=/verbs?language={{ selected_language }}"
           class="feedback-link"
