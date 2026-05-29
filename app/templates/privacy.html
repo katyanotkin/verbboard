@@ -30,12 +30,6 @@
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
     }
 
-    @media (max-width: 639px) {
-      .container {
-        margin-bottom: calc(56px + env(safe-area-inset-bottom) + 16px);
-      }
-    }
-
     h1 {
       text-align: center;
       margin-bottom: 4px;
@@ -132,8 +126,6 @@
     <a href="/" class="feedback-link">Home</a>
   </div>
 </div>
-
-{% set bnav_lang = '' %}{% set bnav_active = '' %}{% set bnav_back_href = '/' %}{% include '_bottom_nav.html' %}
 
 <script defer src="/static/pwa.js"></script>
 </body>
