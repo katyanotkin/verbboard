@@ -86,10 +86,12 @@
   practiceLoop.maybeShowWrapUp();
 
   if (window.location.hash === '#practice-panel' && practiceEl) {
+    // Use scrollIntoView instead of chip.click() -- Chrome's @view-transition
+    // CSS interferes with the browser's native scroll-to-hash on navigation,
+    // and chip.click() on an already-set hash does not re-scroll in Chrome.
     setTimeout(function () {
-      var chip = document.querySelector('a[href="#practice-panel"]');
-      if (chip) chip.click();
-    }, 50);
+      practiceEl.scrollIntoView({ block: 'start' });
+    }, 80);
   }
 
   // W2: keep Practice bottom-nav tab active while hash == #practice-panel
