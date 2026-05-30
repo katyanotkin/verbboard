@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from urllib.parse import unquote, urlencode
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
@@ -15,19 +15,11 @@ from core.polls import (
     get_poll_question,
     get_poll_valid_answers,
 )
+from core.safe_return import safe_return_to
 from core.settings import load_settings
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
-
-
-def _safe_return_to(return_to: str) -> str:
-    decoded = unquote(return_to or "/")
-    if not decoded.startswith("/"):
-        return "/"
-    if decoded.startswith("//"):
-        return "/"
-    return decoded
 
 
 @router.get("/feedback")
@@ -40,7 +32,7 @@ def feedback_form(
     success: str = "",
     error: str = "",
 ):
-    return_to = _safe_return_to(return_to)
+    return_to = safe_return_to(return_to, fallback="/")
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
     settings = load_settings()
@@ -88,7 +80,7 @@ def submit_feedback(
     return_to: str = Form("/"),
     ui_language: str = Form(""),
 ):
-    return_to = _safe_return_to(return_to)
+    return_to = safe_return_to(return_to, fallback="/")
     clean_comment = comment.strip()
 
     if poll_answer not in get_poll_valid_answers(ACTIVE_POLL_ID or ""):
