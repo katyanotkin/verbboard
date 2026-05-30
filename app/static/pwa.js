@@ -9,10 +9,9 @@ let _installPrompt = null;
 window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault();
   _installPrompt = e;
-  // Install button is for mobile only; desktop can install via the browser menu
-  if (window.matchMedia("(max-width: 767px)").matches) {
-    document.getElementById("install-btn")?.removeAttribute("hidden");
-  }
+  // Shown on all screen sizes while testing the install flow.
+  // Restrict back to mobile-only once verified: wrap in matchMedia("(max-width:767px)").
+  document.getElementById("install-btn")?.removeAttribute("hidden");
 });
 
 window.addEventListener("appinstalled", () => {
