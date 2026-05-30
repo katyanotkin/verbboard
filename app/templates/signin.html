@@ -10,21 +10,23 @@
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; margin: 0; background: #f8fafc; color: #374151;
     }
-    .msg { text-align: center; padding: 24px; }
+    /* max-width prevents the card from floating in a sea of whitespace on tablets */
+    .msg { text-align: center; padding: 24px; max-width: 360px; margin: 0 auto; }
     .msg p { margin: 8px 0; font-size: 1rem; }
     .msg small { display: block; color: #6b7280; font-size: 0.85rem; margin-top: 8px; }
     #signin-btn {
       margin-top: 16px; padding: 12px 24px; font-size: 1rem; font-weight: 600;
-      background: #2d6a4f; color: white; border: none; border-radius: 999px;
-      cursor: pointer;
+      background: #2d6a4f; /* matches --color-nav-active in common.css */
+      color: white; border: none; border-radius: 999px; cursor: pointer;
     }
     #signin-btn:disabled { opacity: 0.6; cursor: default; }
+    #signin-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
   </style>
 </head>
 <body>
   <div class="msg">
     <p id="status">Tap the button to sign in to VerbBoard.</p>
-    <button id="signin-btn" onclick="doSignIn()">Sign in with Google</button>
+    <button id="signin-btn" type="button" onclick="doSignIn()">Sign in with Google</button>
     <small id="hint"></small>
   </div>
   <script>window.FIREBASE_WEB_CONFIG = {{ firebase_cfg_json | safe }};</script>
@@ -53,11 +55,11 @@
         if (returnTo) {
           window.location.href = returnTo;
         } else {
-          // Notify the PWA shell window (if this tab was opened by it) so it
-          // can refresh auth state without waiting for IndexedDB propagation.
-          try { window.opener?.postMessage('vb:signed-in', location.origin); } catch (_) {}
+          // Show hint before attempting close so it's visible if close() is a no-op.
           hint.textContent = 'You can close this tab and return to VerbBoard.';
           btn.hidden = true;
+          // Notify the PWA shell window (future hook; Firebase IndexedDB sync also fires).
+          try { window.opener?.postMessage('vb:signed-in', location.origin); } catch (_) {}
           window.close();
         }
       } catch (err) {

@@ -14,6 +14,7 @@ from core.admin_logging import log_missing_verb_search
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
 from core.registry import all_plugins
+from core.safe_return import safe_return_to
 from core.search_utils import find_best_entry, tokenize_text
 from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
@@ -59,15 +60,6 @@ def set_language(language: str):
     return response
 
 
-def _safe_return_to(return_to: str | None) -> str | None:
-    """Only allow same-origin relative paths as redirect targets."""
-    if not return_to:
-        return None
-    if not return_to.startswith("/") or "://" in return_to:
-        return None
-    return return_to
-
-
 @router.get("/search_verb_by_lang", response_model=None)
 async def search_verb_by_lang(
     request: Request,
@@ -89,7 +81,9 @@ async def search_verb_by_lang(
         settings.google_cloud_project,
     )
 
-    logger.debug("search_verb_by_lang q=%r translated=%r lang=%s", query, translated, language)
+    logger.debug(
+        "search_verb_by_lang q=%r translated=%r lang=%s", query, translated, language
+    )
 
     if translated:
         doc = find_verb_by_search_extract(language, translated)
@@ -129,7 +123,7 @@ async def search_verb_by_lang(
         page="home",
         source="search_by_lang",
     )
-    base = _safe_return_to(return_to) or f"/?language={language}"
+    base = safe_return_to(return_to or "", fallback="") or f"/?language={language}"
     sep = "&" if "?" in base else "?"
     response = RedirectResponse(
         url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&search_mode={source_lang}"
@@ -181,7 +175,7 @@ def search_verb(
         source="search",
     )
 
-    base = _safe_return_to(return_to) or f"/?language={language}"
+    base = safe_return_to(return_to or "", fallback="") or f"/?language={language}"
     sep = "&" if "?" in base else "?"
     response = RedirectResponse(
         url=f"{base}{sep}not_available=1&search={quote(query, safe='')}"

@@ -13,19 +13,30 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 
+def _html_safe_json(value: object) -> str:
+    """Serialize to JSON with <, >, & unicode-escaped for safe inline <script> use."""
+    return (
+        json.dumps(value)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
+
+
 @router.get("/auth/signin", response_class=HTMLResponse, include_in_schema=False)
 def auth_signin_page(request: Request, return_to: str = "") -> HTMLResponse:
     settings = load_settings()
-    # Re-serialize through json.loads/dumps to guarantee well-formed JSON with no
-    # </script> injection risk, even if the raw secret value is malformed.
+    # Re-serialize to guarantee well-formed JSON, then unicode-escape <, >, & so
+    # the value is safe inside an HTML <script> block (json.dumps alone does not
+    # escape these, and a value containing </script> would break the block).
     try:
-        firebase_cfg_json = json.dumps(
+        firebase_cfg_json = _html_safe_json(
             json.loads(settings.firebase_web_config_json or "null")
         )
     except (TypeError, ValueError):
         firebase_cfg_json = "null"
 
-    safe_return_json = json.dumps(safe_return_to(return_to, fallback=""))
+    safe_return_json = _html_safe_json(safe_return_to(return_to, fallback=""))
 
     return templates.TemplateResponse(
         request,

@@ -185,3 +185,83 @@ def test_sw_precache_includes_learn_js() -> None:
 
     sw = pathlib.Path("app/static/sw.js").read_text()
     assert "/static/learn.js" in sw
+
+
+# ---------------------------------------------------------------------------
+# QA-1: home.py search redirect rejects unsafe return_to (W3-x)
+# ---------------------------------------------------------------------------
+
+
+def test_home_search_rejects_double_slash_return_to(
+    client: TestClient, monkeypatch
+) -> None:
+    monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda *a: None)
+    monkeypatch.setattr("app.routes.home.list_verbs_recent", lambda *a, **kw: [])
+    monkeypatch.setattr("app.routes.home.find_best_entry", lambda *a: None)
+    resp = client.get(
+        "/search_verb?language=en&q=notfound&return_to=//evil.com",
+        follow_redirects=False,
+    )
+    assert resp.status_code in (302, 303, 307)
+    assert "evil.com" not in resp.headers["location"]
+
+
+def test_home_search_rejects_backslash_return_to(
+    client: TestClient, monkeypatch
+) -> None:
+    monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda *a: None)
+    monkeypatch.setattr("app.routes.home.list_verbs_recent", lambda *a, **kw: [])
+    monkeypatch.setattr("app.routes.home.find_best_entry", lambda *a: None)
+    resp = client.get(
+        "/search_verb?language=en&q=notfound&return_to=/\\evil",
+        follow_redirects=False,
+    )
+    assert resp.status_code in (302, 303, 307)
+    assert "\\evil" not in resp.headers["location"]
+
+
+def test_home_search_accepts_valid_return_to(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda *a: None)
+    monkeypatch.setattr("app.routes.home.list_verbs_recent", lambda *a, **kw: [])
+    monkeypatch.setattr("app.routes.home.find_best_entry", lambda *a: None)
+    resp = client.get(
+        "/search_verb?language=en&q=notfound&return_to=/verbs%3Flanguage%3Den",
+        follow_redirects=False,
+    )
+    assert resp.status_code in (302, 303, 307)
+    assert "/verbs" in resp.headers["location"]
+
+
+# ---------------------------------------------------------------------------
+# QA-3: firebase_cfg_json XSS guard -- </script> neutralized by json round-trip
+# ---------------------------------------------------------------------------
+
+
+def test_auth_signin_firebase_config_script_injection_neutralized(
+    client: TestClient,
+) -> None:
+    import dataclasses
+    from unittest.mock import patch
+
+    from core.settings import load_settings as _real_load_settings
+
+    malicious = '{"apiKey":"</script><script>alert(1)</script>"}'
+    settings = dataclasses.replace(
+        _real_load_settings(), firebase_web_config_json=malicious
+    )
+    with patch("app.routes.auth_pages.load_settings", return_value=settings):
+        html = client.get("/auth/signin").text
+    assert "</script><script>" not in html
+
+
+# ---------------------------------------------------------------------------
+# QA-4: safe_return_json is a quoted JS string literal in signin response
+# ---------------------------------------------------------------------------
+
+
+def test_auth_signin_return_to_is_quoted_js_string_literal(
+    client: TestClient,
+) -> None:
+    """safe_return_json must render as a JS string with surrounding quotes."""
+    html = client.get("/auth/signin?return_to=/verbs%3Flanguage%3Den").text
+    assert '"/verbs?language=en"' in html

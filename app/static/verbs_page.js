@@ -98,8 +98,14 @@
     var browseTab = document.querySelector('.bottom-nav .bnav-tab[href*="/verbs"]:not([href*="#"])');
     function syncBnavPractice() {
       var on = location.hash === '#practice-panel';
-      if (practiceTab) practiceTab.classList.toggle('bnav-tab--active', on);
-      if (browseTab) browseTab.classList.toggle('bnav-tab--active', !on);
+      if (practiceTab) {
+        practiceTab.classList.toggle('bnav-tab--active', on);
+        practiceTab.setAttribute('aria-current', on ? 'page' : 'false');
+      }
+      if (browseTab) {
+        browseTab.classList.toggle('bnav-tab--active', !on);
+        browseTab.setAttribute('aria-current', on ? 'false' : 'page');
+      }
     }
     syncBnavPractice();
     window.addEventListener('hashchange', syncBnavPractice);

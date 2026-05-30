@@ -52,7 +52,8 @@
     <span>Practice</span>
   </a>
 
-  <button class="bnav-tab{% if bnav_active == 'profile' %} bnav-tab--active{% endif %}"
+  <button type="button"
+          class="bnav-tab{% if bnav_active == 'profile' %} bnav-tab--active{% endif %}"
           onclick="window.VerbBoardAuth?.tapProfile()"
           aria-label="Login">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"

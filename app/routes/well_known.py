@@ -13,7 +13,9 @@ _ASSETLINKS = [
         "target": {
             "namespace": "android_app",
             "package_name": "com.verbboard.app",
-            "sha256_cert_fingerprints": ["PLACEHOLDER"],
+            "sha256_cert_fingerprints": [
+                "2F:EF:38:E8:A1:E4:EA:8D:90:A9:1F:22:43:19:F6:06:68:C8:6D:09:45:D5:58:F1:A8:0D:83:67:44:4F:1C:85"
+            ],
         },
     }
 ]
