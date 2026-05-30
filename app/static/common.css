@@ -447,6 +447,10 @@ body {
     flex-direction: row-reverse;
   }
 
+  [dir="rtl"] .bnav-tab[aria-label="Back"] svg {
+    transform: scaleX(-1);
+  }
+
   .bnav-tab {
     flex: 1;
     display: flex;
