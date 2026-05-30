@@ -19,6 +19,7 @@ _ASSETLINKS = [
 ]
 
 _SW_PATH = os.path.join(os.path.dirname(__file__), "..", "static", "sw.js")
+_SW_CONTENT = open(_SW_PATH).read()
 
 
 @router.get("/.well-known/assetlinks.json", include_in_schema=False)
@@ -31,9 +32,8 @@ async def service_worker() -> Response:
     # Serve sw.js from the root path so its default scope is "/".
     # Service-Worker-Allowed: / overrides the path-based scope restriction that
     # would otherwise limit the SW to /static/ when registered from /static/sw.js.
-    content = open(_SW_PATH).read()
     return Response(
-        content=content,
+        content=_SW_CONTENT,
         media_type="application/javascript",
         headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"},
     )
