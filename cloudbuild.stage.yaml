@@ -1,6 +1,6 @@
 availableSecrets:
   secretManager:
-    - versionName: projects/$PROJECT_ID/secrets/verbboard-firebase-web-config/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/verbboard-firebase-web-config-stage/versions/latest
       env: FIREBASE_WEB_CONFIG_JSON
 
 steps:
@@ -29,7 +29,7 @@ steps:
       - --platform=managed
       - --allow-unauthenticated
       - --set-env-vars=ENVIRONMENT=stage,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,AUDIO_BUCKET=verbboard-audio-stage,VERB_SIGNALS_COLLECTION=demand_signal,VERB_SIGNAL_LABELS_COLLECTION=demand_signal_labels,VERBS_COLLECTION=verbs,LOG_LEVEL=INFO,PRACTICE_LOOP_ENABLED=true
-      - --set-secrets=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest
+      - --set-secrets=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config-stage:latest
 
 images:
   - us-east1-docker.pkg.dev/$PROJECT_ID/verbboard/verbboard:$COMMIT_SHA
