@@ -23,7 +23,8 @@ IMAGE_TAG=$(shell git rev-parse --short HEAD)
 GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 COMMON_ENV_VARS=GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),PRACTICE_LOOP_ENABLED=true
-COMMON_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest
+STAGE_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config-stage:latest
+PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest
 
 .DEFAULT_GOAL := help
 
@@ -184,7 +185,7 @@ gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branc
 		--allow-unauthenticated \
 		--project=$(GCP_PROJECT) \
 		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE) \
-		--set-secrets=$(COMMON_SECRETS)
+		--set-secrets=$(STAGE_SECRETS)
 
 ## GCP: promote currently deployed stage image to prod
 gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod (TAG=label, default: YYYYMMDD)
@@ -197,7 +198,7 @@ gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-pro
 		--region $(GCP_REGION) \
 		--platform managed \
 		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
-                --set-secrets $(COMMON_SECRETS) \
+                --set-secrets $(PROD_SECRETS) \
 		--allow-unauthenticated
 	$(eval _PROD_LABEL := $(if $(TAG),release-$(TAG),prod-$(shell date +%Y%m%d)))
 	gcloud artifacts docker tags add $(STAGE_IMAGE) \
