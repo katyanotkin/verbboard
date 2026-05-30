@@ -153,8 +153,10 @@
 
     const bnavLabel = document.getElementById('bnav-login-label');
     if (bnavLabel) {
-      // Bottom nav uses English to match the other hardcoded nav labels.
-      bnavLabel.textContent = currentUser ? 'Logout' : 'Login';
+      const bnavText = currentUser ? 'Logout' : 'Login';
+      bnavLabel.textContent = bnavText;
+      const bnavBtn = bnavLabel.closest('button');
+      if (bnavBtn) bnavBtn.setAttribute('aria-label', bnavText);
     }
   }
 

@@ -91,6 +91,19 @@
       if (chip) chip.click();
     }, 50);
   }
+
+  // W2: keep Practice bottom-nav tab active while hash == #practice-panel
+  (function () {
+    var practiceTab = document.querySelector('.bottom-nav .bnav-tab[href*="#practice-panel"]');
+    var browseTab = document.querySelector('.bottom-nav .bnav-tab[href*="/verbs"]:not([href*="#"])');
+    function syncBnavPractice() {
+      var on = location.hash === '#practice-panel';
+      if (practiceTab) practiceTab.classList.toggle('bnav-tab--active', on);
+      if (browseTab) browseTab.classList.toggle('bnav-tab--active', !on);
+    }
+    syncBnavPractice();
+    window.addEventListener('hashchange', syncBnavPractice);
+  })();
   // NOTE: syncPracticeBadgesFromServer() is intentionally NOT called here.
   // auth.js is deferred, so window.VerbBoardAuth does not exist yet at this
   // point. The call is made inside the vb:progress-hydrated handler below,

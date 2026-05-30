@@ -9,6 +9,10 @@ Coverage:
 - PWA meta tags: manifest link, theme-color, viewport-fit=cover present on all pages
 - Session tracker pure-Python helpers: ensure_sid, get_seen_pages, set_seen_cookie
 - tracked_page helper in daily_counters
+- manifest.json scope field (W8)
+- Bottom-nav bnav_lang URL encoding (W6)
+- Bottom-nav login button aria-label initial state and JS update (W7)
+- Practice tab href and verbs_page.js hashchange handler (W2)
 """
 
 from __future__ import annotations
@@ -601,3 +605,92 @@ def test_is_mobile_does_not_match_desktop_ua(
     is_mobile_re: _re.Pattern, ua: str
 ) -> None:
     assert not is_mobile_re.search(ua), f"Expected desktop UA NOT to match: {ua}"
+
+
+# ---------------------------------------------------------------------------
+# W8: manifest.json scope field
+# ---------------------------------------------------------------------------
+
+
+def test_manifest_has_scope_root() -> None:
+    """manifest.json must declare scope '/' so the SW controls the whole origin."""
+    import json
+    import pathlib
+
+    manifest = json.loads(pathlib.Path("app/static/manifest.json").read_text())
+    assert manifest.get("scope") == "/"
+
+
+# ---------------------------------------------------------------------------
+# W6: bnav_lang is URL-encoded in bottom-nav hrefs
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "url,lang,patch_target",
+    [
+        ("/?language=en", "en", "app.routes.home.list_verbs_recent"),
+        ("/?language=ru", "ru", "app.routes.home.list_verbs_recent"),
+        ("/?language=he", "he", "app.routes.home.list_verbs_recent"),
+        ("/verbs?language=en", "en", "app.routes.verbs.load_entries_for_language"),
+        ("/verbs?language=ru", "ru", "app.routes.verbs.load_entries_for_language"),
+    ],
+)
+def test_bottom_nav_lang_hrefs_contain_language(
+    client: TestClient, url: str, lang: str, patch_target: str
+) -> None:
+    """Bottom-nav Search and Browse links must carry the current language."""
+    with patch(patch_target, return_value=[]):
+        html = client.get(url).text
+    assert f'href="/?language={lang}"' in html
+    assert f'href="/verbs?language={lang}"' in html
+
+
+# ---------------------------------------------------------------------------
+# W7: bottom-nav login button aria-label
+# ---------------------------------------------------------------------------
+
+
+def test_bottom_nav_login_button_initial_aria_label(client: TestClient) -> None:
+    """Profile button must start with aria-label='Login' before auth.js runs."""
+    with patch("app.routes.home.list_verbs_recent", return_value=[]):
+        html = client.get("/?language=en").text
+    assert 'aria-label="Login"' in html
+
+
+def test_auth_js_updates_bnav_aria_label() -> None:
+    """auth.js must call setAttribute('aria-label', ...) on the profile button."""
+    import pathlib
+
+    auth_js = pathlib.Path("app/static/auth.js").read_text()
+    assert "setAttribute('aria-label'" in auth_js
+
+
+# ---------------------------------------------------------------------------
+# W2: Practice tab href and hashchange handler in verbs_page.js
+# ---------------------------------------------------------------------------
+
+
+def test_verbs_bottom_nav_practice_tab_href(client: TestClient) -> None:
+    """Practice tab must link to the practice panel anchor on the verbs page."""
+    with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
+        html = client.get("/verbs?language=en").text
+    assert "/verbs?language=en#practice-panel" in html
+
+
+@pytest.mark.parametrize("lang", ["en", "ru", "he"])
+def test_verbs_bottom_nav_practice_tab_carries_language(
+    client: TestClient, lang: str
+) -> None:
+    with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
+        html = client.get(f"/verbs?language={lang}").text
+    assert f"/verbs?language={lang}#practice-panel" in html
+
+
+def test_verbs_page_js_has_hashchange_handler() -> None:
+    """verbs_page.js must register a hashchange listener to sync Practice tab state."""
+    import pathlib
+
+    js = pathlib.Path("app/static/verbs_page.js").read_text()
+    assert "hashchange" in js
+    assert "bnav-tab--active" in js

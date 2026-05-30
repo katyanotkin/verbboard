@@ -14,7 +14,7 @@
   </a>
   {% endif %}
 
-  <a href="/?language={{ bnav_lang }}"
+  <a href="/?language={{ bnav_lang | urlencode }}"
      class="bnav-tab{% if bnav_active == 'search' %} bnav-tab--active{% endif %}"
      aria-current="{{ 'page' if bnav_active == 'search' else 'false' }}">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -25,7 +25,7 @@
     <span>Search</span>
   </a>
 
-  <a href="/verbs?language={{ bnav_lang }}"
+  <a href="/verbs?language={{ bnav_lang | urlencode }}"
      class="bnav-tab{% if bnav_active == 'browse' %} bnav-tab--active{% endif %}"
      aria-current="{{ 'page' if bnav_active == 'browse' else 'false' }}">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -41,7 +41,7 @@
     <span>List</span>
   </a>
 
-  <a href="/verbs?language={{ bnav_lang }}#practice-panel"
+  <a href="/verbs?language={{ bnav_lang | urlencode }}#practice-panel"
      class="bnav-tab{% if bnav_active == 'practice' %} bnav-tab--active{% endif %}"
      aria-current="{{ 'page' if bnav_active == 'practice' else 'false' }}">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"

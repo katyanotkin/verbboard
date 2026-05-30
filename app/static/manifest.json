@@ -3,6 +3,7 @@
   "short_name": "VerbBoard",
   "description": "Verb conjugation, audio, and practice for language learners",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#2d6a4f",
