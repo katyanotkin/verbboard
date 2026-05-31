@@ -7,11 +7,6 @@
   display: none !important;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  @view-transition {
-    navigation: auto;
-  }
-}
 
 body {
   overscroll-behavior-y: contain;

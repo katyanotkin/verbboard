@@ -1,4 +1,4 @@
-const CACHE = "vb-v17";
+const CACHE = "vb-v18";
 const PRECACHE = [
   "/static/common.css",
   "/static/home.css",
@@ -19,7 +19,10 @@ const PRECACHE = [
 
 self.addEventListener("install", e =>
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(c => c.addAll(PRECACHE))
+      .then(() => self.skipWaiting())
+      .catch(err => { console.error("SW precache failed:", err); self.skipWaiting(); })
   )
 );
 

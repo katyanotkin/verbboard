@@ -137,6 +137,12 @@
     <button id="install-btn" hidden onclick="vbInstall()" class="install-btn">
       Install VerbBoard
     </button>
+
+    <div id="install-hint" class="install-hint" hidden>
+      <span class="install-hint-text">{{ ui['home.install_hint'] }}</span>
+      <button type="button" class="install-hint-close" id="install-hint-close"
+              aria-label="{{ ui['home.install_hint_dismiss'] }}">&#x2715;</button>
+    </div>
   </div>
 
   {% set bnav_lang = learning_lang %}{% set bnav_active = 'search' %}{% set bnav_back_href = '' %}{% include '_bottom_nav.html' %}

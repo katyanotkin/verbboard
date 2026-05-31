@@ -21,6 +21,13 @@ def _trigger_class(page) -> str:
     return page.locator("#ui-lang-trigger").get_attribute("class") or ""
 
 
+def _wait_for_highlight(page) -> None:
+    """Wait for the highlight class -- it may be applied in an async auth.ready() callback."""
+    page.wait_for_function(
+        "document.getElementById('ui-lang-trigger')?.className.includes('ui-lang-trigger--highlight')"
+    )
+
+
 def _dropdown_hidden(page) -> bool:
     return page.locator("#ui-lang-dropdown[hidden]").count() == 1
 
@@ -44,6 +51,7 @@ def test_highlight_shown_for_new_user_even_when_browser_matches(
     ctx, page = _new_page(browser, "en-US")
     try:
         page.goto(f"{live_server_url}{HOME_EN}")
+        _wait_for_highlight(page)
         assert "ui-lang-trigger--highlight" in _trigger_class(page)
     finally:
         ctx.close()
@@ -54,6 +62,7 @@ def test_highlight_shown_for_new_user_with_mismatch(browser, live_server_url):
     ctx, page = _new_page(browser, "es-ES")
     try:
         page.goto(f"{live_server_url}{HOME_EN}")
+        _wait_for_highlight(page)
         assert "ui-lang-trigger--highlight" in _trigger_class(page)
         # Flag is set by animationend (after ~4s) or on explicit dismiss -- not checked here
     finally:
@@ -65,6 +74,7 @@ def test_hint_text_visible_during_highlight(browser, live_server_url):
     ctx, page = _new_page(browser, "es-ES")
     try:
         page.goto(f"{live_server_url}{HOME_EN}")
+        _wait_for_highlight(page)
         assert "ui-lang-trigger--highlight" in _trigger_class(page)
         hint = page.locator(".ui-lang-hint")
         assert hint.is_visible(), "Hint callout should be visible during highlight"
@@ -107,6 +117,7 @@ def test_highlight_is_visually_distinct(browser, live_server_url):
     ctx, page = _new_page(browser, "es-ES")
     try:
         page.goto(f"{live_server_url}{HOME_EN}")
+        _wait_for_highlight(page)
         assert "ui-lang-trigger--highlight" in _trigger_class(page)
         bg = page.evaluate(
             "getComputedStyle(document.getElementById('ui-lang-trigger')).backgroundColor"
@@ -146,6 +157,10 @@ def test_highlight_on_locale_mismatch(browser, live_server_url):
         # Simulate returning user who has seen the prompt before (no mismatch marker yet)
         page.evaluate(f"localStorage.setItem('{SEEN_KEY}', 'en')")
         page.reload()
+        # Highlight may be applied after auth.ready() resolves -- wait for it
+        page.wait_for_function(
+            "document.getElementById('ui-lang-trigger')?.className.includes('ui-lang-trigger--highlight')"
+        )
         assert "ui-lang-trigger--highlight" in _trigger_class(page)
         # Flag written by explicit dismiss (× button or language pick) -- not checked here
     finally:
@@ -174,6 +189,7 @@ def test_clicking_trigger_removes_highlight(browser, live_server_url):
     ctx, page = _new_page(browser, "es-ES")
     try:
         page.goto(f"{live_server_url}{HOME_EN}")
+        _wait_for_highlight(page)
         assert "ui-lang-trigger--highlight" in _trigger_class(page)
         page.locator("#ui-lang-trigger").click()
         assert "ui-lang-trigger--highlight" not in _trigger_class(page)

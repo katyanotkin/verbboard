@@ -86,12 +86,16 @@
   practiceLoop.maybeShowWrapUp();
 
   if (window.location.hash === '#practice-panel' && practiceEl) {
-    // Use scrollIntoView instead of chip.click() -- Chrome's @view-transition
-    // CSS interferes with the browser's native scroll-to-hash on navigation,
-    // and chip.click() on an already-set hash does not re-scroll in Chrome.
+    // Delay until after layout is stable -- low-end Android can take 150-300ms
+    // from DOMContentLoaded to first paint. Double rAF inside setTimeout ensures
+    // the scroll fires after the browser has committed the layout.
     setTimeout(function () {
-      practiceEl.scrollIntoView({ block: 'start' });
-    }, 80);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          practiceEl.scrollIntoView({ block: 'start' });
+        });
+      });
+    }, 200);
   }
 
   // W2: keep Practice bottom-nav tab active while hash == #practice-panel

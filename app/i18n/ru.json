@@ -99,5 +99,7 @@
   "board.persona_m": "М",
   "board.persona_f": "Ж",
   "board.number_sg": "Ед",
-  "board.number_pl": "Мн"
+  "board.number_pl": "Мн",
+  "home.install_hint": "Нажмите меню браузера, затем «Добавить на главный экран»",
+  "home.install_hint_dismiss": "Закрыть"
 }

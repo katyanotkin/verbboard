@@ -99,5 +99,7 @@
   "board.persona_m": "M",
   "board.persona_f": "F",
   "board.number_sg": "Sg",
-  "board.number_pl": "Pl"
+  "board.number_pl": "Pl",
+  "home.install_hint": "Tap the browser menu, then \"Add to Home Screen\" to install",
+  "home.install_hint_dismiss": "Dismiss"
 }
