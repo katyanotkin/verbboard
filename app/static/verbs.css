@@ -232,8 +232,8 @@
 .vb-item:active   { background: #e0eaff; box-shadow: none; }
 .vb-item.is-known { background: #eff6ff; border-color: #bfdbfe; }
 .vb-item.is-seen {
-  background: #f8fafc;
-  border-color: #e5e7eb;
+  background: #f0f4f8;
+  border-color: #c8d6e5;
 }
 
 .vb-lemma {
