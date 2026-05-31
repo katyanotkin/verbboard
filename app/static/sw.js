@@ -30,7 +30,9 @@ self.addEventListener("activate", e =>
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
+    // clients.claim() intentionally omitted -- claiming open pages mid-session
+    // triggers Firebase Auth's controllerchange listener and cancels in-progress
+    // signInWithPopup calls. The SW takes control naturally on the next navigation.
   )
 );
 
