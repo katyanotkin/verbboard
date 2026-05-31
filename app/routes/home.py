@@ -117,17 +117,33 @@ async def search_verb_by_lang(
             )
             return response
 
-    log_missing_verb_search(
-        language=language,
-        query=query,
-        page="home",
-        source="search_by_lang",
-    )
     base = safe_return_to(return_to or "", fallback="") or f"/?language={language}"
     sep = "&" if "?" in base else "?"
-    response = RedirectResponse(
-        url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&search_mode={source_lang}"
-    )
+
+    if not translated:
+        # Gemini failed to translate -- show original query so user can retry
+        logger.warning(
+            "search_verb_by_lang translation failed q=%r %s->%s",
+            query,
+            source_lang,
+            language,
+        )
+        response = RedirectResponse(
+            url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&search_mode={source_lang}"
+        )
+    else:
+        # Translation succeeded but verb not in DB -- show translated word
+        # so user sees what was actually searched in the target language.
+        log_missing_verb_search(
+            language=language,
+            query=translated,
+            page="home",
+            source="search_by_lang",
+        )
+        response = RedirectResponse(
+            url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native"
+        )
+
     response.set_cookie("language", language, httponly=False, samesite="lax")
     return response
 

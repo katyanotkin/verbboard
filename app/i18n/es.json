@@ -100,6 +100,6 @@
   "board.persona_f": "F",
   "board.number_sg": "Sg",
   "board.number_pl": "Pl",
-  "home.install_hint": "Toca el menú del navegador y selecciona «Agregar a pantalla de inicio»",
+  "home.install_hint": "Toca ⋮ en el navegador y elige «Agregar a inicio»",
   "home.install_hint_dismiss": "Cerrar"
 }
