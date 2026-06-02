@@ -230,7 +230,8 @@ h1 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.3px
 .btn-preview,
 .btn-needs-fix,
 .btn-reopen,
-.btn-regen {
+.btn-regen,
+.btn-examples {
   padding: 3px 9px;
   font-size: 12px;
   border-radius: 3px;
@@ -285,7 +286,23 @@ h1 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.3px
 .btn-reopen:disabled,
 .btn-regen:disabled { opacity: 0.5; cursor: default; }
 
+.btn-examples { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-examples:hover { color: var(--text); border-color: var(--text); }
+.btn-examples.open  { color: var(--info); border-color: var(--info); }
+
 .btn-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+
+/* candidate examples expansion row */
+.cand-examples-row > td { padding: 0; background: var(--bg); border-top: none; }
+.cand-example-list { list-style: none; padding: 6px 14px 10px 14px; display: flex; flex-direction: column; gap: 4px; }
+.cand-example-item { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; }
+.cand-example-idx  { color: var(--muted); min-width: 16px; text-align: right; flex-shrink: 0; }
+.cand-example-src  { font-family: var(--mono); }
+.cand-example-sep  { color: var(--muted); flex-shrink: 0; }
+.cand-example-dst  { color: var(--muted); flex: 1; }
+.btn-regen-ex { padding: 1px 5px; font-size: 11px; border-radius: 3px; cursor: pointer; background: transparent; color: var(--muted); border: 1px solid var(--border); transition: all 0.1s; flex-shrink: 0; }
+.btn-regen-ex:hover { color: var(--text); border-color: var(--text); }
+.btn-regen-ex:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .cand-lemma { font-family: var(--mono); font-size: 13px; font-weight: 500; }
 

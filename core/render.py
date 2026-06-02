@@ -218,7 +218,7 @@ def render_board_html(
             '<script defer src="/static/candidate_banner.js"></script>'
         )
         vid = escape(candidate_verb_id)
-        admin = escape(admin_href or "/") + "#candidates"
+        admin = escape(admin_href or "/admin#candidates")
         candidate_banner = f"""
 <div class="candidate-banner" id="candidate-banner" data-admin-href="{admin}">
   <span class="candidate-banner-label">⚠ Candidate preview: <b>{escape(str(board.verb.lemma))}</b></span>

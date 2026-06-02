@@ -167,6 +167,12 @@ function renderCandidates() {
         );
       }
 
+      if (item.examples && item.examples.length) {
+        actionButtons.push(
+          `<button class="btn-examples" id="cand-ex-btn-${esc(item.verb_id)}" onclick="toggleExamples('${esc(item.verb_id)}')">📖 ${item.examples.length}</button>`,
+        );
+      }
+
       const lemmaDisplay = item.lemma
         ? `<span class="cand-lemma">${esc(item.lemma)}</span>`
         : '<em style="color:var(--muted)">—</em>';
@@ -182,9 +188,78 @@ function renderCandidates() {
           ${actionButtons.join('')}
         </div>
       </td>
-    </tr>`;
+    </tr>
+    ${renderExamplesRowHtml(item)}`;
     })
     .join('');
+}
+
+function renderExamplesRowHtml(item) {
+  const vid = esc(item.verb_id);
+  if (!item.examples || !item.examples.length) {
+    return `<tr id="cand-ex-${vid}" hidden><td colspan="6"></td></tr>`;
+  }
+  const items = item.examples
+    .map((ex, i) => {
+      const src = esc(ex.src || '');
+      const dst = esc(ex.dst || '');
+      return `<li class="cand-example-item">
+        <span class="cand-example-idx">${i + 1}.</span>
+        <span class="cand-example-src">${src}</span>
+        <span class="cand-example-sep">→</span>
+        <span class="cand-example-dst">${dst}</span>
+        <button class="btn-regen-ex" onclick="regenExample('${vid}',${i},this)" title="Regen this example">⟳</button>
+      </li>`;
+    })
+    .join('');
+  return `<tr id="cand-ex-${vid}" class="cand-examples-row" hidden>
+    <td colspan="6"><ol class="cand-example-list">${items}</ol></td>
+  </tr>`;
+}
+
+function toggleExamples(verbId) {
+  const row = document.getElementById(`cand-ex-${verbId}`);
+  const btn = document.getElementById(`cand-ex-btn-${verbId}`);
+  if (!row) return;
+  row.hidden = !row.hidden;
+  if (btn) btn.classList.toggle('open', !row.hidden);
+}
+
+function refreshExamplesRow(verbId) {
+  const row = document.getElementById(`cand-ex-${verbId}`);
+  if (!row) return;
+  const wasHidden = row.hidden;
+  const item = candidatesData.find((c) => c.verb_id === verbId);
+  if (!item) return;
+  const tmp = document.createElement('tbody');
+  tmp.innerHTML = renderExamplesRowHtml(item);
+  const newRow = tmp.firstElementChild;
+  newRow.hidden = wasHidden;
+  row.replaceWith(newRow);
+}
+
+async function regenExample(verbId, index, button) {
+  button.disabled = true;
+  const orig = button.textContent;
+  button.textContent = '…';
+  try {
+    const resp = await fetch(
+      `${CANDIDATES_ROOT}/api/candidates/${encodeURIComponent(verbId)}/examples/${index}/regen`,
+      { method: 'POST' },
+    );
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+      throw new Error(err.detail ?? resp.statusText);
+    }
+    const data = await resp.json();
+    const candidate = candidatesData.find((c) => c.verb_id === verbId);
+    if (candidate) candidate.examples[index] = data.example;
+    refreshExamplesRow(verbId);
+  } catch (err) {
+    button.disabled = false;
+    button.textContent = orig;
+    alert('Regen example failed: ' + err.message);
+  }
 }
 
 async function regenSingle(verbId, button) {

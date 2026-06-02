@@ -139,7 +139,7 @@ async def learn(
 
     html = render_board_html(
         board=board,
-        return_to=return_to,
+        return_to=return_to or ("/admin#candidates" if source == "candidate" else None),
         candidate_verb_id=verb.id if source == "candidate" else None,
         admin_href="/admin#candidates" if source == "candidate" else None,
         ui_strings=ui_strings,

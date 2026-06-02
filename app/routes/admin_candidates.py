@@ -144,6 +144,50 @@ def _get_max_rank(language: str) -> int:
     return max_rank
 
 
+async def _call_claude_single_example(
+    language: str, lemma: str, existing_examples: list, index: int
+) -> dict[str, Any]:
+    client = get_anthropic_client()
+    existing_texts = [
+        ex.get("dst", "")
+        for i, ex in enumerate(existing_examples)
+        if i != index and isinstance(ex, dict) and ex.get("dst")
+    ]
+    avoid_note = (
+        "Avoid repeating these existing examples:\n"
+        + "\n".join(f"- {t}" for t in existing_texts)
+        if existing_texts
+        else ""
+    )
+    prompt = (
+        f'Generate ONE new example sentence for the {language} verb "{lemma}".\n'
+        f"{avoid_note}\n\n"
+        "Return ONLY a JSON object:\n"
+        '{"src": "<sentence in target language>", "dst": "<English translation>"}'
+    )
+    message = await client.messages.create(
+        model=_MODEL.get(language, _MODEL_DEFAULT),
+        max_tokens=512,
+        system=get_cached_system(language),
+        messages=[{"role": "user", "content": prompt}],
+    )
+    raw = message.content[0].text.strip()
+    if raw.startswith("```"):
+        raw = re.sub(r"^```[a-z]*\n?", "", raw)
+        raw = re.sub(r"\n?```$", "", raw).strip()
+    try:
+        result = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=502, detail="Example generation returned invalid JSON"
+        ) from exc
+    if not isinstance(result.get("src"), str) or not isinstance(result.get("dst"), str):
+        raise HTTPException(
+            status_code=502, detail="Example generation returned unexpected format"
+        )
+    return {"src": result["src"], "dst": result["dst"]}
+
+
 async def _call_claude(language: str, query: str) -> dict[str, Any]:
     client = get_anthropic_client()
 
@@ -485,6 +529,48 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
     return JSONResponse(
         {"verb_id": verb_id, "regenerated": True, "lemma": lemma, "updated_at": now}
     )
+
+
+@router.post("/api/candidates/{verb_id}/examples/{index}/regen")
+async def regen_candidate_example(
+    request: Request, verb_id: str, index: int
+) -> JSONResponse:
+    require_admin_api(request)
+    db = get_db()
+    ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    doc = ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    data = doc.to_dict()
+    language = data.get("language", "")
+    lemma = data.get("lemma", "")
+    examples = list(data.get("examples", []))
+
+    if index < 0 or index >= len(examples):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Example index {index} out of range (have {len(examples)})",
+        )
+
+    new_example = await _call_claude_single_example(language, lemma, examples, index)
+
+    translated = await asyncio.to_thread(
+        translate_examples,
+        verb_lang=language,
+        lemma=lemma,
+        examples=[new_example],
+        project=_GCP_PROJECT,
+        api_key=_load_anthropic_api_key(),
+    )
+    if translated:
+        new_example = translated[0]
+
+    examples[index] = new_example
+    now = datetime.now(UTC).isoformat()
+    ref.update({"examples": examples, "updated_at": now})
+
+    return JSONResponse({"index": index, "example": new_example, "updated_at": now})
 
 
 @router.delete("/api/candidates/{verb_id}")

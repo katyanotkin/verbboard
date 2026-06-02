@@ -260,3 +260,141 @@ def test_get_anthropic_client_returns_same_instance() -> None:
         ), f"AsyncAnthropic constructor called {mock_cls.call_count} times, expected 1"
     finally:
         get_anthropic_client.cache_clear()
+
+
+# ---------------------------------------------------------------------------
+# _call_claude_single_example
+# ---------------------------------------------------------------------------
+
+
+def _patch_single(mock_client):
+    return patch(
+        "app.routes.admin_candidates.get_anthropic_client",
+        return_value=mock_client,
+    )
+
+
+def test_single_example_returns_src_dst_dict() -> None:
+    """Happy path: valid JSON with src+dst is returned as a plain dict."""
+    payload = {"src": "Je vais à l'école.", "dst": "I go to school."}
+    mock_client = _make_mock_client(json.dumps(payload))
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        result = _run_async(_call_claude_single_example("fr", "aller", [], 0))
+
+    assert result == payload
+
+
+def test_single_example_strips_markdown_fences() -> None:
+    payload = {"src": "Ich gehe.", "dst": "I go."}
+    fenced = f"```json\n{json.dumps(payload)}\n```"
+    mock_client = _make_mock_client(fenced)
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        result = _run_async(_call_claude_single_example("de", "gehen", [], 0))
+
+    assert result == payload
+
+
+def test_single_example_raises_502_on_invalid_json() -> None:
+    mock_client = _make_mock_client("Sorry, cannot do that.")
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        with pytest.raises(HTTPException) as exc_info:
+            _run_async(_call_claude_single_example("en", "go", [], 0))
+
+    assert exc_info.value.status_code == 502
+    assert "invalid JSON" in exc_info.value.detail
+
+
+def test_single_example_raises_502_on_missing_src() -> None:
+    mock_client = _make_mock_client('{"dst": "I go."}')
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        with pytest.raises(HTTPException) as exc_info:
+            _run_async(_call_claude_single_example("en", "go", [], 0))
+
+    assert exc_info.value.status_code == 502
+    assert "unexpected format" in exc_info.value.detail
+
+
+def test_single_example_raises_502_on_missing_dst() -> None:
+    mock_client = _make_mock_client('{"src": "I go."}')
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        with pytest.raises(HTTPException) as exc_info:
+            _run_async(_call_claude_single_example("en", "go", [], 0))
+
+    assert exc_info.value.status_code == 502
+
+
+def test_single_example_uses_512_max_tokens() -> None:
+    mock_client = _make_mock_client('{"src": "x", "dst": "y"}')
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        _run_async(_call_claude_single_example("en", "go", [], 0))
+
+    _, kwargs = mock_client.messages.create.call_args
+    assert kwargs.get("max_tokens") == 512
+
+
+def test_single_example_passes_system_prompt() -> None:
+    mock_client = _make_mock_client('{"src": "x", "dst": "y"}')
+
+    with (
+        _patch_single(mock_client),
+        patch("app.routes.admin_candidates.get_cached_system", return_value="sys"),
+    ):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        _run_async(_call_claude_single_example("ru", "идти", [], 0))
+
+    _, kwargs = mock_client.messages.create.call_args
+    assert kwargs.get("system") == "sys"
+
+
+def test_single_example_avoid_note_excludes_replaced_index() -> None:
+    """The example at the replaced index must not appear in the avoid list."""
+    existing = [
+        {"src": "A", "dst": "keep this"},
+        {"src": "B", "dst": "replace this"},
+    ]
+    mock_client = _make_mock_client('{"src": "C", "dst": "new"}')
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        _run_async(_call_claude_single_example("en", "go", existing, 1))
+
+    _, kwargs = mock_client.messages.create.call_args
+    user_content = kwargs["messages"][0]["content"]
+    assert "keep this" in user_content
+    assert "replace this" not in user_content
+
+
+def test_single_example_no_avoid_note_when_only_one_example() -> None:
+    """When replacing the only example there is nothing to avoid."""
+    mock_client = _make_mock_client('{"src": "x", "dst": "y"}')
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        _run_async(
+            _call_claude_single_example("en", "go", [{"src": "A", "dst": "B"}], 0)
+        )
+
+    _, kwargs = mock_client.messages.create.call_args
+    user_content = kwargs["messages"][0]["content"]
+    assert "Avoid" not in user_content
