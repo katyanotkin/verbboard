@@ -149,9 +149,11 @@ async def _call_claude_single_example(
 ) -> dict[str, Any]:
     client = get_anthropic_client()
     existing_texts = [
-        ex.get("dst", "")
+        # regen-format examples: src = native sentence, dst = English translation
+        # old-format examples:   only dst = native sentence
+        ex.get("src") or ex.get("dst", "")
         for i, ex in enumerate(existing_examples)
-        if i != index and isinstance(ex, dict) and ex.get("dst")
+        if i != index and isinstance(ex, dict) and (ex.get("src") or ex.get("dst"))
     ]
     avoid_note = (
         "Avoid repeating these existing examples:\n"
@@ -545,6 +547,12 @@ async def regen_candidate_example(
     data = doc.to_dict()
     language = data.get("language", "")
     lemma = data.get("lemma", "")
+    if not language or not lemma:
+        raise HTTPException(
+            status_code=422,
+            detail="Candidate is missing language or lemma (run Generate first)",
+        )
+
     examples = list(data.get("examples", []))
 
     if index < 0 or index >= len(examples):
@@ -555,16 +563,20 @@ async def regen_candidate_example(
 
     new_example = await _call_claude_single_example(language, lemma, examples, index)
 
+    # translate_examples expects dst = native sentence; use src when present (regen format)
+    native_sentence = new_example.get("src") or new_example.get("dst", "")
     translated = await asyncio.to_thread(
         translate_examples,
         verb_lang=language,
         lemma=lemma,
-        examples=[new_example],
+        examples=[{"dst": native_sentence}],
         project=_GCP_PROJECT,
         api_key=_load_anthropic_api_key(),
     )
     if translated:
-        new_example = translated[0]
+        translations = translated[0].get("translations")
+        if translations:
+            new_example = {**new_example, "translations": translations}
 
     examples[index] = new_example
     now = datetime.now(UTC).isoformat()

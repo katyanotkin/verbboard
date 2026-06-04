@@ -169,6 +169,231 @@ def test_regen_example_propagates_502_from_claude(client: TestClient) -> None:
 
 
 # ---------------------------------------------------------------------------
+# translate_examples is called with regen-format example (src+dst)
+# ---------------------------------------------------------------------------
+
+
+def test_regen_endpoint_passes_native_sentence_to_translate_examples(
+    client: TestClient,
+) -> None:
+    """translate_examples must receive {"dst": native_sentence}, not the raw
+    regen-format example.  The native sentence is ex["src"] for regen-format examples.
+    """
+    db = _mock_db("en_go", _CANDIDATE)
+    regen_example = {"src": "Мы идём вместе.", "dst": "We go together."}
+    translate_calls: list[dict] = []
+
+    def _capturing_translate(**kwargs):
+        translate_calls.append({"examples": list(kwargs.get("examples", []))})
+        return kwargs.get("examples", [])
+
+    with (
+        patch("app.routes.admin_candidates.get_db", return_value=db),
+        patch(
+            "app.routes.admin_candidates._call_claude_single_example",
+            new=AsyncMock(return_value=regen_example),
+        ),
+        patch(
+            "app.routes.admin_candidates.translate_examples",
+            side_effect=_capturing_translate,
+        ),
+    ):
+        resp = client.post(
+            "/admin/api/candidates/en_go/examples/0/regen",
+            cookies=_admin_cookies(),
+        )
+
+    assert resp.status_code == 200
+    assert len(translate_calls) == 1
+    passed_examples = translate_calls[0]["examples"]
+    assert len(passed_examples) == 1
+    # translate_examples must receive {"dst": native_sentence}, using src from regen example
+    assert passed_examples[0] == {"dst": "Мы идём вместе."}
+    assert (
+        passed_examples[0]["dst"] == "Мы идём вместе."
+    )  # native sentence, not English
+
+
+# ---------------------------------------------------------------------------
+# translate_examples result is merged into the returned example
+# ---------------------------------------------------------------------------
+
+
+def test_regen_endpoint_merges_translations_into_returned_example(
+    client: TestClient,
+) -> None:
+    """When translate_examples returns an example enriched with a translations dict,
+    the endpoint must return that enriched example (not the bare regen result).
+    """
+    db = _mock_db("en_go", _CANDIDATE)
+    raw_example = {"src": "I go to the store.", "dst": "I go to the store."}
+    translated_example = {
+        "src": "I go to the store.",
+        "dst": "I go to the store.",
+        "translations": {"ru": "Я иду в магазин.", "es": "Voy a la tienda."},
+    }
+
+    with (
+        patch("app.routes.admin_candidates.get_db", return_value=db),
+        patch(
+            "app.routes.admin_candidates._call_claude_single_example",
+            new=AsyncMock(return_value=raw_example),
+        ),
+        patch(
+            "app.routes.admin_candidates.translate_examples",
+            return_value=[translated_example],
+        ),
+    ):
+        resp = client.post(
+            "/admin/api/candidates/en_go/examples/0/regen",
+            cookies=_admin_cookies(),
+        )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    returned = body["example"]
+    assert (
+        "translations" in returned
+    ), "translations dict from translate_examples must be present in the returned example"
+    assert returned["translations"]["ru"] == "Я иду в магазин."
+    assert returned["translations"]["es"] == "Voy a la tienda."
+
+
+def test_regen_endpoint_returns_raw_example_when_translate_returns_same_list(
+    client: TestClient,
+) -> None:
+    """When translate_examples returns the identical list object (no translations
+    added), the endpoint must still return the original example unchanged.
+    """
+    db = _mock_db("en_go", _CANDIDATE)
+    raw_example = {"src": "I go to the store.", "dst": "I go to the store."}
+
+    def _identity(**kwargs):
+        # Simulate translate_examples returning the same list unchanged
+        return kwargs["examples"]
+
+    with (
+        patch("app.routes.admin_candidates.get_db", return_value=db),
+        patch(
+            "app.routes.admin_candidates._call_claude_single_example",
+            new=AsyncMock(return_value=raw_example),
+        ),
+        patch(
+            "app.routes.admin_candidates.translate_examples",
+            side_effect=_identity,
+        ),
+    ):
+        resp = client.post(
+            "/admin/api/candidates/en_go/examples/0/regen",
+            cookies=_admin_cookies(),
+        )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["example"]["src"] == raw_example["src"]
+    assert body["example"]["dst"] == raw_example["dst"]
+
+
+# ---------------------------------------------------------------------------
+# Empty lemma in candidate (never generated)
+# ---------------------------------------------------------------------------
+
+
+def test_regen_example_rejects_empty_lemma_with_422(client: TestClient) -> None:
+    """A candidate that was never generated has lemma=''.
+    The endpoint must reject it with 422 rather than sending a malformed prompt to Claude.
+    """
+    candidate_no_lemma = {
+        "verb_id": "ru_unknown",
+        "language": "ru",
+        "lemma": "",  # blank -- never generated
+        "status": "needs_generation",
+        "examples": [{"dst": "placeholder"}],
+    }
+    db = _mock_db("ru_unknown", candidate_no_lemma)
+
+    with patch("app.routes.admin_candidates.get_db", return_value=db):
+        resp = client.post(
+            "/admin/api/candidates/ru_unknown/examples/0/regen",
+            cookies=_admin_cookies(),
+        )
+
+    assert resp.status_code == 422
+    assert "lemma" in resp.json()["detail"]
+
+
+def test_regen_example_empty_examples_list_returns_400(client: TestClient) -> None:
+    """A candidate with an empty examples list must cause a 400 for any index,
+    since the range check fires (index 0 >= len([]) = 0).
+    """
+    candidate_empty_examples = {
+        "verb_id": "en_empty",
+        "language": "en",
+        "lemma": "go",
+        "status": "pending",
+        "examples": [],
+    }
+    db = _mock_db("en_empty", candidate_empty_examples)
+
+    with patch("app.routes.admin_candidates.get_db", return_value=db):
+        resp = client.post(
+            "/admin/api/candidates/en_empty/examples/0/regen",
+            cookies=_admin_cookies(),
+        )
+
+    assert resp.status_code == 400
+    assert "out of range" in resp.json()["detail"]
+
+
+# ---------------------------------------------------------------------------
+# translate_examples is called with the correct verb_lang and lemma
+# ---------------------------------------------------------------------------
+
+
+def test_regen_endpoint_passes_correct_lang_and_lemma_to_translate_examples(
+    client: TestClient,
+) -> None:
+    """translate_examples must receive verb_lang and lemma from the candidate doc,
+    not hardcoded values.
+    """
+    candidate = {
+        "verb_id": "ru_idti",
+        "language": "ru",
+        "lemma": "идти",
+        "status": "pending",
+        "examples": [{"dst": "Я иду домой."}],
+    }
+    db = _mock_db("ru_idti", candidate)
+    new_ex = {"src": "Мы идём.", "dst": "We go."}
+    translate_kwargs: list[dict] = []
+
+    def _capture(**kwargs):
+        translate_kwargs.append(kwargs)
+        return [new_ex]
+
+    with (
+        patch("app.routes.admin_candidates.get_db", return_value=db),
+        patch(
+            "app.routes.admin_candidates._call_claude_single_example",
+            new=AsyncMock(return_value=new_ex),
+        ),
+        patch(
+            "app.routes.admin_candidates.translate_examples",
+            side_effect=_capture,
+        ),
+    ):
+        resp = client.post(
+            "/admin/api/candidates/ru_idti/examples/0/regen",
+            cookies=_admin_cookies(),
+        )
+
+    assert resp.status_code == 200
+    assert len(translate_kwargs) == 1
+    assert translate_kwargs[0]["verb_lang"] == "ru"
+    assert translate_kwargs[0]["lemma"] == "идти"
+
+
+# ---------------------------------------------------------------------------
 # learn.py: return_to defaults to /admin#candidates when source=candidate
 # ---------------------------------------------------------------------------
 

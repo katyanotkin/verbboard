@@ -366,10 +366,10 @@ def test_single_example_passes_system_prompt() -> None:
 
 
 def test_single_example_avoid_note_excludes_replaced_index() -> None:
-    """The example at the replaced index must not appear in the avoid list."""
+    """The native sentence of the replaced index must not appear; others must."""
     existing = [
-        {"src": "A", "dst": "keep this"},
-        {"src": "B", "dst": "replace this"},
+        {"src": "A native", "dst": "A english"},
+        {"src": "B native", "dst": "B english"},
     ]
     mock_client = _make_mock_client('{"src": "C", "dst": "new"}')
 
@@ -380,8 +380,12 @@ def test_single_example_avoid_note_excludes_replaced_index() -> None:
 
     _, kwargs = mock_client.messages.create.call_args
     user_content = kwargs["messages"][0]["content"]
-    assert "keep this" in user_content
-    assert "replace this" not in user_content
+    # src (native sentence) of index 0 must be in the avoid list
+    assert "A native" in user_content
+    # src (native sentence) of the replaced index 1 must NOT be in the avoid list
+    assert "B native" not in user_content
+    # English translations must not appear in the avoid list
+    assert "A english" not in user_content
 
 
 def test_single_example_no_avoid_note_when_only_one_example() -> None:
@@ -398,3 +402,95 @@ def test_single_example_no_avoid_note_when_only_one_example() -> None:
     _, kwargs = mock_client.messages.create.call_args
     user_content = kwargs["messages"][0]["content"]
     assert "Avoid" not in user_content
+
+
+# ---------------------------------------------------------------------------
+# avoid_note bug: mixed-format example list (old-format dst-only + regen src+dst)
+# ---------------------------------------------------------------------------
+
+
+def test_single_example_avoid_note_uses_dst_for_old_format_examples() -> None:
+    """When the existing list has old-format entries (dst=native, no src key), the
+    avoid note must include the native sentence -- not nothing.
+
+    This is the CORRECT current behavior for old-format examples.
+    """
+    # Old _call_claude format: only "dst" key, value = native sentence
+    existing = [
+        {"dst": "Я иду домой."},  # old format, dst = native
+        {"dst": "replace me"},  # index to replace
+    ]
+    mock_client = _make_mock_client(
+        '{"src": "Мы идём вместе.", "dst": "We go together."}'
+    )
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        _run_async(_call_claude_single_example("ru", "идти", existing, 1))
+
+    _, kwargs = mock_client.messages.create.call_args
+    user_content = kwargs["messages"][0]["content"]
+    # Old-format example: dst IS the native sentence, so it correctly appears in avoid.
+    assert "Я иду домой." in user_content
+    assert "replace me" not in user_content
+
+
+def test_single_example_avoid_note_uses_src_for_regen_format_examples() -> None:
+    """When the existing list contains a previously-regened example
+    (src=native, dst=English translation), the avoid list must use src
+    (the native sentence), not dst (the English translation).
+    """
+    # Regen format: src = native sentence, dst = English translation
+    existing = [
+        {"src": "Я иду домой.", "dst": "I go home."},  # previously regened example
+        {"src": "replace me native", "dst": "replace me english"},  # index to replace
+    ]
+    mock_client = _make_mock_client(
+        '{"src": "Мы идём вместе.", "dst": "We go together."}'
+    )
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        _run_async(_call_claude_single_example("ru", "идти", existing, 1))
+
+    _, kwargs = mock_client.messages.create.call_args
+    user_content = kwargs["messages"][0]["content"]
+
+    # The native sentence (src) must be in the avoid list; English translation must not.
+    assert "Я иду домой." in user_content  # native sentence (src) is in avoid list
+    assert "I go home." not in user_content  # English translation (dst) is not used
+
+
+def test_single_example_avoid_note_mixed_old_and_regen_formats() -> None:
+    """When examples come from different sources -- some old-format (dst=native),
+    some regen-format (src=native, dst=English) -- the avoid list must contain
+    the native sentence from each example regardless of format.
+    """
+    existing = [
+        {"dst": "Я иду домой."},  # old format: dst = native (correct)
+        {
+            "src": "Он идёт на работу.",
+            "dst": "He goes to work.",
+        },  # regen format: dst = English (wrong)
+        {"src": "replace me", "dst": "replace me en"},  # index to replace
+    ]
+    mock_client = _make_mock_client(
+        '{"src": "Мы идём вместе.", "dst": "We go together."}'
+    )
+
+    with _patch_single(mock_client):
+        from app.routes.admin_candidates import _call_claude_single_example
+
+        _run_async(_call_claude_single_example("ru", "идти", existing, 2))
+
+    _, kwargs = mock_client.messages.create.call_args
+    user_content = kwargs["messages"][0]["content"]
+
+    # Old-format example: dst = native sentence -- appears in avoid list.
+    assert "Я иду домой." in user_content
+    # Regen-format example: src = native sentence -- appears in avoid list.
+    assert "Он идёт на работу." in user_content
+    # English translation of regen-format example must NOT appear.
+    assert "He goes to work." not in user_content

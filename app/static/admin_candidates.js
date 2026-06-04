@@ -203,11 +203,13 @@ function renderExamplesRowHtml(item) {
     .map((ex, i) => {
       const src = esc(ex.src || '');
       const dst = esc(ex.dst || '');
+      // main-generated examples only have dst; regen examples have src (native) + dst (English)
+      const body = src && dst
+        ? `<span class="cand-example-src">${src}</span><span class="cand-example-sep">→</span><span class="cand-example-dst">${dst}</span>`
+        : `<span class="cand-example-src">${src || dst}</span>`;
       return `<li class="cand-example-item">
         <span class="cand-example-idx">${i + 1}.</span>
-        <span class="cand-example-src">${src}</span>
-        <span class="cand-example-sep">→</span>
-        <span class="cand-example-dst">${dst}</span>
+        ${body}
         <button class="btn-regen-ex" onclick="regenExample('${vid}',${i},this)" title="Regen this example">⟳</button>
       </li>`;
     })
