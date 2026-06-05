@@ -366,7 +366,8 @@ def test_single_example_passes_system_prompt() -> None:
 
 
 def test_single_example_avoid_note_excludes_replaced_index() -> None:
-    """The native sentence of the replaced index must not appear; others must."""
+    """The replaced example's native sentence must appear in the form-preservation note
+    but NOT in the avoid list.  Other examples' native sentences must be in the avoid list."""
     existing = [
         {"src": "A native", "dst": "A english"},
         {"src": "B native", "dst": "B english"},
@@ -380,12 +381,21 @@ def test_single_example_avoid_note_excludes_replaced_index() -> None:
 
     _, kwargs = mock_client.messages.create.call_args
     user_content = kwargs["messages"][0]["content"]
-    # src (native sentence) of index 0 must be in the avoid list
+    # form-preservation note must include the original sentence and ask for same form
+    assert "B native" in user_content
+    assert "SAME grammatical form" in user_content
+    # other examples' native sentences must be in the avoid list
     assert "A native" in user_content
-    # src (native sentence) of the replaced index 1 must NOT be in the avoid list
-    assert "B native" not in user_content
-    # English translations must not appear in the avoid list
+    # English translations must never appear in the prompt
     assert "A english" not in user_content
+    assert "B english" not in user_content
+    # B native must not be in the avoid list (it precedes "Avoid repeating", not follow it)
+    avoid_section = (
+        user_content.split("Avoid repeating", 1)[-1]
+        if "Avoid repeating" in user_content
+        else ""
+    )
+    assert "B native" not in avoid_section
 
 
 def test_single_example_no_avoid_note_when_only_one_example() -> None:
@@ -431,9 +441,17 @@ def test_single_example_avoid_note_uses_dst_for_old_format_examples() -> None:
 
     _, kwargs = mock_client.messages.create.call_args
     user_content = kwargs["messages"][0]["content"]
-    # Old-format example: dst IS the native sentence, so it correctly appears in avoid.
+    # Old-format example at index 0: dst IS the native sentence, appears in avoid list.
     assert "Я иду домой." in user_content
-    assert "replace me" not in user_content
+    # Replaced example's native sentence appears in the form-preservation note, not avoid.
+    assert "replace me" in user_content
+    assert "SAME grammatical form" in user_content
+    avoid_section = (
+        user_content.split("Avoid repeating", 1)[-1]
+        if "Avoid repeating" in user_content
+        else ""
+    )
+    assert "replace me" not in avoid_section
 
 
 def test_single_example_avoid_note_uses_src_for_regen_format_examples() -> None:

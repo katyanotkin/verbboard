@@ -96,6 +96,29 @@ def test_firestore_document_ignores_non_string_translation_values() -> None:
     assert entry.examples[0].translations == {"en": "I go."}
 
 
+def test_firestore_document_regen_format_uses_src_as_native_sentence() -> None:
+    """Regen-format examples store the native sentence in src and English in dst.
+    _firestore_document_to_verb_entry must use src as the display sentence."""
+    from core.verb_loader import _firestore_document_to_verb_entry
+
+    doc = {
+        "verb_id": "ru_idti",
+        "rank": 1,
+        "lemma": "идти",
+        "forms": {},
+        "examples": [
+            {
+                "src": "Мы идём вместе.",
+                "dst": "We go together.",
+                "translations": {"en": "We go together."},
+            }
+        ],
+    }
+    entry = _firestore_document_to_verb_entry(doc)
+    assert entry.examples[0].dst == "Мы идём вместе."
+    assert entry.examples[0].translations["en"] == "We go together."
+
+
 # ---------------------------------------------------------------------------
 # render_board_html — translation span content and RTL attribute
 # ---------------------------------------------------------------------------

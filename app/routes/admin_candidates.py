@@ -161,8 +161,23 @@ async def _call_claude_single_example(
         if existing_texts
         else ""
     )
+    original_ex = (
+        existing_examples[index] if 0 <= index < len(existing_examples) else {}
+    )
+    original_native = (
+        original_ex.get("src") or original_ex.get("dst", "")
+        if isinstance(original_ex, dict)
+        else ""
+    )
+    form_note = (
+        f"Replace this example: {original_native!r}\n"
+        "Use the SAME grammatical form (same person, number, tense, aspect) but completely different content.\n"
+        if original_native
+        else ""
+    )
     prompt = (
         f'Generate ONE new example sentence for the {language} verb "{lemma}".\n'
+        f"{form_note}"
         f"{avoid_note}\n\n"
         "Return ONLY a JSON object:\n"
         '{"src": "<sentence in target language>", "dst": "<English translation>"}'

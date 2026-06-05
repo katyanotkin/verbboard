@@ -13,7 +13,9 @@ _CACHE_TTL = 60.0
 def _firestore_document_to_verb_entry(document: dict[str, Any]) -> VerbEntry:
     examples = [
         Example(
-            dst=example["dst"],
+            # regen-format examples store the native sentence in "src" and English in "dst";
+            # old-format examples store the native sentence directly in "dst"
+            dst=example.get("src") or example["dst"],
             translations={
                 k: v
                 for k, v in example.get("translations", {}).items()

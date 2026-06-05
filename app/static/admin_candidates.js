@@ -110,7 +110,7 @@ function renderCandidates() {
 
   const tbody = document.getElementById('cand-body');
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty"><td colspan="6">No candidates</td></tr>';
+    tbody.innerHTML = '<tr class="empty"><td colspan="7">No candidates</td></tr>';
     return;
   }
 
@@ -167,15 +167,13 @@ function renderCandidates() {
         );
       }
 
-      if (item.examples && item.examples.length) {
-        actionButtons.push(
-          `<button class="btn-examples" id="cand-ex-btn-${esc(item.verb_id)}" onclick="toggleExamples('${esc(item.verb_id)}')">📖 ${item.examples.length}</button>`,
-        );
-      }
-
       const lemmaDisplay = item.lemma
         ? `<span class="cand-lemma">${esc(item.lemma)}</span>`
         : '<em style="color:var(--muted)">—</em>';
+
+      const examplesCell = item.examples && item.examples.length
+        ? `<button class="btn-examples" id="cand-ex-btn-${esc(item.verb_id)}" onclick="toggleExamples('${esc(item.verb_id)}')">📖 ${item.examples.length}</button>`
+        : '<span style="color:var(--muted);font-size:12px">—</span>';
 
       return `<tr id="cand-row-${esc(item.verb_id)}" class="${isPromoted ? 'row-promoted' : ''}">
       <td><span class="mono">${esc(item.query)}</span></td>
@@ -183,6 +181,7 @@ function renderCandidates() {
       <td><span class="pill pill-lang">${esc(item.language)}</span></td>
       <td style="color:var(--muted);font-size:12px">${item.rank ?? '—'}</td>
       <td>${candStatusPill(item.status)}</td>
+      <td>${examplesCell}</td>
       <td>
         <div class="btn-row">
           ${actionButtons.join('')}
@@ -197,7 +196,7 @@ function renderCandidates() {
 function renderExamplesRowHtml(item) {
   const vid = esc(item.verb_id);
   if (!item.examples || !item.examples.length) {
-    return `<tr id="cand-ex-${vid}" hidden><td colspan="6"></td></tr>`;
+    return `<tr id="cand-ex-${vid}" hidden><td colspan="7"></td></tr>`;
   }
   const items = item.examples
     .map((ex, i) => {
@@ -215,7 +214,7 @@ function renderExamplesRowHtml(item) {
     })
     .join('');
   return `<tr id="cand-ex-${vid}" class="cand-examples-row" hidden>
-    <td colspan="6"><ol class="cand-example-list">${items}</ol></td>
+    <td colspan="7"><ol class="cand-example-list">${items}</ol></td>
   </tr>`;
 }
 
