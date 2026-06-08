@@ -32,3 +32,6 @@ runtime/admin_logs/
 *.tmp
 admin_candidates.py.with-pealim-scraping
 /experiments
+
+# Firebase CLI cache
+.firebase/
