@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "knotmem26"
+  },
+  "targets": {
+    "knotmem26": {
+      "hosting": {
+        "prod": ["verbboard-knotmem26"],
+        "stage": ["verbboard-stage-knotmem26"]
+      }
+    }
+  }
+}

@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from core.i18n import get_strings, resolve_ui_language
 from core.registry import all_plugins
 from core.settings import load_settings
+from core.storage.firestore_db import get_db
 from core.storage.verb_repository import list_verbs_recent
 from core.verb_loader import load_entries_for_language
+
+log = logging.getLogger(__name__)
 
 RECENT_VERBS_LIMIT = 8
 
@@ -57,23 +62,15 @@ def verb_browser(
         "A → Z",
     )
 
-    entries = load_entries_for_language(language=selected_language)
+    all_entries = load_entries_for_language(language=selected_language)
+    total_verb_count = len(all_entries)
 
-    verbs_js: list[dict[str, object]] = []
+    if settings.verbs_page_limit > 0:
+        entries = sorted(all_entries, key=lambda e: e.rank)[: settings.verbs_page_limit]
+    else:
+        entries = all_entries
 
-    for entry in entries:
-        lemma = entry.display_lemma or entry.lemma
-
-        if isinstance(lemma, dict):
-            lemma = lemma.get("imperfective") or lemma.get("perfective") or ""
-
-        verbs_js.append(
-            {
-                "id": entry.id,
-                "lemma": str(lemma),
-                "created_at": entry.created_at,
-            }
-        )
+    verbs_js = [_build_verb_item(e) for e in entries]
 
     recent_docs = list_verbs_recent(
         language=selected_language, limit=RECENT_VERBS_LIMIT
@@ -86,6 +83,7 @@ def verb_browser(
         "verbs.count_other": ui["verbs.count_other"],
         "verbs.empty_state": ui["verbs.empty_state"],
         "verbs.filter_recent": ui["verbs.filter_recent"],
+        "verbs.load_more": ui["verbs.load_more"],
         # Auth button labels -- always included so auth.js can localize the
         # Login/Logout button regardless of whether the practice loop is on.
         "auth.login": ui["auth.login"],
@@ -133,6 +131,8 @@ def verb_browser(
             "search_mode": search_mode or "native",
             "practice_loop_enabled": PRACTICE_LOOP_ENABLED,
             "badge_compact_threshold": settings.badge_compact_threshold,
+            "total_verb_count": total_verb_count,
+            "verbs_display_batch": settings.verbs_display_batch,
             "firebase_web_config_json": (settings.firebase_web_config_json),
         },
     )
@@ -152,3 +152,51 @@ def verb_browser(
     )
 
     return response
+
+
+def _build_verb_item(entry: object) -> dict[str, object]:
+    lemma = getattr(entry, "display_lemma", None) or getattr(entry, "lemma", "")
+    if isinstance(lemma, dict):
+        lemma = lemma.get("imperfective") or lemma.get("perfective") or ""
+    morph = getattr(entry, "morph", None) or {}
+    item: dict[str, object] = {
+        "id": entry.id,  # type: ignore[attr-defined]
+        "lemma": str(lemma),
+        "created_at": entry.created_at,  # type: ignore[attr-defined]
+    }
+    if morph.get("root"):
+        item["root"] = str(morph["root"])
+    return item
+
+
+@router.get("/api/verbs", response_class=JSONResponse)
+def api_verbs(
+    language: str = Query(...),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+) -> JSONResponse:
+    all_entries = load_entries_for_language(language=language)
+    total = len(all_entries)
+    sorted_entries = sorted(all_entries, key=lambda e: e.rank)
+    page = sorted_entries[offset : offset + limit]
+    verbs = [_build_verb_item(e) for e in page]
+
+    try:
+        get_db().collection("verb_paging_events").add(
+            {
+                "language": language,
+                "offset": offset,
+                "limit": limit,
+                "timestamp": datetime.now(timezone.utc),
+            }
+        )
+    except Exception:
+        log.warning("verb_paging_events write failed", exc_info=True)
+
+    return JSONResponse(
+        {
+            "verbs": verbs,
+            "total": total,
+            "has_more": offset + limit < total,
+        }
+    )

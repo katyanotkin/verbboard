@@ -6,6 +6,7 @@
   });
 
   let currentUser = null;
+  let signInInProgress = false;
 
   // sessionStorage key used to detect sign-out across page navigations.
   // Set to the uid on login; removed on sign-out.  sessionStorage persists
@@ -41,23 +42,29 @@
   }
 
   async function signIn() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    // Always show the account chooser, even when the browser has a cached
-    // Google session -- prevents silent single-account auto-sign-in.
-    provider.setCustomParameters({ prompt: 'select_account' });
-    if (isStandalone()) {
-      // Standalone PWA: opening a browser tab crosses the PWA/browser
-      // boundary and focuses the new tab. Firebase syncs auth state back
-      // to the PWA shell via IndexedDB once sign-in completes.
-      window.open('/auth/signin', '_blank');
-    } else if (isMobile()) {
-      // Mobile browser: window.open(_blank) opens in the background on
-      // Chrome Android (no focus switch). Navigate the current page to the
-      // sign-in page instead; it redirects back via return_to after success.
-      var returnTo = encodeURIComponent(location.pathname + location.search);
-      window.location.href = '/auth/signin?return_to=' + returnTo;
-    } else {
-      await firebase.auth().signInWithPopup(provider);
+    if (signInInProgress) return;
+    signInInProgress = true;
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      // Always show the account chooser, even when the browser has a cached
+      // Google session -- prevents silent single-account auto-sign-in.
+      provider.setCustomParameters({ prompt: 'select_account' });
+      if (isStandalone()) {
+        // Standalone PWA: opening a browser tab crosses the PWA/browser
+        // boundary and focuses the new tab. Firebase syncs auth state back
+        // to the PWA shell via IndexedDB once sign-in completes.
+        window.open('/auth/signin', '_blank');
+      } else if (isMobile()) {
+        // Mobile browser: window.open(_blank) opens in the background on
+        // Chrome Android (no focus switch). Navigate the current page to the
+        // sign-in page instead; it redirects back via return_to after success.
+        var returnTo = encodeURIComponent(location.pathname + location.search);
+        window.location.href = '/auth/signin?return_to=' + returnTo;
+      } else {
+        await firebase.auth().signInWithPopup(provider);
+      }
+    } finally {
+      signInInProgress = false;
     }
   }
 
@@ -143,6 +150,7 @@
         try {
           await signIn();
         } catch (err) {
+          if (err.code === 'auth/cancelled-popup-request') return;
           console.error('VB sign-in error:', err);
           alert('Sign-in error: ' + (err.message || err.code || err));
         }
@@ -390,6 +398,7 @@
         await signIn();
       }
     } catch (err) {
+      if (err.code === 'auth/cancelled-popup-request') return;
       console.error('VB tapProfile error:', err);
       alert('Sign-in error: ' + (err.message || err.code || err));
     }

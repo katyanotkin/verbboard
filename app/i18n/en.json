@@ -42,6 +42,7 @@
   "verbs.tap_hint": "Tap any verb to study its conjugation",
   "verbs.known_legend": "★ = learned",
   "verbs.empty_state": "No verbs match",
+  "verbs.load_more": "Show more verbs",
   "practice.label": "Practice",
   "practice.size_unit": "# of verbs",
   "practice.start": "Start",

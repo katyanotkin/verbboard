@@ -20,13 +20,19 @@
       toggleEl,
       progressFillEl,
       progressCountEl,
-      progressTotalEl,
+      loadMoreWrapEl,
+      displayBatch,
       ui,
     } = config;
 
     const storage = window.VerbBoardStorage;
 
     const stateKey = `vb-ui:${lang}`;
+    const displayCountKey = `vb-display-count:${lang}`;
+    const batch = displayBatch || 20;
+
+    const savedCount = parseInt(sessionStorage.getItem(displayCountKey) || '0', 10);
+    let displayCount = (savedCount >= batch) ? savedCount : batch;
 
     function readHash() {
       const params = new URLSearchParams(window.location.hash.slice(1));
@@ -146,14 +152,16 @@
       const knownSet = known();
       const seenSet = seen();
       const rows = visibleVerbs();
+      const shownRows = rows.slice(0, displayCount);
 
-      if (!rows.length) {
+      if (!shownRows.length) {
         listEl.innerHTML = `
           <div class="vb-empty">
             ${ui['verbs.empty_state'] || 'No verbs match'}
           </div>
         `;
 
+        if (loadMoreWrapEl) loadMoreWrapEl.style.display = 'none';
         return;
       }
 
@@ -162,12 +170,12 @@
       );
 
       const recentRows = showRecent
-        ? rows.filter(v => recentSet.has(v.id))
+        ? shownRows.filter(v => recentSet.has(v.id))
         : [];
 
       const mainRows = showRecent
-        ? rows.filter(v => !recentSet.has(v.id))
-        : rows;
+        ? shownRows.filter(v => !recentSet.has(v.id))
+        : shownRows;
 
       let html = '';
 
@@ -191,11 +199,18 @@
         .map(v => renderItem(v, knownSet, seenSet))
         .join('');
 
+      sessionStorage.setItem(displayCountKey, String(displayCount));
       listEl.innerHTML = html;
+
+      if (loadMoreWrapEl) {
+        var clientHasMore = displayCount < rows.length;
+        var serverHasMore = window.VB_VERBS && window.VB_VERBS.length < (window.VB_VERBS_TOTAL || 0);
+        loadMoreWrapEl.style.display = (clientHasMore || serverHasMore) ? '' : 'none';
+      }
     }
 
     function updateProgress() {
-      const total = verbs.length;
+      const total = (window.VB_VERBS_TOTAL > 0 ? window.VB_VERBS_TOTAL : verbs.length);
 
       if (!total) {
         return;
@@ -212,20 +227,32 @@
         progressCountEl.textContent = String(count);
       }
 
-      if (progressTotalEl) {
-        progressTotalEl.textContent = ` / ${total}`;
-      }
+      // progress-total span is server-rendered static HTML -- do not overwrite
     }
 
     function applyFilter(newFilter) {
       activeFilter = newFilter;
+      displayCount = batch;
 
-      toggleEl.querySelectorAll('.vb-ftbtn').forEach(function (node) {
-        node.classList.toggle('active', node.dataset.filter === newFilter);
-      });
+      if (toggleEl.tagName === 'SELECT') {
+        toggleEl.value = newFilter;
+      } else {
+        toggleEl.querySelectorAll('.vb-ftbtn').forEach(function (node) {
+          node.classList.toggle('active', node.dataset.filter === newFilter);
+        });
+      }
 
       writeState();
       render();
+    }
+
+    function showMore() {
+      displayCount += batch;
+      render();
+    }
+
+    function hasMoreToShow() {
+      return displayCount < visibleVerbs().length;
     }
 
     function bindEvents() {
@@ -233,26 +260,36 @@
 
       applyFilter(activeFilter);
 
-      toggleEl.addEventListener('click', function (event) {
-        const button = event.target.closest('.vb-ftbtn');
+      if (toggleEl.tagName === 'SELECT') {
+        toggleEl.addEventListener('change', function () {
+          applyFilter(toggleEl.value);
+        });
+      } else {
+        toggleEl.addEventListener('click', function (event) {
+          const button = event.target.closest('.vb-ftbtn');
 
-        if (!button) {
-          return;
-        }
+          if (!button) {
+            return;
+          }
 
-        applyFilter(button.dataset.filter);
-      });
+          applyFilter(button.dataset.filter);
+        });
+      }
 
       sortEl.addEventListener('change', function () {
         activeSort = sortEl.value;
+        displayCount = batch;
 
         writeState();
         render();
       });
 
+      var searchTimer;
       searchEl.addEventListener('input', function () {
         searchQuery = searchEl.value;
-        render();
+        displayCount = batch;
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(render, 150);
       });
 
       const prefetched = new Set();
@@ -283,6 +320,8 @@
       updateProgress,
       known,
       seen,
+      showMore,
+      hasMoreToShow,
     };
   }
 

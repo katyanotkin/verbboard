@@ -1,0 +1,32 @@
+{
+  "hosting": [
+    {
+      "site": "verbboard-knotmem26",
+      "public": "public",
+      "ignore": ["firebase.json", "**/.*"],
+      "rewrites": [
+        {
+          "source": "**",
+          "run": {
+            "serviceId": "verbboard",
+            "region": "us-east1"
+          }
+        }
+      ]
+    },
+    {
+      "site": "verbboard-stage-knotmem26",
+      "public": "public",
+      "ignore": ["firebase.json", "**/.*"],
+      "rewrites": [
+        {
+          "source": "**",
+          "run": {
+            "serviceId": "verbboard-stage",
+            "region": "us-east1"
+          }
+        }
+      ]
+    }
+  ]
+}

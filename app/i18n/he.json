@@ -42,6 +42,7 @@
   "verbs.tap_hint": "לחץ על פועל ללימוד",
   "verbs.known_legend": "★ = נלמד",
   "verbs.empty_state": "אין תוצאות",
+  "verbs.load_more": "הצג עוד",
   "practice.label": "תרגול",
   "practice.size_unit": "# פעלים",
   "practice.start": "התחל",

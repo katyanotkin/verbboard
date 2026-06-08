@@ -16,6 +16,8 @@
     window.VB_BADGE_COMPACT_THRESHOLD = {{ badge_compact_threshold }};
     window.VB_LANGUAGE = {{ lang_json | safe }};
     window.VB_VERBS = {{ verbs_json | safe }};
+    window.VB_VERBS_TOTAL = {{ total_verb_count }};
+    window.VB_DISPLAY_BATCH = {{ verbs_display_batch }};
     window.VB_RECENT_IDS = {{ recent_json | safe }};
     window.UI = {{ ui_json | safe }};
   </script>
@@ -46,128 +48,96 @@
       </div>
     </div>
 
-    <div class="vb-title-row">
-      <h1 class="vb-title">{{ ui['verbs.heading'] }}</h1>
-      {% if practice_loop_enabled %}
-      <a href="#practice-panel" class="practice-nav-chip">
-        <span aria-hidden="true" class="chip-arrow">↓</span>
-        <span>{{ ui['practice.label'] }}</span>
-      </a>
-      {% endif %}
-    </div>
-
-    <form
-      action="/search_verb"
-      method="get"
-      class="vb-toolbar"
-    >
-      <input type="hidden" name="language" value="{{ selected_language }}"/>
-      <input type="hidden" name="return_to" value="/verbs?language={{ selected_language }}"/>
-      {% if selected_language != 'en' %}
-      <input type="hidden" id="vb-source-lang-input" name="source_lang" value="{{ 'en' if search_mode == 'en' else '' }}"/>
-      {% endif %}
-
-      <div class="search-row-header vb-search-header">
-        <label for="vb-search">{{ ui['home.search_label'] }}</label>
-        {% if selected_language != 'en' %}
-        <div class="search-mode-pills" id="vb-search-mode-pills">
-          <button type="button" class="search-mode-pill{% if search_mode != 'en' %} active{% endif %}" data-mode="native">{{ ui['lang.' + selected_language] }}</button>
-          <button type="button" class="search-mode-pill{% if search_mode == 'en' %} active{% endif %}" data-mode="en" data-source-lang="en">{{ ui['lang.en'] }}</button>
-        </div>
+    <div class="vb-body">
+      <div class="vb-sticky-controls">
+        {% if practice_loop_enabled %}
+        <div id="practice-panel" class="practice-panel"></div>
         {% endif %}
-      </div>
-
-      <div class="vb-search-row">
-        <input
-          id="vb-search"
-          name="q"
-          class="vb-search"
-          type="text"
-          value="{{ search_value }}"
-          placeholder="{{ ui['home.search_placeholder_en'] if search_mode == 'en' else ui['home.search_placeholder'] }}"
-          data-placeholder-en="{{ ui['home.search_placeholder_en'] }}"
-          autocomplete="off"
-        />
-        <button
-          type="submit"
-          id="vb-search-submit-btn"
-          class="search-btn"
+        <form
+          action="/search_verb"
+          method="get"
+          class="vb-toolbar"
         >
-          {{ ui['verbs.find_button'] }}
+          <input type="hidden" name="language" value="{{ selected_language }}"/>
+          <input type="hidden" name="return_to" value="/verbs?language={{ selected_language }}"/>
+          {% if selected_language != 'en' %}
+          <input type="hidden" id="vb-source-lang-input" name="source_lang" value="{{ 'en' if search_mode == 'en' else '' }}"/>
+          {% endif %}
+
+          <div class="search-row-header vb-search-header">
+            <label for="vb-search">{{ ui['home.search_label'] }}</label>
+            {% if selected_language != 'en' %}
+            <div class="search-mode-pills" id="vb-search-mode-pills">
+              <button type="button" class="search-mode-pill{% if search_mode != 'en' %} active{% endif %}" data-mode="native">{{ ui['lang.' + selected_language] }}</button>
+              <button type="button" class="search-mode-pill{% if search_mode == 'en' %} active{% endif %}" data-mode="en" data-source-lang="en">{{ ui['lang.en'] }}</button>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="vb-search-row">
+            <input
+              id="vb-search"
+              name="q"
+              class="vb-search"
+              type="text"
+              value="{{ search_value }}"
+              placeholder="{{ ui['home.search_placeholder_en'] if search_mode == 'en' else ui['home.search_placeholder'] }}"
+              data-placeholder-en="{{ ui['home.search_placeholder_en'] }}"
+              autocomplete="off"
+            />
+            <button
+              type="submit"
+              id="vb-search-submit-btn"
+              class="search-btn"
+            >
+              {{ ui['verbs.find_button'] }}
+            </button>
+          </div>
+
+          {% if notice_text %}
+          <div class="notice" id="vb-notice">{{ ui['home.no_match'] }} <b>{{ notice_text }}</b></div>
+          {% endif %}
+        </form>
+
+        <div class="vb-controls-row">
+          <div class="progress-row vb-progress-row">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:0%"></div>
+            </div>
+
+            <div class="progress-meta">
+              <span class="progress-star">★</span>
+              <span class="progress-count">0</span>
+              <span class="progress-total"> / {{ total_verb_count }}</span>
+            </div>
+          </div>
+
+          <div class="vb-filter-row">
+            <div id="vb-filter-toggle" class="vb-filter-toggle">
+              <button class="vb-ftbtn" data-filter="new">{{ ui['verbs.filter_new'] }}</button>
+              <button class="vb-ftbtn" data-filter="seen">{{ ui['verbs.filter_seen'] }}</button>
+              <button class="vb-ftbtn" data-filter="known">{{ ui['verbs.filter_known'] }}</button>
+              <button class="vb-ftbtn" data-filter="all">{{ ui['verbs.filter_all'] }}</button>
+            </div>
+
+            <select id="vb-sort" class="vb-sort-select">
+              <option value="newest">{{ ui['verbs.sort_newest'] }}</option>
+              <option value="alpha">{{ sort_az_label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <h1 class="vb-title">{{ ui['verbs.heading'] }}</h1>
+      </div>
+
+      <div id="vb-list" class="vb-list"></div>
+
+      <div id="vb-load-more-wrap" class="vb-load-more-wrap" style="display:none">
+        <button type="button" id="vb-load-more" class="vb-load-more-btn">
+          {{ ui['verbs.load_more'] }}
         </button>
-      </div>
-
-      {% if notice_text %}
-      <div class="notice" id="vb-notice">{{ ui['home.no_match'] }} <b>{{ notice_text }}</b></div>
-      {% endif %}
-    </form>
-
-    {% if practice_loop_enabled %}
-    <div id="practice-panel" class="practice-panel"></div>
-    {% endif %}
-
-    <div class="progress-row vb-progress-row">
-      <div class="progress-bar">
-        <div class="progress-fill" style="width:0%"></div>
-      </div>
-
-      <div class="progress-meta">
-        <span class="progress-star">★</span>
-        <span class="progress-count">0</span>
-        <span class="progress-total"></span>
       </div>
     </div>
-
-    <p class="vb-tap-hint">{{ ui['verbs.tap_hint'] }}</p>
-    <p class="vb-known-legend">{{ ui['verbs.known_legend'] }}</p>
-
-    <div class="vb-filter-row">
-      <div class="vb-filter-toggle" id="vb-filter-toggle">
-        <button
-          type="button"
-          class="vb-ftbtn active"
-          data-filter="new"
-        >
-          {{ ui['verbs.filter_new'] }}
-        </button>
-
-        <button
-          type="button"
-          class="vb-ftbtn"
-          data-filter="seen"
-        >
-          {{ ui['verbs.filter_seen'] }}
-        </button>
-
-        <button
-          type="button"
-          class="vb-ftbtn"
-          data-filter="known"
-        >
-          {{ ui['verbs.filter_known'] }}
-        </button>
-
-        <button
-          type="button"
-          class="vb-ftbtn"
-          data-filter="all"
-        >
-          {{ ui['verbs.filter_all'] }}
-        </button>
-      </div>
-
-      <select id="vb-sort" class="vb-sort-select">
-        <option value="newest">
-          {{ ui['verbs.sort_newest'] }}
-        </option>
-
-        <option value="alpha">
-          {{ sort_az_label }}
-        </option>
-      </select>
-    </div>
-
-    <div id="vb-list" class="vb-list"></div>
 
   </div>
 

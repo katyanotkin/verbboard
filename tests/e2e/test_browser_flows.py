@@ -154,10 +154,10 @@ def test_verbs_filter_and_sort_persist_after_back_navigation(page, live_server_u
     page.wait_for_load_state("networkidle")
 
     # Wait for JS to initialise filter buttons
-    page.wait_for_selector(".vb-ftbtn[data-filter='all']")
+    page.wait_for_selector("#vb-filter-toggle")
 
     # Change filter from default "new" to "all"
-    page.locator(".vb-ftbtn[data-filter='all']").click()
+    page.locator("#vb-filter-toggle button[data-filter='all']").click()
     page.wait_for_timeout(100)
 
     # Change sort from default "alpha" to "newest"
@@ -177,12 +177,12 @@ def test_verbs_filter_and_sort_persist_after_back_navigation(page, live_server_u
     page.wait_for_timeout(300)  # let JS init run
 
     # Filter should still be "all"
-    all_btn_class = (
-        page.locator(".vb-ftbtn[data-filter='all']").get_attribute("class") or ""
+    filter_value = page.locator("#vb-filter-toggle .vb-ftbtn.active").get_attribute(
+        "data-filter"
     )
     assert (
-        "active" in all_btn_class
-    ), f"Expected 'all' filter to remain active after Back, got class: {all_btn_class!r}"
+        filter_value == "all"
+    ), f"Expected 'all' filter to remain active after Back, got: {filter_value!r}"
 
     # Sort should still be "newest"
     sort_value = page.locator("#vb-sort").input_value()
@@ -201,7 +201,7 @@ def test_verbs_filter_only_change_persists_after_back_navigation(page, live_serv
     page.wait_for_load_state("networkidle")
 
     # Wait for JS to initialise filter buttons
-    page.wait_for_selector(".vb-ftbtn[data-filter='seen']")
+    page.wait_for_selector("#vb-filter-toggle")
 
     # Verify default sort is alpha
     assert (
@@ -209,7 +209,7 @@ def test_verbs_filter_only_change_persists_after_back_navigation(page, live_serv
     ), "Expected alpha as default sort"
 
     # Change filter to "seen" -- do not touch sort
-    page.locator(".vb-ftbtn[data-filter='seen']").click()
+    page.locator("#vb-filter-toggle button[data-filter='seen']").click()
     page.wait_for_timeout(100)
 
     # Navigate to Learn directly -- state is already written to localStorage/hash
@@ -225,12 +225,12 @@ def test_verbs_filter_only_change_persists_after_back_navigation(page, live_serv
     page.wait_for_timeout(300)
 
     # Filter should still be "seen"
-    seen_btn_class = (
-        page.locator(".vb-ftbtn[data-filter='seen']").get_attribute("class") or ""
+    filter_value = page.locator("#vb-filter-toggle .vb-ftbtn.active").get_attribute(
+        "data-filter"
     )
     assert (
-        "active" in seen_btn_class
-    ), f"Expected 'seen' filter to remain active after Back, got: {seen_btn_class!r}"
+        filter_value == "seen"
+    ), f"Expected 'seen' filter to remain active after Back, got: {filter_value!r}"
 
     # Sort should still be "alpha" (unchanged default)
     sort_value = page.locator("#vb-sort").input_value()

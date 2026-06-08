@@ -29,6 +29,8 @@ class Settings:
     firebase_web_config_json: str
     allow_local_dev_auth: bool
     badge_compact_threshold: int
+    verbs_page_limit: int
+    verbs_display_batch: int
 
 
 def _resolve_environment() -> str:
@@ -116,7 +118,9 @@ def load_settings() -> Settings:
         admin_secret=_load_admin_secret(),
         firebase_web_config_json=os.getenv("FIREBASE_WEB_CONFIG_JSON", ""),
         allow_local_dev_auth=os.getenv("ALLOW_LOCAL_DEV_AUTH", "").lower() == "true",
-        badge_compact_threshold=int(os.getenv("BADGE_COMPACT_THRESHOLD", "400")),
+        badge_compact_threshold=int(os.getenv("BADGE_COMPACT_THRESHOLD", "20")),
+        verbs_page_limit=int(os.getenv("VERBS_PAGE_LIMIT", "300")),
+        verbs_display_batch=int(os.getenv("VERBS_DISPLAY_BATCH", "20")),
     )
     _validate(settings)
     return settings
@@ -133,3 +137,11 @@ def _validate(settings: Settings) -> None:
         raise ValueError("AUDIO_BUCKET must be set")
     if not settings.admin_secret:
         raise ValueError("ADMIN_SECRET must not be empty")
+    if (
+        settings.verbs_page_limit > 0
+        and settings.verbs_page_limit <= settings.verbs_display_batch
+    ):
+        raise ValueError(
+            f"VERBS_PAGE_LIMIT ({settings.verbs_page_limit}) must be greater than "
+            f"VERBS_DISPLAY_BATCH ({settings.verbs_display_batch})"
+        )

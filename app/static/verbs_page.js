@@ -16,7 +16,6 @@
 
   const progressFillEl = document.querySelector('.progress-fill');
   const progressCountEl = document.querySelector('.progress-count');
-  const progressTotalEl = document.querySelector('.progress-total');
 
   const filters = window.VerbBoardVerbFilters.createVerbFilters({
     lang,
@@ -28,7 +27,8 @@
     toggleEl,
     progressFillEl,
     progressCountEl,
-    progressTotalEl,
+    loadMoreWrapEl: document.getElementById('vb-load-more-wrap'),
+    displayBatch: window.VB_DISPLAY_BATCH || 20,
     ui,
   });
 
@@ -140,4 +140,45 @@
     filters.updateProgress();
     practiceLoop.renderPracticePanel();
   });
+
+  // Load-more: client-side batch first, then server fetch when pre-loaded verbs exhausted
+  (function () {
+    var btnEl = document.getElementById('vb-load-more');
+    if (!btnEl) return;
+
+    var batchSize = window.VB_DISPLAY_BATCH || 20;
+    var loadMoreLabel = (window.UI && window.UI['verbs.load_more']) || 'Show more verbs';
+
+    btnEl.addEventListener('click', function () {
+      if (filters.hasMoreToShow()) {
+        filters.showMore();
+        return;
+      }
+
+      var offset = window.VB_VERBS.length;
+      btnEl.disabled = true;
+      btnEl.textContent = '…';
+
+      fetch(
+        '/api/verbs?language=' + encodeURIComponent(lang) +
+        '&offset=' + offset +
+        '&limit=' + batchSize
+      )
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function (data) {
+          data.verbs.forEach(function (v) { window.VB_VERBS.push(v); });
+          window.VB_VERBS_TOTAL = data.total;
+          filters.showMore();
+          btnEl.disabled = false;
+          btnEl.textContent = loadMoreLabel;
+        })
+        .catch(function () {
+          btnEl.disabled = false;
+          btnEl.textContent = loadMoreLabel;
+        });
+    });
+  }());
 })();

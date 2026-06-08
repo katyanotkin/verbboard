@@ -42,6 +42,7 @@
   "verbs.tap_hint": "Кликните на глагол для изучения",
   "verbs.known_legend": "★ = выучен",
   "verbs.empty_state": "Нет совпадений",
+  "verbs.load_more": "Показать ещё",
   "practice.label": "Тренировка",
   "practice.size_unit": "кол-во гл.",
   "practice.start": "Начать",
