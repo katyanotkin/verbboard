@@ -158,7 +158,6 @@
   padding-bottom: 8px;
   border-bottom: 1px solid var(--card-border);
   margin-bottom: 8px;
-  will-change: transform;
 }
 
 /* controls row: progress bar left, filter+sort right */

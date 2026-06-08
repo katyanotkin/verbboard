@@ -31,7 +31,9 @@
     const displayCountKey = `vb-display-count:${lang}`;
     const batch = displayBatch || 20;
 
-    const savedCount = parseInt(sessionStorage.getItem(displayCountKey) || '0', 10);
+    const navType = (performance.getEntriesByType('navigation')[0] || {}).type;
+    const isBackNav = navType === 'back_forward';
+    const savedCount = isBackNav ? parseInt(sessionStorage.getItem(displayCountKey) || '0', 10) : 0;
     let displayCount = (savedCount >= batch) ? savedCount : batch;
 
     function readHash() {
