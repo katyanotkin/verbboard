@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 
 from fastapi import APIRouter, Form, Request
@@ -106,36 +107,30 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     token = create_admin_session_token()
-    print("[admin] login success, setting cookie", flush=True)
-    # 200 (not 303): Fastly strips Set-Cookie from 3xx responses.
-    # Navigate to /admin/login-callback (a GET) rather than /admin directly.
-    # The cookie from this POST response commits during the login-callback round-trip,
-    # so GET /admin fires after the cookie is in the store.
-    response = HTMLResponse(
+    print("[admin] login success, setting cookie via JS", flush=True)
+    # Firebase Hosting strips Set-Cookie headers from all responses.
+    # document.cookie assignment is synchronous -- cookie is committed before
+    # location.replace fires on the next line.
+    cookie_str = (
+        f"{ADMIN_SESSION_COOKIE}={token}; path=/; "
+        f"max-age={ADMIN_SESSION_MAX_AGE_SECONDS}; secure; samesite=lax"
+    )
+    return HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
+            f"document.cookie={json.dumps(cookie_str)};"
             f"window.location.replace('{ADMIN_PREFIX}/login-callback');"
             "</script></body></html>"
         ),
         headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
         status_code=200,
     )
-    response.set_cookie(
-        key=ADMIN_SESSION_COOKIE,
-        value=token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
-        path="/",
-    )
-    return response
 
 
 @router.get("/login-callback")
 async def admin_login_callback(request: Request) -> HTMLResponse:
-    # By the time the browser processes this GET response, the Set-Cookie from the
-    # preceding POST has been committed. Safe to navigate to /admin now.
+    # Cookie was set synchronously via document.cookie in the POST response.
+    # This round-trip is here to confirm it was received before navigating to /admin.
     token = request.cookies.get(ADMIN_SESSION_COOKIE, "")
     print(f"[admin] login-callback token_present={bool(token)}", flush=True)
     return HTMLResponse(
@@ -161,19 +156,14 @@ async def admin_check_auth(request: Request) -> Response:
 
 @router.post("/logout")
 async def admin_logout() -> HTMLResponse:
-    response = HTMLResponse(
+    clear_str = f"{ADMIN_SESSION_COOKIE}=; path=/; max-age=0; secure; samesite=lax"
+    return HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
+            f"document.cookie={json.dumps(clear_str)};"
             f"window.location.replace('{ADMIN_PREFIX}/login');"
             "</script></body></html>"
         ),
         headers={"Cache-Control": "no-store"},
         status_code=200,
     )
-    response.delete_cookie(
-        key=ADMIN_SESSION_COOKIE,
-        path="/",
-        secure=True,
-        samesite="none",
-    )
-    return response
