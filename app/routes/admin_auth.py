@@ -127,22 +127,15 @@ async def admin_login_callback(t: str = "") -> Response:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     session_token = create_admin_session_token()
-    print("[admin] login-callback: setting session cookie", flush=True)
-    poll_js = (
-        "async function waitForAdminCookie() {"
-        "for (let attempt = 0; attempt < 30; attempt++) {"
-        "try {"
-        "const response = await fetch('/admin/check-auth', {credentials: 'include'});"
-        "if (response.ok) { window.location.replace('/admin'); return; }"
-        "} catch (_) {}"
-        "await new Promise(resolve => setTimeout(resolve, 100));"
-        "}"
-        "document.body.innerHTML = 'Login succeeded but admin session cookie was not established.';"
-        "}"
-        "waitForAdminCookie();"
-    )
+    print("[admin] login-callback: setting session cookie, navigating", flush=True)
+    # Navigate directly -- navigate requests always send cookies regardless of SameSite.
+    # Cache-Control: no-store tells Fastly not to cache this response and pass Set-Cookie through.
     response = HTMLResponse(
-        content=f"<!doctype html><html><head></head><body><script>{poll_js}</script></body></html>",
+        content=(
+            "<!doctype html><html><head></head><body><script>"
+            f"window.location.replace('{ADMIN_PREFIX}');"
+            "</script></body></html>"
+        ),
         status_code=200,
     )
     response.set_cookie(
@@ -154,6 +147,7 @@ async def admin_login_callback(t: str = "") -> Response:
         max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
         path="/",
     )
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
 
 
