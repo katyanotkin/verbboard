@@ -106,7 +106,7 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     token = create_admin_session_token()
-    logger.info("login success, setting admin cookie")
+    print("[admin] login success, setting admin cookie", flush=True)
     # 200 (not 303): Firebase Hosting/Fastly strips Set-Cookie from redirect responses.
     # Poll /admin/check-auth until the cookie is committed to the browser's cookie
     # store before navigating -- avoids the race between Set-Cookie and the next request.
@@ -142,10 +142,9 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
 @router.get("/check-auth")
 async def admin_check_auth(request: Request) -> Response:
     token = request.cookies.get(ADMIN_SESSION_COOKIE, "")
-    logger.info(
-        "check-auth cookie_header=%r token_present=%s",
-        request.headers.get("cookie"),
-        bool(token),
+    print(
+        f"[admin] check-auth cookie_header={request.headers.get('cookie')!r} token_present={bool(token)}",
+        flush=True,
     )
     if token and verify_admin_session_token(token):
         return Response(status_code=204)
