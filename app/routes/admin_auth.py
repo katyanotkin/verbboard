@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Form
-from fastapi.responses import HTMLResponse, RedirectResponse  # noqa: F401
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from core.admin_auth import (
     ADMIN_SESSION_COOKIE,
@@ -101,12 +101,7 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     token = create_admin_session_token()
-    response = HTMLResponse(
-        content=f"<!doctype html><html><head><title>…</title></head><body>"
-        f'<script>window.location.replace("{ADMIN_PREFIX}");</script>'
-        f"</body></html>",
-        status_code=200,
-    )
+    response = RedirectResponse(url=ADMIN_PREFIX, status_code=303)
     response.set_cookie(
         key=ADMIN_SESSION_COOKIE,
         value=token,
