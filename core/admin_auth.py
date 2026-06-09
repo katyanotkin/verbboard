@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import hmac
 import logging
 
@@ -32,7 +33,10 @@ def create_admin_session_token() -> str:
 def verify_admin_session_token(token: str) -> bool:
     if not token:
         return False
-    serializer = _serializer()
+    settings = load_settings()
+    secret_tag = hashlib.md5(settings.admin_secret.encode()).hexdigest()[:8]
+    print(f"[admin] verify: secret_tag={secret_tag} token={token[:16]}...", flush=True)
+    serializer = URLSafeTimedSerializer(settings.admin_secret)
     try:
         payload = serializer.loads(
             token,
@@ -48,4 +52,6 @@ def verify_admin_session_token(token: str) -> bool:
     except Exception as exc:
         print(f"[admin] verify: unexpected {type(exc).__name__}: {exc}", flush=True)
         return False
-    return payload == {"role": "admin"}
+    result = isinstance(payload, dict) and payload.get("role") == "admin"
+    print(f"[admin] verify: result={result} payload={payload}", flush=True)
+    return result
