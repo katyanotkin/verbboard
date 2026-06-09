@@ -101,7 +101,17 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     token = create_admin_session_token()
-    response = RedirectResponse(url=ADMIN_PREFIX, status_code=303)
+    # 200 (not 303): Firebase Hosting/Fastly strips Set-Cookie from redirect responses.
+    # setTimeout 100ms: Chrome commits cookies async after navigation response;
+    # firing window.location immediately races the cookie store write.
+    response = HTMLResponse(
+        content=(
+            "<!doctype html><html><head></head><body>"
+            f"<script>setTimeout(function(){{window.location.replace('{ADMIN_PREFIX}');}},100);</script>"
+            "</body></html>"
+        ),
+        status_code=200,
+    )
     response.set_cookie(
         key=ADMIN_SESSION_COOKIE,
         value=token,
