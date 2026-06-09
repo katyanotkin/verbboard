@@ -31,7 +31,7 @@ def create_admin_session_token() -> str:
 
 def verify_admin_session_token(token: str) -> bool:
     if not token:
-        logger.warning("admin token verify: empty token")
+        print("[admin] token verify: empty token", flush=True)
         return False
     serializer = _serializer()
     try:
@@ -41,16 +41,16 @@ def verify_admin_session_token(token: str) -> bool:
             max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
         )
     except SignatureExpired:
-        logger.warning("admin token verify: SignatureExpired")
+        print("[admin] token verify: SignatureExpired", flush=True)
         return False
     except BadSignature as exc:
-        logger.warning("admin token verify: BadSignature – %s", exc)
+        print(f"[admin] token verify: BadSignature – {exc}", flush=True)
         return False
     except Exception as exc:
-        logger.warning("admin token verify: unexpected error – %s", exc)
+        print(f"[admin] token verify: unexpected error – {exc}", flush=True)
         return False
 
     ok = payload == {"role": "admin"}
     if not ok:
-        logger.warning("admin token verify: unexpected payload %r", payload)
+        print(f"[admin] token verify: unexpected payload {payload!r}", flush=True)
     return ok
