@@ -8,9 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from core.admin_auth import (
     ADMIN_SESSION_COOKIE,
     ADMIN_SESSION_MAX_AGE_SECONDS,
-    create_admin_login_token,
     create_admin_session_token,
-    verify_admin_login_token,
     verify_admin_password,
     verify_admin_session_token,
 )
@@ -107,48 +105,22 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
     if not verify_admin_password(password):
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
-    # Fastly strips Set-Cookie from POST responses and 3xx responses.
-    # Issue a short-lived signed token and navigate to a GET endpoint that sets the cookie.
-    login_token = create_admin_login_token()
-    print("[admin] login success, issuing login token", flush=True)
+    token = create_admin_session_token()
+    print("[admin] login success, setting cookie via JS", flush=True)
+    # Set the cookie from JS, not via Set-Cookie header.
+    # Firebase Hosting / Fastly strips or isolates server-set cookies;
+    # document.cookie is synchronous and definitively first-party.
+    cookie_str = f"{ADMIN_SESSION_COOKIE}={token}; Path=/; Max-Age={ADMIN_SESSION_MAX_AGE_SECONDS}; SameSite=Lax; Secure"
     return HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
-            f"window.location.replace('{ADMIN_PREFIX}/login-callback?t={login_token}');"
-            "</script></body></html>"
-        ),
-        status_code=200,
-    )
-
-
-@router.get("/login-callback")
-async def admin_login_callback(t: str = "") -> Response:
-    if not verify_admin_login_token(t):
-        return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
-
-    session_token = create_admin_session_token()
-    print("[admin] login-callback: setting session cookie, navigating", flush=True)
-    # Navigate directly -- navigate requests always send cookies regardless of SameSite.
-    # Cache-Control: no-store tells Fastly not to cache this response and pass Set-Cookie through.
-    response = HTMLResponse(
-        content=(
-            "<!doctype html><html><head></head><body><script>"
+            f"document.cookie={cookie_str!r};"
             f"window.location.replace('{ADMIN_PREFIX}');"
             "</script></body></html>"
         ),
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
         status_code=200,
     )
-    response.set_cookie(
-        key=ADMIN_SESSION_COOKIE,
-        value=session_token,
-        httponly=True,
-        samesite="none",
-        secure=True,
-        max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
-        path="/",
-    )
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    return response
 
 
 @router.get("/check-auth")
@@ -162,7 +134,15 @@ async def admin_check_auth(request: Request) -> Response:
 
 
 @router.post("/logout")
-async def admin_logout() -> RedirectResponse:
-    response = RedirectResponse(url=f"{ADMIN_PREFIX}/login", status_code=303)
-    response.delete_cookie(key=ADMIN_SESSION_COOKIE, path="/")
-    return response
+async def admin_logout() -> HTMLResponse:
+    clear_cookie = f"{ADMIN_SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; Secure"
+    return HTMLResponse(
+        content=(
+            "<!doctype html><html><head></head><body><script>"
+            f"document.cookie={clear_cookie!r};"
+            f"window.location.replace('{ADMIN_PREFIX}/login');"
+            "</script></body></html>"
+        ),
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
+        status_code=200,
+    )

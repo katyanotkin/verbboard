@@ -1,4 +1,4 @@
-const CACHE = "vb-v18";
+const CACHE = "vb-v19";
 const PRECACHE = [
   "/static/common.css",
   "/static/home.css",
@@ -37,6 +37,21 @@ self.addEventListener("activate", e =>
 );
 
 self.addEventListener("fetch", e => {
-  if (e.request.mode === "navigate") return;
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+  const url = new URL(e.request.url);
+
+  const isStaticAsset =
+    url.pathname.startsWith("/static/") ||
+    url.pathname.startsWith("/icons/") ||
+    url.pathname.endsWith(".css") ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".svg") ||
+    url.pathname.endsWith(".png");
+
+  if (!isStaticAsset) {
+    return; // bypass SW for API/auth/navigation
+  }
+
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request))
+  );
 });
