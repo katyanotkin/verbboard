@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import hmac
+import logging
 
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from core.settings import load_settings
+
+logger = logging.getLogger(__name__)
 
 ADMIN_SESSION_COOKIE = "verbboard_admin_session"
 ADMIN_SESSION_SALT = "verbboard-admin-session"
@@ -27,6 +30,9 @@ def create_admin_session_token() -> str:
 
 
 def verify_admin_session_token(token: str) -> bool:
+    if not token:
+        logger.warning("admin token verify: empty token")
+        return False
     serializer = _serializer()
     try:
         payload = serializer.loads(
@@ -34,7 +40,17 @@ def verify_admin_session_token(token: str) -> bool:
             salt=ADMIN_SESSION_SALT,
             max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
         )
-    except (BadSignature, SignatureExpired):
+    except SignatureExpired:
+        logger.warning("admin token verify: SignatureExpired")
+        return False
+    except BadSignature as exc:
+        logger.warning("admin token verify: BadSignature – %s", exc)
+        return False
+    except Exception as exc:
+        logger.warning("admin token verify: unexpected error – %s", exc)
         return False
 
-    return payload == {"role": "admin"}
+    ok = payload == {"role": "admin"}
+    if not ok:
+        logger.warning("admin token verify: unexpected payload %r", payload)
+    return ok
