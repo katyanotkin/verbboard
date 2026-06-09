@@ -8,8 +8,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from core.admin_auth import (
     ADMIN_SESSION_COOKIE,
-    ADMIN_SESSION_MAX_AGE_SECONDS,
-    create_admin_session_token,
     verify_admin_password,
     verify_admin_session_token,
 )
@@ -106,25 +104,24 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
     if not verify_admin_password(password):
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
-    token = create_admin_session_token()
-    print("[admin] login success, setting cookie via JS", flush=True)
-    # Firebase Hosting strips Set-Cookie headers from all responses.
-    # document.cookie assignment is synchronous -- cookie is committed before
-    # location.replace fires on the next line.
-    cookie_str = (
-        f"{ADMIN_SESSION_COOKIE}={token}; path=/; "
-        f"max-age={ADMIN_SESSION_MAX_AGE_SECONDS}; secure; samesite=lax"
-    )
-    return HTMLResponse(
+    print("[admin] login: diagnostic Set-Cookie test", flush=True)
+    # DIAGNOSTIC ONLY: Set-Cookie with value=test to check if infrastructure strips it.
+    # Check Application tab in DevTools after submitting password.
+    # cookie=test present → infrastructure not stripping → switch back to server-set real token.
+    # cookie absent → infrastructure strips Set-Cookie → need alternative.
+    response = HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
-            f"document.cookie={json.dumps(cookie_str)};"
             f"window.location.replace('{ADMIN_PREFIX}/login-callback');"
             "</script></body></html>"
         ),
         headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
         status_code=200,
     )
+    response.headers["Set-Cookie"] = (
+        f"{ADMIN_SESSION_COOKIE}=test; Path=/; Secure; SameSite=Lax"
+    )
+    return response
 
 
 @router.get("/login-callback")
