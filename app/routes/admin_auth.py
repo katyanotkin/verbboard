@@ -106,21 +106,27 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     token = create_admin_session_token()
-    print("[admin] login success, setting cookie via JS", flush=True)
-    # Set the cookie from JS, not via Set-Cookie header.
-    # Firebase Hosting / Fastly strips or isolates server-set cookies;
-    # document.cookie is synchronous and definitively first-party.
-    cookie_str = f"{ADMIN_SESSION_COOKIE}={token}; Path=/; Max-Age={ADMIN_SESSION_MAX_AGE_SECONDS}; SameSite=Lax; Secure"
-    return HTMLResponse(
+    print("[admin] login success, setting cookie", flush=True)
+    # 200 (not 303): Fastly strips Set-Cookie from 3xx responses.
+    response = HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
-            f"document.cookie={cookie_str!r};"
             f"window.location.replace('{ADMIN_PREFIX}');"
             "</script></body></html>"
         ),
         headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
         status_code=200,
     )
+    response.set_cookie(
+        key=ADMIN_SESSION_COOKIE,
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
+        path="/",
+    )
+    return response
 
 
 @router.get("/check-auth")
@@ -135,14 +141,19 @@ async def admin_check_auth(request: Request) -> Response:
 
 @router.post("/logout")
 async def admin_logout() -> HTMLResponse:
-    clear_cookie = f"{ADMIN_SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; Secure"
-    return HTMLResponse(
+    response = HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
-            f"document.cookie={clear_cookie!r};"
             f"window.location.replace('{ADMIN_PREFIX}/login');"
             "</script></body></html>"
         ),
-        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
+        headers={"Cache-Control": "no-store"},
         status_code=200,
     )
+    response.delete_cookie(
+        key=ADMIN_SESSION_COOKIE,
+        path="/",
+        secure=True,
+        samesite="none",
+    )
+    return response

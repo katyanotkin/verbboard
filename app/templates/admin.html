@@ -200,6 +200,8 @@
 
 <script>
   window.ADMIN_ROOT = '__ADMIN_ROOT__';
+  const _fetch = window.fetch;
+  window.fetch = (url, opts = {}) => _fetch(url, { credentials: 'include', ...opts });
 </script>
 <script src="/static/admin_shared.js"></script>
 <script src="/static/admin_signals.js"></script>
