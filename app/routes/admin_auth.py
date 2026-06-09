@@ -101,10 +101,10 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     token = create_admin_session_token()
-    # Cloud Run's GFE strips Set-Cookie from 3xx responses.
-    # Return a 200 with meta-refresh so the cookie reaches the browser.
     response = HTMLResponse(
-        content=f'<meta http-equiv="refresh" content="0;url={ADMIN_PREFIX}">',
+        content=f"<!doctype html><html><head><title>…</title></head><body>"
+        f'<script>window.location.replace("{ADMIN_PREFIX}");</script>'
+        f"</body></html>",
         status_code=200,
     )
     response.set_cookie(
