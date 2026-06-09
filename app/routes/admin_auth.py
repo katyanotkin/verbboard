@@ -8,7 +8,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from core.admin_auth import (
     ADMIN_SESSION_COOKIE,
     ADMIN_SESSION_MAX_AGE_SECONDS,
+    create_admin_login_token,
     create_admin_session_token,
+    verify_admin_login_token,
     verify_admin_password,
     verify_admin_session_token,
 )
@@ -101,15 +103,31 @@ async def admin_login_page(error: str = "") -> str:
 
 
 @router.post("/login")
-async def admin_login(password: str = Form(...)) -> RedirectResponse:
+async def admin_login(password: str = Form(...)) -> HTMLResponse:
     if not verify_admin_password(password):
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
-    token = create_admin_session_token()
-    print("[admin] login success, setting admin cookie", flush=True)
-    # 200 (not 303): Firebase Hosting/Fastly strips Set-Cookie from redirect responses.
-    # Poll /admin/check-auth until the cookie is committed to the browser's cookie
-    # store before navigating -- avoids the race between Set-Cookie and the next request.
+    # Fastly strips Set-Cookie from POST responses and 3xx responses.
+    # Issue a short-lived signed token and navigate to a GET endpoint that sets the cookie.
+    login_token = create_admin_login_token()
+    print("[admin] login success, issuing login token", flush=True)
+    return HTMLResponse(
+        content=(
+            "<!doctype html><html><head></head><body><script>"
+            f"window.location.replace('{ADMIN_PREFIX}/login-callback?t={login_token}');"
+            "</script></body></html>"
+        ),
+        status_code=200,
+    )
+
+
+@router.get("/login-callback")
+async def admin_login_callback(t: str = "") -> Response:
+    if not verify_admin_login_token(t):
+        return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
+
+    session_token = create_admin_session_token()
+    print("[admin] login-callback: setting session cookie", flush=True)
     poll_js = (
         "async function waitForAdminCookie() {"
         "for (let attempt = 0; attempt < 30; attempt++) {"
@@ -129,7 +147,7 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
     )
     response.set_cookie(
         key=ADMIN_SESSION_COOKIE,
-        value=token,
+        value=session_token,
         httponly=True,
         samesite="lax",
         secure=settings.environment in {"stage", "prod"},

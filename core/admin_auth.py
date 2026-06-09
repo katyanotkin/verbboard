@@ -13,6 +13,11 @@ ADMIN_SESSION_COOKIE = "verbboard_admin_session"
 ADMIN_SESSION_SALT = "verbboard-admin-session"
 ADMIN_SESSION_MAX_AGE_SECONDS = 60 * 60 * 12  # 12 hours
 
+# Short-lived token passed via GET /admin/login-callback to move Set-Cookie
+# onto a GET response (Fastly strips Set-Cookie from POST responses).
+ADMIN_LOGIN_TOKEN_SALT = "verbboard-admin-login-token"
+ADMIN_LOGIN_TOKEN_MAX_AGE_SECONDS = 60
+
 
 def _serializer() -> URLSafeTimedSerializer:
     settings = load_settings()
@@ -22,6 +27,26 @@ def _serializer() -> URLSafeTimedSerializer:
 def verify_admin_password(password: str) -> bool:
     settings = load_settings()
     return hmac.compare_digest(password, settings.admin_secret)
+
+
+def create_admin_login_token() -> str:
+    serializer = _serializer()
+    return serializer.dumps({"action": "login"}, salt=ADMIN_LOGIN_TOKEN_SALT)
+
+
+def verify_admin_login_token(token: str) -> bool:
+    if not token:
+        return False
+    serializer = _serializer()
+    try:
+        payload = serializer.loads(
+            token,
+            salt=ADMIN_LOGIN_TOKEN_SALT,
+            max_age=ADMIN_LOGIN_TOKEN_MAX_AGE_SECONDS,
+        )
+    except Exception:
+        return False
+    return payload == {"action": "login"}
 
 
 def create_admin_session_token() -> str:
