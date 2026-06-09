@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from datetime import UTC, datetime
 
 from google.cloud import firestore
@@ -23,14 +24,19 @@ _PAGE_NAMES = {
 def tracked_page(path: str) -> str | None:
     return _PAGE_NAMES.get(path)
 
+
 _pending: set[asyncio.Task] = set()
+
+
+def _safe_key(value: str) -> str:
+    return re.sub(r"[^a-z0-9-]", "_", (value or "none").lower())[:20]
 
 
 def _write(date: str, page: str, language: str, ui_lang: str, device_type: str) -> None:
     from core.storage.firestore_db import get_db
 
-    lang_key = language or "none"
-    ui_key = ui_lang or "none"
+    lang_key = _safe_key(language)
+    ui_key = _safe_key(ui_lang)
     doc_id = f"{date}_{page}_{device_type}_{lang_key}_{ui_key}"
     try:
         get_db().collection(COLLECTION).document(doc_id).set(
