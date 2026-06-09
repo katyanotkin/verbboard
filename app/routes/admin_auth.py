@@ -108,10 +108,13 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
     token = create_admin_session_token()
     print("[admin] login success, setting cookie", flush=True)
     # 200 (not 303): Fastly strips Set-Cookie from 3xx responses.
+    # Navigate to /admin/login-callback (a GET) rather than /admin directly.
+    # The cookie from this POST response commits during the login-callback round-trip,
+    # so GET /admin fires after the cookie is in the store.
     response = HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
-            f"window.location.replace('{ADMIN_PREFIX}');"
+            f"window.location.replace('{ADMIN_PREFIX}/login-callback');"
             "</script></body></html>"
         ),
         headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
@@ -127,6 +130,23 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
         path="/",
     )
     return response
+
+
+@router.get("/login-callback")
+async def admin_login_callback(request: Request) -> HTMLResponse:
+    # By the time the browser processes this GET response, the Set-Cookie from the
+    # preceding POST has been committed. Safe to navigate to /admin now.
+    token = request.cookies.get(ADMIN_SESSION_COOKIE, "")
+    print(f"[admin] login-callback token_present={bool(token)}", flush=True)
+    return HTMLResponse(
+        content=(
+            "<!doctype html><html><head></head><body><script>"
+            f"window.location.replace('{ADMIN_PREFIX}');"
+            "</script></body></html>"
+        ),
+        headers={"Cache-Control": "no-store"},
+        status_code=200,
+    )
 
 
 @router.get("/check-auth")
