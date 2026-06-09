@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import http.cookies
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.staticfiles import StaticFiles
-from starlette.types import Scope
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 # Import plugins so they self-register on module import.
 import core.languages.en.plugin  # noqa: F401
@@ -49,12 +49,31 @@ class _CachedStaticFiles(StaticFiles):
         return response
 
 
-class _PageViewMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        response = await call_next(request)
+def _make_set_cookie(
+    name: str, value: str, *, httponly: bool = False, samesite: str = "lax"
+) -> bytes:
+    c: http.cookies.SimpleCookie = http.cookies.SimpleCookie()
+    c[name] = value
+    if httponly:
+        c[name]["httponly"] = True
+    c[name]["samesite"] = samesite
+    return c.output(header="").strip().encode("latin-1")
+
+
+class _PageViewMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self._app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self._app(scope, receive, send)
+            return
+
+        request = Request(scope, receive)
 
         if request.method != "GET":
-            return response
+            await self._app(scope, receive, send)
+            return
 
         from datetime import UTC, datetime
 
@@ -63,13 +82,13 @@ class _PageViewMiddleware(BaseHTTPMiddleware):
         from core.analytics.session_tracker import (
             ensure_sid,
             get_seen_pages,
-            set_seen_cookie,
             start_session,
         )
 
         page = tracked_page(request.url.path)
         if page is None:
-            return response
+            await self._app(scope, receive, send)
+            return
 
         language = request.query_params.get("language") or request.cookies.get(
             "language", ""
@@ -84,21 +103,46 @@ class _PageViewMiddleware(BaseHTTPMiddleware):
         seen = get_seen_pages(request, date)
 
         if is_new_session:
-            response.set_cookie("vb_sid", sid, httponly=True, samesite="lax")
             await start_session(
                 sid, date, detect_device_type(user_agent), language, ui_lang
             )
 
-        if page not in seen:
-            await record(request.url.path, language, ui_lang, user_agent)
-            seen.add(page)
-            set_seen_cookie(response, date, seen)
+        async def patched_send(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                extra: list[tuple[bytes, bytes]] = []
+                if is_new_session:
+                    extra.append(
+                        (
+                            b"set-cookie",
+                            _make_set_cookie(
+                                "vb_sid", sid, httponly=True, samesite="lax"
+                            ),
+                        )
+                    )
+                if page not in seen:
+                    await record(request.url.path, language, ui_lang, user_agent)
+                    seen.add(page)
+                    seen_val = f"{date}|{','.join(sorted(seen))}"
+                    extra.append(
+                        (
+                            b"set-cookie",
+                            _make_set_cookie(
+                                "vb_seen", seen_val, httponly=True, samesite="lax"
+                            ),
+                        )
+                    )
+                if extra:
+                    headers = list(message.get("headers", [])) + extra
+                    message = {**message, "headers": headers}
+            await send(message)
 
-        return response
+        await self._app(scope, receive, patched_send)
 
 
 app = FastAPI(lifespan=lifespan, title="VerbBoard")
-app.add_middleware(_PageViewMiddleware)
+app.add_middleware(
+    _PageViewMiddleware
+)  # pure ASGI — preserves all route-handler headers
 app.mount("/static", _CachedStaticFiles(directory="app/static"), name="static")
 
 app.include_router(about_router)
