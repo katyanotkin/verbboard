@@ -40,12 +40,12 @@ def verify_admin_session_token(token: str) -> bool:
             max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
         )
     except SignatureExpired:
-        print("[admin] verify: SignatureExpired", flush=True)
+        logger.info("verify: SignatureExpired")
         return False
     except BadSignature as exc:
-        print(f"[admin] verify: BadSignature – {exc}", flush=True)
+        logger.info("verify: BadSignature: %s", exc)
         return False
     except Exception as exc:
-        print(f"[admin] verify: unexpected – {type(exc).__name__}: {exc}", flush=True)
+        logger.warning("verify: unexpected %s: %s", type(exc).__name__, exc)
         return False
     return payload == {"role": "admin"}

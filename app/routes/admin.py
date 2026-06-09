@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
@@ -8,6 +10,8 @@ from app.routes.admin_candidates import router as admin_candidates_router
 from app.routes.admin_feedback import router as admin_feedback_router
 from app.routes.admin_signals import router as admin_signals_router
 from app.routes.admin_utils import ADMIN_PREFIX, TEMPLATES_DIR, require_admin_page
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix=ADMIN_PREFIX)
 

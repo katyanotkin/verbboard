@@ -1,15 +1,20 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+import logging
+
+from fastapi import APIRouter, Form, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from core.admin_auth import (
     ADMIN_SESSION_COOKIE,
     ADMIN_SESSION_MAX_AGE_SECONDS,
     create_admin_session_token,
     verify_admin_password,
+    verify_admin_session_token,
 )
 from core.settings import load_settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 settings = load_settings()
@@ -101,15 +106,25 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     token = create_admin_session_token()
+    logger.info("login success, setting admin cookie")
     # 200 (not 303): Firebase Hosting/Fastly strips Set-Cookie from redirect responses.
-    # setTimeout 100ms: Chrome commits cookies async after navigation response;
-    # firing window.location immediately races the cookie store write.
+    # Poll /admin/check-auth until the cookie is committed to the browser's cookie
+    # store before navigating -- avoids the race between Set-Cookie and the next request.
+    poll_js = (
+        "async function waitForAdminCookie() {"
+        "for (let attempt = 0; attempt < 30; attempt++) {"
+        "try {"
+        "const response = await fetch('/admin/check-auth', {credentials: 'include'});"
+        "if (response.ok) { window.location.replace('/admin'); return; }"
+        "} catch (_) {}"
+        "await new Promise(resolve => setTimeout(resolve, 100));"
+        "}"
+        "document.body.innerHTML = 'Login succeeded but admin session cookie was not established.';"
+        "}"
+        "waitForAdminCookie();"
+    )
     response = HTMLResponse(
-        content=(
-            "<!doctype html><html><head></head><body>"
-            f"<script>setTimeout(function(){{window.location.replace('{ADMIN_PREFIX}');}},100);</script>"
-            "</body></html>"
-        ),
+        content=f"<!doctype html><html><head></head><body><script>{poll_js}</script></body></html>",
         status_code=200,
     )
     response.set_cookie(
@@ -122,6 +137,14 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
         path="/",
     )
     return response
+
+
+@router.get("/check-auth")
+async def admin_check_auth(request: Request) -> Response:
+    token = request.cookies.get(ADMIN_SESSION_COOKIE, "")
+    if token and verify_admin_session_token(token):
+        return Response(status_code=204)
+    return Response(status_code=401)
 
 
 @router.post("/logout")
