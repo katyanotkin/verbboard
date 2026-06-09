@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse  # noqa: F401
 
 from core.admin_auth import (
     ADMIN_SESSION_COOKIE,
@@ -101,7 +101,12 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     token = create_admin_session_token()
-    response = RedirectResponse(url=ADMIN_PREFIX, status_code=303)
+    # Cloud Run's GFE strips Set-Cookie from 3xx responses.
+    # Return a 200 with meta-refresh so the cookie reaches the browser.
+    response = HTMLResponse(
+        content=f'<meta http-equiv="refresh" content="0;url={ADMIN_PREFIX}">',
+        status_code=200,
+    )
     response.set_cookie(
         key=ADMIN_SESSION_COOKIE,
         value=token,
