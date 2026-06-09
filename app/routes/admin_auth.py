@@ -142,6 +142,11 @@ async def admin_login(password: str = Form(...)) -> RedirectResponse:
 @router.get("/check-auth")
 async def admin_check_auth(request: Request) -> Response:
     token = request.cookies.get(ADMIN_SESSION_COOKIE, "")
+    logger.info(
+        "check-auth cookie_header=%r token_present=%s",
+        request.headers.get("cookie"),
+        bool(token),
+    )
     if token and verify_admin_session_token(token):
         return Response(status_code=204)
     return Response(status_code=401)
