@@ -10,7 +10,7 @@ from core.settings import load_settings
 
 logger = logging.getLogger(__name__)
 
-ADMIN_SESSION_COOKIE = "verbboard_admin_session"
+ADMIN_SESSION_COOKIE = "vb_admin_tok"
 ADMIN_SESSION_SALT = "verbboard-admin-session"
 ADMIN_SESSION_MAX_AGE_SECONDS = 60 * 60 * 12  # 12 hours
 

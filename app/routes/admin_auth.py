@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import logging
 
 from fastapi import APIRouter, Form, Request
@@ -8,6 +7,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from core.admin_auth import (
     ADMIN_SESSION_COOKIE,
+    ADMIN_SESSION_MAX_AGE_SECONDS,
+    create_admin_session_token,
     verify_admin_password,
     verify_admin_session_token,
 )
@@ -104,11 +105,10 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
     if not verify_admin_password(password):
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
-    print("[admin] login: diagnostic Set-Cookie test", flush=True)
-    # DIAGNOSTIC ONLY: Set-Cookie with value=test to check if infrastructure strips it.
-    # Check Application tab in DevTools after submitting password.
-    # cookie=test present → infrastructure not stripping → switch back to server-set real token.
-    # cookie absent → infrastructure strips Set-Cookie → need alternative.
+    token = create_admin_session_token()
+    print("[admin] login success, setting cookie", flush=True)
+    # Firebase Hosting strips cookies whose names contain "session" from proxied requests.
+    # Cookie is named vb_admin_tok (no "session") to avoid this.
     response = HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
@@ -118,8 +118,14 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
         headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
         status_code=200,
     )
-    response.headers["Set-Cookie"] = (
-        f"{ADMIN_SESSION_COOKIE}=test; Path=/; Secure; SameSite=Lax"
+    response.set_cookie(
+        key=ADMIN_SESSION_COOKIE,
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
+        path="/",
     )
     return response
 
@@ -153,14 +159,16 @@ async def admin_check_auth(request: Request) -> Response:
 
 @router.post("/logout")
 async def admin_logout() -> HTMLResponse:
-    clear_str = f"{ADMIN_SESSION_COOKIE}=; path=/; max-age=0; secure; samesite=lax"
-    return HTMLResponse(
+    response = HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
-            f"document.cookie={json.dumps(clear_str)};"
             f"window.location.replace('{ADMIN_PREFIX}/login');"
             "</script></body></html>"
         ),
         headers={"Cache-Control": "no-store"},
         status_code=200,
     )
+    response.delete_cookie(
+        key=ADMIN_SESSION_COOKIE, path="/", secure=True, samesite="lax"
+    )
+    return response
