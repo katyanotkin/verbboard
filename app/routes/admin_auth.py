@@ -149,8 +149,8 @@ async def admin_login_callback(t: str = "") -> Response:
         key=ADMIN_SESSION_COOKIE,
         value=session_token,
         httponly=True,
-        samesite="lax",
-        secure=settings.environment in {"stage", "prod"},
+        samesite="none",
+        secure=True,
         max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
         path="/",
     )
