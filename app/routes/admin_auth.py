@@ -132,8 +132,14 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
 
 @router.get("/login-callback")
 async def admin_login_callback(request: Request) -> HTMLResponse:
-    # Cookie was set synchronously via document.cookie in the POST response.
-    # This round-trip is here to confirm it was received before navigating to /admin.
+    print(f"[admin] ADMIN_SESSION_COOKIE={ADMIN_SESSION_COOKIE!r}", flush=True)
+    print(
+        f"[admin] login-callback cookie_header={request.headers.get('cookie')!r}",
+        flush=True,
+    )
+    print(
+        f"[admin] login-callback parsed_cookies={dict(request.cookies)!r}", flush=True
+    )
     token = request.cookies.get(ADMIN_SESSION_COOKIE, "")
     print(f"[admin] login-callback token_present={bool(token)}", flush=True)
     return HTMLResponse(
