@@ -82,7 +82,7 @@ test-e2e-parallel: ## QA: run Playwright e2e tests with 2 parallel workers
 	PYTHONPATH=. pytest tests/e2e -n 2 -v
 
 test-e2e-stage: ## QA: run Playwright browser flow tests against stage
-	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e -v
+	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e -n 2 -v
 
 ## QA: run progress API integration tests against stage (mock user, requires ALLOW_LOCAL_DEV_AUTH=true)
 test-progress-stage: ## QA: progress API integration tests vs stage
