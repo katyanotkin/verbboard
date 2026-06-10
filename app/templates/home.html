@@ -74,11 +74,11 @@
       </div>
 
       <div class="row browse-row">
-        <a href="/verbs?language={{ learning_lang }}" class="browse-main-link" id="browse-btn">
+        <a href="/verbs?language={{ learning_lang }}&ui_language={{ lang }}" class="browse-main-link" id="browse-btn">
           <span class="browse-icon">🧩</span>
           <span>{{ ui['home.browse_link'] }}</span>
         </a>
-        <a href="/verbs?language={{ learning_lang }}#practice-panel" class="browse-practice-btn">
+        <a href="/verbs?language={{ learning_lang }}&ui_language={{ lang }}#practice-panel" class="browse-practice-btn">
           <span class="browse-icon">▶</span>
           <span>{{ ui['practice.label'] }}</span>
         </a>
@@ -145,7 +145,7 @@
     </div>
   </div>
 
-  {% set bnav_lang = learning_lang %}{% set bnav_active = 'search' %}{% set bnav_back_href = '' %}{% include '_bottom_nav.html' %}
+  {% set bnav_lang = learning_lang %}{% set bnav_ui_lang = lang %}{% set bnav_active = 'search' %}{% set bnav_back_href = '' %}{% include '_bottom_nav.html' %}
 
   <script src="/static/home.js"></script>
   <script src="/static/pwa.js"></script>

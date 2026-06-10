@@ -1,4 +1,6 @@
 {% set bnav_back_href = bnav_back_href if bnav_back_href is defined else '' %}
+{% set bnav_ui_lang = bnav_ui_lang if bnav_ui_lang is defined else '' %}
+{% set _ui_suffix = ('&ui_language=' ~ (bnav_ui_lang | urlencode)) if bnav_ui_lang else '' %}
 <nav class="bottom-nav" aria-label="Main navigation">
 
   {% if bnav_back_href %}
@@ -14,7 +16,7 @@
   </a>
   {% endif %}
 
-  <a href="/?language={{ bnav_lang | urlencode }}"
+  <a href="/?language={{ bnav_lang | urlencode }}{{ _ui_suffix }}"
      class="bnav-tab{% if bnav_active == 'search' %} bnav-tab--active{% endif %}"
      aria-current="{{ 'page' if bnav_active == 'search' else 'false' }}">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -25,7 +27,7 @@
     <span>Search</span>
   </a>
 
-  <a href="/verbs?language={{ bnav_lang | urlencode }}"
+  <a href="/verbs?language={{ bnav_lang | urlencode }}{{ _ui_suffix }}"
      class="bnav-tab{% if bnav_active == 'browse' %} bnav-tab--active{% endif %}"
      aria-current="{{ 'page' if bnav_active == 'browse' else 'false' }}">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -41,7 +43,7 @@
     <span>List</span>
   </a>
 
-  <a href="/verbs?language={{ bnav_lang | urlencode }}#practice-panel"
+  <a href="/verbs?language={{ bnav_lang | urlencode }}{{ _ui_suffix }}#practice-panel"
      class="bnav-tab{% if bnav_active == 'practice' %} bnav-tab--active{% endif %}"
      aria-current="{{ 'page' if bnav_active == 'practice' else 'false' }}">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"

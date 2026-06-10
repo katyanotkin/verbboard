@@ -72,7 +72,8 @@ def test_home_browse_practice_btn_language_matches_selection(
 ) -> None:
     resp = client.get("/?language=he")
     assert resp.status_code == 200
-    assert "/verbs?language=he#practice-panel" in resp.text
+    assert "/verbs?language=he" in resp.text
+    assert "#practice-panel" in resp.text
 
 
 def test_home_both_ctas_present_together(client: TestClient) -> None:

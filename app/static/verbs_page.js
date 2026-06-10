@@ -141,6 +141,42 @@
     practiceLoop.renderPracticePanel();
   });
 
+  var _isMobile = window.matchMedia('(pointer: coarse)').matches;
+
+  // Mobile: show all pre-loaded verbs at once (no display-batch cap). If there are
+  // more verbs beyond VERBS_PAGE_LIMIT, the show-more button fetches them on demand.
+  (function () {
+    if (!_isMobile) return;
+    filters.showAll();
+  }());
+
+  // Desktop back-nav: re-fetch verbs that were previously loaded but are absent
+  // after page reload (VB_VERBS only contains the server-rendered page-limit batch).
+  (function () {
+    if (_isMobile) return;
+
+    var navType = (performance.getEntriesByType('navigation')[0] || {}).type;
+    if (navType !== 'back_forward') return;
+
+    var needed = parseInt(sessionStorage.getItem('vb-display-count:' + lang) || '0', 10) - window.VB_VERBS.length;
+    if (!(needed > 0)) return;
+    if (window.VB_VERBS.length >= (window.VB_VERBS_TOTAL || 0)) return;
+
+    fetch(
+      '/api/verbs?language=' + encodeURIComponent(lang) +
+      '&offset=' + window.VB_VERBS.length +
+      '&limit=' + Math.min(needed, 100)
+    )
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data) return;
+        data.verbs.forEach(function (v) { window.VB_VERBS.push(v); });
+        window.VB_VERBS_TOTAL = data.total;
+        filters.render();
+      })
+      .catch(function () {});
+  }());
+
   // Load-more: client-side batch first, then server fetch when pre-loaded verbs exhausted
   (function () {
     var btnEl = document.getElementById('vb-load-more');

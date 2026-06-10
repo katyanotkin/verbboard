@@ -138,12 +138,14 @@
           ? ' is-seen'
           : '';
 
-      const returnTo = encodeURIComponent(`/verbs?language=${lang}`);
+      const uiLang = window.VB_UI_LANG || '';
+      const uiParam = uiLang ? ('&ui_language=' + encodeURIComponent(uiLang)) : '';
+      const returnTo = encodeURIComponent('/verbs?language=' + lang + uiParam);
 
       return `
         <a
           class="vb-item${className}"
-          href="/learn?language=${encodeURIComponent(lang)}&verb_id=${encodeURIComponent(verb.id)}&return_to=${returnTo}"
+          href="/learn?language=${encodeURIComponent(lang)}&verb_id=${encodeURIComponent(verb.id)}&return_to=${returnTo}${uiParam}"
         >
           <span class="vb-lemma">${esc(verb.lemma)}</span>${badge}
         </a>
@@ -201,7 +203,9 @@
         .map(v => renderItem(v, knownSet, seenSet))
         .join('');
 
-      sessionStorage.setItem(displayCountKey, String(displayCount));
+      if (isFinite(displayCount)) {
+        sessionStorage.setItem(displayCountKey, String(displayCount));
+      }
       listEl.innerHTML = html;
 
       if (loadMoreWrapEl) {
@@ -232,9 +236,9 @@
       // progress-total span is server-rendered static HTML -- do not overwrite
     }
 
-    function applyFilter(newFilter) {
+    function applyFilter(newFilter, init) {
       activeFilter = newFilter;
-      displayCount = batch;
+      if (!init) displayCount = batch;
 
       if (toggleEl.tagName === 'SELECT') {
         toggleEl.value = newFilter;
@@ -253,6 +257,11 @@
       render();
     }
 
+    function showAll() {
+      displayCount = Infinity;
+      render();
+    }
+
     function hasMoreToShow() {
       return displayCount < visibleVerbs().length;
     }
@@ -260,7 +269,7 @@
     function bindEvents() {
       sortEl.value = activeSort;
 
-      applyFilter(activeFilter);
+      applyFilter(activeFilter, true);
 
       if (toggleEl.tagName === 'SELECT') {
         toggleEl.addEventListener('change', function () {
@@ -323,6 +332,7 @@
       known,
       seen,
       showMore,
+      showAll,
       hasMoreToShow,
     };
   }

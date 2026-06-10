@@ -277,15 +277,16 @@ def test_verbs_bottom_nav_browse_tab_active(client: TestClient) -> None:
 
 def test_home_bottom_nav_search_link_carries_language(client: TestClient) -> None:
     with patch("app.routes.home.list_verbs_recent", return_value=[]):
-        html = client.get("/?language=ru").text
-    # The Search tab links to /?language={lang}
-    assert 'href="/?language=ru"' in html
+        html = client.get("/?language=ru&ui_language=ru").text
+    # Search tab must carry both learning language and UI language (ui_language
+    # propagated as URL param because Firebase Hosting strips all cookies).
+    assert "/?language=ru&amp;ui_language=ru" in html
 
 
 def test_verbs_bottom_nav_browse_link_carries_language(client: TestClient) -> None:
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
-        html = client.get("/verbs?language=he").text
-    assert 'href="/verbs?language=he"' in html
+        html = client.get("/verbs?language=he&ui_language=en").text
+    assert "/verbs?language=he&amp;ui_language=en" in html
 
 
 # ---------------------------------------------------------------------------
@@ -639,11 +640,17 @@ def test_manifest_has_scope_root() -> None:
 def test_bottom_nav_lang_hrefs_contain_language(
     client: TestClient, url: str, lang: str, patch_target: str
 ) -> None:
-    """Bottom-nav Search and Browse links must carry the current language."""
+    """Bottom-nav Search and Browse links must carry language and ui_language.
+
+    ui_language is propagated as a URL param (not cookie) because Firebase
+    Hosting strips all cookies except __session before forwarding to Cloud Run.
+    Requests without ui_language default to 'en'. Jinja2 autoescape renders
+    the & separator as &amp; inside href attributes.
+    """
     with patch(patch_target, return_value=[]):
         html = client.get(url).text
-    assert f'href="/?language={lang}"' in html
-    assert f'href="/verbs?language={lang}"' in html
+    assert f'href="/?language={lang}&amp;ui_language=en"' in html
+    assert f'href="/verbs?language={lang}&amp;ui_language=en"' in html
 
 
 # ---------------------------------------------------------------------------
@@ -675,7 +682,8 @@ def test_verbs_bottom_nav_practice_tab_href(client: TestClient) -> None:
     """Practice tab must link to the practice panel anchor on the verbs page."""
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         html = client.get("/verbs?language=en").text
-    assert "/verbs?language=en#practice-panel" in html
+    assert "/verbs?language=en" in html
+    assert "#practice-panel" in html
 
 
 @pytest.mark.parametrize("lang", ["en", "ru", "he"])
@@ -684,7 +692,8 @@ def test_verbs_bottom_nav_practice_tab_carries_language(
 ) -> None:
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         html = client.get(f"/verbs?language={lang}").text
-    assert f"/verbs?language={lang}#practice-panel" in html
+    assert f"/verbs?language={lang}" in html
+    assert "#practice-panel" in html
 
 
 def test_verbs_page_js_has_hashchange_handler() -> None:
