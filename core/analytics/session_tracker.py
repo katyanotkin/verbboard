@@ -1,56 +1,49 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
-import uuid
 from datetime import UTC, datetime
 
-from fastapi import Request, Response
+from fastapi import Request
 
 logger = logging.getLogger(__name__)
 
 COLLECTION = "analytics_sessions"
 
-_SID_COOKIE = "vb_sid"
-_SEEN_COOKIE = "vb_seen"
-
 _pending: set[asyncio.Task] = set()
 
 
-def ensure_sid(request: Request) -> tuple[str, bool]:
-    """Return (sid, is_new). is_new=True means no session cookie was present."""
-    sid = request.cookies.get(_SID_COOKIE)
-    if sid:
-        return sid, False
-    return str(uuid.uuid4()), True
+def get_fingerprint_sid(request: Request, date: str) -> str:
+    """Deterministic session ID: SHA256(forwarded_ip|user_agent|date)[:32].
+
+    Firebase Hosting strips all cookies except __session, so cookie-based
+    session IDs cannot survive to Cloud Run. A server-side fingerprint derived
+    from stable request headers gives one session doc per (IP, UA, day) without
+    any cookie round-trip.
+    """
+    ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or (request.client.host if request.client else "")
+        or "unknown"
+    )
+    ua = request.headers.get("user-agent", "")
+    raw = f"{ip}|{ua}|{date}"
+    return hashlib.sha256(raw.encode()).hexdigest()[:32]
 
 
-def get_seen_pages(request: Request, date: str) -> set[str]:
-    """Return set of page names already counted today for this session."""
-    raw = request.cookies.get(_SEEN_COOKIE, "")
-    if not raw:
-        return set()
-    cookie_date, _, pages_str = raw.partition("|")
-    if cookie_date != date:
-        return set()
-    return set(pages_str.split(",")) if pages_str else set()
-
-
-def set_seen_cookie(response: Response, date: str, pages: set[str]) -> None:
-    value = f"{date}|{','.join(sorted(pages))}"
-    response.set_cookie(_SEEN_COOKIE, value, httponly=True, samesite="lax")
-
-
-def _write_session(
-    sid: str, date: str, device_type: str, language: str, ui_lang: str
+def _create_session(
+    fingerprint: str, date: str, device_type: str, language: str, ui_lang: str
 ) -> None:
+    from google.api_core.exceptions import AlreadyExists
+
     from core.storage.firestore_db import get_db
 
-    doc_id = f"{date}_{sid}"
+    doc_id = f"{date}_{fingerprint}"
     try:
-        get_db().collection(COLLECTION).document(doc_id).set(
+        get_db().collection(COLLECTION).document(doc_id).create(
             {
-                "sid": sid,
+                "sid": fingerprint,
                 "date": date,
                 "device_type": device_type,
                 "language": language or "",
@@ -59,24 +52,28 @@ def _write_session(
                 "created_at": datetime.now(UTC),
             }
         )
+    except AlreadyExists:
+        pass  # returning visitor within the same day -- expected, not an error
     except Exception:
         logger.exception("Failed to write analytics session")
 
 
 async def start_session(
-    sid: str, date: str, device_type: str, language: str, ui_lang: str
+    fingerprint: str, date: str, device_type: str, language: str, ui_lang: str
 ) -> None:
     task = asyncio.create_task(
-        asyncio.to_thread(_write_session, sid, date, device_type, language, ui_lang)
+        asyncio.to_thread(
+            _create_session, fingerprint, date, device_type, language, ui_lang
+        )
     )
     _pending.add(task)
     task.add_done_callback(_pending.discard)
 
 
-def _attach_uid(sid: str, date: str, uid: str) -> None:
+def _attach_uid(fingerprint: str, date: str, uid: str) -> None:
     from core.storage.firestore_db import get_db
 
-    doc_id = f"{date}_{sid}"
+    doc_id = f"{date}_{fingerprint}"
     try:
         get_db().collection(COLLECTION).document(doc_id).set(
             {"uid": uid},
@@ -86,7 +83,7 @@ def _attach_uid(sid: str, date: str, uid: str) -> None:
         logger.exception("Failed to attach uid to analytics session")
 
 
-async def attach_uid(sid: str, date: str, uid: str) -> None:
-    task = asyncio.create_task(asyncio.to_thread(_attach_uid, sid, date, uid))
+async def attach_uid(fingerprint: str, date: str, uid: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_attach_uid, fingerprint, date, uid))
     _pending.add(task)
     task.add_done_callback(_pending.discard)

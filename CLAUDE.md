@@ -135,9 +135,13 @@ Use the **Explore** agent for detailed file navigation.
 
 **Inline translations:** `Example.translations` dict; Claude/Gemini routing per language; shown when UI language differs from verb language.
 
-**Localization:** UI in EN / RU / HE / ES. Language + voice persist via cookies. Hebrew RTL supported.
+**Localization:** UI in EN / RU / HE / ES. Language travels as a `?language=` URL query param on every nav link and redirect. `ui_language` travels as `?ui_language=`. Neither uses cookies -- Firebase Hosting (Fastly CDN) strips all cookies except `__session` before forwarding to Cloud Run. Hebrew RTL supported.
 
 **Lexicon JSON:** As of 2026-04-30, retained for local development and Firestore import/backfill only. Runtime (stage/prod) reads exclusively from Firestore.
+
+---
+
+**Analytics:** `_PageViewMiddleware` in `app/main.py` tracks page views on `/`, `/verbs`, `/learn`, `/feedback`. Session ID = `SHA256(forwarded_ip|user_agent|date)[:32]` -- no cookie needed. One `analytics_sessions` doc per (IP, UA, day) in Firestore (created with `create()`, idempotent). Page views increment `analytics_daily` counters. UID attached to session on Firebase login via `POST /api/analytics/session` (server re-derives fingerprint from request headers).
 
 ---
 
@@ -146,6 +150,7 @@ Use the **Explore** agent for detailed file navigation.
 - No frontend frameworks -- vanilla JS only
 - No second database -- Firestore is the single source of truth
 - Do not commit `.env` or secrets
+- **Never use `set_cookie()` for non-`__session` names** -- Firebase Hosting CDN strips all other cookies before forwarding to Cloud Run and before returning responses to the browser
 - When adding a feature: does it conflict with the stateless/frictionless UX principle?
 - Always read `Makefile` and `pytest.ini` before touching test config
 

@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from core.analytics.session_tracker import _SID_COOKIE, attach_uid
+from core.analytics.session_tracker import attach_uid, get_fingerprint_sid
 from core.auth.firebase_auth import get_optional_auth_user
 
 router = APIRouter()
@@ -17,10 +17,7 @@ async def record_session_uid(request: Request) -> JSONResponse:
     if user is None:
         return JSONResponse({"ok": False}, status_code=401)
 
-    sid = request.cookies.get(_SID_COOKIE)
-    if not sid:
-        return JSONResponse({"ok": False}, status_code=400)
-
     date = datetime.now(UTC).strftime("%Y-%m-%d")
-    await attach_uid(sid, date, user.uid)
+    fingerprint = get_fingerprint_sid(request, date)
+    await attach_uid(fingerprint, date, user.uid)
     return JSONResponse({"ok": True})

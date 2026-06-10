@@ -1,132 +1,119 @@
-"""Tests for session tracking pure-Python helpers.
+"""Tests for session tracking helpers.
 
 Covers:
-- ensure_sid: returns existing cookie or generates a new UUID
-- get_seen_pages: parses vb_seen cookie (date-prefixed CSV); returns empty on mismatch
-- set_seen_cookie: writes sorted, date-prefixed value; round-trips with get_seen_pages
+- get_fingerprint_sid: deterministic SHA256(ip|ua|date)[:32]; stable across
+  calls, varies by IP / UA / date; uses X-Forwarded-For when present
 - tracked_page: maps URL paths to page names; returns None for untracked paths
 """
 
 from __future__ import annotations
 
-from http.cookies import SimpleCookie
-
-import pytest
 from starlette.requests import Request
-from starlette.responses import Response
 
 from core.analytics.daily_counters import tracked_page
-from core.analytics.session_tracker import (
-    ensure_sid,
-    get_seen_pages,
-    set_seen_cookie,
-)
+from core.analytics.session_tracker import get_fingerprint_sid
 
-# ── request / response helpers ────────────────────────────────────────────────
+# ── request helper ─────────────────────────────────────────────────────────────
 
 
-def _build_request(cookies: dict[str, str] | None = None) -> Request:
-    cookie_header = "; ".join(f"{k}={v}" for k, v in (cookies or {}).items())
-    headers_list = []
-    if cookie_header:
-        headers_list.append((b"cookie", cookie_header.encode()))
+def _build_request(
+    *,
+    forwarded_for: str = "",
+    user_agent: str = "",
+    client_host: str = "127.0.0.1",
+) -> Request:
+    headers: list[tuple[bytes, bytes]] = []
+    if forwarded_for:
+        headers.append((b"x-forwarded-for", forwarded_for.encode()))
+    if user_agent:
+        headers.append((b"user-agent", user_agent.encode()))
     scope = {
         "type": "http",
         "method": "GET",
         "path": "/",
         "query_string": b"",
-        "headers": headers_list,
+        "headers": headers,
+        "client": (client_host, 12345),
     }
     return Request(scope)
 
 
-def _parse_set_cookie_value(response: Response, name: str) -> str:
-    raw = response.headers.get("set-cookie", "")
-    sc = SimpleCookie()
-    sc.load(raw)
-    return sc[name].value if name in sc else ""
+# ── get_fingerprint_sid ────────────────────────────────────────────────────────
 
 
-# ── ensure_sid ────────────────────────────────────────────────────────────────
+def test_fingerprint_is_32_hex_chars() -> None:
+    req = _build_request(forwarded_for="1.2.3.4", user_agent="Mozilla/5.0")
+    sid = get_fingerprint_sid(req, "2026-06-10")
+    assert len(sid) == 32
+    assert all(c in "0123456789abcdef" for c in sid)
 
 
-def test_ensure_sid_returns_existing_cookie() -> None:
-    req = _build_request(cookies={"vb_sid": "existing-sid"})
-    sid, is_new = ensure_sid(req)
-    assert sid == "existing-sid"
-    assert is_new is False
+def test_fingerprint_is_deterministic() -> None:
+    req = _build_request(forwarded_for="1.2.3.4", user_agent="Mozilla/5.0")
+    sid1 = get_fingerprint_sid(req, "2026-06-10")
+    sid2 = get_fingerprint_sid(req, "2026-06-10")
+    assert sid1 == sid2
 
 
-def test_ensure_sid_generates_new_uuid_when_no_cookie() -> None:
-    req = _build_request()
-    sid, is_new = ensure_sid(req)
-    assert is_new is True
-    parts = sid.split("-")
-    assert len(parts) == 5
+def test_fingerprint_varies_by_date() -> None:
+    req = _build_request(forwarded_for="1.2.3.4", user_agent="Mozilla/5.0")
+    assert get_fingerprint_sid(req, "2026-06-10") != get_fingerprint_sid(
+        req, "2026-06-11"
+    )
 
 
-def test_ensure_sid_new_uuids_are_unique() -> None:
-    req = _build_request()
-    sid1, _ = ensure_sid(req)
-    sid2, _ = ensure_sid(req)
-    assert sid1 != sid2
+def test_fingerprint_varies_by_ip() -> None:
+    ua = "Mozilla/5.0"
+    date = "2026-06-10"
+    req1 = _build_request(forwarded_for="1.2.3.4", user_agent=ua)
+    req2 = _build_request(forwarded_for="5.6.7.8", user_agent=ua)
+    assert get_fingerprint_sid(req1, date) != get_fingerprint_sid(req2, date)
 
 
-# ── get_seen_pages ────────────────────────────────────────────────────────────
+def test_fingerprint_varies_by_user_agent() -> None:
+    ip = "1.2.3.4"
+    date = "2026-06-10"
+    req1 = _build_request(forwarded_for=ip, user_agent="Chrome/120")
+    req2 = _build_request(forwarded_for=ip, user_agent="Firefox/121")
+    assert get_fingerprint_sid(req1, date) != get_fingerprint_sid(req2, date)
 
 
-def test_get_seen_pages_empty_when_no_cookie() -> None:
-    req = _build_request()
-    assert get_seen_pages(req, "2026-05-27") == set()
+def test_fingerprint_uses_x_forwarded_for() -> None:
+    """X-Forwarded-For takes precedence over request.client.host."""
+    req_forwarded = _build_request(
+        forwarded_for="203.0.113.1", user_agent="UA", client_host="10.0.0.1"
+    )
+    req_direct = _build_request(
+        forwarded_for="", user_agent="UA", client_host="10.0.0.1"
+    )
+    # Different IPs in hash source -> different fingerprints
+    assert get_fingerprint_sid(req_forwarded, "2026-06-10") != get_fingerprint_sid(
+        req_direct, "2026-06-10"
+    )
 
 
-def test_get_seen_pages_empty_when_cookie_date_mismatch() -> None:
-    req = _build_request(cookies={"vb_seen": "2026-01-01|home,verbs"})
-    assert get_seen_pages(req, "2026-05-27") == set()
+def test_fingerprint_uses_first_forwarded_ip() -> None:
+    """Takes only the first IP from a comma-separated X-Forwarded-For header."""
+    req_single = _build_request(forwarded_for="1.2.3.4", user_agent="UA")
+    req_chain = _build_request(
+        forwarded_for="1.2.3.4, 10.0.0.1, 172.16.0.1", user_agent="UA"
+    )
+    assert get_fingerprint_sid(req_single, "2026-06-10") == get_fingerprint_sid(
+        req_chain, "2026-06-10"
+    )
 
 
-def test_get_seen_pages_returns_pages_for_matching_date() -> None:
-    req = _build_request(cookies={"vb_seen": "2026-05-27|home,verbs"})
-    pages = get_seen_pages(req, "2026-05-27")
-    assert pages == {"home", "verbs"}
-
-
-def test_get_seen_pages_single_page() -> None:
-    req = _build_request(cookies={"vb_seen": "2026-05-27|learn"})
-    assert get_seen_pages(req, "2026-05-27") == {"learn"}
-
-
-# ── set_seen_cookie ───────────────────────────────────────────────────────────
-
-
-def test_set_seen_cookie_contains_date_prefix() -> None:
-    response = Response()
-    set_seen_cookie(response, "2026-05-27", {"verbs", "home", "learn"})
-    value = _parse_set_cookie_value(response, "vb_seen")
-    assert value.startswith("2026-05-27|")
-
-
-def test_set_seen_cookie_writes_sorted_pages() -> None:
-    response = Response()
-    set_seen_cookie(response, "2026-05-27", {"verbs", "home", "learn"})
-    value = _parse_set_cookie_value(response, "vb_seen")
-    pages_part = value.split("|", 1)[1]
-    assert pages_part == "home,learn,verbs"
-
-
-def test_set_seen_cookie_round_trips() -> None:
-    """Value written by set_seen_cookie must be parseable by get_seen_pages."""
-    response = Response()
-    pages_in = {"home", "verbs"}
-    set_seen_cookie(response, "2026-05-27", pages_in)
-    cookie_value = _parse_set_cookie_value(response, "vb_seen")
-
-    req = _build_request(cookies={"vb_seen": cookie_value})
-    pages_out = get_seen_pages(req, "2026-05-27")
-    assert pages_out == pages_in
+def test_fingerprint_falls_back_to_client_host() -> None:
+    """When no X-Forwarded-For, uses request.client.host."""
+    req = _build_request(forwarded_for="", user_agent="UA", client_host="192.168.1.1")
+    sid = get_fingerprint_sid(req, "2026-06-10")
+    assert len(sid) == 32
 
 
 # ── tracked_page ──────────────────────────────────────────────────────────────
+
+
+import pytest  # noqa: E402
 
 
 @pytest.mark.parametrize(

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import http.cookies
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from starlette.staticfiles import StaticFiles
-from starlette.types import ASGIApp, Message, Receive, Scope, Send
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 # Import plugins so they self-register on module import.
 import core.languages.en.plugin  # noqa: F401
@@ -49,17 +48,6 @@ class _CachedStaticFiles(StaticFiles):
         return response
 
 
-def _make_set_cookie(
-    name: str, value: str, *, httponly: bool = False, samesite: str = "lax"
-) -> bytes:
-    c: http.cookies.SimpleCookie = http.cookies.SimpleCookie()
-    c[name] = value
-    if httponly:
-        c[name]["httponly"] = True
-    c[name]["samesite"] = samesite
-    return c.output(header="").strip().encode("latin-1")
-
-
 class _PageViewMiddleware:
     def __init__(self, app: ASGIApp) -> None:
         self._app = app
@@ -79,64 +67,25 @@ class _PageViewMiddleware:
 
         from core.analytics.client_context import detect_device_type
         from core.analytics.daily_counters import record, tracked_page
-        from core.analytics.session_tracker import (
-            ensure_sid,
-            get_seen_pages,
-            start_session,
-        )
+        from core.analytics.session_tracker import get_fingerprint_sid, start_session
 
         page = tracked_page(request.url.path)
         if page is None:
             await self._app(scope, receive, send)
             return
 
-        language = request.query_params.get("language") or request.cookies.get(
-            "language", ""
-        )
-        ui_lang = request.query_params.get("ui_language") or request.cookies.get(
-            "ui_language", ""
-        )
+        language = request.query_params.get("language", "")
+        ui_lang = request.query_params.get("ui_language", "")
         user_agent = request.headers.get("user-agent")
         date = datetime.now(UTC).strftime("%Y-%m-%d")
 
-        sid, is_new_session = ensure_sid(request)
-        seen = get_seen_pages(request, date)
+        fingerprint = get_fingerprint_sid(request, date)
+        await start_session(
+            fingerprint, date, detect_device_type(user_agent), language, ui_lang
+        )
+        await record(request.url.path, language, ui_lang, user_agent)
 
-        if is_new_session:
-            await start_session(
-                sid, date, detect_device_type(user_agent), language, ui_lang
-            )
-
-        async def patched_send(message: Message) -> None:
-            if message["type"] == "http.response.start":
-                extra: list[tuple[bytes, bytes]] = []
-                if is_new_session:
-                    extra.append(
-                        (
-                            b"set-cookie",
-                            _make_set_cookie(
-                                "vb_sid", sid, httponly=True, samesite="lax"
-                            ),
-                        )
-                    )
-                if page not in seen:
-                    await record(request.url.path, language, ui_lang, user_agent)
-                    seen.add(page)
-                    seen_val = f"{date}|{','.join(sorted(seen))}"
-                    extra.append(
-                        (
-                            b"set-cookie",
-                            _make_set_cookie(
-                                "vb_seen", seen_val, httponly=True, samesite="lax"
-                            ),
-                        )
-                    )
-                if extra:
-                    headers = list(message.get("headers", [])) + extra
-                    message = {**message, "headers": headers}
-            await send(message)
-
-        await self._app(scope, receive, patched_send)
+        await self._app(scope, receive, send)
 
 
 app = FastAPI(lifespan=lifespan, title="VerbBoard")

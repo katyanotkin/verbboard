@@ -70,6 +70,28 @@ build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board
 
 Plugins are imported in `app/main.py` at startup. The registry is in `core/registry.py`.
 
+### Cookie constraint
+
+Firebase Hosting (Fastly CDN) strips **all** cookies from requests and responses except `__session`. Rules that follow from this:
+
+- `__session` -- admin HMAC token only; set/read by `admin_auth.py` and `admin_utils.py`
+- All other preferences (`language`, `ui_language`) travel as **URL query params**, never as cookies
+- Analytics sessions use a **server-side IP+UA fingerprint** (see Analytics below)
+- Never add a new `set_cookie()` call for a non-`__session` name in server code
+
+### Analytics
+
+Middleware: `_PageViewMiddleware` in `app/main.py` intercepts GET requests to tracked pages (`/`, `/verbs`, `/learn`, `/feedback`).
+
+**Session tracking** (`core/analytics/session_tracker.py`):
+- Session ID = `SHA256(forwarded_ip | user_agent | date)[:32]` -- deterministic, no cookie needed
+- One Firestore doc per `(IP, UA, day)` in `analytics_sessions`; `create()` is a no-op for returning visitors
+- UID attached to session doc on user login via `POST /api/analytics/session` (auth.js fires this after Firebase sign-in; server derives fingerprint from the same request headers)
+
+**Page view counting** (`core/analytics/daily_counters.py`):
+- Increments a counter doc in `analytics_daily` keyed by `{date}_{page}_{device}_{lang}_{ui_lang}`
+- Counts every page load (no per-session deduplication for now -- future upgrade: JS-side sessionStorage analytics)
+
 ### Key data flows
 
 **Verb page load:** `GET /learn?verb={id}&language={lang}` -> `verb_loader.py` (Firestore, 60s TTL cache) -> language plugin `build_board()` -> `core/render.py` builds HTML -> `TemplateResponse("board.html")`
@@ -114,12 +136,10 @@ Generated from lead-architect audit (2026-06-10). Tracks divergences from intend
   - Created `app/templates/admin_login.html` + `app/static/admin_login.css`
   - Minimal redirect scripts (login-callback, logout) left inline (3-liners, acceptable)
 
-- [ ] **Cookie persistence on Firebase Hosting (decision needed)**
-  - Firebase Hosting / Fastly CDN strips all cookies except `__session` before forwarding to Cloud Run
-  - Affected cookies set via `Set-Cookie`: `language`, `ui_language`, `verb_id`, `vb_sid`, `vb_seen`
-  - On prod/stage, Cloud Run never sees these on subsequent requests -- preferences silently reset
-  - Options: move preferences to `localStorage` + pass as query params on first load; or accept degradation
-  - Files: `app/routes/home.py`, `app/routes/verbs.py`, `app/routes/about.py`, `app/main.py`
+- [x] **Cookie persistence on Firebase Hosting**
+  - Firebase Hosting / Fastly CDN strips all cookies except `__session`
+  - `language`, `ui_language`, `verb_id` preference cookies removed from all routes; `ui_language` now travels exclusively as URL query param
+  - `vb_sid`/`vb_seen` analytics cookies replaced by server-side IP+UA fingerprint (see Analytics section below)
 
 ## Medium
 
