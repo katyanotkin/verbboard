@@ -54,8 +54,11 @@ def _load_entries(language: str) -> list[_HomeVerb]:
 
 
 @router.get("/set_language", response_model=None)
-def set_language(language: str):
-    response = RedirectResponse(url=f"/?language={language}")
+def set_language(language: str, ui_language: str = ""):
+    url = f"/?language={language}"
+    if ui_language:
+        url += f"&ui_language={ui_language}"
+    response = RedirectResponse(url=url)
     response.set_cookie("language", language, httponly=False, samesite="lax")
     return response
 
@@ -67,10 +70,12 @@ async def search_verb_by_lang(
     q: str = "",
     source_lang: str = "en",
     return_to: str | None = None,
+    ui_language: str = "",
 ):
     query = (q or "").strip()
+    _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
-        return RedirectResponse(url=f"/?language={language}")
+        return RedirectResponse(url=f"/?language={language}{_ui_suffix}")
 
     settings = load_settings()
     translated = await asyncio.to_thread(
@@ -109,6 +114,7 @@ async def search_verb_by_lang(
                 url=(
                     f"/learn?language={language}&verb_id={matched_verb_id}"
                     f"&translated_from={quote(query, safe='')}&source_lang={source_lang}"
+                    f"{_ui_suffix}"
                 )
             )
             response.set_cookie("language", language, httponly=False, samesite="lax")
@@ -117,7 +123,10 @@ async def search_verb_by_lang(
             )
             return response
 
-    base = safe_return_to(return_to or "", fallback="") or f"/?language={language}"
+    base = (
+        safe_return_to(return_to or "", fallback="")
+        or f"/?language={language}{_ui_suffix}"
+    )
     sep = "&" if "?" in base else "?"
 
     if not translated:
@@ -153,11 +162,13 @@ def search_verb(
     request: Request,
     language: str,
     q: str = "",
+    ui_language: str = "",
     return_to: str | None = None,
 ):
     query = (q or "").strip()
+    _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
-        return RedirectResponse(url=f"/?language={language}")
+        return RedirectResponse(url=f"/?language={language}{_ui_suffix}")
 
     doc = find_verb_by_search_extract(language, query)
 
@@ -165,7 +176,7 @@ def search_verb(
         matched_verb_id = doc.get("verb_id")
 
         response = RedirectResponse(
-            url=f"/learn?language={language}&verb_id={matched_verb_id}"
+            url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}"
         )
         response.set_cookie("language", language, httponly=False, samesite="lax")
         response.set_cookie("verb_id", matched_verb_id, httponly=False, samesite="lax")
@@ -178,7 +189,7 @@ def search_verb(
         matched_verb_id = matched_entry.id
 
         response = RedirectResponse(
-            url=f"/learn?language={language}&verb_id={matched_verb_id}"
+            url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}"
         )
         response.set_cookie("language", language, httponly=False, samesite="lax")
         response.set_cookie("verb_id", matched_verb_id, httponly=False, samesite="lax")
@@ -191,7 +202,10 @@ def search_verb(
         source="search",
     )
 
-    base = safe_return_to(return_to or "", fallback="") or f"/?language={language}"
+    base = (
+        safe_return_to(return_to or "", fallback="")
+        or f"/?language={language}{_ui_suffix}"
+    )
     sep = "&" if "?" in base else "?"
     response = RedirectResponse(
         url=f"{base}{sep}not_available=1&search={quote(query, safe='')}"

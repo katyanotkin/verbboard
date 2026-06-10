@@ -60,7 +60,8 @@
           class="vb-toolbar"
         >
           <input type="hidden" name="language" value="{{ selected_language }}"/>
-          <input type="hidden" name="return_to" value="/verbs?language={{ selected_language }}"/>
+          <input type="hidden" name="ui_language" value="{{ ui_lang }}"/>
+          <input type="hidden" name="return_to" value="/verbs?language={{ selected_language }}&ui_language={{ ui_lang }}"/>
           {% if selected_language != 'en' %}
           <input type="hidden" id="vb-source-lang-input" name="source_lang" value="{{ 'en' if search_mode == 'en' else '' }}"/>
           {% endif %}

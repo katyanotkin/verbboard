@@ -141,7 +141,7 @@
     practiceLoop.renderPracticePanel();
   });
 
-  var _isMobile = window.matchMedia('(pointer: coarse)').matches;
+  var _isMobile = window.matchMedia('(any-pointer: coarse)').matches;
 
   // Mobile: show all pre-loaded verbs at once (no display-batch cap). If there are
   // more verbs beyond VERBS_PAGE_LIMIT, the show-more button fetches them on demand.
