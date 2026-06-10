@@ -74,20 +74,16 @@ make smoke-prod
 
 ---
 
-## TODO: test coverage gaps (from README/about page audit)
+## Covered (previously TODO)
 
-The README and about page document features that currently lack explicit regression tests.
-Each item below is a candidate for a future unit or e2e test pass:
+- **Focus filter** — `tests/test_focus_filter_render.py`: 18 unit tests covering
+  `data-gender`/`data-number` attribute rendering for HE/RU/ES/EN, and filter button
+  panel presence by language.
 
-- **Focus filter** (`/learn`) — hide conjugation rows by gender (masculine/feminine) and
-  number (singular/plural). Applies to Hebrew, Russian, and Spanish boards. No test
-  verifies that the correct rows are hidden/shown based on active filter state.
+- **Inline translations toggle** — `tests/e2e/test_translation_toggle.py`: 4 e2e tests
+  covering show/hide class toggle, button text swap, and absence when ui_language
+  matches verb language.
 
-- **Inline translations toggle** — when UI language differs from the verb language,
-  example sentences show a translation button. No test covers the toggle interaction
-  (button present, translation appears/hides on click, absent when languages match).
-
-- **Cross-device sync merge on login** — local progress (seen/known verbs, practice
-  badges) must merge automatically with server state when the user signs in. The merge
-  logic in `progress_service.py` and the badge merge in `practice_loop.js` (keep longer
-  list) are not covered by regression tests.
+- **Badge merge (cross-device sync)** — `tests/e2e/test_badge_merge.py`: 7 e2e tests
+  documenting the merge contract (server wins when longer or tied, local wins when
+  strictly longer, edge cases for empty arrays).
