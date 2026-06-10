@@ -62,9 +62,9 @@ def main(base: str) -> None:
     # ── verbs ─────────────────────────────────────────────────────────────
     _check(f"{base}/verbs?language=en", "verbs: renders", require=("vb-list",))
     _check(
-        f"{base}/verbs?language=en",
+        f"{base}/verbs?language=en&ui_language=en",
         "verbs: back to home",
-        require=('href="/?language=en"',),
+        require=('href="/?language=en&amp;ui_language=en"',),
     )
     _check(
         f"{base}/verbs?language=en", "verbs: feedback context", require=("page=verbs",)
