@@ -2,15 +2,14 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi import APIRouter, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from core.admin_auth import (
     ADMIN_SESSION_COOKIE,
     ADMIN_SESSION_MAX_AGE_SECONDS,
     create_admin_session_token,
     verify_admin_password,
-    verify_admin_session_token,
 )
 from core.settings import load_settings
 
@@ -106,9 +105,6 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
     token = create_admin_session_token()
-    print("[admin] login success, setting cookie", flush=True)
-    # Firebase Hosting strips cookies whose names contain "session" from proxied requests.
-    # Cookie is named vb_admin_tok (no "session") to avoid this.
     response = HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
@@ -131,17 +127,7 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
 
 
 @router.get("/login-callback")
-async def admin_login_callback(request: Request) -> HTMLResponse:
-    print(f"[admin] ADMIN_SESSION_COOKIE={ADMIN_SESSION_COOKIE!r}", flush=True)
-    print(
-        f"[admin] login-callback cookie_header={request.headers.get('cookie')!r}",
-        flush=True,
-    )
-    print(
-        f"[admin] login-callback parsed_cookies={dict(request.cookies)!r}", flush=True
-    )
-    token = request.cookies.get(ADMIN_SESSION_COOKIE, "")
-    print(f"[admin] login-callback token_present={bool(token)}", flush=True)
+async def admin_login_callback() -> HTMLResponse:
     return HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
@@ -151,16 +137,6 @@ async def admin_login_callback(request: Request) -> HTMLResponse:
         headers={"Cache-Control": "no-store"},
         status_code=200,
     )
-
-
-@router.get("/check-auth")
-async def admin_check_auth(request: Request) -> Response:
-    token = request.cookies.get(ADMIN_SESSION_COOKIE, "")
-    print(f"[admin] cookie_header={request.headers.get('cookie')!r}", flush=True)
-    print(f"[admin] cookies={dict(request.cookies)!r}", flush=True)
-    if token and verify_admin_session_token(token):
-        return Response(status_code=204)
-    return Response(status_code=401)
 
 
 @router.post("/logout")

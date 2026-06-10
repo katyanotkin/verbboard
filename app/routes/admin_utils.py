@@ -33,14 +33,8 @@ def signal_collections() -> tuple[str, str]:
 
 def require_admin_page(request: Request) -> RedirectResponse | None:
     token = request.cookies.get(ADMIN_SESSION_COOKIE, "")
-    valid = bool(token) and verify_admin_session_token(token)
-    print(
-        f"[admin] require_admin_page token_present={bool(token)} valid={valid}",
-        flush=True,
-    )
-    if valid:
+    if token and verify_admin_session_token(token):
         return None
-
     return RedirectResponse(url=f"{ADMIN_PREFIX}/login", status_code=303)
 
 
