@@ -44,10 +44,9 @@ def verb_browser(
 ) -> HTMLResponse:
     settings = load_settings()
 
-    cookie_language = request.cookies.get("language")
     plugins = all_plugins()
 
-    selected_language = language or cookie_language or "he"
+    selected_language = language or "he"
 
     if selected_language not in plugins:
         selected_language = "he"
@@ -135,20 +134,6 @@ def verb_browser(
             "verbs_display_batch": settings.verbs_display_batch,
             "firebase_web_config_json": (settings.firebase_web_config_json),
         },
-    )
-
-    response.set_cookie(
-        "language",
-        selected_language,
-        httponly=False,
-        samesite="lax",
-    )
-
-    response.set_cookie(
-        "ui_language",
-        ui_lang,
-        httponly=False,
-        samesite="lax",
     )
 
     return response

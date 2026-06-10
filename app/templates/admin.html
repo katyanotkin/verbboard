@@ -15,7 +15,7 @@
       <div class="sub">Admin</div>
     </div>
 
-    <a class="nav-item active" href="__ADMIN_ROOT__/feedback">
+    <a class="nav-item active" href="{{ admin_prefix }}/feedback">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
         <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H9l-3 2v-2H3a1 1 0 01-1-1V3z" fill="currentColor" opacity="0.7"/>
       </svg>
@@ -199,7 +199,7 @@
 </div>
 
 <script>
-  window.ADMIN_ROOT = '__ADMIN_ROOT__';
+  window.ADMIN_ROOT = '{{ admin_prefix }}';
   const _fetch = window.fetch;
   window.fetch = (url, opts = {}) => _fetch(url, { credentials: 'include', ...opts });
 </script>

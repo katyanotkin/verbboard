@@ -6,7 +6,6 @@ by a separate endpoint; see test_search_cross_language.py.
 
 Covers:
 - Hit: redirects to /learn with verb_id and language
-- Hit: language cookie is set
 - Miss: demand signal logged
 - Miss: redirects with not_available=1
 - Empty query: redirects to home without not_available
@@ -32,17 +31,6 @@ def test_search_hit_via_firestore_redirects_to_learn(
     assert "/learn" in location
     assert "en_go" in location
     assert "language=en" in location
-
-
-def test_search_hit_sets_cookies(client: TestClient, monkeypatch) -> None:
-    monkeypatch.setattr(
-        "app.routes.home.find_verb_by_search_extract",
-        lambda lang, query: {"verb_id": "en_go"},
-    )
-    response = client.get("/search_verb?language=en&q=go", follow_redirects=False)
-    assert "language" in response.cookies or "language" in response.headers.get(
-        "set-cookie", ""
-    )
 
 
 def test_search_miss_logs_demand_signal(client: TestClient, monkeypatch) -> None:

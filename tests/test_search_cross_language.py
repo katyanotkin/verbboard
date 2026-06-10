@@ -149,25 +149,6 @@ def test_search_by_lang_includes_translated_from_param(
     assert "source_lang=en" in location
 
 
-def test_search_by_lang_sets_language_cookie(client: TestClient, monkeypatch) -> None:
-    """On successful match, language cookie is set to the target language."""
-    monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_es)
-    monkeypatch.setattr(
-        "app.routes.home.find_verb_by_search_extract",
-        lambda lang, query: _CORRER_DOC
-        if (lang == "es" and query == "correr")
-        else None,
-    )
-
-    response = client.get(
-        "/search_verb_by_lang?language=es&q=run&source_lang=en",
-        follow_redirects=False,
-    )
-
-    set_cookie = response.headers.get("set-cookie", "")
-    assert "language" in response.cookies or "language" in set_cookie
-
-
 def test_search_by_lang_token_fallback_handles_punctuation(
     client: TestClient, monkeypatch
 ) -> None:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -13,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 _SETTINGS = load_settings()
 ADMIN_PREFIX = "/admin"
-TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 
 VERBS_COLLECTION = "verbs"
 CANDIDATES_COLLECTION = "verb_candidates"

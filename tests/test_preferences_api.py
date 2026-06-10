@@ -13,16 +13,10 @@ Coverage:
 - POST /api/preferences rejects invalid learning_language value
 - POST /api/preferences rejects invalid practice_session_size value
 - POST /api/preferences accepts partial payloads (only one field)
-- /set_language redirects to /?language=<lang> and sets a language cookie
-- /set_language with a valid language sets the right cookie value
-- Home page respects language cookie when no explicit ?language= param
-- Home page explicit ?language= param overrides cookie
-- Home page sets language cookie on every response
+- /set_language redirects to /?language=<lang>
 """
 
 from __future__ import annotations
-
-from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -175,7 +169,7 @@ def test_post_preferences_accepts_all_valid_learning_languages(lang: str) -> Non
 
 
 # ---------------------------------------------------------------------------
-# /set_language -- redirect and cookie
+# /set_language -- redirect
 # ---------------------------------------------------------------------------
 
 
@@ -186,79 +180,3 @@ def test_set_language_redirects_to_home() -> None:
     location = response.headers.get("location", "")
     assert "language=ru" in location
     assert location.startswith("/") or "localhost" in location
-
-
-def test_set_language_sets_language_cookie() -> None:
-    """GET /set_language must set a language cookie matching the chosen language."""
-    response = client.get("/set_language?language=he")
-    cookie_header = response.headers.get("set-cookie", "")
-    assert "language=he" in cookie_header
-
-
-@pytest.mark.parametrize("lang", ["en", "ru", "he", "es"])
-def test_set_language_cookie_matches_chosen_language(lang: str) -> None:
-    """The language cookie value must match the requested language for all supported languages."""
-    response = client.get(f"/set_language?language={lang}")
-    cookie_header = response.headers.get("set-cookie", "")
-    assert f"language={lang}" in cookie_header
-
-
-# ---------------------------------------------------------------------------
-# Home page language resolution -- cookie and URL param interaction
-# These guard the server-side half of the preference-override flow.
-# ---------------------------------------------------------------------------
-
-
-def test_home_explicit_language_param_wins_over_cookie() -> None:
-    """Explicit ?language= URL param must override cookie when both are present."""
-    with patch("app.routes.home.list_verbs_recent", return_value=[]):
-        client_with_cookies = TestClient(app)
-        response = client_with_cookies.get(
-            "/?language=ru",
-            cookies={"language": "he"},
-        )
-    assert response.status_code == 200
-    # The page should reflect Russian (ru), not Hebrew (he)
-    # The language selector value is in a <select> with the 'selected' attribute
-    assert (
-        'value="ru" selected' in response.text
-        or 'value="ru"  selected' in response.text
-        or (
-            # Jinja renders: <option value="ru" selected>
-            'value="ru"' in response.text and "ru" in response.text
-        )
-    )
-    # Cookie must be updated to ru
-    cookie_header = response.headers.get("set-cookie", "")
-    assert "language=ru" in cookie_header
-
-
-def test_home_cookie_used_when_no_language_param() -> None:
-    """When no ?language= param is given, the language cookie determines the selection."""
-    with patch("app.routes.home.list_verbs_recent", return_value=[]):
-        client_with_cookies = TestClient(app)
-        response = client_with_cookies.get(
-            "/",
-            cookies={"language": "es"},
-        )
-    assert response.status_code == 200
-    # es should be selected, not the default (he)
-    assert "language=es" in response.headers.get("set-cookie", "")
-
-
-def test_home_sets_language_cookie_on_every_response() -> None:
-    """Home page must always set the language cookie so it persists across navigation."""
-    with patch("app.routes.home.list_verbs_recent", return_value=[]):
-        client_with_cookies = TestClient(app)
-        response = client_with_cookies.get("/?language=en")
-    assert response.status_code == 200
-    assert "language=" in response.headers.get("set-cookie", "")
-
-
-def test_home_sets_ui_language_cookie_on_every_response() -> None:
-    """Home page must always set the ui_language cookie so language persists across navigation."""
-    with patch("app.routes.home.list_verbs_recent", return_value=[]):
-        client_with_cookies = TestClient(app)
-        response = client_with_cookies.get("/?ui_language=ru")
-    assert response.status_code == 200
-    assert "ui_language=ru" in response.headers.get("set-cookie", "")

@@ -58,9 +58,7 @@ def set_language(language: str, ui_language: str = ""):
     url = f"/?language={language}"
     if ui_language:
         url += f"&ui_language={ui_language}"
-    response = RedirectResponse(url=url)
-    response.set_cookie("language", language, httponly=False, samesite="lax")
-    return response
+    return RedirectResponse(url=url)
 
 
 @router.get("/search_verb_by_lang", response_model=None)
@@ -110,18 +108,13 @@ async def search_verb_by_lang(
 
         if doc:
             matched_verb_id = doc.get("verb_id")
-            response = RedirectResponse(
+            return RedirectResponse(
                 url=(
                     f"/learn?language={language}&verb_id={matched_verb_id}"
                     f"&translated_from={quote(query, safe='')}&source_lang={source_lang}"
                     f"{_ui_suffix}"
                 )
             )
-            response.set_cookie("language", language, httponly=False, samesite="lax")
-            response.set_cookie(
-                "verb_id", matched_verb_id, httponly=False, samesite="lax"
-            )
-            return response
 
     base = (
         safe_return_to(return_to or "", fallback="")
@@ -137,24 +130,20 @@ async def search_verb_by_lang(
             source_lang,
             language,
         )
-        response = RedirectResponse(
+        return RedirectResponse(
             url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&search_mode={source_lang}"
         )
-    else:
-        # Translation succeeded but verb not in DB -- show translated word
-        # so user sees what was actually searched in the target language.
-        log_missing_verb_search(
-            language=language,
-            query=translated,
-            page="home",
-            source="search_by_lang",
-        )
-        response = RedirectResponse(
-            url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native"
-        )
-
-    response.set_cookie("language", language, httponly=False, samesite="lax")
-    return response
+    # Translation succeeded but verb not in DB -- show translated word
+    # so user sees what was actually searched in the target language.
+    log_missing_verb_search(
+        language=language,
+        query=translated,
+        page="home",
+        source="search_by_lang",
+    )
+    return RedirectResponse(
+        url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native"
+    )
 
 
 @router.get("/search_verb", response_model=None)
@@ -174,26 +163,17 @@ def search_verb(
 
     if doc:
         matched_verb_id = doc.get("verb_id")
-
-        response = RedirectResponse(
+        return RedirectResponse(
             url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}"
         )
-        response.set_cookie("language", language, httponly=False, samesite="lax")
-        response.set_cookie("verb_id", matched_verb_id, httponly=False, samesite="lax")
-        return response
 
     entries = _load_entries(language)
     matched_entry = find_best_entry(entries, query)
 
     if matched_entry:
-        matched_verb_id = matched_entry.id
-
-        response = RedirectResponse(
-            url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}"
+        return RedirectResponse(
+            url=f"/learn?language={language}&verb_id={matched_entry.id}{_ui_suffix}"
         )
-        response.set_cookie("language", language, httponly=False, samesite="lax")
-        response.set_cookie("verb_id", matched_verb_id, httponly=False, samesite="lax")
-        return response
 
     log_missing_verb_search(
         language=language,
@@ -207,11 +187,9 @@ def search_verb(
         or f"/?language={language}{_ui_suffix}"
     )
     sep = "&" if "?" in base else "?"
-    response = RedirectResponse(
+    return RedirectResponse(
         url=f"{base}{sep}not_available=1&search={quote(query, safe='')}"
     )
-    response.set_cookie("language", language, httponly=False, samesite="lax")
-    return response
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -230,9 +208,7 @@ def home(
     ui = get_strings(ui_lang)
     html_dir = "rtl" if LANGUAGE.get(ui_lang, LANGUAGE["en"]).rtl else "ltr"
 
-    cookie_language = request.cookies.get("language")
-
-    selected_language = language or cookie_language or "he"
+    selected_language = language or "he"
     if selected_language not in plugins:
         selected_language = "he"
 
@@ -272,6 +248,4 @@ def home(
             "firebase_web_config_json": settings.firebase_web_config_json,
         },
     )
-    response.set_cookie("language", selected_language, httponly=False, samesite="lax")
-    response.set_cookie("ui_language", ui_lang, httponly=False, samesite="lax")
     return response

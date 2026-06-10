@@ -31,5 +31,4 @@ def about_page(request: Request) -> HTMLResponse:
             "auth_logout": ui.get("auth.logout", "Logout"),
         },
     )
-    response.set_cookie("ui_language", lang, httponly=False, samesite="lax")
     return response

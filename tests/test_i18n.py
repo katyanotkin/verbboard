@@ -40,7 +40,7 @@ def test_all_languages_have_same_keys() -> None:
 # ── resolve_ui_language ───────────────────────────────────────────────────────
 
 
-def _make_request(qp: str = "", cookie: str = "", accept: str = ""):
+def _make_request(qp: str = "", accept: str = ""):
     from starlette.requests import Request as StarletteRequest
 
     scope = {
@@ -48,22 +48,14 @@ def _make_request(qp: str = "", cookie: str = "", accept: str = ""):
         "method": "GET",
         "path": "/",
         "query_string": qp.encode(),
-        "headers": [
-            (b"accept-language", accept.encode()),
-            (b"cookie", f"ui_language={cookie}".encode() if cookie else b""),
-        ],
+        "headers": [(b"accept-language", accept.encode())],
     }
     return StarletteRequest(scope)
 
 
 def test_resolve_query_param_wins() -> None:
-    req = _make_request(qp="ui_language=ru", cookie="he", accept="es")
+    req = _make_request(qp="ui_language=ru", accept="es")
     assert resolve_ui_language(req) == "ru"
-
-
-def test_resolve_cookie_over_accept() -> None:
-    req = _make_request(cookie="es", accept="ru")
-    assert resolve_ui_language(req) == "es"
 
 
 def test_resolve_accept_language() -> None:
@@ -76,8 +68,8 @@ def test_resolve_defaults_to_en() -> None:
     assert resolve_ui_language(req) == "en"
 
 
-def test_resolve_unsupported_qp_falls_through_to_cookie() -> None:
-    req = _make_request(qp="ui_language=fr", cookie="es")
+def test_resolve_unsupported_qp_falls_through_to_accept() -> None:
+    req = _make_request(qp="ui_language=fr", accept="es")
     assert resolve_ui_language(req) == "es"
 
 
@@ -116,14 +108,6 @@ def test_verbs_hebrew_has_rtl(client: TestClient) -> None:
     assert 'dir="rtl"' in resp.text
 
 
-def test_verbs_spanish_cookie(client: TestClient) -> None:
-    es = get_strings("es")
-    with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
-        resp = client.get("/verbs?language=en", cookies={"ui_language": "es"})
-    assert resp.status_code == 200
-    assert es["verbs.heading"] in resp.text
-
-
 def test_verbs_has_language_selector(client: TestClient) -> None:
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         resp = client.get("/verbs?language=en&ui_language=en")
@@ -151,13 +135,6 @@ def test_about_uses_ui_language_param_not_lang(client: TestClient) -> None:
     resp = client.get("/about?ui_language=ru")
     assert ru["about.back"] in resp.text
     assert ru["about.feedback"] in resp.text
-
-
-def test_about_cookie_resolves_ui_language(client: TestClient) -> None:
-    es = get_strings("es")
-    resp = client.get("/about", cookies={"ui_language": "es"})
-    assert resp.status_code == 200
-    assert es["about.title"] in resp.text
 
 
 def test_about_no_lang_toggle_widget(client: TestClient) -> None:
