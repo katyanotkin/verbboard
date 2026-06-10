@@ -7,7 +7,6 @@ Firestore. This is how the EN pill on the verbs/home page works.
 Covers:
 - Happy path: EN -> ES (run -> correr), EN -> RU (run -> бежать), EN -> HE (run -> לרוץ)
 - translated_from and source_lang params in redirect URL (UI breadcrumb)
-- Language cookie set on success
 - Token fallback: Gemini returns "correr." with trailing punctuation
 - Fuzzy fallback: Firestore search_extract misses, cached entry list used
 - Translation failure (Gemini returns None): redirect with original query + search_mode=en

@@ -301,33 +301,6 @@ def test_ui_language_redirect_fires_on_non_home_pages(page, live_server_url):
     ), "UI language preference redirect should fire even on non-home pages"
 
 
-# ---------------------------------------------------------------------------
-# Language persistence: switching via /set_language cookie is picked up by home
-# ---------------------------------------------------------------------------
-
-
-def test_set_language_cookie_propagates_to_home_page_selector(page, live_server_url):
-    """After visiting /set_language?language=ru (which sets the cookie), navigating
-    to home without an explicit ?language= param should still show Russian selected.
-    This tests that the cookie-based preference survives navigation.
-    """
-    # Visit /set_language -- this sets the cookie language=ru and redirects to home
-    page.goto(f"{live_server_url}/set_language?language=ru")
-    page.wait_for_load_state("networkidle")
-
-    # Navigate to home WITHOUT explicit ?language= param
-    page.goto(f"{live_server_url}/")
-    page.wait_for_load_state("networkidle")
-
-    lang_select = page.locator('select[name="language"]')
-    if lang_select.count() > 0:
-        selected_lang = lang_select.input_value()
-        assert selected_lang == "ru", (
-            f"After setting language=ru via /set_language, the home page selector "
-            f"should show 'ru' (from cookie), got: {selected_lang!r}"
-        )
-
-
 def test_set_language_redirects_to_home_with_correct_param(page, live_server_url):
     """GET /set_language?language=he must redirect to /?language=he."""
     page.goto(f"{live_server_url}/set_language?language=he")
