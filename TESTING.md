@@ -71,3 +71,23 @@ make smoke-prod
 - Smoke tests validate deployment correctness
 - Keep the two layers separate, but consistent in what they verify
 - Expanding smoke coverage (e.g. more endpoints) is encouraged, as long as it stays lightweight
+
+---
+
+## TODO: test coverage gaps (from README/about page audit)
+
+The README and about page document features that currently lack explicit regression tests.
+Each item below is a candidate for a future unit or e2e test pass:
+
+- **Focus filter** (`/learn`) — hide conjugation rows by gender (masculine/feminine) and
+  number (singular/plural). Applies to Hebrew, Russian, and Spanish boards. No test
+  verifies that the correct rows are hidden/shown based on active filter state.
+
+- **Inline translations toggle** — when UI language differs from the verb language,
+  example sentences show a translation button. No test covers the toggle interaction
+  (button present, translation appears/hides on click, absent when languages match).
+
+- **Cross-device sync merge on login** — local progress (seen/known verbs, practice
+  badges) must merge automatically with server state when the user signs in. The merge
+  logic in `progress_service.py` and the badge merge in `practice_loop.js` (keep longer
+  list) are not covered by regression tests.

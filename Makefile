@@ -33,11 +33,13 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	docker-build docker-run docker-stop docker-rm docker-dev docker-url \
 	gcp-check gcp-login gcp-auth \
 	gcp-image gcp-open gcp-open-stage gcp-open-prod \
-	gcp-release-prod gcp-deploy-stage \
+	gcp-release-prod gcp-deploy-stage gcp-promote-stage-to-prod \
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
-	audit-examples audit-en audit-ru audit-he audit-es \
-\ttest test-unit test-e2e-local test-e2e-stage test-demand \\\n\ttest-progress-stage test-progress-prod \\
+	audit-examples audit-en audit-ru audit-he audit-es audit-verb-ids \
+	test test-unit test-unit-fast \
+	test-e2e-local test-e2e-stage test-e2e-parallel \
+	test-demand test-progress-stage test-progress-prod \
 	smoke-nav-local smoke-nav-stage validate-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
 	cache-audio-stage cache-audio-prod \
@@ -67,9 +69,17 @@ test: ## QA: run all tests — unit + Playwright e2e
 test-unit: ## QA: run unit tests only (excludes tests/e2e/ and tests/integration/)
 	PYTHONPATH=. pytest --ignore=tests/e2e --ignore=tests/integration
 
+## QA: run unit tests in parallel (requires pytest-xdist: uv add --dev pytest-xdist)
+test-unit-fast: ## QA: run unit tests in parallel across all CPUs
+	PYTHONPATH=. pytest --ignore=tests/e2e --ignore=tests/integration -n auto
+
 ## QA: run Playwright browser e2e tests only
 test-e2e-local: ## QA: run Playwright browser flow tests locally
 	PYTHONPATH=. pytest tests/e2e -v
+
+## QA: run e2e tests in parallel with 2 workers (each gets its own browser + server)
+test-e2e-parallel: ## QA: run Playwright e2e tests with 2 parallel workers
+	PYTHONPATH=. pytest tests/e2e -n 2 -v
 
 test-e2e-stage: ## QA: run Playwright browser flow tests against stage
 	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e -v

@@ -26,6 +26,7 @@ dev = [
     "pre-commit>=4.6.0",
     "pytest>=9.0.3",
     "pytest-playwright>=0.7.2",
+    "pytest-xdist>=3.6.0",
     "ruff>=0.15.12",
     "types-requests>=2.33.0.20260508",
 ]
