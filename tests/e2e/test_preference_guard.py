@@ -318,6 +318,64 @@ def test_set_language_redirects_to_home_with_correct_param(page, live_server_url
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# localStorage language persistence: vb_language IIFE in home.js
+#
+# Firebase Hosting strips all cookies except __session, so language preference
+# cannot survive a bare '/' request via cookie.  home.js persists the last
+# explicit ?language= value in localStorage('vb_language') and on a bare '/'
+# visit redirects to /?language={stored} before rendering.
+# ---------------------------------------------------------------------------
+
+
+def test_vb_language_localStorage_persists_across_bare_home_visit(
+    page, live_server_url
+):
+    """Visiting /?language=ru must save 'ru' to localStorage, and a subsequent
+    bare '/' visit (no ?language= param) must redirect to /?language=ru.
+
+    This is the replacement for the deleted cookie-based language persistence
+    test: cookies are stripped by Firebase Hosting; localStorage is not.
+    """
+    # First visit: explicit language param -- home.js saves it to localStorage
+    page.goto(f"{live_server_url}/?language=ru&ui_language=en")
+    page.wait_for_load_state("networkidle")
+
+    stored = page.evaluate("localStorage.getItem('vb_language')")
+    assert stored == "ru", (
+        f"home.js should save ?language=ru to localStorage('vb_language'), "
+        f"got: {stored!r}"
+    )
+
+    # Second visit: bare '/' with no ?language= -- home.js should redirect
+    page.goto(f"{live_server_url}/")
+    page.wait_for_load_state("networkidle")
+
+    final_url = page.url
+    assert "language=ru" in final_url, (
+        f"Bare '/' visit after storing 'ru' must redirect to URL containing "
+        f"'language=ru' (localStorage fallback). Got: {final_url!r}"
+    )
+
+
+def test_vb_language_localStorage_updated_on_language_change(page, live_server_url):
+    """Switching from one language to another must overwrite the stored value."""
+    page.goto(f"{live_server_url}/?language=he&ui_language=en")
+    page.wait_for_load_state("networkidle")
+    assert page.evaluate("localStorage.getItem('vb_language')") == "he"
+
+    page.goto(f"{live_server_url}/?language=en&ui_language=en")
+    page.wait_for_load_state("networkidle")
+    assert (
+        page.evaluate("localStorage.getItem('vb_language')") == "en"
+    ), "Visiting /?language=en after /?language=he must update localStorage to 'en'"
+
+    # Bare visit must now follow the updated preference
+    page.goto(f"{live_server_url}/")
+    page.wait_for_load_state("networkidle")
+    assert "language=en" in page.url
+
+
 def test_ui_language_dropdown_links_carry_current_learning_lang(page, live_server_url):
     """UI language switcher links must carry the current learning language so that
     switching UI language doesn't reset the learning language selection.
