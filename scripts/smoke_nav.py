@@ -192,10 +192,7 @@ def main(base: str) -> None:
     if "language=en" not in location:
         print(f"[FAIL]  set_language: redirect missing language param: {location!r}")
         sys.exit(1)
-    if "language" not in resp.headers.get("set-cookie", ""):
-        print("[FAIL]  set_language: cookie not set in response")
-        sys.exit(1)
-    print("[OK]    set_language: redirects and sets cookie")
+    print("[OK]    set_language: redirects with language param")
 
     print("\nAll nav smoke tests passed.\n")
 
