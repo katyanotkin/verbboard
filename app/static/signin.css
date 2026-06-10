@@ -1,0 +1,52 @@
+body {
+  font-family: system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  background: #f8fafc;
+  color: #374151;
+}
+
+/* max-width prevents the card from floating in a sea of whitespace on tablets */
+.msg {
+  text-align: center;
+  padding: 24px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.msg p {
+  margin: 8px 0;
+  font-size: 1rem;
+}
+
+.msg small {
+  display: block;
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+#signin-btn {
+  margin-top: 16px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: #2d6a4f; /* matches --color-nav-active in common.css */
+  color: white;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+#signin-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+#signin-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}

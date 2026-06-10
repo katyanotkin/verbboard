@@ -147,12 +147,10 @@ Generated from lead-architect audit (2026-06-10). Tracks divergences from intend
   - Replaced `__ADMIN_ROOT__` placeholders in `admin.html` with `{{ admin_prefix }}` Jinja2 variables
   - Removed `TEMPLATES_DIR` and unused `Path` import from `admin_utils.py`
 
-- [ ] **Inline `<style>` blocks in templates**
-  - `app/templates/signin.html` lines 7-24 -- flexbox layout, button styles
-  - `app/templates/feedback.html` -- card layout, form styles, alert boxes
-  - `app/templates/privacy.html` -- page layout styles
-  - `app/templates/about.html` -- page layout styles
-  - Fix: extract each into `app/static/{page}.css`, link via `<link rel="stylesheet">`
+- [x] **Inline `<style>` blocks in templates**
+  - Extracted `signin.css`, `feedback.css`, `privacy.css`, `about.css` from inline blocks
+  - Alert divs in `feedback.html` replaced with `.alert .alert-success/.alert-error` classes
+  - `admin_login.css` also extracted (admin login page)
 
 - [ ] **Inline `style=` attributes in Python-generated HTML**
   - `core/render.py` lines 87, 172: `style="font-size:..."` and `style="text-align:..."` baked into f-strings
