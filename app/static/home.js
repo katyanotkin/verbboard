@@ -1,3 +1,23 @@
+// Persist the studied language across bare '/' visits.
+// Firebase Hosting strips all cookies except __session, so the server can't
+// read the language cookie on a bare '/' request.  We keep the preference in
+// localStorage (readable by JS regardless of Hosting) and redirect before the
+// page is shown so the server receives the correct ?language= param.
+(function () {
+  var params = new URLSearchParams(location.search);
+  var lang = params.get('language');
+  if (lang) {
+    try { localStorage.setItem('vb_language', lang); } catch (e) {}
+    return;
+  }
+  var stored;
+  try { stored = localStorage.getItem('vb_language'); } catch (e) {}
+  if (stored) {
+    params.set('language', stored);
+    location.replace('/?' + params);
+  }
+}());
+
 document.addEventListener("DOMContentLoaded", function () {
   const TOKEN_SPLIT_PATTERN = (function () {
     try {
