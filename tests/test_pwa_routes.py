@@ -322,8 +322,8 @@ def test_bottom_nav_verbs_has_back_tab(client: TestClient) -> None:
 
 def test_bottom_nav_verbs_back_links_to_home(client: TestClient) -> None:
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
-        html = client.get("/verbs?language=ru").text
-    assert 'href="/?language=ru"' in html
+        html = client.get("/verbs?language=ru&ui_language=en").text
+    assert 'href="/?language=ru&amp;ui_language=en"' in html
 
 
 def test_bottom_nav_about_has_back_tab(client: TestClient) -> None:

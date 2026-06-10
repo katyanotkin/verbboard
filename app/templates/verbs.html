@@ -30,7 +30,7 @@
 
     <div class="topbar-nav">
       <a
-        href="/?language={{ selected_language }}"
+        href="/?language={{ selected_language }}&ui_language={{ ui_lang }}"
         class="nav-btn nav-btn--ghost"
       >
         <span>{{ ui['verbs.back_home'] }}</span>
@@ -38,7 +38,7 @@
 
       <div class="topbar-nav-right">
         <a
-          href="/feedback?page=verbs&language={{ selected_language }}&return_to=/verbs?language={{ selected_language }}"
+          href="/feedback?page=verbs&language={{ selected_language }}&ui_language={{ ui_lang }}&return_to=/verbs?language={{ selected_language }}&ui_language={{ ui_lang }}"
           class="feedback-link"
           title="{{ ui['verbs.feedback_title'] }}"
         >

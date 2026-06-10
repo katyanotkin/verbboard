@@ -41,8 +41,8 @@ def test_verbs_renders_200(client: TestClient, monkeypatch) -> None:
 
 def test_verbs_has_back_to_home_link(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [])
-    html = client.get("/verbs?language=en").text
-    assert 'href="/?language=en"' in html
+    html = client.get("/verbs?language=en&ui_language=en").text
+    assert 'href="/?language=en&amp;ui_language=en"' in html
 
 
 def test_verbs_feedback_link_carries_page_context(

@@ -17,6 +17,8 @@
   const progressFillEl = document.querySelector('.progress-fill');
   const progressCountEl = document.querySelector('.progress-count');
 
+  var _isMobile = window.matchMedia('(any-pointer: coarse)').matches;
+
   const filters = window.VerbBoardVerbFilters.createVerbFilters({
     lang,
     verbs,
@@ -140,8 +142,6 @@
     filters.updateProgress();
     practiceLoop.renderPracticePanel();
   });
-
-  var _isMobile = window.matchMedia('(any-pointer: coarse)').matches;
 
   // Mobile: show all pre-loaded verbs at once (no display-batch cap). If there are
   // more verbs beyond VERBS_PAGE_LIMIT, the show-more button fetches them on demand.
