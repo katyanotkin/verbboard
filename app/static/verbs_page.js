@@ -143,12 +143,6 @@
     practiceLoop.renderPracticePanel();
   });
 
-  // Mobile: show all pre-loaded verbs at once (no display-batch cap). If there are
-  // more verbs beyond VERBS_PAGE_LIMIT, the show-more button fetches them on demand.
-  (function () {
-    if (!_isMobile) return;
-    filters.showAll();
-  }());
 
   // Desktop back-nav: re-fetch verbs that were previously loaded but are absent
   // after page reload (VB_VERBS only contains the server-rendered page-limit batch).

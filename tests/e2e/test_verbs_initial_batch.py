@@ -12,18 +12,6 @@ This must hold for every combination of:
   - filter      all / new  (seen/known skipped -- empty without auth progress)
   - sort        alpha / newest
 
-Known failure (tracked here until fixed)
------------------------------------------
-verbs_page.js calls filters.showAll() unconditionally when _isMobile is true
-(any-pointer: coarse), setting displayCount = Infinity on every mobile page
-load.  That breaks the invariant for all mobile × filter × sort combinations.
-
-Relevant code -- verbs_page.js ~line 148:
-    (function () {
-        if (!_isMobile) return;
-        filters.showAll();      // sets displayCount = Infinity
-    }());
-
 All tests skip gracefully when Firestore has <= VB_DISPLAY_BATCH verbs
 (the invariant is vacuously satisfied with no show-more needed).
 """
@@ -117,22 +105,9 @@ def _check_batch_invariant(
 # ── parametrized invariant tests ──────────────────────────────────────────────
 
 
-_MOBILE_XFAIL = pytest.mark.xfail(
-    reason=(
-        "Known bug: verbs_page.js calls filters.showAll() unconditionally on mobile "
-        "(any-pointer: coarse), setting displayCount = Infinity. "
-        "Remove this mark once the bug is fixed."
-    ),
-    strict=False,
-)
-
-
 @pytest.mark.parametrize("sort_name", ["alpha", "newest"])
 @pytest.mark.parametrize("filter_name", ["all", "new"])
-@pytest.mark.parametrize(
-    "viewport_name",
-    ["desktop", pytest.param("mobile", marks=_MOBILE_XFAIL)],
-)
+@pytest.mark.parametrize("viewport_name", ["desktop", "mobile"])
 def test_initial_render_respects_display_batch(
     browser,
     live_server_url,
@@ -158,10 +133,7 @@ def test_initial_render_respects_display_batch(
 # ── after auth hydration re-render ────────────────────────────────────────────
 
 
-@pytest.mark.parametrize(
-    "viewport_name",
-    ["desktop", pytest.param("mobile", marks=_MOBILE_XFAIL)],
-)
+@pytest.mark.parametrize("viewport_name", ["desktop", "mobile"])
 def test_batch_invariant_holds_after_auth_hydration(
     browser, live_server_url, viewport_name: str
 ):
@@ -205,16 +177,7 @@ def test_batch_invariant_holds_after_auth_hydration(
 def test_filter_change_resets_to_one_batch(
     browser, live_server_url, viewport_name: str
 ):
-    """Switching the active filter must reset the display to one batch.
-
-    On mobile this will fail if displayCount is Infinity (from showAll()) because
-    applyFilter() only resets to batch when init=false, but the count was already
-    consumed by showAll() before any filter interaction.
-
-    Actually: applyFilter(newFilter) does set displayCount = batch when init=false,
-    so filter changes DO reset correctly even on mobile.  This test documents that
-    the reset-on-filter-change path is not broken by the showAll() bug.
-    """
+    """Switching the active filter must reset the display to one batch."""
     with _page_for_viewport(browser, viewport_name) as page:
         page.goto(f"{live_server_url}/verbs?language=en")
         page.evaluate("sessionStorage.clear()")
