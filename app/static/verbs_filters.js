@@ -262,7 +262,7 @@
     }
 
     function showAll() {
-      displayCount = Infinity;
+      displayCount = verbs.length;
       render();
     }
 

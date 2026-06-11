@@ -1,7 +1,9 @@
 .vb-page {
   max-width: 600px;
   margin: 0 auto;
-  padding: 16px 12px 0;
+  padding-top: 16px;
+  padding-left: 12px;
+  padding-right: 12px;
   font-family: system-ui, sans-serif;
 }
 
