@@ -13,6 +13,9 @@
 
     const storage = window.VerbBoardStorage;
 
+    const _uiLang = window.VB_UI_LANG || '';
+    const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
+
     const practiceSessionKey = `practice_session:${lang}`;
     const practiceSizeKey = `practice_size:${lang}`;
     const practiceBadgesKey = `practice_badges:${lang}`;
@@ -207,12 +210,13 @@
           return !seenSet.has(id);
         }) || session.ids[session.ids.length - 1];
 
-        const verbsUrl = `/verbs?language=${encodeURIComponent(lang)}`;
+        const verbsUrl = `/verbs?language=${encodeURIComponent(lang)}${_uiSuffix}`;
 
         const continueUrl =
           `/learn?language=${encodeURIComponent(lang)}` +
           `&verb_id=${encodeURIComponent(continueId)}` +
-          `&return_to=${encodeURIComponent(verbsUrl)}`;
+          `&return_to=${encodeURIComponent(verbsUrl)}` +
+          _uiSuffix;
 
         practiceEl.innerHTML = `
           <div class="practice-panel-card">
@@ -329,12 +333,13 @@
         size: activePracticeSize,
       });
 
-      const verbsUrl = `/verbs?language=${encodeURIComponent(lang)}`;
+      const verbsUrl = `/verbs?language=${encodeURIComponent(lang)}${_uiSuffix}`;
 
       window.location.href =
         `/learn?language=${encodeURIComponent(lang)}` +
         `&verb_id=${encodeURIComponent(ids[0])}` +
-        `&return_to=${encodeURIComponent(verbsUrl)}`;
+        `&return_to=${encodeURIComponent(verbsUrl)}` +
+        _uiSuffix;
     }
 
     function maybeShowWrapUp() {

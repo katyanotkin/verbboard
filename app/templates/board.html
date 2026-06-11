@@ -11,7 +11,8 @@
 <link rel="stylesheet" href="/static/learn.css"/>
 {{ candidate_banner_assets | safe }}
 {% include '_persist_ui_lang.html' %}
-<script>window.UI = {{ board_ui_json | safe }};</script>
+<script>window.UI = {{ board_ui_json | safe }};
+window.VB_UI_LANG = {{ html_lang | tojson }};</script>
 
 {% include '_firebase_auth.html' %}
 

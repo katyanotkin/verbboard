@@ -130,11 +130,11 @@
   </div>
 
   <div class="back">
-    <a href="/" class="feedback-link">
+    <a href="/?ui_language={{ lang | urlencode }}" class="feedback-link">
       <span>{{ back_label }}</span>
     </a>
 
-    <a href="/feedback?page=about&amp;return_to=/about" class="feedback-link">
+    <a href="/feedback?page=about&amp;return_to={{ ('/about?ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}" class="feedback-link">
       <span>💬</span>
       <span>{{ feedback_label }}</span>
     </a>
@@ -143,7 +143,7 @@
   </div>
 </div>
 
-{% set bnav_lang = '' %}{% set bnav_active = '' %}{% set bnav_back_href = '/' %}{% include '_bottom_nav.html' %}
+{% set bnav_lang = '' %}{% set bnav_active = '' %}{% set bnav_back_href = '/?ui_language=' ~ (lang | urlencode) %}{% include '_bottom_nav.html' %}
 
 <script defer src="/static/pwa.js"></script>
 </body>

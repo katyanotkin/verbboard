@@ -9,6 +9,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (!language || !verbId) return;
 
+  const _uiLang = window.VB_UI_LANG || '';
+  const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
+
   const progress = window.VerbBoardProgress;
   if (!progress) return;
 
@@ -171,7 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function _mountPracticeBar(session, idx) {
     const UI = window.UI || {};
-    const verbsUrl = `/verbs?language=${encodeURIComponent(language)}`;
+    const verbsUrl = `/verbs?language=${encodeURIComponent(language)}${_uiSuffix}`;
     const total = session.ids.length;
     const isLast = idx === total - 1;
 
@@ -219,7 +222,8 @@ document.addEventListener("DOMContentLoaded", function () {
       window.location.href =
         `/learn?language=${encodeURIComponent(language)}` +
         `&verb_id=${encodeURIComponent(targetId)}` +
-        `&return_to=${encodeURIComponent(verbsUrl)}`;
+        `&return_to=${encodeURIComponent(verbsUrl)}` +
+        _uiSuffix;
     }
 
     function hasListened() {
@@ -321,6 +325,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     localStorage.removeItem(sessionKey);
-    window.location.href = `/verbs?language=${encodeURIComponent(language)}`;
+    window.location.href = `/verbs?language=${encodeURIComponent(language)}${_uiSuffix}`;
   }
 });

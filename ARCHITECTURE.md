@@ -86,8 +86,14 @@ State that must survive navigation: `language` (studied language) and `ui_langua
 **`language`** -- persisted in `localStorage` as `vb_language` by `home.js`. On bare `/?` loads with no `?language=` param, home.js reads localStorage and redirects before the page renders. All server-rendered navigation links include `?language=` explicitly.
 
 **`ui_language`** -- two-layer defence:
-1. **Explicit param propagation**: every server-rendered link (`_bottom_nav.html`, verbs.html, board.html back/feedback links, render.py `resolved_return_to`/`learn_href`) and every JS navigation (`home.js openVerb()`, `verbs_filters.js renderItem()`) must include `&ui_language=`. `core/render.py` computes `ui_suffix` from the `ui_lang` parameter and applies it to all generated URLs.
+1. **Explicit param propagation**: every server-rendered link (`_bottom_nav.html`, verbs.html, board.html back/feedback links, render.py `resolved_return_to`/`learn_href`) and every JS navigation (`home.js openVerb()`, `verbs_filters.js renderItem()`) must include `&ui_language=`. `core/render.py` computes `ui_suffix` from the `ui_lang` parameter and applies it to all generated URLs. `core/render.py` also sanitizes `return_to` via `safe_return_to()` before embedding in any href (XSS guard -- prevents `javascript:` URIs in the Back button).
 2. **localStorage safety net**: `app/templates/_persist_ui_lang.html` is included in every page template (home, verbs, board, about, privacy, feedback). The inline early-load script saves `ui_language` to `localStorage('vb_ui_language')` when the param is present; if the param is absent and localStorage has a value, it redirects before the page is painted. This catches any link that accidentally drops the param.
+
+**`window.VB_UI_LANG`** -- JS-side source of truth for UI language. Set in every page template (`window.VB_UI_LANG = {{ ui_lang | tojson }}` or equivalent). All JS modules (`verbs_filters.js`, `practice_loop.js`, `learn.js`) read from this single global -- no per-module URL parsing.
+
+**`_bottom_nav.html` `bnav_ui_lang`** -- falls back to the page-level `lang` variable if `bnav_ui_lang` is not explicitly set by the including template. Individual templates only need to set `bnav_ui_lang` when it differs from `lang` (e.g. `board.html` where the verb language differs from the UI language).
+
+**Voice form (board.html)** -- `voice_source_input` in `core/render.py` carries all form-round-trip state: `source=candidate` (if applicable), `translated_from`, and `source_lang`. Adding new per-request state to the voice form means adding it to `voice_source_input` in `render.py`, not to `board.html`.
 
 **Auditing rule**: any change that adds a new navigation path (link, form, `RedirectResponse`, `window.location`) must carry both `language` and `ui_language`. Any removal of a state-carrying mechanism (cookie, localStorage key) requires a full path audit of every link, form, JS navigation, and redirect before committing.
 
@@ -178,7 +184,32 @@ Generated from lead-architect audit (2026-06-10). Tracks divergences from intend
   - `core/render.py` lines 87, 172: `style="font-size:..."` and `style="text-align:..."` baked into f-strings
   - Fix: use CSS classes instead of inline styles
 
+- [ ] **`_firebase_auth.html`: apply `_html_safe_json()` to `firebase_web_config_json` in all routes**
+  - Currently only `signin.py` calls `_html_safe_json()`; other routes pass the raw JSON string via `| safe`
+  - A `</script>` in the secret manager value would break every page
+  - Fix: centralise encoding in `load_settings()` or apply `_html_safe_json()` in every route that sets `firebase_web_config_json`
+
+- [ ] **`practice_loop.js`: replace biased shuffle with Fisher-Yates**
+  - `startPractice()` line 313 uses `sort(() => Math.random() - 0.5)` -- not uniformly random (V8 TimSort bias)
+  - Users see the same verbs disproportionately
+
+- [ ] **`admin_feedback.js`: `answerLabel` called with one argument**
+  - Lines 221, 227: `answerLabel(row.poll_answer)` omits `pollMeta`; poll option labels are never shown
+  - Fix: pass the correct `pollMeta` argument
+
 ## Low / Architectural Debt
+
+- [ ] **`home.js`: dead code and minor hygiene**
+  - `updatePrimaryAction()` is an empty stub called twice -- remove
+  - `window.location = ...` should be `window.location.href = ...` (line 105)
+
+- [ ] **`verbs_filters.js`: `esc()` does not escape single quotes**
+  - Safe today (only used in double-quoted attributes), but diverges from `admin_shared.js` -- latent gap if ever used in single-quoted context
+
+- [ ] **`admin.html`/`admin_feedback.html`/`admin_login.html`**: minor hardening
+  - `window.ADMIN_ROOT` in `admin.html` should use `| tojson` not bare string interpolation
+  - Add `lang="en"` to `<html>` on all admin pages (WCAG 3.1.1)
+  - Add `autocomplete="current-password"` to admin login password field
 
 - [ ] **`core/render.py`: ~280 lines of Python-side HTML generation**
   - Builds conjugation table rows, audio buttons, example rows, banners as f-strings, passes via `| safe`

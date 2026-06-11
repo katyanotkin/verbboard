@@ -23,7 +23,7 @@
   <div class="page">
     <div class="topbar-nav">
       <div class="topbar-nav-right">
-        <a href="/feedback?page=home&language={{ learning_lang }}&return_to=/?language={{ learning_lang }}"
+        <a href="/feedback?page=home&amp;language={{ learning_lang | urlencode }}&amp;return_to={{ ('/?language=' ~ learning_lang ~ '&ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}"
            class="feedback-link">{{ ui['home.feedback_link'] }}</a>
 
         <div class="ui-lang-menu" id="ui-lang-menu">

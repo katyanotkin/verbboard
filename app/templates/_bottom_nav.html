@@ -1,5 +1,5 @@
 {% set bnav_back_href = bnav_back_href if bnav_back_href is defined else '' %}
-{% set bnav_ui_lang = bnav_ui_lang if bnav_ui_lang is defined else '' %}
+{% set bnav_ui_lang = bnav_ui_lang if bnav_ui_lang is defined else (lang if lang is defined else '') %}
 {% set _ui_suffix = ('&ui_language=' ~ (bnav_ui_lang | urlencode)) if bnav_ui_lang else '' %}
 <nav class="bottom-nav" aria-label="Main navigation">
 

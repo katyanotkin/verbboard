@@ -57,7 +57,7 @@ def test_verbs_feedback_link_carries_page_context(
 
 
 def test_about_has_back_to_home_link(client: TestClient) -> None:
-    assert 'href="/"' in client.get("/about").text
+    assert 'href="/?ui_language=' in client.get("/about").text
 
 
 def test_about_feedback_link_carries_page_context(client: TestClient) -> None:

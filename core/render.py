@@ -10,6 +10,7 @@ from core.audio_service import build_hashed_audio_key
 from core.languages.config import LANGUAGE as LANG_CONFIG
 from core.models import Board
 from core.paths import TEMPLATES_DIR
+from core.safe_return import safe_return_to as _safe_return_to
 
 NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}
 
@@ -188,7 +189,8 @@ def render_board_html(
         )
 
     ui_suffix = f"&ui_language={escape(ui_lang)}" if ui_lang else ""
-    resolved_return_to = return_to or f"/?language={escape(board.language)}{ui_suffix}"
+    safe_rt = _safe_return_to(return_to) if return_to else None
+    resolved_return_to = safe_rt or f"/?language={escape(board.language)}{ui_suffix}"
 
     source_suffix = "&source=candidate" if candidate_verb_id else ""
     learn_href = (
@@ -235,6 +237,13 @@ def render_board_html(
         candidate_banner_assets = ""
         candidate_banner = ""
         voice_source_input = ""
+
+    if translated_from:
+        voice_source_input += f'<input type="hidden" name="translated_from" value="{escape(translated_from)}">'
+    if source_lang:
+        voice_source_input += (
+            f'<input type="hidden" name="source_lang" value="{escape(source_lang)}">'
+        )
 
     if has_any_translation:
         toggle_label_show = escape(

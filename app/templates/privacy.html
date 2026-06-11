@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="{{ lang }}" dir="{{ html_dir }}">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
@@ -65,11 +65,11 @@
   </div>
 
   <div class="back">
-    <a href="/" class="feedback-link">Home</a>
+    <a href="/?ui_language={{ lang | urlencode }}" class="feedback-link">Home</a>
   </div>
 </div>
 
-{% set bnav_lang = '' %}{% set bnav_active = '' %}{% set bnav_back_href = '/' %}{% include '_bottom_nav.html' %}
+{% set bnav_lang = '' %}{% set bnav_active = '' %}{% set bnav_back_href = '/?ui_language=' ~ (lang | urlencode) %}{% include '_bottom_nav.html' %}
 
 <script defer src="/static/pwa.js"></script>
 </body>
