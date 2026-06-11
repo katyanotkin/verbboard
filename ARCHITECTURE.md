@@ -79,6 +79,25 @@ Firebase Hosting (Fastly CDN) strips **all** cookies from requests and responses
 - Analytics sessions use a **server-side IP+UA fingerprint** (see Analytics below)
 - Never add a new `set_cookie()` call for a non-`__session` name in server code
 
+### Client-side state propagation
+
+State that must survive navigation: `language` (studied language) and `ui_language` (UI locale).
+
+**`language`** -- persisted in `localStorage` as `vb_language` by `home.js`. On bare `/?` loads with no `?language=` param, home.js reads localStorage and redirects before the page renders. All server-rendered navigation links include `?language=` explicitly.
+
+**`ui_language`** -- two-layer defence:
+1. **Explicit param propagation**: every server-rendered link (`_bottom_nav.html`, verbs.html, board.html back/feedback links, render.py `resolved_return_to`/`learn_href`) and every JS navigation (`home.js openVerb()`, `verbs_filters.js renderItem()`) must include `&ui_language=`. `core/render.py` computes `ui_suffix` from the `ui_lang` parameter and applies it to all generated URLs.
+2. **localStorage safety net**: `app/templates/_persist_ui_lang.html` is included in every page template (home, verbs, board, about, privacy, feedback). The inline early-load script saves `ui_language` to `localStorage('vb_ui_language')` when the param is present; if the param is absent and localStorage has a value, it redirects before the page is painted. This catches any link that accidentally drops the param.
+
+**Auditing rule**: any change that adds a new navigation path (link, form, `RedirectResponse`, `window.location`) must carry both `language` and `ui_language`. Any removal of a state-carrying mechanism (cookie, localStorage key) requires a full path audit of every link, form, JS navigation, and redirect before committing.
+
+### Verbs page paging
+
+- **Server pre-load**: both platforms receive up to `VERBS_PAGE_LIMIT` verbs in the initial render. `VB_VERBS_TOTAL` is always the full count.
+- **Desktop** (`pointer: fine`): `VERBS_DISPLAY_BATCH` items shown at a time; "Show more" button pages through pre-loaded set, then fetches from Firestore.
+- **Mobile** (`pointer: coarse`): `filters.showAll()` called on **fresh page loads** only -- sets `displayCount = Infinity` so the full pre-loaded list is scrollable with no button tap. Back-nav and return-from-learn/feedback skip `showAll()` so `sessionStorage` restores the previous scroll position (same `navType === 'back_forward' || fromInternal` guard used throughout `verbs_page.js`).
+- **Filter change**: `applyFilter(filter, init=false)` resets `displayCount` to `batch` on both viewports -- intentional, a filter switch is a new context.
+
 ### Analytics
 
 Middleware: `_PageViewMiddleware` in `app/main.py` intercepts GET requests to tracked pages (`/`, `/verbs`, `/learn`, `/feedback`).
@@ -140,6 +159,9 @@ Generated from lead-architect audit (2026-06-10). Tracks divergences from intend
   - Firebase Hosting / Fastly CDN strips all cookies except `__session`
   - `language`, `ui_language`, `verb_id` preference cookies removed from all routes; `ui_language` now travels exclusively as URL query param
   - `vb_sid`/`vb_seen` analytics cookies replaced by server-side IP+UA fingerprint (see Analytics section below)
+  - `_persist_ui_lang.html` localStorage safety net added to all page templates
+  - `render.py` `resolved_return_to` / `learn_href`, board.html feedback link, `home.js openVerb()` all carry `ui_language`
+  - Mobile verbs `showAll()` restored with back-nav guard (fresh-load only)
 
 ## Medium
 
