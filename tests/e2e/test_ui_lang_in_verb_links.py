@@ -164,29 +164,18 @@ def test_back_nav_from_learn_lands_on_verbs_with_ui_language(page, live_server_u
 
 
 def test_bottom_nav_back_tab_carries_ui_language(page, live_server_url):
-    """Bottom-nav Back tab on the verbs page must link to home with ui_language.
+    """Bottom-nav Back tab href must carry ui_language=ru (checked in DOM, not by visibility).
 
-    board.html sets bnav_back_href to /verbs?language=…&ui_language=… via _bottom_nav.html.
-    This checks the server-rendered bottom-nav does not drop ui_language.
+    The bottom nav is hidden on desktop viewports via CSS; the href is set server-side
+    so we validate the attribute directly without requiring the element to be visible.
     """
     page.goto(f"{live_server_url}{_VERBS_RU_UI}")
     page.wait_for_load_state("networkidle")
 
-    bnav_back = page.locator(".bottom-nav a").first
-    if not bnav_back.is_visible():
-        pytest.skip("Bottom nav not visible on this viewport")
+    back_tab = page.locator(".bottom-nav a[aria-label='Back']")
+    back_tab.wait_for(state="attached", timeout=5000)
 
-    all_bnav = page.locator(".bottom-nav a").all()
-    back_hrefs = [
-        a.get_attribute("href") or ""
-        for a in all_bnav
-        if "/?language" in (a.get_attribute("href") or "")
-    ]
-
-    if not back_hrefs:
-        pytest.skip("No bottom-nav Back link found pointing to home")
-
-    for href in back_hrefs:
-        assert (
-            "ui_language=ru" in href
-        ), f"Bottom-nav Back link must carry ui_language=ru. Got href={href!r}"
+    href = back_tab.get_attribute("href") or ""
+    assert (
+        "ui_language=ru" in href
+    ), f"Bottom-nav Back tab must carry ui_language=ru. Got href={href!r}"
