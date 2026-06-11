@@ -2,6 +2,56 @@ from __future__ import annotations
 
 import pytest
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _expand_verb_list(page, live_server_url) -> int:
+    """Navigate to /verbs, click show-more once, return count after expansion.
+
+    Skips the test (via pytest.skip) if the list is too small to expand.
+    Returns the item count after show-more.
+    """
+    page.goto(f"{live_server_url}/verbs?language=en")
+    page.wait_for_load_state("networkidle")
+    page.locator("#vb-list").wait_for(state="visible")
+    page.wait_for_timeout(500)
+
+    btn = page.locator("#vb-load-more")
+    if not btn.is_visible():
+        pytest.skip("No show-more button — verb list too small")
+
+    before = page.locator("#vb-list a.vb-item").count()
+    btn.click()
+    page.wait_for_timeout(800)
+
+    after = page.locator("#vb-list a.vb-item").count()
+    if after <= before:
+        pytest.skip("Show-more did not add items")
+    return after
+
+
+def _go_to_learn_then_return(page, live_server_url, return_via: str) -> None:
+    """Navigate from /verbs to the first verb's learn page, then return.
+
+    return_via: 'app_back' (topbar Back link) | 'browser_back' (page.go_back())
+    """
+    first = page.locator("#vb-list a.vb-item").first
+    first.click()
+    page.wait_for_load_state("networkidle")
+
+    if return_via == "app_back":
+        back_btn = page.locator(".nav-btn.nav-btn--ghost").first
+        if not back_btn.is_visible():
+            pytest.skip("Topbar Back not visible — verb may not have loaded")
+        back_btn.click()
+    else:
+        page.go_back()
+
+    page.wait_for_load_state("networkidle")
+    page.wait_for_timeout(1500)
+
 
 # Feedback open-redirect regression
 def test_learn_feedback_link_encodes_return_to(page, live_server_url):
@@ -53,62 +103,31 @@ def test_known_star_persists_after_reload(page, live_server_url):
     assert star.get_attribute("aria-pressed") == "true"
 
 
-# Show-more count survives back navigation (Bug 2 regression).
+# Invariant: expanded verb count survives any return trip to /verbs.
 #
-# Root cause: applyFilter() always reset displayCount = batch on init, discarding
-# the count saved in sessionStorage from a previous visit. On back-nav, the page
-# also only had the server-rendered initial batch in window.VB_VERBS.
+# Root cause of original bug: applyFilter() reset displayCount=batch on every
+# init; verbs_page.js only re-fetched on back_forward nav type (browser Back).
+# Clicking the app's topbar Back button from /learn navigates via return_to URL
+# (navType='navigate'), so the refetch and count-restore were both skipped.
 #
-# Fix: applyFilter(filter, init) skips the reset when init=True. verbs_page.js
-# fetches missing verbs from /api/verbs on back_forward navigation before rendering.
-def test_show_more_count_survives_back_navigation(page, live_server_url):
-    """After clicking 'Show more verbs', navigating to a learn page, and going back,
-    the verbs page must show at least as many verbs as were visible after show-more.
-    """
-    page.goto(f"{live_server_url}/verbs?language=en")
-    page.wait_for_load_state("networkidle")
+# Fix: isBackNav in verbs_filters.js also triggers when referrer includes '/learn'.
+# verbs_page.js refetch IIFE also triggers on referrer='/learn', and no longer
+# skips mobile (mobile now uses batch/show-more like desktop).
+#
+# Add new return strategies as additional pytest.param entries -- no new test needed.
+@pytest.mark.parametrize(
+    "return_via",
+    [
+        pytest.param("browser_back", id="browser-back"),
+        pytest.param("app_back", id="app-back-button"),
+    ],
+)
+def test_show_more_count_survives_return_to_verbs(page, live_server_url, return_via):
+    """Expanded verb count must be restored however the user returns to /verbs."""
+    after_more = _expand_verb_list(page, live_server_url)
+    _go_to_learn_then_return(page, live_server_url, return_via)
 
-    # Wait for the verb list to receive at least one item.
-    list_el = page.locator("#vb-list")
-    list_el.wait_for(state="visible")
-    page.wait_for_timeout(500)
-
-    load_more_btn = page.locator("#vb-load-more")
-
-    # If there is no show-more button (e.g. CI has no verbs or all fit in one batch),
-    # skip gracefully so the test does not become a false failure.
-    if not load_more_btn.is_visible():
-        pytest.skip(
-            "No 'Show more verbs' button — verb list is too small to test back-nav count retention"
-        )
-
-    # Count items before clicking show-more.
-    initial_count = page.locator("#vb-list a.vb-item").count()
-
-    # Click show-more and wait for additional items to appear.
-    load_more_btn.click()
-    page.wait_for_timeout(800)
-
-    after_more = page.locator("#vb-list a.vb-item").count()
-
-    if after_more <= initial_count:
-        pytest.skip(
-            "Show-more did not add items — nothing to assert about back-nav count retention"
-        )
-
-    # Navigate to the first verb's learn page.
-    first_link = page.locator("#vb-list a.vb-item").first
-    first_link.click()
-    page.wait_for_load_state("networkidle")
-
-    # Go back and wait for the verb list to restore.
-    page.go_back()
-    page.wait_for_load_state("networkidle")
-
-    # Give the async back-nav re-fetch time to complete.
-    page.wait_for_timeout(1500)
-
-    restored_count = page.locator("#vb-list a.vb-item").count()
+    restored = page.locator("#vb-list a.vb-item").count()
     assert (
-        restored_count >= after_more
-    ), f"Expected at least {after_more} verbs after back navigation, got {restored_count}"
+        restored >= after_more
+    ), f"[{return_via}] Expected >= {after_more} verbs on return, got {restored}"

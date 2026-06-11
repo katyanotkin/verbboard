@@ -25,8 +25,9 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/login")
 async def admin_login_page(request: Request, error: str = "") -> HTMLResponse:
     return templates.TemplateResponse(
+        request,
         "admin_login.html",
-        {"request": request, "admin_prefix": ADMIN_PREFIX, "error": error == "1"},
+        {"admin_prefix": ADMIN_PREFIX, "error": error == "1"},
     )
 
 

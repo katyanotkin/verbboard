@@ -27,7 +27,7 @@ async def admin_page(request: Request) -> HTMLResponse:
         return redirect_response
 
     return templates.TemplateResponse(
-        "admin.html", {"request": request, "admin_prefix": ADMIN_PREFIX}
+        request, "admin.html", {"admin_prefix": ADMIN_PREFIX}
     )
 
 
