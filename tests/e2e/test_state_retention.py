@@ -3,16 +3,23 @@ from __future__ import annotations
 import pytest
 
 # ---------------------------------------------------------------------------
-# Helpers
+# Parametrize axes -- add new entries here, no new test functions needed
 # ---------------------------------------------------------------------------
 
-_RETURN_STRATEGIES = pytest.mark.parametrize(
-    "return_via",
-    [
-        pytest.param("browser_back", id="browser-back"),
-        pytest.param("app_back", id="app-back-button"),
-    ],
-)
+_RETURN_STRATEGIES = [
+    pytest.param("browser_back", id="browser-back"),
+    pytest.param("app_back", id="app-back-button"),
+]
+
+_LEARN_ACTIONS = [
+    pytest.param("none", id="no-action"),
+    pytest.param("change_voice", id="change-voice"),
+]
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 
 def _require_verb_items(page, timeout: int = 5_000) -> None:
@@ -33,53 +40,56 @@ def _active_sort(page) -> str:
     return page.locator("#vb-sort").input_value()
 
 
-def _expand_verb_list(page, live_server_url) -> int:
-    """Navigate to /verbs, click show-more once, return count after expansion.
-
-    Skips the test (via pytest.skip) if the list is too small to expand.
-    Returns the item count after show-more.
-    """
-    page.goto(f"{live_server_url}/verbs?language=en")
-    page.wait_for_load_state("networkidle")
-    page.locator("#vb-list").wait_for(state="visible")
-    page.wait_for_timeout(500)
-
+def _maybe_expand_verb_list(page) -> int | None:
+    """Try to expand the verb list via show-more. Returns post-expansion count or None."""
     btn = page.locator("#vb-load-more")
     if not btn.is_visible():
-        pytest.skip("No show-more button — verb list too small")
-
+        return None
     before = page.locator("#vb-list a.vb-item").count()
     btn.click()
     page.wait_for_timeout(800)
-
     after = page.locator("#vb-list a.vb-item").count()
-    if after <= before:
-        pytest.skip("Show-more did not add items")
-    return after
+    return after if after > before else None
 
 
-def _go_to_learn_then_return(page, live_server_url, return_via: str) -> None:
-    """Navigate from /verbs to the first verb's learn page, then return.
+def _perform_learn_action(page, action: str) -> None:
+    """Perform an optional action on the learn page before navigating back.
 
-    return_via: 'app_back' (topbar Back link) | 'browser_back' (page.go_back())
+    Add new actions as pytest.param entries in _LEARN_ACTIONS above.
     """
-    first = page.locator("#vb-list a.vb-item").first
-    first.click()
-    page.wait_for_load_state("networkidle")
+    if action == "change_voice":
+        male_btn = page.locator("button.voice-btn[value='male']")
+        if male_btn.is_visible():
+            male_btn.click()
+            page.wait_for_load_state("networkidle")
 
+
+def _return_to_verbs(page, return_via: str) -> None:
+    """Navigate back to /verbs using the given strategy.
+
+    browser_back loops go_back() until on /verbs because learn actions like
+    voice-change add entries to the browser history stack.
+    """
     if return_via == "app_back":
         back_btn = page.locator(".nav-btn.nav-btn--ghost").first
         if not back_btn.is_visible():
             pytest.skip("Topbar Back not visible — verb may not have loaded")
         back_btn.click()
+        page.wait_for_load_state("networkidle")
     else:
-        page.go_back()
-
-    page.wait_for_load_state("networkidle")
+        for _ in range(5):
+            if "/verbs" in page.url:
+                break
+            page.go_back()
+            page.wait_for_load_state("networkidle")
     page.wait_for_timeout(1500)
 
 
-# Feedback open-redirect regression
+# ---------------------------------------------------------------------------
+# Unrelated-to-back-nav smoke checks (keep here for context)
+# ---------------------------------------------------------------------------
+
+
 def test_learn_feedback_link_encodes_return_to(page, live_server_url):
     page.goto(f"{live_server_url}/learn?language=en&verb_id=en_be&voice=female")
     page.wait_for_load_state("networkidle")
@@ -95,7 +105,6 @@ def test_learn_feedback_link_encodes_return_to(page, live_server_url):
     assert "%26" in href
 
 
-# Learn feedback link preserves encoded return_to
 def test_feedback_blocks_external_return_to(page, live_server_url):
     page.goto(
         f"{live_server_url}/feedback?return_to=https://malicious.example.com/path"
@@ -110,7 +119,6 @@ def test_feedback_blocks_external_return_to(page, live_server_url):
     assert "://" not in href
 
 
-# Known star survives reload
 def test_known_star_persists_after_reload(page, live_server_url):
     page.goto(f"{live_server_url}/learn?language=en&verb_id=en_be")
     page.wait_for_load_state("networkidle")
@@ -129,81 +137,62 @@ def test_known_star_persists_after_reload(page, live_server_url):
     assert star.get_attribute("aria-pressed") == "true"
 
 
-# Invariant: expanded verb count survives any return trip to /verbs.
+# ---------------------------------------------------------------------------
+# Holistic back-nav state invariant
 #
-# Root cause of original bug: applyFilter() reset displayCount=batch on every
-# init; verbs_page.js only re-fetched on back_forward nav type (browser Back).
-# Clicking the app's topbar Back button from /learn navigates via return_to URL
-# (navType='navigate'), so the refetch and count-restore were both skipped.
+# All user-visible state on /verbs must survive any round-trip to the learn
+# page regardless of what the user did there or how they returned.
 #
-# Fix: isBackNav in verbs_filters.js also triggers when referrer includes '/learn'.
-# verbs_page.js refetch IIFE also triggers on referrer='/learn', and no longer
-# skips mobile (mobile now uses batch/show-more like desktop).
+# Dimensions:
+#   return_via  -- how the user gets back (browser Back button, app Back link)
+#   learn_action -- what the user did on the learn page before returning
 #
-# Add new return strategies as additional pytest.param entries -- no new test needed.
-@_RETURN_STRATEGIES
-def test_show_more_count_survives_return_to_verbs(page, live_server_url, return_via):
-    """Expanded verb count must be restored however the user returns to /verbs."""
-    after_more = _expand_verb_list(page, live_server_url)
-    _go_to_learn_then_return(page, live_server_url, return_via)
-
-    restored = page.locator("#vb-list a.vb-item").count()
-    assert (
-        restored >= after_more
-    ), f"[{return_via}] Expected >= {after_more} verbs on return, got {restored}"
+# State checked simultaneously:
+#   - active filter (set to non-default "all")
+#   - active sort   (set to non-default "newest")
+#   - ui_language in URL (?ui_language=ru)
+#   - display count (only when the list was expandable via show-more)
+#
+# To cover a new scenario add a pytest.param to _RETURN_STRATEGIES or
+# _LEARN_ACTIONS above -- no new test function required.
+# ---------------------------------------------------------------------------
 
 
-# Filter: stored in localStorage (vb-ui:{lang}) and URL hash on writeState().
-# On browser_back the hash restores it; on app_back localStorage is the fallback.
-@_RETURN_STRATEGIES
-def test_filter_survives_return_to_verbs(page, live_server_url, return_via):
-    """Active filter must be preserved however the user returns to /verbs."""
-    page.goto(f"{live_server_url}/verbs?language=en")
-    page.wait_for_load_state("networkidle")
-    _require_verb_items(page)
-
-    page.locator(".vb-ftbtn[data-filter='all']").click()
-    page.wait_for_timeout(300)
-    assert _active_filter(page) == "all"
-
-    _go_to_learn_then_return(page, live_server_url, return_via)
-
-    assert (
-        _active_filter(page) == "all"
-    ), f"[{return_via}] Filter reset to {_active_filter(page)!r} after back-nav"
-
-
-# Sort: same storage path as filter (vb-ui:{lang} in localStorage + URL hash).
-@_RETURN_STRATEGIES
-def test_sort_survives_return_to_verbs(page, live_server_url, return_via):
-    """Active sort must be preserved however the user returns to /verbs."""
-    page.goto(f"{live_server_url}/verbs?language=en")
-    page.wait_for_load_state("networkidle")
-    _require_verb_items(page)
-
-    page.locator("#vb-sort").wait_for(state="visible")
-    page.locator("#vb-sort").select_option("newest")
-    page.wait_for_timeout(300)
-    assert _active_sort(page) == "newest"
-
-    _go_to_learn_then_return(page, live_server_url, return_via)
-
-    assert (
-        _active_sort(page) == "newest"
-    ), f"[{return_via}] Sort reset to {_active_sort(page)!r} after back-nav"
-
-
-# ui_language: travels in the URL (?ui_language=); JS encodes it into return_to.
-# browser_back: browser restores the full URL. app_back: return_to carries it.
-@_RETURN_STRATEGIES
-def test_ui_language_survives_return_to_verbs(page, live_server_url, return_via):
-    """ui_language=ru must remain in the URL however the user returns to /verbs."""
+@pytest.mark.parametrize("learn_action", _LEARN_ACTIONS)
+@pytest.mark.parametrize("return_via", _RETURN_STRATEGIES)
+def test_verbs_state_survives_learn_roundtrip(
+    page, live_server_url, return_via, learn_action
+):
+    """All /verbs state must survive any learn-page round-trip."""
     page.goto(f"{live_server_url}/verbs?language=en&ui_language=ru")
     page.wait_for_load_state("networkidle")
     _require_verb_items(page)
 
-    _go_to_learn_then_return(page, live_server_url, return_via)
+    # Filter and sort first -- applyFilter(non-init) resets displayCount to batch,
+    # so expanding must happen AFTER to get the correct expanded count in sessionStorage.
+    page.locator(".vb-ftbtn[data-filter='all']").click()
+    page.wait_for_timeout(200)
+    page.locator("#vb-sort").wait_for(state="visible")
+    page.locator("#vb-sort").select_option("newest")
+    page.wait_for_timeout(200)
 
+    expanded_count = _maybe_expand_verb_list(page)
+
+    page.locator("#vb-list a.vb-item").first.click()
+    page.wait_for_load_state("networkidle")
+
+    _perform_learn_action(page, learn_action)
+    _return_to_verbs(page, return_via)
+
+    tag = f"[{return_via}/{learn_action}]"
     assert (
-        "ui_language=ru" in page.url
-    ), f"[{return_via}] ui_language=ru missing after back-nav. URL: {page.url!r}"
+        _active_filter(page) == "all"
+    ), f"{tag} filter reset to {_active_filter(page)!r}"
+    assert _active_sort(page) == "newest", f"{tag} sort reset to {_active_sort(page)!r}"
+    assert "ui_language=ru" in page.url, f"{tag} ui_language lost. URL: {page.url!r}"
+
+    if expanded_count is not None:
+        restored = page.locator("#vb-list a.vb-item").count()
+        assert (
+            restored >= expanded_count
+        ), f"{tag} display count reset: expected >={expanded_count}, got {restored}"

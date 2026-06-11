@@ -55,6 +55,8 @@
         <form method="get" action="/learn" class="voice-control">
           <input type="hidden" name="language" value="{{ language }}">
           <input type="hidden" name="verb_id" value="{{ verb_id }}">
+          <input type="hidden" name="return_to" value="{{ return_to }}">
+          <input type="hidden" name="ui_language" value="{{ html_lang }}">
           {{ voice_source_input | safe }}
           <span class="voice-icon">🔊</span>
           <span class="voice-label">{{ board_voice_label }}</span>
