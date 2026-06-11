@@ -6,6 +6,32 @@ import pytest
 # Helpers
 # ---------------------------------------------------------------------------
 
+_RETURN_STRATEGIES = pytest.mark.parametrize(
+    "return_via",
+    [
+        pytest.param("browser_back", id="browser-back"),
+        pytest.param("app_back", id="app-back-button"),
+    ],
+)
+
+
+def _require_verb_items(page, timeout: int = 5_000) -> None:
+    """Skip the test if no verb items are rendered (e.g. empty Firestore)."""
+    try:
+        page.wait_for_selector("#vb-list a.vb-item", timeout=timeout)
+    except Exception:
+        pytest.skip("No verb items rendered — Firestore has no verbs for this language")
+
+
+def _active_filter(page) -> str:
+    """Return the data-filter value of the currently active filter button."""
+    return page.locator(".vb-ftbtn.active").first.get_attribute("data-filter") or ""
+
+
+def _active_sort(page) -> str:
+    """Return the current value of the sort select."""
+    return page.locator("#vb-sort").input_value()
+
 
 def _expand_verb_list(page, live_server_url) -> int:
     """Navigate to /verbs, click show-more once, return count after expansion.
@@ -115,13 +141,7 @@ def test_known_star_persists_after_reload(page, live_server_url):
 # skips mobile (mobile now uses batch/show-more like desktop).
 #
 # Add new return strategies as additional pytest.param entries -- no new test needed.
-@pytest.mark.parametrize(
-    "return_via",
-    [
-        pytest.param("browser_back", id="browser-back"),
-        pytest.param("app_back", id="app-back-button"),
-    ],
-)
+@_RETURN_STRATEGIES
 def test_show_more_count_survives_return_to_verbs(page, live_server_url, return_via):
     """Expanded verb count must be restored however the user returns to /verbs."""
     after_more = _expand_verb_list(page, live_server_url)
@@ -131,3 +151,59 @@ def test_show_more_count_survives_return_to_verbs(page, live_server_url, return_
     assert (
         restored >= after_more
     ), f"[{return_via}] Expected >= {after_more} verbs on return, got {restored}"
+
+
+# Filter: stored in localStorage (vb-ui:{lang}) and URL hash on writeState().
+# On browser_back the hash restores it; on app_back localStorage is the fallback.
+@_RETURN_STRATEGIES
+def test_filter_survives_return_to_verbs(page, live_server_url, return_via):
+    """Active filter must be preserved however the user returns to /verbs."""
+    page.goto(f"{live_server_url}/verbs?language=en")
+    page.wait_for_load_state("networkidle")
+    _require_verb_items(page)
+
+    page.locator(".vb-ftbtn[data-filter='all']").click()
+    page.wait_for_timeout(300)
+    assert _active_filter(page) == "all"
+
+    _go_to_learn_then_return(page, live_server_url, return_via)
+
+    assert (
+        _active_filter(page) == "all"
+    ), f"[{return_via}] Filter reset to {_active_filter(page)!r} after back-nav"
+
+
+# Sort: same storage path as filter (vb-ui:{lang} in localStorage + URL hash).
+@_RETURN_STRATEGIES
+def test_sort_survives_return_to_verbs(page, live_server_url, return_via):
+    """Active sort must be preserved however the user returns to /verbs."""
+    page.goto(f"{live_server_url}/verbs?language=en")
+    page.wait_for_load_state("networkidle")
+    _require_verb_items(page)
+
+    page.locator("#vb-sort").wait_for(state="visible")
+    page.locator("#vb-sort").select_option("newest")
+    page.wait_for_timeout(300)
+    assert _active_sort(page) == "newest"
+
+    _go_to_learn_then_return(page, live_server_url, return_via)
+
+    assert (
+        _active_sort(page) == "newest"
+    ), f"[{return_via}] Sort reset to {_active_sort(page)!r} after back-nav"
+
+
+# ui_language: travels in the URL (?ui_language=); JS encodes it into return_to.
+# browser_back: browser restores the full URL. app_back: return_to carries it.
+@_RETURN_STRATEGIES
+def test_ui_language_survives_return_to_verbs(page, live_server_url, return_via):
+    """ui_language=ru must remain in the URL however the user returns to /verbs."""
+    page.goto(f"{live_server_url}/verbs?language=en&ui_language=ru")
+    page.wait_for_load_state("networkidle")
+    _require_verb_items(page)
+
+    _go_to_learn_then_return(page, live_server_url, return_via)
+
+    assert (
+        "ui_language=ru" in page.url
+    ), f"[{return_via}] ui_language=ru missing after back-nav. URL: {page.url!r}"
