@@ -26,6 +26,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+_NON_LATIN_LANGUAGES = {"ru", "he"}
+
+
+def _looks_english(query: str) -> bool:
+    """Return True if the query contains only ASCII letters/spaces -- likely English input."""
+    stripped = query.strip()
+    return bool(stripped) and all(
+        c.isascii() and (c.isalpha() or c.isspace()) for c in stripped
+    )
+
 
 @dataclass
 class _HomeVerb:
@@ -158,6 +168,12 @@ def search_verb(
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
         return RedirectResponse(url=f"/?language={language}{_ui_suffix}")
+
+    if language in _NON_LATIN_LANGUAGES and _looks_english(query):
+        _rt = f"&return_to={quote(return_to, safe='')}" if return_to else ""
+        return RedirectResponse(
+            url=f"/search_verb_by_lang?language={language}&q={quote(query, safe='')}&source_lang=en{_ui_suffix}{_rt}"
+        )
 
     doc = find_verb_by_search_extract(language, query)
 
