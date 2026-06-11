@@ -40,6 +40,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	test test-unit test-unit-fast \
 	test-e2e-local test-e2e-stage test-e2e-parallel \
 	test-demand test-progress-stage test-progress-prod \
+	test-qatp-stage \
 	smoke-nav-local smoke-nav-stage validate-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
 	cache-audio-stage cache-audio-prod \
@@ -83,6 +84,10 @@ test-e2e-parallel: ## QA: run Playwright e2e tests with 2 parallel workers
 
 test-e2e-stage: ## QA: run Playwright browser flow tests against stage
 	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e -n 2 -v
+
+## QA: run QATP security + practice regression tests against stage
+test-qatp-stage: ## QA: QATP (XSS, practice ui_language, voice banner) vs stage
+	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e/test_qatp.py -v
 
 ## QA: run progress API integration tests against stage (mock user, requires ALLOW_LOCAL_DEV_AUTH=true)
 test-progress-stage: ## QA: progress API integration tests vs stage
@@ -329,7 +334,7 @@ smoke-nav-local: ## QA: nav smoke test against http://localhost:$(HOST_PORT)
 smoke-nav-stage: ## QA: nav smoke test against stage.verbboard.com
 	python scripts/smoke_nav.py $(STAGE_URL)
 
-validate-stage: smoke-stage smoke-nav-stage test-e2e-stage ## QA: full stage validation (smoke + nav + Playwright)
+validate-stage: smoke-stage smoke-nav-stage test-e2e-stage test-qatp-stage ## QA: full stage validation (smoke + nav + Playwright + QATP)
 
 ## GCP: smoke test prod
 smoke-prod: gcp-check ## GCP: smoke test prod service
