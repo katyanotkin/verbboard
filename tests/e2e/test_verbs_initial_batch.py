@@ -1,19 +1,22 @@
-"""Regression: verbs page initial render must respect VB_DISPLAY_BATCH.
+"""Regression: verbs page initial render behaviour by viewport.
 
-Core invariant
---------------
-On any fresh page load (navigation type != back_forward):
-
+Desktop invariant (pointer:fine)
+---------------------------------
     rendered_count <= VB_DISPLAY_BATCH
     show_more_visible == (total_visible > VB_DISPLAY_BATCH)
 
-This must hold for every combination of:
-  - viewport    desktop (pointer:fine)  /  mobile (pointer:coarse)
-  - filter      all / new  (seen/known skipped -- empty without auth progress)
-  - sort        alpha / newest
+Mobile invariant (pointer:coarse)
+----------------------------------
+Mobile calls filters.showAll() on fresh loads so users can scroll the full
+pre-loaded list without tapping "show more".
 
+    rendered_count == len(pre_loaded_verbs)   (no display-batch cap)
+
+Show-more is still present when the server has more verbs beyond the page limit.
+
+Both invariants hold for every filter × sort combination tested.
 All tests skip gracefully when Firestore has <= VB_DISPLAY_BATCH verbs
-(the invariant is vacuously satisfied with no show-more needed).
+(not enough data to distinguish batched vs all-shown).
 """
 
 from __future__ import annotations
@@ -32,11 +35,7 @@ _VIEWPORTS = {
 
 @contextmanager
 def _page_for_viewport(browser, viewport_name: str):
-    """Yield a Playwright page with the right pointer media for the viewport name.
-
-    'mobile' sets has_touch=True so matchMedia('(any-pointer: coarse)') returns
-    true, which is the condition verbs_page.js uses to call filters.showAll().
-    """
+    """Yield a Playwright page with the right pointer media for the viewport name."""
     is_mobile = viewport_name == "mobile"
     context = browser.new_context(
         has_touch=is_mobile,
@@ -51,54 +50,70 @@ def _page_for_viewport(browser, viewport_name: str):
         context.close()
 
 
-# ── invariant helper ──────────────────────────────────────────────────────────
+# ── invariant helpers ─────────────────────────────────────────────────────────
 
 
-def _check_batch_invariant(
-    page, live_server_url: str, filter_name: str, sort_name: str
-):
-    """Navigate to the verbs page with the given filter/sort and assert the invariant.
-
-    Returns True if the assertion ran, False if it was skipped (not enough data).
-    Raises AssertionError if the invariant is violated.
-    """
+def _check_desktop_batch_invariant(page, live_server_url, filter_name, sort_name):
+    """Desktop: initial render must show at most VB_DISPLAY_BATCH items."""
     hash_fragment = f"filter={filter_name}&sort={sort_name}"
     page.goto(f"{live_server_url}/verbs?language=en#{hash_fragment}")
-
-    # Clear any leftover sessionStorage so this is always treated as a fresh load.
     page.evaluate("sessionStorage.clear()")
     page.reload()
     page.wait_for_load_state("networkidle")
 
     batch = int(page.evaluate("window.VB_DISPLAY_BATCH || 20"))
     all_verbs = page.evaluate("(window.VB_VERBS || []).length")
-
     if all_verbs <= batch:
-        return False  # invariant vacuously holds; caller skips
+        return False
 
-    # Wait for at least one item or confirm empty state
     try:
         page.wait_for_selector("#vb-list .vb-item, .vb-empty", timeout=5_000)
     except Exception:
-        return False  # list never rendered; skip
+        return False
 
     item_count = page.locator("#vb-list .vb-item").count()
-
     if item_count == 0:
-        return False  # filter produced no results (e.g. 'seen' with no progress)
+        return False
 
     assert item_count <= batch, (
-        f"viewport=*  filter={filter_name!r}  sort={sort_name!r}: "
-        f"initial render showed {item_count} items but VB_DISPLAY_BATCH={batch}. "
-        f"Expected at most {batch} items on first paint."
+        f"desktop  filter={filter_name!r}  sort={sort_name!r}: "
+        f"initial render showed {item_count} items but VB_DISPLAY_BATCH={batch}."
     )
-
     show_more = page.locator("#vb-load-more")
     assert show_more.is_visible(), (
-        f"viewport=*  filter={filter_name!r}  sort={sort_name!r}: "
-        f"show-more button must be visible when total ({all_verbs}) > batch ({batch})."
+        f"desktop  filter={filter_name!r}  sort={sort_name!r}: "
+        f"show-more must be visible when total ({all_verbs}) > batch ({batch})."
     )
+    return True
 
+
+def _check_mobile_showall_invariant(page, live_server_url, filter_name, sort_name):
+    """Mobile: fresh load must show all pre-loaded verbs (no display-batch cap)."""
+    hash_fragment = f"filter={filter_name}&sort={sort_name}"
+    page.goto(f"{live_server_url}/verbs?language=en#{hash_fragment}")
+    page.evaluate("sessionStorage.clear()")
+    page.reload()
+    page.wait_for_load_state("networkidle")
+
+    batch = int(page.evaluate("window.VB_DISPLAY_BATCH || 20"))
+    all_verbs = page.evaluate("(window.VB_VERBS || []).length")
+    if all_verbs <= batch:
+        return False
+
+    try:
+        page.wait_for_selector("#vb-list .vb-item, .vb-empty", timeout=5_000)
+    except Exception:
+        return False
+
+    item_count = page.locator("#vb-list .vb-item").count()
+    if item_count == 0:
+        return False
+
+    assert item_count >= all_verbs, (
+        f"mobile  filter={filter_name!r}  sort={sort_name!r}: "
+        f"expected all {all_verbs} pre-loaded verbs visible, got {item_count}. "
+        f"Mobile fresh load should call filters.showAll()."
+    )
     return True
 
 
@@ -107,43 +122,38 @@ def _check_batch_invariant(
 
 @pytest.mark.parametrize("sort_name", ["alpha", "newest"])
 @pytest.mark.parametrize("filter_name", ["all", "new"])
-@pytest.mark.parametrize("viewport_name", ["desktop", "mobile"])
-def test_initial_render_respects_display_batch(
-    browser,
-    live_server_url,
-    viewport_name: str,
-    filter_name: str,
-    sort_name: str,
+def test_desktop_initial_render_respects_display_batch(
+    browser, live_server_url, filter_name, sort_name
 ):
-    """Initial render must show at most VB_DISPLAY_BATCH items for any
-    viewport × filter × sort combination.
-
-    Desktop cases should PASS.
-    Mobile cases currently FAIL (showAll() bug).
-    """
-    with _page_for_viewport(browser, viewport_name) as page:
-        ran = _check_batch_invariant(page, live_server_url, filter_name, sort_name)
+    """Desktop: initial render must show at most VB_DISPLAY_BATCH items."""
+    with _page_for_viewport(browser, "desktop") as page:
+        ran = _check_desktop_batch_invariant(
+            page, live_server_url, filter_name, sort_name
+        )
         if not ran:
-            pytest.skip(
-                f"Not enough verbs in Firestore to exercise show-more "
-                f"(need >VB_DISPLAY_BATCH for filter={filter_name!r})"
-            )
+            pytest.skip("Not enough verbs to exercise show-more")
+
+
+@pytest.mark.parametrize("sort_name", ["alpha", "newest"])
+@pytest.mark.parametrize("filter_name", ["all", "new"])
+def test_mobile_initial_render_shows_all_preloaded(
+    browser, live_server_url, filter_name, sort_name
+):
+    """Mobile: fresh load must expand to show all pre-loaded verbs (no batch cap)."""
+    with _page_for_viewport(browser, "mobile") as page:
+        ran = _check_mobile_showall_invariant(
+            page, live_server_url, filter_name, sort_name
+        )
+        if not ran:
+            pytest.skip("Not enough verbs to distinguish batched vs show-all")
 
 
 # ── after auth hydration re-render ────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("viewport_name", ["desktop", "mobile"])
-def test_batch_invariant_holds_after_auth_hydration(
-    browser, live_server_url, viewport_name: str
-):
-    """After vb:progress-hydrated fires (Firebase auth + localStorage sync),
-    a re-render must not expand the visible list beyond VB_DISPLAY_BATCH.
-
-    On mobile this will fail for the same reason: displayCount is already
-    Infinity when the hydration re-render runs, so all items stay visible.
-    """
-    with _page_for_viewport(browser, viewport_name) as page:
+def test_desktop_batch_invariant_holds_after_auth_hydration(browser, live_server_url):
+    """Desktop: vb:progress-hydrated re-render must not expand beyond VB_DISPLAY_BATCH."""
+    with _page_for_viewport(browser, "desktop") as page:
         page.goto(f"{live_server_url}/verbs?language=en")
         page.evaluate("sessionStorage.clear()")
         page.reload()
@@ -159,25 +169,50 @@ def test_batch_invariant_holds_after_auth_hydration(
         except Exception:
             pytest.skip("List never rendered")
 
-        # Simulate auth hydration re-render (fires filters.render() via event)
         page.evaluate("window.dispatchEvent(new Event('vb:progress-hydrated'))")
         page.wait_for_timeout(200)
 
         item_count = page.locator("#vb-list .vb-item").count()
         assert item_count <= batch, (
-            f"viewport={viewport_name!r}: after vb:progress-hydrated re-render, "
+            f"desktop: after vb:progress-hydrated re-render, "
             f"{item_count} items visible -- expected at most {batch}."
         )
 
 
-# ── filter-change resets to one batch ─────────────────────────────────────────
+def test_mobile_showall_persists_after_auth_hydration(browser, live_server_url):
+    """Mobile: vb:progress-hydrated re-render must keep all pre-loaded verbs visible."""
+    with _page_for_viewport(browser, "mobile") as page:
+        page.goto(f"{live_server_url}/verbs?language=en")
+        page.evaluate("sessionStorage.clear()")
+        page.reload()
+        page.wait_for_load_state("networkidle")
+
+        batch = int(page.evaluate("window.VB_DISPLAY_BATCH || 20"))
+        all_verbs = page.evaluate("(window.VB_VERBS || []).length")
+        if all_verbs <= batch:
+            pytest.skip("Not enough verbs to distinguish batched vs show-all")
+
+        try:
+            page.wait_for_selector("#vb-list .vb-item, .vb-empty", timeout=5_000)
+        except Exception:
+            pytest.skip("List never rendered")
+
+        page.evaluate("window.dispatchEvent(new Event('vb:progress-hydrated'))")
+        page.wait_for_timeout(200)
+
+        item_count = page.locator("#vb-list .vb-item").count()
+        assert item_count >= all_verbs, (
+            f"mobile: after vb:progress-hydrated re-render, only {item_count} items "
+            f"visible -- expected all {all_verbs} pre-loaded verbs to remain shown."
+        )
+
+
+# ── filter-change resets to one batch (both viewports) ───────────────────────
 
 
 @pytest.mark.parametrize("viewport_name", ["desktop", "mobile"])
-def test_filter_change_resets_to_one_batch(
-    browser, live_server_url, viewport_name: str
-):
-    """Switching the active filter must reset the display to one batch."""
+def test_filter_change_resets_to_one_batch(browser, live_server_url, viewport_name):
+    """Switching the active filter must reset the display to one batch on any viewport."""
     with _page_for_viewport(browser, viewport_name) as page:
         page.goto(f"{live_server_url}/verbs?language=en")
         page.evaluate("sessionStorage.clear()")
@@ -194,7 +229,6 @@ def test_filter_change_resets_to_one_batch(
         except Exception:
             pytest.skip("List never rendered")
 
-        # Click the 'all' filter button to trigger a filter-change (init=false path)
         all_btn = page.locator('.vb-ftbtn[data-filter="all"]').first
         if not all_btn.is_visible():
             pytest.skip("Filter buttons not present on this page")

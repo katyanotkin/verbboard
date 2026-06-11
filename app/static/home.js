@@ -100,8 +100,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function openVerb(verbId) {
     const language = getLanguage();
-
-    window.location = `/learn?language=${encodeURIComponent(language)}&verb_id=${encodeURIComponent(verbId)}`;
+    const uiLang = new URLSearchParams(location.search).get('ui_language') || '';
+    const uiParam = uiLang ? '&ui_language=' + encodeURIComponent(uiLang) : '';
+    window.location = `/learn?language=${encodeURIComponent(language)}&verb_id=${encodeURIComponent(verbId)}${uiParam}`;
   }
 
   function renderSuggestions(query) {

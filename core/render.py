@@ -187,12 +187,13 @@ def render_board_html(
             "</tr>"
         )
 
-    resolved_return_to = return_to or f"/?language={escape(board.language)}"
+    ui_suffix = f"&ui_language={escape(ui_lang)}" if ui_lang else ""
+    resolved_return_to = return_to or f"/?language={escape(board.language)}{ui_suffix}"
 
     source_suffix = "&source=candidate" if candidate_verb_id else ""
     learn_href = (
         f"/learn?language={escape(board.language)}"
-        f"&verb_id={escape(board.verb.id)}{source_suffix}"
+        f"&verb_id={escape(board.verb.id)}{source_suffix}{ui_suffix}"
     )
 
     voice_key = (board.voice_key or "").lower()

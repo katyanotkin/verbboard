@@ -9,7 +9,7 @@
   <title>{{ title }}</title>
   <link rel="stylesheet" href="/static/common.css"/>
   <link rel="stylesheet" href="/static/feedback.css"/>
-
+{% include '_persist_ui_lang.html' %}
 <script>window.UI = { "auth.login": {{ auth_login | tojson }}, "auth.logout": {{ auth_logout | tojson }} };</script>
 {% include '_firebase_auth.html' %}
 </head>

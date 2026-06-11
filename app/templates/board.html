@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/static/common.css"/>
 <link rel="stylesheet" href="/static/learn.css"/>
 {{ candidate_banner_assets | safe }}
-
+{% include '_persist_ui_lang.html' %}
 <script>window.UI = {{ board_ui_json | safe }};</script>
 
 {% include '_firebase_auth.html' %}
@@ -32,7 +32,7 @@
       </a>
       <div class="topbar-nav-right">
         <a
-          href="/feedback?page=learn&amp;language={{ language_urlencode }}&amp;verb_id={{ verb_id_urlencode }}&amp;return_to={{ learn_href_urlencode }}"
+          href="/feedback?page=learn&amp;language={{ language_urlencode }}&amp;verb_id={{ verb_id_urlencode }}&amp;return_to={{ learn_href_urlencode }}&amp;ui_language={{ html_lang | urlencode }}"
           class="feedback-link"
           title="{{ board_send_feedback }}"
         >

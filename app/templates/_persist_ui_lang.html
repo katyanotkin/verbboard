@@ -1,0 +1,22 @@
+{# Early inline script: persist ui_language in localStorage and restore it on
+   pages loaded without the ?ui_language= param so server renders the right
+   UI language even when a link forgets to carry the param.
+   Must be loaded non-deferred so the redirect fires before the page is painted.
+#}
+<script>
+(function () {
+  var KEY = 'vb_ui_language';
+  var params = new URLSearchParams(location.search);
+  var lang = params.get('ui_language');
+  if (lang) {
+    try { localStorage.setItem(KEY, lang); } catch (_) {}
+  } else {
+    var stored;
+    try { stored = localStorage.getItem(KEY); } catch (_) {}
+    if (stored) {
+      params.set('ui_language', stored);
+      location.replace(location.pathname + '?' + params);
+    }
+  }
+}());
+</script>
