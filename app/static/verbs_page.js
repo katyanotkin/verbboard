@@ -147,11 +147,14 @@
   // Back-nav: re-fetch verbs that were previously loaded but are absent after page
   // reload (VB_VERBS only contains the server-rendered page-limit batch).
   // Triggers on browser back button (back_forward) OR app Back link from /learn
-  // (navigate type, referrer = /learn).
+  // or /feedback (navigate type, referrer = /learn or /feedback).
   (function () {
     var navType = (performance.getEntriesByType('navigation')[0] || {}).type;
-    var fromLearn = !!document.referrer && document.referrer.includes('/learn');
-    if (navType !== 'back_forward' && !fromLearn) return;
+    var fromInternal = !!document.referrer && (
+      document.referrer.includes('/learn') ||
+      document.referrer.includes('/feedback')
+    );
+    if (navType !== 'back_forward' && !fromInternal) return;
 
     var needed = parseInt(sessionStorage.getItem('vb-display-count:' + lang) || '0', 10) - window.VB_VERBS.length;
     if (!(needed > 0)) return;

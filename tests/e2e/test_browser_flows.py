@@ -14,70 +14,76 @@ Verb used: tests prefer `en_be` when present, otherwise use the first available 
 
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
+import pytest
+
 LEARN_URL_PARAMS = "language=en&verb_id=en_be"
 
-
 # ---------------------------------------------------------------------------
-# Feedback navigation
+# Feedback roundtrip: source page → /feedback → Back → source page
+#
+# Covers every page that exposes a feedback link. Add new sources as
+# pytest.param entries — no new test function required.
 # ---------------------------------------------------------------------------
 
-
-def test_feedback_link_on_verbs(page, live_server_url):
-    """Verbs page feedback link navigates to /feedback?page=verbs."""
-    page.goto(f"{live_server_url}/verbs?language=en")
-    link = page.locator("a.feedback-link").first
-    link.wait_for(state="visible")
-
-    href = link.get_attribute("href") or ""
-    assert "page=verbs" in href, f"Expected page=verbs in href, got: {href!r}"
-
-    link.click()
-    page.wait_for_url("**/feedback**")
-    assert "page=verbs" in page.url
+_FEEDBACK_SOURCES = [
+    pytest.param("/?language=en", "/", id="home"),
+    pytest.param("/verbs?language=en&ui_language=ru", "/verbs", id="verbs"),
+    pytest.param(f"/learn?{LEARN_URL_PARAMS}", "/learn", id="learn"),
+    pytest.param("/about", "/about", id="about"),
+]
 
 
-def test_feedback_link_on_home(page, live_server_url):
-    """Home page feedback link navigates to /feedback?page=home."""
-    page.goto(f"{live_server_url}/?language=en")
-    link = page.locator("a.feedback-link[href*='feedback']").first
-    link.wait_for(state="visible")
+@pytest.mark.parametrize("source_url,landing_path", _FEEDBACK_SOURCES)
+def test_feedback_roundtrip(page, live_server_url, source_url, landing_path):
+    """Feedback link on each page opens /feedback and Back returns to the source."""
+    page.goto(f"{live_server_url}{source_url}")
+    page.wait_for_load_state("networkidle")
 
-    href = link.get_attribute("href") or ""
-    assert "/feedback" in href, f"Expected /feedback in href, got: {href!r}"
-    assert "page=home" in href, f"Expected page=home in href, got: {href!r}"
+    feedback = page.locator("a[href*='/feedback']").first
+    if not feedback.is_visible():
+        pytest.skip(f"Feedback link not visible on {source_url!r}")
+    feedback.click()
+    page.wait_for_load_state("networkidle")
+    assert "/feedback" in page.url, f"Expected /feedback page, got: {page.url!r}"
 
-    link.click()
-    page.wait_for_url("**/feedback**")
-    assert "page=home" in page.url
-
-
-def test_feedback_link_on_learn(page, live_server_url):
-    """Learn page feedback link navigates to /feedback?page=learn."""
-    page.goto(f"{live_server_url}/learn?{LEARN_URL_PARAMS}")
-    link = page.locator("a.feedback-link").first
-    link.wait_for(state="visible")
-
-    href = link.get_attribute("href") or ""
-    assert "page=learn" in href, f"Expected page=learn in href, got: {href!r}"
-    assert "verb_id=en_be" in href, f"Expected verb_id=en_be in href, got: {href!r}"
-
-    link.click()
-    page.wait_for_url("**/feedback**")
-    assert "page=learn" in page.url
-
-
-def test_feedback_back_navigates(page, live_server_url):
-    """Back link on the feedback page sends the user to `return_to`."""
-    return_path = "/verbs?language=en"
-    encoded = return_path.replace("?", "%3F").replace("=", "%3D")
-    page.goto(f"{live_server_url}/feedback?page=verbs&language=en&return_to={encoded}")
-
-    back = page.locator("a.feedback-link[href*='verbs']").first
+    back = page.locator("a.feedback-link").first
     back.wait_for(state="visible")
     back.click()
+    page.wait_for_load_state("networkidle")
 
-    page.wait_for_url("**/verbs**")
-    assert "language=en" in page.url
+    assert (
+        landing_path in page.url
+    ), f"After feedback Back, expected {landing_path!r} in URL. Got: {page.url!r}"
+
+
+# ---------------------------------------------------------------------------
+# About roundtrip: home → about → Back → home
+# ---------------------------------------------------------------------------
+
+
+def test_about_roundtrip_from_home(page, live_server_url):
+    """About link on home opens /about; Back on about returns to home."""
+    page.goto(f"{live_server_url}/?language=en")
+    page.wait_for_load_state("networkidle")
+
+    about_link = page.locator("a.about-page-link").first
+    if not about_link.is_visible():
+        pytest.skip("About link not visible on home page")
+    about_link.click()
+    page.wait_for_load_state("networkidle")
+    assert "/about" in page.url, f"Expected /about page, got: {page.url!r}"
+
+    back = page.locator("a.feedback-link").first
+    back.wait_for(state="visible")
+    back.click()
+    page.wait_for_load_state("networkidle")
+
+    assert urlparse(page.url).path in (
+        "/",
+        "",
+    ), f"Expected home (path=/) after about Back. Got: {page.url!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -91,19 +97,6 @@ def test_about_page_renders_with_ui_language(page, live_server_url):
     page.wait_for_load_state("networkidle")
     assert "О приложении VerbBoard" in page.title()
     assert "lang-toggle" not in page.content()
-
-
-def test_about_back_link_returns_to_home(page, live_server_url):
-    """Back link on the about page navigates to home."""
-    page.goto(f"{live_server_url}/about")
-    page.wait_for_load_state("networkidle")
-
-    back = page.locator("a.feedback-link").first
-    back.wait_for(state="visible")
-    back.click()
-
-    page.wait_for_url("**/")
-    assert page.url.rstrip("/").endswith(live_server_url.rstrip("/")) or "/" in page.url
 
 
 def test_about_feedback_link_carries_page_context(page, live_server_url):

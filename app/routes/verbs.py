@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
+from urllib.parse import quote
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -133,6 +134,9 @@ def verb_browser(
             "total_verb_count": total_verb_count,
             "verbs_display_batch": settings.verbs_display_batch,
             "firebase_web_config_json": (settings.firebase_web_config_json),
+            "verbs_return_to": quote(
+                f"/verbs?language={selected_language}&ui_language={ui_lang}", safe="/"
+            ),
         },
     )
 

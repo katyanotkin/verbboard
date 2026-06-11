@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 import pytest
 
 # ---------------------------------------------------------------------------
@@ -14,6 +16,7 @@ _RETURN_STRATEGIES = [
 _LEARN_ACTIONS = [
     pytest.param("none", id="no-action"),
     pytest.param("change_voice", id="change-voice"),
+    pytest.param("visit_feedback", id="visit-feedback"),
 ]
 
 
@@ -62,6 +65,16 @@ def _perform_learn_action(page, action: str) -> None:
         if male_btn.is_visible():
             male_btn.click()
             page.wait_for_load_state("networkidle")
+    elif action == "visit_feedback":
+        # Go to feedback from learn, then browser-back to restore the original learn
+        # context. The feedback back link only has the bare learn URL (no return_to or
+        # ui_language), so clicking it loses the verbs context; browser-back keeps it.
+        feedback = page.locator("a.feedback-link[href*='feedback']").first
+        if feedback.is_visible():
+            feedback.click()
+            page.wait_for_load_state("networkidle")
+            page.go_back()
+            page.wait_for_load_state("networkidle")
 
 
 def _return_to_verbs(page, return_via: str) -> None:
@@ -78,7 +91,7 @@ def _return_to_verbs(page, return_via: str) -> None:
         page.wait_for_load_state("networkidle")
     else:
         for _ in range(5):
-            if "/verbs" in page.url:
+            if urlparse(page.url).path.rstrip("/") == "/verbs":
                 break
             page.go_back()
             page.wait_for_load_state("networkidle")
@@ -185,6 +198,66 @@ def test_verbs_state_survives_learn_roundtrip(
     _return_to_verbs(page, return_via)
 
     tag = f"[{return_via}/{learn_action}]"
+    assert (
+        _active_filter(page) == "all"
+    ), f"{tag} filter reset to {_active_filter(page)!r}"
+    assert _active_sort(page) == "newest", f"{tag} sort reset to {_active_sort(page)!r}"
+    assert "ui_language=ru" in page.url, f"{tag} ui_language lost. URL: {page.url!r}"
+
+    if expanded_count is not None:
+        restored = page.locator("#vb-list a.vb-item").count()
+        assert (
+            restored >= expanded_count
+        ), f"{tag} display count reset: expected >={expanded_count}, got {restored}"
+
+
+# ---------------------------------------------------------------------------
+# Direct verbs → feedback → verbs round-trip
+#
+# The feedback link on /verbs uses return_to so the back button on /feedback
+# returns via navType='navigate' with referrer='/feedback' -- different from
+# the '/learn' path covered above. The isBackNav check was extended to include
+# '/feedback' in the referrer test.
+#
+# About page is not linked from /verbs and its Back link goes to Home, so
+# browser_back (already covered by navType='back_forward') is the only relevant
+# path and needs no separate test.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("return_via", _RETURN_STRATEGIES)
+def test_verbs_state_survives_feedback_detour(page, live_server_url, return_via):
+    """All /verbs state must survive a direct verbs→feedback→verbs round-trip."""
+    page.goto(f"{live_server_url}/verbs?language=en&ui_language=ru")
+    page.wait_for_load_state("networkidle")
+    _require_verb_items(page)
+
+    page.locator(".vb-ftbtn[data-filter='all']").click()
+    page.wait_for_timeout(200)
+    page.locator("#vb-sort").wait_for(state="visible")
+    page.locator("#vb-sort").select_option("newest")
+    page.wait_for_timeout(200)
+
+    expanded_count = _maybe_expand_verb_list(page)
+
+    # Navigate to feedback via the verbs-page feedback link
+    feedback_link = page.locator("a.feedback-link[href*='feedback']").first
+    if not feedback_link.is_visible():
+        pytest.skip("Feedback link not visible on verbs page")
+    feedback_link.click()
+    page.wait_for_load_state("networkidle")
+
+    if return_via == "app_back":
+        back = page.locator("a.feedback-link[href*='verbs']").first
+        if not back.is_visible():
+            pytest.skip("Feedback back link to verbs not visible")
+        back.click()
+        page.wait_for_load_state("networkidle")
+        page.wait_for_timeout(1500)
+    else:
+        _return_to_verbs(page, "browser_back")
+
+    tag = f"[feedback/{return_via}]"
     assert (
         _active_filter(page) == "all"
     ), f"{tag} filter reset to {_active_filter(page)!r}"
