@@ -70,7 +70,7 @@ def main(base: str) -> None:
 
     # ── about ─────────────────────────────────────────────────────────────
     _check(f"{base}/about", "about: renders", require=("VerbBoard",))
-    _check(f"{base}/about", "about: back to home", require=('href="/"',))
+    _check(f"{base}/about?ui_language=en", "about: back to home", require=('href="/?ui_language=en"',))
     _check(f"{base}/about", "about: feedback link", require=("page=about",))
 
     # ── feedback: return_to roundtrip ──────────────────────────────────────
