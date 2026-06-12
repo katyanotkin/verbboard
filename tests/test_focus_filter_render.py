@@ -78,9 +78,7 @@ def test_row_without_filter_keys_has_no_data_attrs() -> None:
     ],
 )
 def test_he_present_row_data_attrs(key, label, text, gender, number) -> None:
-    rows = [
-        {"key": key, "label": label, "text": text, "gender": gender, "number": number}
-    ]
+    rows = [{"key": key, "label": label, "text": text, "gender": gender, "number": number}]
     html = render_board_html(_board("he", rows), ui_lang="en")
     assert f"data-gender='{gender}'" in html, f"missing data-gender for {key}"
     assert f"data-number='{number}'" in html, f"missing data-number for {key}"
@@ -170,11 +168,9 @@ def test_filter_buttons_present_for_correct_languages(
     gender_present = "persona-btn" in html
     number_present = "number-btn" in html
 
-    assert gender_present == expect_gender_btn, (
-        f"language={language}: expected persona-btn present={expect_gender_btn}, "
-        f"got {gender_present}"
-    )
-    assert number_present == expect_number_btn, (
-        f"language={language}: expected number-btn present={expect_number_btn}, "
-        f"got {number_present}"
-    )
+    assert (
+        gender_present == expect_gender_btn
+    ), f"language={language}: expected persona-btn present={expect_gender_btn}, got {gender_present}"
+    assert (
+        number_present == expect_number_btn
+    ), f"language={language}: expected number-btn present={expect_number_btn}, got {number_present}"

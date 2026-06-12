@@ -72,9 +72,7 @@ def verb_browser(
 
     verbs_js = [_build_verb_item(e) for e in entries]
 
-    recent_docs = list_verbs_recent(
-        language=selected_language, limit=RECENT_VERBS_LIMIT
-    )
+    recent_docs = list_verbs_recent(language=selected_language, limit=RECENT_VERBS_LIMIT)
     known_ids = {v["id"] for v in verbs_js}
     recent_ids = [d["verb_id"] for d in recent_docs if d.get("verb_id") in known_ids]
 
@@ -134,9 +132,7 @@ def verb_browser(
             "total_verb_count": total_verb_count,
             "verbs_display_batch": settings.verbs_display_batch,
             "firebase_web_config_json": (settings.firebase_web_config_json),
-            "verbs_return_to": quote(
-                f"/verbs?language={selected_language}&ui_language={ui_lang}", safe="/"
-            ),
+            "verbs_return_to": quote(f"/verbs?language={selected_language}&ui_language={ui_lang}", safe="/"),
         },
     )
 

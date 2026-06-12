@@ -70,16 +70,12 @@ def process_verb(
         lemma = lemma.get("imperfective") or lemma.get("perfective") or str(lemma)
 
     examples: list[dict] = [
-        ex
-        for ex in data.get("examples", [])
-        if isinstance(ex, dict) and isinstance(ex.get("dst"), str)
+        ex for ex in data.get("examples", []) if isinstance(ex, dict) and isinstance(ex.get("dst"), str)
     ]
     if not examples:
         return False
 
-    effective_targets = target_langs or [
-        lang for lang in SUPPORTED_LANGUAGES if lang != verb_lang
-    ]
+    effective_targets = target_langs or [lang for lang in SUPPORTED_LANGUAGES if lang != verb_lang]
 
     if force:
         examples = _strip_translations(examples, effective_targets)
@@ -123,22 +119,16 @@ def run(
 
     for verb_lang in verb_langs:
         logger.info("Processing language: %s", verb_lang)
-        docs = (
-            db.collection(VERBS_COLLECTION).where("language", "==", verb_lang).stream()
-        )
+        docs = db.collection(VERBS_COLLECTION).where("language", "==", verb_lang).stream()
         updated = skipped = 0
         for doc in docs:
             data = doc.to_dict()
             logger.info("  %s", data.get("verb_id", doc.id))
-            if process_verb(
-                doc.reference, data, target_langs, project, api_key, dry_run, force
-            ):
+            if process_verb(doc.reference, data, target_langs, project, api_key, dry_run, force):
                 updated += 1
             else:
                 skipped += 1
-        logger.info(
-            "  %s: %d updated, %d already complete", verb_lang, updated, skipped
-        )
+        logger.info("  %s: %d updated, %d already complete", verb_lang, updated, skipped)
 
 
 def main() -> None:

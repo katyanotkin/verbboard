@@ -7,7 +7,6 @@ import core.languages.en.plugin  # noqa: F401
 import core.languages.es.plugin  # noqa: F401
 import core.languages.he.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
-
 from core.languages.config import LANGUAGE
 from core.registry import all_plugins
 

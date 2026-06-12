@@ -82,7 +82,5 @@ async def admin_logout() -> HTMLResponse:
         headers={"Cache-Control": "no-store"},
         status_code=200,
     )
-    response.delete_cookie(
-        key=ADMIN_SESSION_COOKIE, path="/", secure=True, samesite="lax"
-    )
+    response.delete_cookie(key=ADMIN_SESSION_COOKIE, path="/", secure=True, samesite="lax")
     return response

@@ -6,13 +6,12 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from core.storage.firestore_db import get_db
-
 from app.routes.admin_utils import (
     CANDIDATES_COLLECTION,
     require_admin_api,
     signal_collections,
 )
+from core.storage.firestore_db import get_db
 
 router = APIRouter()
 
@@ -61,11 +60,7 @@ async def list_signals(
         data = doc.to_dict()
         created_at = data.get("created_at")
 
-        created_at_value = (
-            created_at.isoformat()
-            if hasattr(created_at, "isoformat")
-            else str(created_at or "")
-        )
+        created_at_value = created_at.isoformat() if hasattr(created_at, "isoformat") else str(created_at or "")
         results.append(
             {
                 "id": doc.id,
@@ -207,12 +202,7 @@ async def classify_signal_group(request: Request) -> JSONResponse:
         }
     )
 
-    raw_docs = (
-        db.collection(sig_col)
-        .where("language", "==", language)
-        .where("query", "==", query)
-        .stream()
-    )
+    raw_docs = db.collection(sig_col).where("language", "==", language).where("query", "==", query).stream()
 
     batch = db.batch()
     batch_size = 0
@@ -229,9 +219,7 @@ async def classify_signal_group(request: Request) -> JSONResponse:
     if batch_size:
         batch.commit()
 
-    return JSONResponse(
-        {"id": label_id, "status": status, "processed": processed_count}
-    )
+    return JSONResponse({"id": label_id, "status": status, "processed": processed_count})
 
 
 @router.post("/api/signal_labels/{label_id}/hide")

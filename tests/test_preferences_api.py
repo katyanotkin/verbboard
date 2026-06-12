@@ -93,9 +93,7 @@ def test_preferences_round_trip_practice_session_size() -> None:
 
 def test_preferences_partial_post_only_one_field() -> None:
     """POST with only learning_language must succeed and return ok=True."""
-    response = client.post(
-        "/api/preferences", headers=AUTH, json={"learning_language": "es"}
-    )
+    response = client.post("/api/preferences", headers=AUTH, json={"learning_language": "es"})
     assert response.status_code == 200
     assert response.json().get("ok") is True
 

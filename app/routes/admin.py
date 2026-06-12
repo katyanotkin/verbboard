@@ -26,9 +26,7 @@ async def admin_page(request: Request) -> HTMLResponse:
     if redirect_response is not None:
         return redirect_response
 
-    return templates.TemplateResponse(
-        request, "admin.html", {"admin_prefix": ADMIN_PREFIX}
-    )
+    return templates.TemplateResponse(request, "admin.html", {"admin_prefix": ADMIN_PREFIX})
 
 
 router.include_router(admin_auth_router)

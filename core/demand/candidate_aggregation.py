@@ -70,9 +70,7 @@ def aggregate_candidates(
                 bucket["last_seen_at"] = created_at
 
     resolved = [
-        {**value, "queries": sorted(value["queries"])}
-        for value in resolved_map.values()
-        if value["count"] >= cutoff
+        {**value, "queries": sorted(value["queries"])} for value in resolved_map.values() if value["count"] >= cutoff
     ]
 
     unresolved = []
@@ -98,9 +96,7 @@ def aggregate_candidates(
         )
 
     resolved.sort(key=lambda item: (-item["count"], item["language"], item["verb_id"]))
-    unresolved.sort(
-        key=lambda item: (-item["count"], item["language"], item["normalized_query"])
-    )
+    unresolved.sort(key=lambda item: (-item["count"], item["language"], item["normalized_query"]))
 
     return {
         "resolved": resolved,

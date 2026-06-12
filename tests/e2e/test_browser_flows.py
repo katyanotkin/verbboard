@@ -54,9 +54,7 @@ def test_feedback_roundtrip(page, live_server_url, source_url, landing_path):
     back.click()
     page.wait_for_load_state("networkidle")
 
-    assert (
-        landing_path in page.url
-    ), f"After feedback Back, expected {landing_path!r} in URL. Got: {page.url!r}"
+    assert landing_path in page.url, f"After feedback Back, expected {landing_path!r} in URL. Got: {page.url!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -127,9 +125,7 @@ def test_voice_toggle_submits_correct_voice(page, live_server_url):
     male_btn.click()
 
     page.wait_for_load_state("networkidle")
-    assert (
-        "voice=male" in page.url
-    ), f"Expected voice=male in URL after toggle, got: {page.url!r}"
+    assert "voice=male" in page.url, f"Expected voice=male in URL after toggle, got: {page.url!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -154,9 +150,7 @@ def test_known_star_toggles_ui_state(page, live_server_url):
     assert star.get_attribute("aria-pressed") == "true"
 
     known_raw = page.evaluate("localStorage.getItem('known:en')")
-    assert (
-        known_raw is not None
-    ), "localStorage key 'known:en' should exist after first click"
+    assert known_raw is not None, "localStorage key 'known:en' should exist after first click"
     assert "en_be" in known_raw, f"Expected en_be in localStorage, got: {known_raw!r}"
 
     # Second click: unmark.
@@ -165,9 +159,7 @@ def test_known_star_toggles_ui_state(page, live_server_url):
     assert star.get_attribute("aria-pressed") == "false"
 
     known_raw2 = page.evaluate("localStorage.getItem('known:en')")
-    assert "en_be" not in (
-        known_raw2 or ""
-    ), f"Expected en_be removed from localStorage, got: {known_raw2!r}"
+    assert "en_be" not in (known_raw2 or ""), f"Expected en_be removed from localStorage, got: {known_raw2!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -223,9 +215,7 @@ def test_verbs_learn_feedback_returns_to_verbs_with_state(page, live_server_url)
     back_on_feedback.click()
     page.wait_for_load_state("networkidle")
     assert "/learn" in page.url, f"Feedback Back must land on /learn, got {page.url!r}"
-    assert (
-        "return_to=" in page.url
-    ), f"Learn URL after feedback Back must contain return_to. Got: {page.url!r}"
+    assert "return_to=" in page.url, f"Learn URL after feedback Back must contain return_to. Got: {page.url!r}"
 
     # Click app Back on learn -- must return to /verbs.
     back_on_learn = page.locator("a.nav-btn.nav-btn--ghost").first
@@ -237,9 +227,7 @@ def test_verbs_learn_feedback_returns_to_verbs_with_state(page, live_server_url)
     assert "/verbs" in page.url, f"Learn Back must land on /verbs, got {page.url!r}"
 
     # ui_language must survive the full round-trip.
-    assert (
-        "ui_language=ru" in page.url
-    ), f"ui_language=ru lost after round-trip. URL: {page.url!r}"
+    assert "ui_language=ru" in page.url, f"ui_language=ru lost after round-trip. URL: {page.url!r}"
 
     # Filter and sort must be restored (from localStorage).
     page.wait_for_selector(".vb-ftbtn.active", timeout=5_000)
@@ -253,9 +241,5 @@ def test_verbs_learn_feedback_returns_to_verbs_with_state(page, live_server_url)
     # isBackNav relies on document.referrer which is set by the browser for
     # link-click navigations; verify sessionStorage held the expanded count
     # even if the JS chose not to restore it (referrer absent in headless mode).
-    saved_count = page.evaluate(
-        "parseInt(sessionStorage.getItem('vb-display-count:en') || '0', 10)"
-    )
-    assert (
-        saved_count >= 20
-    ), f"sessionStorage vb-display-count:en not written. Got: {saved_count!r}"
+    saved_count = page.evaluate("parseInt(sessionStorage.getItem('vb-display-count:en') || '0', 10)")
+    assert saved_count >= 20, f"sessionStorage vb-display-count:en not written. Got: {saved_count!r}"

@@ -78,12 +78,7 @@ async def _generate_and_upload(
         await tts_to_mp3(text, out_path, voice_edge_id)
         audio_bytes = out_path.read_bytes()
 
-    await asyncio.gather(
-        *[
-            asyncio.to_thread(backends[i].write_bytes, gcs_key, audio_bytes)
-            for i in missing_indices
-        ]
-    )
+    await asyncio.gather(*[asyncio.to_thread(backends[i].write_bytes, gcs_key, audio_bytes) for i in missing_indices])
 
 
 async def _cache_language(
@@ -100,12 +95,8 @@ async def _cache_language(
     existing_per_backend: list[set[str]] = []
     for backend in backends:
         prefix = f"audio/{language}/"
-        print(
-            f"[{language}] [{backend.bucket.name}] listing GCS keys under {prefix}..."
-        )
-        existing: set[str] = {
-            blob.name for blob in backend.bucket.list_blobs(prefix=prefix)
-        }
+        print(f"[{language}] [{backend.bucket.name}] listing GCS keys under {prefix}...")
+        existing: set[str] = {blob.name for blob in backend.bucket.list_blobs(prefix=prefix)}
         print(f"[{language}] [{backend.bucket.name}] {len(existing)} cached")
         existing_per_backend.append(existing)
 
@@ -122,28 +113,19 @@ async def _cache_language(
                 gcs_key = build_audio_key(language, verb.id, voice_key, form_key)
                 counts["total"] += 1
 
-                missing = [
-                    i
-                    for i, existing in enumerate(existing_per_backend)
-                    if gcs_key not in existing
-                ]
+                missing = [i for i, existing in enumerate(existing_per_backend) if gcs_key not in existing]
 
                 if not missing:
                     counts["cached"] += 1
                 else:
-                    pending.append(
-                        (form_key, text, voice_meta.edge_id, gcs_key, missing)
-                    )
+                    pending.append((form_key, text, voice_meta.edge_id, gcs_key, missing))
 
             if not pending:
                 continue
 
             if dry_run:
                 targets = ", ".join(backends[i].bucket.name for i in pending[0][4])
-                print(
-                    f"  DRY-RUN {verb.id} [{voice_key}]: "
-                    f"would generate {len(pending)} to [{targets}]"
-                )
+                print(f"  DRY-RUN {verb.id} [{voice_key}]: would generate {len(pending)} to [{targets}]")
                 counts["generated"] += len(pending)
                 continue
 
@@ -239,10 +221,7 @@ def _parse_args() -> argparse.Namespace:
         action="append",
         dest="buckets",
         metavar="BUCKET",
-        help=(
-            "GCS bucket name; repeat for multiple buckets "
-            "(default: AUDIO_BUCKET env var)"
-        ),
+        help=("GCS bucket name; repeat for multiple buckets (default: AUDIO_BUCKET env var)"),
     )
     parser.add_argument(
         "--dry-run",
@@ -262,9 +241,7 @@ def main() -> None:
     if not buckets:
         sys.exit("ERROR: --bucket or AUDIO_BUCKET is required")
 
-    languages = (
-        supported_languages_list() if args.language == "all" else [args.language]
-    )
+    languages = supported_languages_list() if args.language == "all" else [args.language]
     backends = [GCSAudioBackend(project=args.project, bucket=b) for b in buckets]
     asyncio.run(_run(languages, args.voice, backends, args.dry_run))
 

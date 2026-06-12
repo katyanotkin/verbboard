@@ -57,9 +57,7 @@ def _load_admin_secret() -> str:
 
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
     if not project_id:
-        raise ValueError(
-            "GOOGLE_CLOUD_PROJECT must be set when ADMIN_SECRET is not provided"
-        )
+        raise ValueError("GOOGLE_CLOUD_PROJECT must be set when ADMIN_SECRET is not provided")
 
     client = secretmanager.SecretManagerServiceClient()
     name = f"projects/{project_id}/secrets/{_ADMIN_SECRET_NAME}/versions/latest"
@@ -78,15 +76,11 @@ def _load_anthropic_api_key() -> str:
 
     environment = _resolve_environment()
     if environment == "local":
-        raise ValueError(
-            "ANTHROPIC_API_KEY is not set in environment or .env for local run"
-        )
+        raise ValueError("ANTHROPIC_API_KEY is not set in environment or .env for local run")
 
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
     if not project_id:
-        raise ValueError(
-            "GOOGLE_CLOUD_PROJECT must be set when ANTHROPIC_API_KEY is not provided"
-        )
+        raise ValueError("GOOGLE_CLOUD_PROJECT must be set when ANTHROPIC_API_KEY is not provided")
 
     client = secretmanager.SecretManagerServiceClient()
     name = f"projects/{project_id}/secrets/{_ANTHROPIC_SECRET_NAME}/versions/latest"
@@ -111,9 +105,7 @@ def load_settings() -> Settings:
             "demand_signal_labels",
         ),
         verbs_collection=os.getenv("VERBS_COLLECTION", "verbs"),
-        verb_candidates_collection=os.getenv(
-            "VERB_CANDIDATES_COLLECTION", "verb_candidates"
-        ),
+        verb_candidates_collection=os.getenv("VERB_CANDIDATES_COLLECTION", "verb_candidates"),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         admin_secret=_load_admin_secret(),
         firebase_web_config_json=os.getenv("FIREBASE_WEB_CONFIG_JSON", ""),
@@ -128,19 +120,14 @@ def load_settings() -> Settings:
 
 def _validate(settings: Settings) -> None:
     if settings.environment not in {"local", "stage", "prod"}:
-        raise ValueError(
-            f"Unsupported ENVIRONMENT={settings.environment}. Expected local|stage|prod"
-        )
+        raise ValueError(f"Unsupported ENVIRONMENT={settings.environment}. Expected local|stage|prod")
     if not settings.google_cloud_project:
         raise ValueError("GOOGLE_CLOUD_PROJECT must be set")
     if not settings.audio_bucket:
         raise ValueError("AUDIO_BUCKET must be set")
     if not settings.admin_secret:
         raise ValueError("ADMIN_SECRET must not be empty")
-    if (
-        settings.verbs_page_limit > 0
-        and settings.verbs_page_limit <= settings.verbs_display_batch
-    ):
+    if settings.verbs_page_limit > 0 and settings.verbs_page_limit <= settings.verbs_display_batch:
         raise ValueError(
             f"VERBS_PAGE_LIMIT ({settings.verbs_page_limit}) must be greater than "
             f"VERBS_DISPLAY_BATCH ({settings.verbs_display_batch})"

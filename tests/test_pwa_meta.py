@@ -38,9 +38,7 @@ _PWA_PAGES: list[tuple[str, dict[str, list]]] = [
 
 
 @pytest.mark.parametrize("url,patches", _PWA_PAGES)
-def test_page_has_pwa_manifest_link(
-    client: TestClient, url: str, patches: dict
-) -> None:
+def test_page_has_pwa_manifest_link(client: TestClient, url: str, patches: dict) -> None:
     ctx_patches = [patch(target, return_value=val) for target, val in patches.items()]
     with _multi_patch(ctx_patches):
         html = client.get(url).text
@@ -57,9 +55,7 @@ def test_page_has_theme_color_meta(client: TestClient, url: str, patches: dict) 
 
 
 @pytest.mark.parametrize("url,patches", _PWA_PAGES)
-def test_page_has_viewport_fit_cover(
-    client: TestClient, url: str, patches: dict
-) -> None:
+def test_page_has_viewport_fit_cover(client: TestClient, url: str, patches: dict) -> None:
     ctx_patches = [patch(target, return_value=val) for target, val in patches.items()]
     with _multi_patch(ctx_patches):
         html = client.get(url).text

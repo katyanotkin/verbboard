@@ -45,9 +45,7 @@ def load_optional_json_map(path: Path) -> dict[str, list[str]]:
         normalized_sentences: list[str] = []
         for index, sentence in enumerate(value, start=1):
             if not isinstance(sentence, str) or not sentence.strip():
-                fail(
-                    f"{path}: sentence #{index} for '{key}' must be a non-empty string"
-                )
+                fail(f"{path}: sentence #{index} for '{key}' must be a non-empty string")
             normalized_sentences.append(sentence)
 
         normalized_payload[key] = normalized_sentences
@@ -69,10 +67,7 @@ def validate_top_level(
     source_path: Path,
 ) -> list[dict[str, Any]]:
     if payload.get("language") != expected_language:
-        fail(
-            f"{source_path}: expected language='{expected_language}', "
-            f"got '{payload.get('language')}'"
-        )
+        fail(f"{source_path}: expected language='{expected_language}', got '{payload.get('language')}'")
 
     verbs_object = payload.get("verbs")
     if not isinstance(verbs_object, list):

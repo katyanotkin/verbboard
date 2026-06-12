@@ -98,10 +98,7 @@ def run(
 
             print(f"Imported {language}/{payload['verb_id']} ({imported_for_language})")
 
-            if (
-                limit_per_language is not None
-                and imported_for_language >= limit_per_language
-            ):
+            if limit_per_language is not None and imported_for_language >= limit_per_language:
                 break
 
     print(f"Import done. Total verbs: {total_verbs_imported}")

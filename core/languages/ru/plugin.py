@@ -19,12 +19,12 @@ def _format_aspect(aspect_value: str) -> str:
 
 def _tense_rows(tense_key: str, tense_forms: dict) -> list:
     labels = [
-        ("1sg", "я",          "sg"),
-        ("2sg", "ты",         "sg"),
+        ("1sg", "я", "sg"),
+        ("2sg", "ты", "sg"),
         ("3sg", "он/она/оно", "sg"),
-        ("1pl", "мы",         "pl"),
-        ("2pl", "вы",         "pl"),
-        ("3pl", "они",        "pl"),
+        ("1pl", "мы", "pl"),
+        ("2pl", "вы", "pl"),
+        ("3pl", "они", "pl"),
     ]
     return [
         {
@@ -49,9 +49,7 @@ def _lookup_pair_lemma_and_href(pair_lemma: str) -> tuple[str, str]:
     try:
         import asyncio
 
-        asyncio.get_running_loop().run_in_executor(
-            None, lambda: generate_and_promote_verb("ru", normalized_pair_lemma)
-        )
+        asyncio.get_running_loop().run_in_executor(None, lambda: generate_and_promote_verb("ru", normalized_pair_lemma))
     except RuntimeError:
         generate_and_promote_verb("ru", normalized_pair_lemma)
 
@@ -79,9 +77,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     if aspect:
         metadata_rows.append({"key": "aspect", "label": "вид", "text": aspect})
     if pair_lemma:
-        metadata_rows.append(
-            {"key": "pair", "label": "пара", "text": pair_lemma, "href": pair_href}
-        )
+        metadata_rows.append({"key": "pair", "label": "пара", "text": pair_lemma, "href": pair_href})
 
     if is_biaspectual:
         tense_sections = [
@@ -115,9 +111,9 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
         {
             "title": "Прошедшее время",
             "rows": [
-                {"key": "past_m",  "label": "он",  "text": past.get("m", ""),  "gender": "m", "number": "sg"},
-                {"key": "past_f",  "label": "она", "text": past.get("f", ""),  "gender": "f", "number": "sg"},
-                {"key": "past_n",  "label": "оно", "text": past.get("n", ""),  "gender": "n", "number": "sg"},
+                {"key": "past_m", "label": "он", "text": past.get("m", ""), "gender": "m", "number": "sg"},
+                {"key": "past_f", "label": "она", "text": past.get("f", ""), "gender": "f", "number": "sg"},
+                {"key": "past_n", "label": "оно", "text": past.get("n", ""), "gender": "n", "number": "sg"},
                 {"key": "past_pl", "label": "они", "text": past.get("pl", ""), "number": "pl"},
             ],
         },

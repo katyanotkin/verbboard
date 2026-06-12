@@ -115,9 +115,7 @@ def test_board_window_ui_has_auth_key(ui_lang: str, auth_key: str) -> None:
     verb = _minimal_verb("ru")
     html = render_board_html(_board(verb, "ru"), ui_strings=ui_strings, ui_lang=ui_lang)
     ui = _extract_window_ui(html)
-    assert (
-        auth_key in ui
-    ), f"{auth_key} missing from board window.UI for ui_lang={ui_lang}"
+    assert auth_key in ui, f"{auth_key} missing from board window.UI for ui_lang={ui_lang}"
     assert ui[auth_key] == ui_strings[auth_key]
 
 
@@ -140,17 +138,13 @@ def test_board_auth_labels_are_not_hardcoded_english() -> None:
 
 @pytest.mark.parametrize("ui_lang", sorted(SUPPORTED_UI_LANGS))
 @pytest.mark.parametrize("auth_key", ["auth.login", "auth.logout"])
-def test_verbs_window_ui_has_auth_key(
-    client: TestClient, ui_lang: str, auth_key: str
-) -> None:
+def test_verbs_window_ui_has_auth_key(client: TestClient, ui_lang: str, auth_key: str) -> None:
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         resp = client.get(f"/verbs?language=en&ui_language={ui_lang}")
     assert resp.status_code == 200
     ui = _extract_window_ui(resp.text)
     expected = get_strings(ui_lang)[auth_key]
-    assert (
-        auth_key in ui
-    ), f"{auth_key} missing from verbs window.UI for ui_lang={ui_lang}"
+    assert auth_key in ui, f"{auth_key} missing from verbs window.UI for ui_lang={ui_lang}"
     assert ui[auth_key] == expected
 
 
@@ -174,9 +168,7 @@ def test_verbs_auth_labels_are_not_hardcoded_english(client: TestClient) -> None
 
 @pytest.mark.parametrize("ui_lang", sorted(SUPPORTED_UI_LANGS))
 @pytest.mark.parametrize("auth_key", ["auth.login", "auth.logout"])
-def test_home_window_ui_has_auth_key(
-    client: TestClient, ui_lang: str, auth_key: str
-) -> None:
+def test_home_window_ui_has_auth_key(client: TestClient, ui_lang: str, auth_key: str) -> None:
     with (
         patch("app.routes.home.list_verbs_recent", return_value=[]),
         patch("app.routes.home.list_verbs_recent", return_value=[]),
@@ -185,9 +177,7 @@ def test_home_window_ui_has_auth_key(
     assert resp.status_code == 200
     ui = _extract_window_ui(resp.text)
     expected = get_strings(ui_lang)[auth_key]
-    assert (
-        auth_key in ui
-    ), f"{auth_key} missing from home window.UI for ui_lang={ui_lang}"
+    assert auth_key in ui, f"{auth_key} missing from home window.UI for ui_lang={ui_lang}"
     assert ui[auth_key] == expected
 
 
@@ -282,9 +272,7 @@ def test_board_empty_firebase_config_renders_null() -> None:
     verb = _minimal_verb("en")
     # default firebase_web_config_json="" (not passed)
     html = render_board_html(_board(verb, "en"), ui_strings=get_strings("en"))
-    assert (
-        "window.FIREBASE_WEB_CONFIG = null;" in html
-    ), "board: empty firebase config must render as null"
+    assert "window.FIREBASE_WEB_CONFIG = null;" in html, "board: empty firebase config must render as null"
     assert "window.FIREBASE_WEB_CONFIG = ;" not in html
 
 
@@ -295,9 +283,7 @@ def test_verbs_empty_firebase_config_renders_null(client: TestClient) -> None:
     ):
         resp = client.get("/verbs?language=en")
     assert resp.status_code == 200
-    assert (
-        "window.FIREBASE_WEB_CONFIG = null;" in resp.text
-    ), "verbs: empty firebase config must render as null"
+    assert "window.FIREBASE_WEB_CONFIG = null;" in resp.text, "verbs: empty firebase config must render as null"
     assert "window.FIREBASE_WEB_CONFIG = ;" not in resp.text
 
 
@@ -309,9 +295,7 @@ def test_home_empty_firebase_config_renders_null(client: TestClient) -> None:
     ):
         resp = client.get("/")
     assert resp.status_code == 200
-    assert (
-        "window.FIREBASE_WEB_CONFIG = null;" in resp.text
-    ), "home: empty firebase config must render as null"
+    assert "window.FIREBASE_WEB_CONFIG = null;" in resp.text, "home: empty firebase config must render as null"
     assert "window.FIREBASE_WEB_CONFIG = ;" not in resp.text
 
 
@@ -367,19 +351,13 @@ def _render_with_translation(verb_lang: str, ui_lang: str) -> str:
     )
 
 
-_TOGGLE_VISIBLE_CASES = [
-    (vl, ul) for vl in SUPPORTED_VERB_LANGS for ul in SUPPORTED_VERB_LANGS if ul != vl
-]
+_TOGGLE_VISIBLE_CASES = [(vl, ul) for vl in SUPPORTED_VERB_LANGS for ul in SUPPORTED_VERB_LANGS if ul != vl]
 
 
 @pytest.mark.parametrize("verb_lang,ui_lang", _TOGGLE_VISIBLE_CASES)
-def test_toggle_visible_when_ui_lang_differs_from_verb_lang(
-    verb_lang: str, ui_lang: str
-) -> None:
+def test_toggle_visible_when_ui_lang_differs_from_verb_lang(verb_lang: str, ui_lang: str) -> None:
     html = _render_with_translation(verb_lang, ui_lang)
-    assert (
-        "toggle-translations" in html
-    ), f"toggle missing: verb_lang={verb_lang}, ui_lang={ui_lang}"
+    assert "toggle-translations" in html, f"toggle missing: verb_lang={verb_lang}, ui_lang={ui_lang}"
 
 
 @pytest.mark.parametrize("lang", SUPPORTED_VERB_LANGS)
@@ -392,9 +370,7 @@ def test_toggle_absent_when_ui_lang_equals_verb_lang(lang: str) -> None:
         ui_strings=get_strings(lang),
         ui_lang=lang,
     )
-    assert (
-        "toggle-translations" not in html
-    ), f"toggle should be absent when verb_lang == ui_lang == {lang}"
+    assert "toggle-translations" not in html, f"toggle should be absent when verb_lang == ui_lang == {lang}"
 
 
 @pytest.mark.parametrize("verb_lang", SUPPORTED_VERB_LANGS)
@@ -431,6 +407,4 @@ def test_toggle_absent_when_translation_missing_for_ui_lang(
         ui_strings=get_strings(ui_lang),
         ui_lang=ui_lang,
     )
-    assert (
-        "toggle-translations" not in html
-    ), f"toggle should be absent: ui_lang={ui_lang} not in {translation_langs}"
+    assert "toggle-translations" not in html, f"toggle should be absent: ui_lang={ui_lang} not in {translation_langs}"

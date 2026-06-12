@@ -277,9 +277,7 @@ class TestFindVerbBySearchExtract:
 
         # Build a stream that returns empty on the first call, then a doc on the second.
         stream_side_effect = [iter([]), iter([_fake_doc(verb_data)])]
-        (
-            db.collection().where().where().limit().stream.side_effect
-        ) = stream_side_effect
+        (db.collection().where().where().limit().stream.side_effect) = stream_side_effect
 
         # Query with nikud so stripped != original
         query_with_nikud = "הֵבֵאתִי"

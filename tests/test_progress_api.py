@@ -275,9 +275,7 @@ def test_badges_reflected_in_get_after_post() -> None:
         headers=AUTH,
     ).json()
 
-    assert (
-        payload["badges"] == badges_to_save
-    ), "saved badges not returned by GET; cross-device badge sync would fail"
+    assert payload["badges"] == badges_to_save, "saved badges not returned by GET; cross-device badge sync would fail"
 
 
 # ---------------------------------------------------------------------------

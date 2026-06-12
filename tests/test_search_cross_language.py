@@ -102,16 +102,12 @@ def _stub_translate_he(query, source_lang, target_lang, project, **kwargs):
 # ── EN -> ES tests ────────────────────────────────────────────────────────────
 
 
-def test_search_by_lang_run_to_correr_redirects_to_learn(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_run_to_correr_redirects_to_learn(client: TestClient, monkeypatch) -> None:
     """Happy path: EN search 'run' with lang=es redirects to correr's learn page."""
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_es)
     monkeypatch.setattr(
         "app.routes.home.find_verb_by_search_extract",
-        lambda lang, query: _CORRER_DOC
-        if (lang == "es" and query == "correr")
-        else None,
+        lambda lang, query: _CORRER_DOC if (lang == "es" and query == "correr") else None,
     )
 
     response = client.get(
@@ -126,16 +122,12 @@ def test_search_by_lang_run_to_correr_redirects_to_learn(
     assert "language=es" in location
 
 
-def test_search_by_lang_includes_translated_from_param(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_includes_translated_from_param(client: TestClient, monkeypatch) -> None:
     """Redirect URL carries translated_from=run and source_lang=en for UI breadcrumb."""
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_es)
     monkeypatch.setattr(
         "app.routes.home.find_verb_by_search_extract",
-        lambda lang, query: _CORRER_DOC
-        if (lang == "es" and query == "correr")
-        else None,
+        lambda lang, query: _CORRER_DOC if (lang == "es" and query == "correr") else None,
     )
 
     response = client.get(
@@ -148,9 +140,7 @@ def test_search_by_lang_includes_translated_from_param(
     assert "source_lang=en" in location
 
 
-def test_search_by_lang_token_fallback_handles_punctuation(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_token_fallback_handles_punctuation(client: TestClient, monkeypatch) -> None:
     """If Gemini returns 'correr.' with trailing punctuation, token fallback strips it."""
 
     def translate_with_punctuation(query, source_lang, target_lang, project, **kwargs):
@@ -164,9 +154,7 @@ def test_search_by_lang_token_fallback_handles_punctuation(
             return _CORRER_DOC
         return None
 
-    monkeypatch.setattr(
-        "app.routes.home.translate_search_query", translate_with_punctuation
-    )
+    monkeypatch.setattr("app.routes.home.translate_search_query", translate_with_punctuation)
     monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", find_by_extract)
 
     response = client.get(
@@ -181,9 +169,7 @@ def test_search_by_lang_token_fallback_handles_punctuation(
     assert call_count["n"] >= 2
 
 
-def test_search_by_lang_fuzzy_fallback_when_firestore_misses(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_fuzzy_fallback_when_firestore_misses(client: TestClient, monkeypatch) -> None:
     """If Firestore search_extract misses, fuzzy match against cached entries finds correr."""
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_es)
     monkeypatch.setattr(
@@ -206,9 +192,7 @@ def test_search_by_lang_fuzzy_fallback_when_firestore_misses(
     assert "es_correr" in location
 
 
-def test_search_by_lang_translation_failure_redirects_with_original_query(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_translation_failure_redirects_with_original_query(client: TestClient, monkeypatch) -> None:
     """If Gemini fails to translate (returns None), redirect shows original query
     and search_mode=en."""
     monkeypatch.setattr(
@@ -229,9 +213,7 @@ def test_search_by_lang_translation_failure_redirects_with_original_query(
     assert "/learn" not in location
 
 
-def test_search_by_lang_verb_not_in_db_logs_demand_signal(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_verb_not_in_db_logs_demand_signal(client: TestClient, monkeypatch) -> None:
     """If translation succeeds but verb is absent, demand signal is logged with
     the translated word (not the original English query)."""
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_es)
@@ -259,9 +241,7 @@ def test_search_by_lang_verb_not_in_db_logs_demand_signal(
     assert log_calls[0]["query"] == "correr"
 
 
-def test_search_by_lang_verb_not_in_db_shows_translated_word(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_verb_not_in_db_shows_translated_word(client: TestClient, monkeypatch) -> None:
     """When verb absent, redirect shows the translated word (correr) not the English
     query, and uses search_mode=native."""
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_es)
@@ -305,16 +285,12 @@ def test_search_by_lang_empty_query_redirects_to_home(client: TestClient) -> Non
 # ── EN -> RU tests ────────────────────────────────────────────────────────────
 
 
-def test_search_by_lang_run_to_bezhat_redirects_to_learn(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_run_to_bezhat_redirects_to_learn(client: TestClient, monkeypatch) -> None:
     """EN search 'run' with lang=ru redirects to бежать's learn page."""
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_ru)
     monkeypatch.setattr(
         "app.routes.home.find_verb_by_search_extract",
-        lambda lang, query: _BEZHAT_DOC
-        if (lang == "ru" and query == "бежать")
-        else None,
+        lambda lang, query: _BEZHAT_DOC if (lang == "ru" and query == "бежать") else None,
     )
 
     response = client.get(
@@ -329,15 +305,11 @@ def test_search_by_lang_run_to_bezhat_redirects_to_learn(
     assert "language=ru" in location
 
 
-def test_search_by_lang_run_ru_includes_translated_from_param(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_run_ru_includes_translated_from_param(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_ru)
     monkeypatch.setattr(
         "app.routes.home.find_verb_by_search_extract",
-        lambda lang, query: _BEZHAT_DOC
-        if (lang == "ru" and query == "бежать")
-        else None,
+        lambda lang, query: _BEZHAT_DOC if (lang == "ru" and query == "бежать") else None,
     )
 
     response = client.get(
@@ -353,9 +325,7 @@ def test_search_by_lang_run_ru_includes_translated_from_param(
 def test_search_by_lang_run_ru_fuzzy_fallback(client: TestClient, monkeypatch) -> None:
     """Fuzzy fallback finds бежать when Firestore search_extract misses."""
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_ru)
-    monkeypatch.setattr(
-        "app.routes.home.find_verb_by_search_extract", lambda lang, query: None
-    )
+    monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda lang, query: None)
     monkeypatch.setattr(
         "app.routes.home.load_entries_for_language",
         lambda language: [_BEZHAT_ENTRY],
@@ -375,9 +345,7 @@ def test_search_by_lang_run_ru_fuzzy_fallback(client: TestClient, monkeypatch) -
 # ── EN -> HE tests ────────────────────────────────────────────────────────────
 
 
-def test_search_by_lang_run_to_larutz_redirects_to_learn(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_run_to_larutz_redirects_to_learn(client: TestClient, monkeypatch) -> None:
     """EN search 'run' with lang=he redirects to לרוץ's learn page."""
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_he)
     monkeypatch.setattr(
@@ -397,9 +365,7 @@ def test_search_by_lang_run_to_larutz_redirects_to_learn(
     assert "language=he" in location
 
 
-def test_search_by_lang_run_he_includes_translated_from_param(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_by_lang_run_he_includes_translated_from_param(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_he)
     monkeypatch.setattr(
         "app.routes.home.find_verb_by_search_extract",
@@ -419,9 +385,7 @@ def test_search_by_lang_run_he_includes_translated_from_param(
 def test_search_by_lang_run_he_fuzzy_fallback(client: TestClient, monkeypatch) -> None:
     """Fuzzy fallback finds לרוץ when Firestore search_extract misses."""
     monkeypatch.setattr("app.routes.home.translate_search_query", _stub_translate_he)
-    monkeypatch.setattr(
-        "app.routes.home.find_verb_by_search_extract", lambda lang, query: None
-    )
+    monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda lang, query: None)
     monkeypatch.setattr(
         "app.routes.home.load_entries_for_language",
         lambda language: [_LARUTZ_ENTRY],

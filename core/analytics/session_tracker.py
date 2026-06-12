@@ -32,9 +32,7 @@ def get_fingerprint_sid(request: Request, date: str) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()[:32]
 
 
-def _create_session(
-    fingerprint: str, date: str, device_type: str, language: str, ui_lang: str
-) -> None:
+def _create_session(fingerprint: str, date: str, device_type: str, language: str, ui_lang: str) -> None:
     from google.api_core.exceptions import AlreadyExists
 
     from core.storage.firestore_db import get_db
@@ -58,14 +56,8 @@ def _create_session(
         logger.exception("Failed to write analytics session")
 
 
-async def start_session(
-    fingerprint: str, date: str, device_type: str, language: str, ui_lang: str
-) -> None:
-    task = asyncio.create_task(
-        asyncio.to_thread(
-            _create_session, fingerprint, date, device_type, language, ui_lang
-        )
-    )
+async def start_session(fingerprint: str, date: str, device_type: str, language: str, ui_lang: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_create_session, fingerprint, date, device_type, language, ui_lang))
     _pending.add(task)
     task.add_done_callback(_pending.discard)
 

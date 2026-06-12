@@ -73,10 +73,7 @@ def test_badge_merge_server_wins_on_equal_length(page, live_server_url):
     server = [3, 6]
     local = [3, 9]  # same length, different content
     result = _merge(page, server=server, local=local)
-    assert result == server, (
-        f"Equal length: server must win (>=). "
-        f"server={server}, local={local}, got {result}"
-    )
+    assert result == server, f"Equal length: server must win (>=). server={server}, local={local}, got {result}"
 
 
 def test_badge_merge_empty_local_uses_server(page, live_server_url):

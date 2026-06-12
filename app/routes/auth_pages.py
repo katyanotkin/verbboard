@@ -15,12 +15,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 def _html_safe_json(value: object) -> str:
     """Serialize to JSON with <, >, & unicode-escaped for safe inline <script> use."""
-    return (
-        json.dumps(value)
-        .replace("<", "\\u003c")
-        .replace(">", "\\u003e")
-        .replace("&", "\\u0026")
-    )
+    return json.dumps(value).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
 
 @router.get("/auth/signin", response_class=HTMLResponse, include_in_schema=False)
@@ -30,9 +25,7 @@ def auth_signin_page(request: Request, return_to: str = "") -> HTMLResponse:
     # the value is safe inside an HTML <script> block (json.dumps alone does not
     # escape these, and a value containing </script> would break the block).
     try:
-        firebase_cfg_json = _html_safe_json(
-            json.loads(settings.firebase_web_config_json or "null")
-        )
+        firebase_cfg_json = _html_safe_json(json.loads(settings.firebase_web_config_json or "null"))
     except (TypeError, ValueError):
         firebase_cfg_json = "null"
 

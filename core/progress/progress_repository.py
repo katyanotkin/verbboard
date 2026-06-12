@@ -23,10 +23,7 @@ USER_PRACTICE_COLLECTION = "user_practice"
 def _progress_language_ref(user_id: str, language: str):
     db = get_db()
     return (
-        db.collection(USER_PROGRESS_COLLECTION)
-        .document(user_id)
-        .collection(LANGUAGES_SUBCOLLECTION)
-        .document(language)
+        db.collection(USER_PROGRESS_COLLECTION).document(user_id).collection(LANGUAGES_SUBCOLLECTION).document(language)
     )
 
 
@@ -47,10 +44,7 @@ def _progress_verb_ref(user_id: str, language: str, verb_id: str):
 def _practice_doc_ref(user_id: str, language: str):
     db = get_db()
     return (
-        db.collection(USER_PRACTICE_COLLECTION)
-        .document(user_id)
-        .collection(LANGUAGES_SUBCOLLECTION)
-        .document(language)
+        db.collection(USER_PRACTICE_COLLECTION).document(user_id).collection(LANGUAGES_SUBCOLLECTION).document(language)
     )
 
 
@@ -85,9 +79,7 @@ def get_preferences(*, user_id: str) -> dict:
     payload = (doc.to_dict() or {}) if doc.exists else {}
     raw_size = payload.get("practice_session_size")
     try:
-        practice_session_size = (
-            PracticeSessionSize(raw_size).value if raw_size is not None else None
-        )
+        practice_session_size = PracticeSessionSize(raw_size).value if raw_size is not None else None
     except ValueError:
         practice_session_size = None
 

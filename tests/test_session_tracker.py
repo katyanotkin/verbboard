@@ -57,9 +57,7 @@ def test_fingerprint_is_deterministic() -> None:
 
 def test_fingerprint_varies_by_date() -> None:
     req = _build_request(forwarded_for="1.2.3.4", user_agent="Mozilla/5.0")
-    assert get_fingerprint_sid(req, "2026-06-10") != get_fingerprint_sid(
-        req, "2026-06-11"
-    )
+    assert get_fingerprint_sid(req, "2026-06-10") != get_fingerprint_sid(req, "2026-06-11")
 
 
 def test_fingerprint_varies_by_ip() -> None:
@@ -80,27 +78,17 @@ def test_fingerprint_varies_by_user_agent() -> None:
 
 def test_fingerprint_uses_x_forwarded_for() -> None:
     """X-Forwarded-For takes precedence over request.client.host."""
-    req_forwarded = _build_request(
-        forwarded_for="203.0.113.1", user_agent="UA", client_host="10.0.0.1"
-    )
-    req_direct = _build_request(
-        forwarded_for="", user_agent="UA", client_host="10.0.0.1"
-    )
+    req_forwarded = _build_request(forwarded_for="203.0.113.1", user_agent="UA", client_host="10.0.0.1")
+    req_direct = _build_request(forwarded_for="", user_agent="UA", client_host="10.0.0.1")
     # Different IPs in hash source -> different fingerprints
-    assert get_fingerprint_sid(req_forwarded, "2026-06-10") != get_fingerprint_sid(
-        req_direct, "2026-06-10"
-    )
+    assert get_fingerprint_sid(req_forwarded, "2026-06-10") != get_fingerprint_sid(req_direct, "2026-06-10")
 
 
 def test_fingerprint_uses_first_forwarded_ip() -> None:
     """Takes only the first IP from a comma-separated X-Forwarded-For header."""
     req_single = _build_request(forwarded_for="1.2.3.4", user_agent="UA")
-    req_chain = _build_request(
-        forwarded_for="1.2.3.4, 10.0.0.1, 172.16.0.1", user_agent="UA"
-    )
-    assert get_fingerprint_sid(req_single, "2026-06-10") == get_fingerprint_sid(
-        req_chain, "2026-06-10"
-    )
+    req_chain = _build_request(forwarded_for="1.2.3.4, 10.0.0.1, 172.16.0.1", user_agent="UA")
+    assert get_fingerprint_sid(req_single, "2026-06-10") == get_fingerprint_sid(req_chain, "2026-06-10")
 
 
 def test_fingerprint_falls_back_to_client_host() -> None:

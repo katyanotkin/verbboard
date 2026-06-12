@@ -526,11 +526,9 @@ def build_en_examples(
         return [{"dst": sentence} for sentence in custom_examples]
 
     if strategy == "copula_state":
-        present_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            COPULA_STATE.get(
-                lemma,
-                ("ready", "calm", "fine yesterday", "careful now", "Be ready."),
-            )
+        present_phrase, third_phrase, past_phrase, progressive_phrase, imperative = COPULA_STATE.get(
+            lemma,
+            ("ready", "calm", "fine yesterday", "careful now", "Be ready."),
         )
         if lemma == "be":
             return make_examples(
@@ -549,17 +547,15 @@ def build_en_examples(
         )
 
     if strategy == "transitive_object":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            TRANSITIVE_OBJECTS.get(
-                lemma,
-                (
-                    "the file every day",
-                    "the document carefully",
-                    "the report",
-                    "the task now",
-                    f"{lemma.capitalize()} it.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = TRANSITIVE_OBJECTS.get(
+            lemma,
+            (
+                "the file every day",
+                "the document carefully",
+                "the report",
+                "the task now",
+                f"{lemma.capitalize()} it.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -570,17 +566,15 @@ def build_en_examples(
         )
 
     if strategy == "motion_place":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            MOTION_PLACES.get(
-                lemma,
-                (
-                    "home early",
-                    "to school on time",
-                    "there yesterday",
-                    "toward the station now",
-                    f"{lemma.capitalize()} there.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = MOTION_PLACES.get(
+            lemma,
+            (
+                "home early",
+                "to school on time",
+                "there yesterday",
+                "toward the station now",
+                f"{lemma.capitalize()} there.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -591,17 +585,15 @@ def build_en_examples(
         )
 
     if strategy == "topic_preposition":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            TOPIC_PREPOSITIONS.get(
-                lemma,
-                (
-                    "about this often",
-                    "about the issue",
-                    "about it",
-                    "about the problem now",
-                    f"{lemma.capitalize()} again.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = TOPIC_PREPOSITIONS.get(
+            lemma,
+            (
+                "about this often",
+                "about the issue",
+                "about it",
+                "about the problem now",
+                f"{lemma.capitalize()} again.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -612,17 +604,15 @@ def build_en_examples(
         )
 
     if strategy == "person_object":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            PERSON_OBJECT.get(
-                lemma,
-                (
-                    "my friend every week",
-                    "the class clearly",
-                    "us yesterday",
-                    "the group now",
-                    f"{lemma.capitalize()} me.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = PERSON_OBJECT.get(
+            lemma,
+            (
+                "my friend every week",
+                "the class clearly",
+                "us yesterday",
+                "the group now",
+                f"{lemma.capitalize()} me.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -633,17 +623,15 @@ def build_en_examples(
         )
 
     if strategy == "person_content":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            PERSON_CONTENT.get(
-                lemma,
-                (
-                    "the truth",
-                    "something useful",
-                    "that yesterday",
-                    "the same thing now",
-                    f"{lemma.capitalize()} it.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = PERSON_CONTENT.get(
+            lemma,
+            (
+                "the truth",
+                "something useful",
+                "that yesterday",
+                "the same thing now",
+                f"{lemma.capitalize()} it.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -654,17 +642,15 @@ def build_en_examples(
         )
 
     if strategy == "object_place":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            OBJECT_PLACE.get(
-                lemma,
-                (
-                    "the book on the desk",
-                    "the keys by the door",
-                    "everything away",
-                    "the chairs in place now",
-                    f"{lemma.capitalize()} it there.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = OBJECT_PLACE.get(
+            lemma,
+            (
+                "the book on the desk",
+                "the keys by the door",
+                "everything away",
+                "the chairs in place now",
+                f"{lemma.capitalize()} it there.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -675,17 +661,15 @@ def build_en_examples(
         )
 
     if strategy == "infinitive_complement":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            INFINITIVE_COMPLEMENT.get(
-                lemma,
-                (
-                    "to leave early",
-                    "to help",
-                    "to go",
-                    "to solve it now",
-                    f"{lemma.capitalize()} again.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = INFINITIVE_COMPLEMENT.get(
+            lemma,
+            (
+                "to leave early",
+                "to help",
+                "to go",
+                "to solve it now",
+                f"{lemma.capitalize()} again.",
+            ),
         )
         if lemma == "want":
             return make_examples(
@@ -704,17 +688,15 @@ def build_en_examples(
         )
 
     if strategy == "mental_content":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            MENTAL_CONTENT.get(
-                lemma,
-                (
-                    "the answer",
-                    "the problem",
-                    "that yesterday",
-                    "more now",
-                    f"{lemma.capitalize()} this.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = MENTAL_CONTENT.get(
+            lemma,
+            (
+                "the answer",
+                "the problem",
+                "that yesterday",
+                "more now",
+                f"{lemma.capitalize()} this.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -725,17 +707,15 @@ def build_en_examples(
         )
 
     if strategy == "activity_general":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            ACTIVITY_GENERAL.get(
-                lemma,
-                (
-                    "every day",
-                    "carefully",
-                    "yesterday",
-                    "right now",
-                    f"{lemma.capitalize()} now.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = ACTIVITY_GENERAL.get(
+            lemma,
+            (
+                "every day",
+                "carefully",
+                "yesterday",
+                "right now",
+                f"{lemma.capitalize()} now.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -746,11 +726,9 @@ def build_en_examples(
         )
 
     if strategy == "intransitive_event":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            INTRANSITIVE_EVENT.get(
-                lemma,
-                ("sometimes", "rarely", "yesterday", "again now", "Let it happen."),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = INTRANSITIVE_EVENT.get(
+            lemma,
+            ("sometimes", "rarely", "yesterday", "again now", "Let it happen."),
         )
         return make_examples(
             f"It can {lemma} {first_phrase}.",
@@ -761,17 +739,15 @@ def build_en_examples(
         )
 
     if strategy == "game_or_music":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            GAME_OR_MUSIC.get(
-                lemma,
-                (
-                    "soccer on weekends",
-                    "the piano well",
-                    "a match yesterday",
-                    "music now",
-                    f"{lemma.capitalize()} on.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = GAME_OR_MUSIC.get(
+            lemma,
+            (
+                "soccer on weekends",
+                "the piano well",
+                "a match yesterday",
+                "music now",
+                f"{lemma.capitalize()} on.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -782,17 +758,15 @@ def build_en_examples(
         )
 
     if strategy == "self_or_object_motion":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            SELF_OR_OBJECT_MOTION.get(
-                lemma,
-                (
-                    "left at the corner",
-                    "the page slowly",
-                    "back too late",
-                    "toward the door now",
-                    f"{lemma.capitalize()} now.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = SELF_OR_OBJECT_MOTION.get(
+            lemma,
+            (
+                "left at the corner",
+                "the page slowly",
+                "back too late",
+                "toward the door now",
+                f"{lemma.capitalize()} now.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -803,17 +777,15 @@ def build_en_examples(
         )
 
     if strategy == "residence_place":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            RESIDENCE_PLACE.get(
-                lemma,
-                (
-                    "in Boston now",
-                    "near the river",
-                    "there for years",
-                    "with family now",
-                    "Live well.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = RESIDENCE_PLACE.get(
+            lemma,
+            (
+                "in Boston now",
+                "near the river",
+                "there for years",
+                "with family now",
+                "Live well.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -824,17 +796,15 @@ def build_en_examples(
         )
 
     if strategy == "payment":
-        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = (
-            PAYMENT.get(
-                lemma,
-                (
-                    "my bills online",
-                    "for coffee by card",
-                    "the rent yesterday",
-                    "for lunch now",
-                    "Pay attention.",
-                ),
-            )
+        first_phrase, third_phrase, past_phrase, progressive_phrase, imperative = PAYMENT.get(
+            lemma,
+            (
+                "my bills online",
+                "for coffee by card",
+                "the rent yesterday",
+                "for lunch now",
+                "Pay attention.",
+            ),
         )
         return make_examples(
             f"I {lemma} {first_phrase}.",
@@ -844,9 +814,7 @@ def build_en_examples(
             imperative,
         )
 
-    fail(
-        f"no English example generator implemented for strategy '{strategy}' (lemma: {lemma})"
-    )
+    fail(f"no English example generator implemented for strategy '{strategy}' (lemma: {lemma})")
 
 
 def expand_english_entry(
@@ -875,9 +843,7 @@ def expand_english_entry(
     if not isinstance(strategy, str) or not strategy.strip():
         fail(f"{context}: example_strategy must be a non-empty string if present")
 
-    irregular: dict[str, Any] = (
-        irregular_object if isinstance(irregular_object, dict) else {}
-    )
+    irregular: dict[str, Any] = irregular_object if isinstance(irregular_object, dict) else {}
 
     base = lemma
 
@@ -890,9 +856,7 @@ def expand_english_entry(
     irregular_past_participle = irregular.get("past_participle")
     if irregular_past_participle is None:
         if isinstance(past, list):
-            fail(
-                f"{context}: irregular.past_participle is required when irregular.past is a list"
-            )
+            fail(f"{context}: irregular.past_participle is required when irregular.past is a list")
         past_participle = past
     else:
         normalized_past_participle = normalize_string_or_list(

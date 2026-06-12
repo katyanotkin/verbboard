@@ -59,12 +59,8 @@ def feedback_form(
             "success_msg": ui["feedback.success"],
             "error_empty": error == "empty",
             "error_empty_msg": ui["feedback.error_empty"],
-            "poll_question": get_poll_question(ACTIVE_POLL_ID, ui_lang)
-            if ACTIVE_POLL_ID
-            else "",
-            "poll_options": get_poll_options(ACTIVE_POLL_ID, ui_lang)
-            if ACTIVE_POLL_ID
-            else [],
+            "poll_question": get_poll_question(ACTIVE_POLL_ID, ui_lang) if ACTIVE_POLL_ID else "",
+            "poll_options": get_poll_options(ACTIVE_POLL_ID, ui_lang) if ACTIVE_POLL_ID else [],
         },
     )
 

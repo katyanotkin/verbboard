@@ -114,9 +114,7 @@ _LANG_PROMPTS: dict[str, str] = {
 }
 
 # Full prompt — all languages combined. Used by verb_service and as fallback.
-_GENERATION_SYSTEM_PROMPT = (
-    "\n\n".join([_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE]) + "\n"
-)
+_GENERATION_SYSTEM_PROMPT = "\n\n".join([_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE]) + "\n"
 
 # ---------------------------------------------------------------------------
 # Model and token settings

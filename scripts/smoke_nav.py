@@ -66,9 +66,7 @@ def main(base: str) -> None:
         "verbs: back to home",
         require=('href="/?language=en&amp;ui_language=en"',),
     )
-    _check(
-        f"{base}/verbs?language=en", "verbs: feedback context", require=("page=verbs",)
-    )
+    _check(f"{base}/verbs?language=en", "verbs: feedback context", require=("page=verbs",))
 
     # ── about ─────────────────────────────────────────────────────────────
     _check(f"{base}/about", "about: renders", require=("VerbBoard",))

@@ -39,40 +39,20 @@ def _filter_feedback_rows(
     filtered_rows = feedback_rows
 
     if visibility == "visible":
-        filtered_rows = [
-            feedback_row
-            for feedback_row in filtered_rows
-            if not feedback_row.get("hidden", False)
-        ]
+        filtered_rows = [feedback_row for feedback_row in filtered_rows if not feedback_row.get("hidden", False)]
     elif visibility == "hidden":
-        filtered_rows = [
-            feedback_row
-            for feedback_row in filtered_rows
-            if feedback_row.get("hidden", False)
-        ]
+        filtered_rows = [feedback_row for feedback_row in filtered_rows if feedback_row.get("hidden", False)]
     elif visibility != "all":
         raise ValueError("Invalid visibility value")
 
     if page:
-        filtered_rows = [
-            feedback_row
-            for feedback_row in filtered_rows
-            if feedback_row.get("page", "") == page
-        ]
+        filtered_rows = [feedback_row for feedback_row in filtered_rows if feedback_row.get("page", "") == page]
 
     if language:
-        filtered_rows = [
-            feedback_row
-            for feedback_row in filtered_rows
-            if feedback_row.get("language", "") == language
-        ]
+        filtered_rows = [feedback_row for feedback_row in filtered_rows if feedback_row.get("language", "") == language]
 
     if source:
-        filtered_rows = [
-            feedback_row
-            for feedback_row in filtered_rows
-            if feedback_row.get("source", "") == source
-        ]
+        filtered_rows = [feedback_row for feedback_row in filtered_rows if feedback_row.get("source", "") == source]
 
     if query:
         normalized_query = query.casefold()
@@ -98,12 +78,7 @@ def list_feedback_rows(
     db = get_db()
 
     direction = "DESCENDING" if sort != "oldest" else "ASCENDING"
-    docs = (
-        db.collection("feedback")
-        .order_by("created_at", direction=direction)
-        .limit(limit)
-        .stream()
-    )
+    docs = db.collection("feedback").order_by("created_at", direction=direction).limit(limit).stream()
 
     feedback_rows = [_normalize_feedback_doc(doc) for doc in docs]
     return _filter_feedback_rows(
@@ -118,36 +93,15 @@ def list_feedback_rows(
 
 def list_feedback_facets(*, limit: int = 1000) -> dict[str, list[str]]:
     db = get_db()
-    docs = (
-        db.collection("feedback")
-        .order_by("created_at", direction="DESCENDING")
-        .limit(limit)
-        .stream()
-    )
+    docs = db.collection("feedback").order_by("created_at", direction="DESCENDING").limit(limit).stream()
     feedback_rows = [_normalize_feedback_doc(doc) for doc in docs]
 
     return {
-        "pages": sorted(
-            {
-                feedback_row["page"]
-                for feedback_row in feedback_rows
-                if feedback_row.get("page")
-            }
-        ),
+        "pages": sorted({feedback_row["page"] for feedback_row in feedback_rows if feedback_row.get("page")}),
         "languages": sorted(
-            {
-                feedback_row["language"]
-                for feedback_row in feedback_rows
-                if feedback_row.get("language")
-            }
+            {feedback_row["language"] for feedback_row in feedback_rows if feedback_row.get("language")}
         ),
-        "sources": sorted(
-            {
-                feedback_row["source"]
-                for feedback_row in feedback_rows
-                if feedback_row.get("source")
-            }
-        ),
+        "sources": sorted({feedback_row["source"] for feedback_row in feedback_rows if feedback_row.get("source")}),
     }
 
 
@@ -180,8 +134,7 @@ def get_active_poll_meta() -> dict:
         return {}
 
     options = [
-        {"value": value, "label": labels.get("en") or value}
-        for value, labels in POLL_OPTIONS.get(ACTIVE_POLL_ID, [])
+        {"value": value, "label": labels.get("en") or value} for value, labels in POLL_OPTIONS.get(ACTIVE_POLL_ID, [])
     ]
     return {
         "poll_id": ACTIVE_POLL_ID,
@@ -190,9 +143,7 @@ def get_active_poll_meta() -> dict:
     }
 
 
-def _count_device_types_feedback(
-    *, days: int = 60, limit: int = 2000
-) -> dict[str, int]:
+def _count_device_types_feedback(*, days: int = 60, limit: int = 2000) -> dict[str, int]:
     db = get_db()
     cutoff = datetime.now(UTC) - timedelta(days=days)
     docs = (

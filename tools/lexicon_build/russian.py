@@ -16,11 +16,7 @@ def build_ru_examples(
     finite_third = present.get("3sg", "")
 
     examples = [
-        {
-            "dst": f"Я {finite_label}."
-            if aspect == "perfective"
-            else f"Я {present.get('1sg', '')}."
-        },
+        {"dst": f"Я {finite_label}." if aspect == "perfective" else f"Я {present.get('1sg', '')}."},
         {"dst": f"Он {finite_third}."},
         {"dst": f"Мы {past.get('pl', '')} вчера."},
         {"dst": f"Привидение {past.get('n', '')} всю ночь."},
@@ -104,9 +100,7 @@ def expand_russian_entry(
             if value is None:
                 continue
             if not isinstance(value, str) or not value.strip():
-                fail(
-                    f"{context}: seed_forms.imperative.{key} must be non-empty if present"
-                )
+                fail(f"{context}: seed_forms.imperative.{key} must be non-empty if present")
             imperative[key] = value
 
     runtime_examples: list[dict[str, str]]

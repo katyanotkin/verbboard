@@ -60,9 +60,7 @@ def test_home_practice_shortcut_includes_ui_language(client: TestClient) -> None
     assert "/verbs?language=en&ui_language=ru#practice-panel" in html
 
 
-def test_verbs_bottom_nav_search_tab_includes_ui_language(
-    client: TestClient, monkeypatch
-) -> None:
+def test_verbs_bottom_nav_search_tab_includes_ui_language(client: TestClient, monkeypatch) -> None:
     """Bottom-nav Search tab on verbs page must carry ui_language.
 
     Jinja2 autoescape is active for HTML templates, so & is rendered as &amp;
@@ -73,9 +71,7 @@ def test_verbs_bottom_nav_search_tab_includes_ui_language(
     assert "/?language=en&amp;ui_language=ru" in html
 
 
-def test_verbs_bottom_nav_list_tab_includes_ui_language(
-    client: TestClient, monkeypatch
-) -> None:
+def test_verbs_bottom_nav_list_tab_includes_ui_language(client: TestClient, monkeypatch) -> None:
     """Bottom-nav List tab on verbs page must carry ui_language."""
     monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [])
     html = client.get("/verbs?language=en&ui_language=ru").text
@@ -111,9 +107,7 @@ def test_board_bottom_nav_back_href_includes_ui_language(
 
 def test_set_language_preserves_ui_language(client: TestClient) -> None:
     """/set_language redirect must forward ui_language to home."""
-    resp = client.get(
-        "/set_language?language=he&ui_language=ru", follow_redirects=False
-    )
+    resp = client.get("/set_language?language=he&ui_language=ru", follow_redirects=False)
     assert resp.status_code in (301, 302, 303, 307, 308)
     assert "ui_language=ru" in resp.headers["location"]
     assert "language=he" in resp.headers["location"]
@@ -130,35 +124,25 @@ def test_set_language_without_ui_language(client: TestClient) -> None:
 # ── /search_verb redirect ──────────────────────────────────────────────────
 
 
-def test_search_verb_found_preserves_ui_language(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_verb_found_preserves_ui_language(client: TestClient, monkeypatch) -> None:
     """/search_verb redirect to /learn must carry ui_language."""
     monkeypatch.setattr(
         "app.routes.home.find_verb_by_search_extract",
         lambda lang, query: {"verb_id": "en_go"},
     )
-    resp = client.get(
-        "/search_verb?language=en&q=go&ui_language=ru", follow_redirects=False
-    )
+    resp = client.get("/search_verb?language=en&q=go&ui_language=ru", follow_redirects=False)
     assert resp.status_code in (301, 302, 303, 307, 308)
     assert "ui_language=ru" in resp.headers["location"]
     assert "verb_id=en_go" in resp.headers["location"]
 
 
-def test_search_verb_not_found_preserves_ui_language(
-    client: TestClient, monkeypatch
-) -> None:
+def test_search_verb_not_found_preserves_ui_language(client: TestClient, monkeypatch) -> None:
     """/search_verb not-found redirect must carry ui_language."""
-    monkeypatch.setattr(
-        "app.routes.home.find_verb_by_search_extract", lambda lang, query: None
-    )
+    monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda lang, query: None)
     monkeypatch.setattr("app.routes.home.find_best_entry", lambda entries, query: None)
     monkeypatch.setattr("app.routes.home._load_entries", lambda lang: [])
     monkeypatch.setattr("app.routes.home.log_missing_verb_search", lambda **kw: None)
-    resp = client.get(
-        "/search_verb?language=en&q=xyz&ui_language=ru", follow_redirects=False
-    )
+    resp = client.get("/search_verb?language=en&q=xyz&ui_language=ru", follow_redirects=False)
     assert resp.status_code in (301, 302, 303, 307, 308)
     assert "ui_language=ru" in resp.headers["location"]
 

@@ -96,9 +96,7 @@ def test_verbs_filter_buttons_all_present(client: TestClient) -> None:
         resp = client.get("/verbs?language=ru&ui_language=ru")
     assert resp.status_code == 200
     for f in ("new", "seen", "known", "all"):
-        assert (
-            f'data-filter="{f}"' in resp.text
-        ), f"filter button '{f}' missing from HTML"
+        assert f'data-filter="{f}"' in resp.text, f"filter button '{f}' missing from HTML"
 
 
 def test_verbs_hebrew_has_rtl(client: TestClient) -> None:

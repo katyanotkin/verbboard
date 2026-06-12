@@ -82,13 +82,7 @@ def get_candidate(verb_id: str) -> dict[str, Any] | None:
 
 def find_verb_by_lemma(language: str, lemma: str) -> dict[str, Any] | None:
     db = get_db()
-    docs = (
-        db.collection(COLLECTION)
-        .where("language", "==", language)
-        .where("lemma", "==", lemma)
-        .limit(1)
-        .stream()
-    )
+    docs = db.collection(COLLECTION).where("language", "==", language).where("lemma", "==", lemma).limit(1).stream()
     for doc in docs:
         return doc.to_dict()
     return None

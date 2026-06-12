@@ -44,9 +44,7 @@ def _new_page(browser, locale: str, timeout: int = 8_000):
 # ---------------------------------------------------------------------------
 
 
-def test_highlight_shown_for_new_user_even_when_browser_matches(
-    browser, live_server_url
-):
+def test_highlight_shown_for_new_user_even_when_browser_matches(browser, live_server_url):
     """New user sees the hint once regardless of browser/UI locale match."""
     ctx, page = _new_page(browser, "en-US")
     try:
@@ -119,9 +117,7 @@ def test_highlight_is_visually_distinct(browser, live_server_url):
         page.goto(f"{live_server_url}{HOME_EN}")
         _wait_for_highlight(page)
         assert "ui-lang-trigger--highlight" in _trigger_class(page)
-        bg = page.evaluate(
-            "getComputedStyle(document.getElementById('ui-lang-trigger')).backgroundColor"
-        )
+        bg = page.evaluate("getComputedStyle(document.getElementById('ui-lang-trigger')).backgroundColor")
         # #eff6ff = rgb(239, 246, 255) -- must not be plain white rgb(255, 255, 255)
         assert bg != "rgb(255, 255, 255)", (
             f"Highlight class applied but background is still white ({bg!r}); "
@@ -229,9 +225,7 @@ def test_dropdown_closes_on_escape(page, live_server_url):
     page.wait_for_timeout(50)
     assert _dropdown_hidden(page), "Dropdown should close on Escape"
     focused_id = page.evaluate("document.activeElement.id")
-    assert (
-        focused_id == "ui-lang-trigger"
-    ), f"Focus should return to trigger, got {focused_id!r}"
+    assert focused_id == "ui-lang-trigger", f"Focus should return to trigger, got {focused_id!r}"
 
 
 def test_dropdown_second_click_closes(page, live_server_url):
@@ -265,6 +259,4 @@ def test_active_language_marked_in_dropdown(page, live_server_url):
     assert active.count() == 1, f"Expected 1 active option, got {active.count()}"
     code = active.locator(".ui-lang-option-code").inner_text()
     assert code == "EN", f"Expected active option to be EN, got {code!r}"
-    assert (
-        active.locator(".ui-lang-check").count() == 1
-    ), "Active option should have checkmark"
+    assert active.locator(".ui-lang-check").count() == 1, "Active option should have checkmark"

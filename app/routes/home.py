@@ -32,9 +32,7 @@ _NON_LATIN_LANGUAGES = {"ru", "he"}
 def _looks_english(query: str) -> bool:
     """Return True if the query contains only ASCII letters/spaces -- likely English input."""
     stripped = query.strip()
-    return bool(stripped) and all(
-        c.isascii() and (c.isalpha() or c.isspace()) for c in stripped
-    )
+    return bool(stripped) and all(c.isascii() and (c.isalpha() or c.isspace()) for c in stripped)
 
 
 @dataclass
@@ -50,11 +48,7 @@ def _doc_to_home_verb(d: dict) -> _HomeVerb:
 
 def _entry_label(entry: _HomeVerb) -> str:
     if isinstance(entry.lemma, dict):
-        return (
-            entry.lemma.get("imperfective", "")
-            + " / "
-            + entry.lemma.get("perfective", "")
-        )
+        return entry.lemma.get("imperfective", "") + " / " + entry.lemma.get("perfective", "")
     return str(entry.lemma)
 
 
@@ -94,9 +88,7 @@ async def search_verb_by_lang(
         settings.google_cloud_project,
     )
 
-    logger.debug(
-        "search_verb_by_lang q=%r translated=%r lang=%s", query, translated, language
-    )
+    logger.debug("search_verb_by_lang q=%r translated=%r lang=%s", query, translated, language)
 
     if translated:
         doc = find_verb_by_search_extract(language, translated)
@@ -126,10 +118,7 @@ async def search_verb_by_lang(
                 )
             )
 
-    base = (
-        safe_return_to(return_to or "", fallback="")
-        or f"/?language={language}{_ui_suffix}"
-    )
+    base = safe_return_to(return_to or "", fallback="") or f"/?language={language}{_ui_suffix}"
     sep = "&" if "?" in base else "?"
 
     if not translated:
@@ -151,9 +140,7 @@ async def search_verb_by_lang(
         page="home",
         source="search_by_lang",
     )
-    return RedirectResponse(
-        url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native"
-    )
+    return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native")
 
 
 @router.get("/search_verb", response_model=None)
@@ -179,17 +166,13 @@ def search_verb(
 
     if doc:
         matched_verb_id = doc.get("verb_id")
-        return RedirectResponse(
-            url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}"
-        )
+        return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}")
 
     entries = _load_entries(language)
     matched_entry = find_best_entry(entries, query)
 
     if matched_entry:
-        return RedirectResponse(
-            url=f"/learn?language={language}&verb_id={matched_entry.id}{_ui_suffix}"
-        )
+        return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_entry.id}{_ui_suffix}")
 
     log_missing_verb_search(
         language=language,
@@ -198,14 +181,9 @@ def search_verb(
         source="search",
     )
 
-    base = (
-        safe_return_to(return_to or "", fallback="")
-        or f"/?language={language}{_ui_suffix}"
-    )
+    base = safe_return_to(return_to or "", fallback="") or f"/?language={language}{_ui_suffix}"
     sep = "&" if "?" in base else "?"
-    return RedirectResponse(
-        url=f"{base}{sep}not_available=1&search={quote(query, safe='')}"
-    )
+    return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}")
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -236,10 +214,7 @@ def home(
             return plugins[key].display_name
         return ui.get(f"lang.{key}", LANGUAGE[key].display)
 
-    lang_options = [
-        (key, _lang_label(key), key == selected_language)
-        for key, plugin in plugins.items()
-    ]
+    lang_options = [(key, _lang_label(key), key == selected_language) for key, plugin in plugins.items()]
 
     notice_text = raw_search_value.strip() if str(not_available) == "1" else None
 
@@ -253,8 +228,7 @@ def home(
             "ui_lang_codes": list(LANGUAGE.keys()),
             "ui_lang_native": {code: cfg.native for code, cfg in LANGUAGE.items()},
             "ui_lang_labels": {
-                code: get_strings(code).get("home.ui_language_label", code.upper())
-                for code in LANGUAGE
+                code: get_strings(code).get("home.ui_language_label", code.upper()) for code in LANGUAGE
             },
             "learning_lang": selected_language,
             "lang_options": lang_options,

@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 VALID_HE_BINYANIM = {
     "פעל",
     "פיעל",
@@ -61,10 +60,7 @@ def check_hebrew_entry(entry: dict[str, Any], index: int) -> None:
     require_nonempty_string(morph["root"], f"{context} morph.root")
 
     if morph["binyan"] not in VALID_HE_BINYANIM:
-        fail(
-            f"{context}: invalid binyan '{morph['binyan']}', "
-            f"expected one of {sorted(VALID_HE_BINYANIM)}"
-        )
+        fail(f"{context}: invalid binyan '{morph['binyan']}', expected one of {sorted(VALID_HE_BINYANIM)}")
 
     forms = entry["forms"]
     if not isinstance(forms, dict):
@@ -110,10 +106,7 @@ def main() -> None:
     expected_language = path.parent.name
     actual_language = payload["language"]
     if actual_language != expected_language:
-        fail(
-            f"top-level: expected language='{expected_language}', "
-            f"got '{actual_language}'"
-        )
+        fail(f"top-level: expected language='{expected_language}', got '{actual_language}'")
 
     if not isinstance(payload["version"], int):
         fail("top-level: version must be int")
@@ -135,9 +128,7 @@ def main() -> None:
             check_hebrew_entry(entry, index)
         else:
             # Minimal generic validation for non-Hebrew lexicons.
-            require_keys(
-                entry, ["id", "rank", "lemma", "forms", "examples"], f"verb #{index}"
-            )
+            require_keys(entry, ["id", "rank", "lemma", "forms", "examples"], f"verb #{index}")
 
             if not isinstance(entry["id"], str) or not entry["id"].strip():
                 fail(f"verb #{index}: id must be non-empty string")
@@ -160,11 +151,7 @@ def main() -> None:
         lemma = entry["lemma"]
         rank = entry["rank"]
 
-        lemma_key = (
-            json.dumps(lemma, ensure_ascii=False, sort_keys=True)
-            if isinstance(lemma, dict)
-            else lemma
-        )
+        lemma_key = json.dumps(lemma, ensure_ascii=False, sort_keys=True) if isinstance(lemma, dict) else lemma
 
         if verb_id in seen_ids:
             fail(f"duplicate id: {verb_id}")

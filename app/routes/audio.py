@@ -34,9 +34,7 @@ async def _generate_on_demand(
 
     verb = await asyncio.to_thread(load_entry_by_id, language=language, verb_id=verb_id)
     if verb is None:
-        verb = await asyncio.to_thread(
-            load_entry_by_id, language=language, verb_id=verb_id, source="candidate"
-        )
+        verb = await asyncio.to_thread(load_entry_by_id, language=language, verb_id=verb_id, source="candidate")
     if verb is None:
         return None
 
@@ -79,9 +77,7 @@ async def _generate_on_demand(
         form_key=form_key,
         voice_edge_id=voice_meta.edge_id,
     )
-    key = build_audio_key(
-        language=language, verb_id=verb_id, voice=voice, form_key=form_key
-    )
+    key = build_audio_key(language=language, verb_id=verb_id, voice=voice, form_key=form_key)
     return await asyncio.to_thread(audio_backend.read_bytes, key)
 
 
@@ -117,8 +113,7 @@ async def get_audio(
             )
         except Exception:
             logger.exception(
-                "On-demand audio generation failed "
-                "language=%s verb_id=%s voice=%s form_key=%s",
+                "On-demand audio generation failed language=%s verb_id=%s voice=%s form_key=%s",
                 language,
                 verb_id,
                 voice,

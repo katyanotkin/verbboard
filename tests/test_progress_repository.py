@@ -51,12 +51,8 @@ def test_mark_seen_targets_correct_path() -> None:
     db.collection().document.assert_called_with("u1")
     db.collection().document().collection.assert_called_with("languages")
     db.collection().document().collection().document.assert_called_with("en")
-    db.collection().document().collection().document().collection.assert_called_with(
-        "verbs"
-    )
-    db.collection().document().collection().document().collection().document.assert_called_with(
-        "en_go"
-    )
+    db.collection().document().collection().document().collection.assert_called_with("verbs")
+    db.collection().document().collection().document().collection().document.assert_called_with("en_go")
 
 
 def test_mark_seen_writes_language_container_doc() -> None:
@@ -102,12 +98,8 @@ def test_set_known_targets_correct_path() -> None:
         repo.set_known(user_id="u1", language="en", verb_id="en_go", known=True)
 
     db.collection.assert_called_with("user_progress")
-    db.collection().document().collection().document().collection.assert_called_with(
-        "verbs"
-    )
-    db.collection().document().collection().document().collection().document.assert_called_with(
-        "en_go"
-    )
+    db.collection().document().collection().document().collection.assert_called_with("verbs")
+    db.collection().document().collection().document().collection().document.assert_called_with("en_go")
 
 
 def test_set_known_writes_language_container_doc() -> None:
@@ -281,9 +273,7 @@ def test_list_progress_queries_correct_path() -> None:
     db.collection().document.assert_called_with("u1")
     db.collection().document().collection.assert_any_call("languages")
     db.collection().document().collection().document.assert_called_with("en")
-    db.collection().document().collection().document().collection.assert_called_with(
-        "verbs"
-    )
+    db.collection().document().collection().document().collection.assert_called_with("verbs")
 
 
 def test_list_progress_returns_verb_progress_models() -> None:

@@ -23,17 +23,12 @@ from core.settings import load_settings as _real_load_settings
 
 def _make_entries(specs: list[tuple[str, int]]) -> list[VerbEntry]:
     """Build VerbEntry objects from (verb_id_suffix, rank) tuples."""
-    return [
-        VerbEntry(id=f"en_{suffix}", rank=rank, lemma=suffix, forms={}, examples=[])
-        for suffix, rank in specs
-    ]
+    return [VerbEntry(id=f"en_{suffix}", rank=rank, lemma=suffix, forms={}, examples=[]) for suffix, rank in specs]
 
 
 def _settings_with_limit(limit: int, batch: int = 20):
     """Return a Settings instance with verbs_page_limit overridden."""
-    return dataclasses.replace(
-        _real_load_settings(), verbs_page_limit=limit, verbs_display_batch=batch
-    )
+    return dataclasses.replace(_real_load_settings(), verbs_page_limit=limit, verbs_display_batch=batch)
 
 
 def _extract_vb_verbs(html: str) -> list[dict]:
@@ -81,9 +76,7 @@ def test_settings_page_limit_must_exceed_display_batch() -> None:
 
     from core.settings import _validate
 
-    bad = dataclasses.replace(
-        _real_load_settings(), verbs_page_limit=20, verbs_display_batch=20
-    )
+    bad = dataclasses.replace(_real_load_settings(), verbs_page_limit=20, verbs_display_batch=20)
     with pytest.raises(ValueError, match="VERBS_PAGE_LIMIT"):
         _validate(bad)
 
@@ -93,9 +86,7 @@ def test_settings_page_limit_must_exceed_display_batch() -> None:
 
 def test_verbs_page_limit_slices_to_n(client: TestClient) -> None:
     """When verbs_page_limit=3 and 5 verbs are available, only 3 appear in VB_VERBS."""
-    entries = _make_entries(
-        [("alpha", 1), ("beta", 2), ("gamma", 3), ("delta", 4), ("epsilon", 5)]
-    )
+    entries = _make_entries([("alpha", 1), ("beta", 2), ("gamma", 3), ("delta", 4), ("epsilon", 5)])
     with (
         patch("app.routes.verbs.load_entries_for_language", return_value=entries),
         patch(
@@ -112,9 +103,7 @@ def test_verbs_page_limit_slices_to_n(client: TestClient) -> None:
 
 def test_verbs_page_limit_zero_returns_all(client: TestClient) -> None:
     """When verbs_page_limit=0, all verbs must appear in VB_VERBS (unlimited)."""
-    entries = _make_entries(
-        [("alpha", 1), ("beta", 2), ("gamma", 3), ("delta", 4), ("epsilon", 5)]
-    )
+    entries = _make_entries([("alpha", 1), ("beta", 2), ("gamma", 3), ("delta", 4), ("epsilon", 5)])
     with (
         patch("app.routes.verbs.load_entries_for_language", return_value=entries),
         patch(
@@ -136,9 +125,7 @@ def test_verbs_page_limit_keeps_top_ranked_entries(client: TestClient) -> None:
     happens before slicing.
     """
     # rank=5 is worst; ranks 1/2/3 should survive
-    entries = _make_entries(
-        [("worst", 5), ("second", 2), ("best", 1), ("third", 3), ("fourth", 4)]
-    )
+    entries = _make_entries([("worst", 5), ("second", 2), ("best", 1), ("third", 3), ("fourth", 4)])
     with (
         patch("app.routes.verbs.load_entries_for_language", return_value=entries),
         patch(
@@ -184,6 +171,4 @@ def test_progress_total_shows_full_firestore_count(client: TestClient) -> None:
     assert total == 5, f"VB_VERBS_TOTAL should be full Firestore count (5), got {total}"
 
     span_text = _extract_progress_total_text(resp.text)
-    assert (
-        "5" in span_text
-    ), f"progress-total span should show full count 5, got {span_text!r}"
+    assert "5" in span_text, f"progress-total span should show full count 5, got {span_text!r}"

@@ -88,10 +88,7 @@ def _build_request(language: str, query: str, idx: int) -> dict[str, Any]:
             "messages": [
                 {
                     "role": "user",
-                    "content": (
-                        f"language: {language}\n"
-                        f"raw query (may be any inflected form): {query}"
-                    ),
+                    "content": (f"language: {language}\nraw query (may be any inflected form): {query}"),
                 }
             ],
         },
@@ -147,9 +144,7 @@ def _save_candidate(
         "status": "pending",
         "forms": generated.get("forms", {}),
         "examples": generated.get("examples", []),
-        "search_extract": build_search_extract_from_entry(
-            language=language, entry=generated
-        ),
+        "search_extract": build_search_extract_from_entry(language=language, entry=generated),
         "created_at": now,
         "updated_at": now,
     }
@@ -258,15 +253,11 @@ def run(
             skipped_post += 1
             continue
         if db.collection(CANDIDATES_COLLECTION).document(resolved_id).get().exists:
-            logger.info(
-                "SKIP   %-30s -> %-20s  (already candidate)", query, resolved_id
-            )
+            logger.info("SKIP   %-30s -> %-20s  (already candidate)", query, resolved_id)
             skipped_post += 1
             continue
         if find_verb_by_search_extract(language, lemma) is not None:
-            logger.info(
-                "SKIP   %-30s -> %-20s  (search_extract match)", query, resolved_id
-            )
+            logger.info("SKIP   %-30s -> %-20s  (search_extract match)", query, resolved_id)
             skipped_post += 1
             continue
 
@@ -309,12 +300,8 @@ def run(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Bulk verb generation via Anthropic Batch API."
-    )
-    parser.add_argument(
-        "--language", required=True, help="Verb language: en / ru / he / es"
-    )
+    parser = argparse.ArgumentParser(description="Bulk verb generation via Anthropic Batch API.")
+    parser.add_argument("--language", required=True, help="Verb language: en / ru / he / es")
     parser.add_argument(
         "--input",
         help="File with one verb query per line (omit to read from stdin)",
@@ -346,9 +333,7 @@ def main() -> None:
     else:
         raw_lines = sys.stdin.readlines()
 
-    queries = [
-        line.strip() for line in raw_lines if line.strip() and not line.startswith("#")
-    ]
+    queries = [line.strip() for line in raw_lines if line.strip() and not line.startswith("#")]
     if not queries:
         logger.error("No queries found in input")
         sys.exit(1)

@@ -5,7 +5,6 @@ from typing import Callable, Dict
 
 from core.models import Board, VerbEntry
 
-
 BuildBoardFn = Callable[[VerbEntry, str, str], Board]
 
 

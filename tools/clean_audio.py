@@ -105,9 +105,7 @@ def main() -> None:
     if not args.bucket:
         sys.exit("ERROR: --bucket or AUDIO_BUCKET is required")
 
-    languages = (
-        supported_languages_list() if args.language == "all" else [args.language]
-    )
+    languages = supported_languages_list() if args.language == "all" else [args.language]
     audio_backend = GCSAudioBackend(project=args.project, bucket=args.bucket)
 
     execute = args.execute

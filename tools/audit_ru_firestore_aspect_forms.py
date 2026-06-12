@@ -6,7 +6,6 @@ from google.cloud.firestore_v1 import FieldFilter
 
 from core.storage.firestore_db import get_db
 
-
 VERBS_COLLECTION = "verbs"
 
 
@@ -34,11 +33,7 @@ def label(document_id: str, data: dict[str, Any]) -> str:
 def main() -> None:
     db = get_db()
 
-    docs = (
-        db.collection(VERBS_COLLECTION)
-        .where(filter=FieldFilter("language", "==", "ru"))
-        .stream()
-    )
+    docs = db.collection(VERBS_COLLECTION).where(filter=FieldFilter("language", "==", "ru")).stream()
 
     perfective_missing_future: list[str] = []
     perfective_with_future: list[str] = []

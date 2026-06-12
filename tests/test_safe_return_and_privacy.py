@@ -192,9 +192,7 @@ def test_sw_precache_includes_learn_js() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_home_search_rejects_double_slash_return_to(
-    client: TestClient, monkeypatch
-) -> None:
+def test_home_search_rejects_double_slash_return_to(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda *a: None)
     monkeypatch.setattr("app.routes.home.list_verbs_recent", lambda *a, **kw: [])
     monkeypatch.setattr("app.routes.home.find_best_entry", lambda *a: None)
@@ -206,9 +204,7 @@ def test_home_search_rejects_double_slash_return_to(
     assert "evil.com" not in resp.headers["location"]
 
 
-def test_home_search_rejects_backslash_return_to(
-    client: TestClient, monkeypatch
-) -> None:
+def test_home_search_rejects_backslash_return_to(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda *a: None)
     monkeypatch.setattr("app.routes.home.list_verbs_recent", lambda *a, **kw: [])
     monkeypatch.setattr("app.routes.home.find_best_entry", lambda *a: None)
@@ -246,9 +242,7 @@ def test_auth_signin_firebase_config_script_injection_neutralized(
     from core.settings import load_settings as _real_load_settings
 
     malicious = '{"apiKey":"</script><script>alert(1)</script>"}'
-    settings = dataclasses.replace(
-        _real_load_settings(), firebase_web_config_json=malicious
-    )
+    settings = dataclasses.replace(_real_load_settings(), firebase_web_config_json=malicious)
     with patch("app.routes.auth_pages.load_settings", return_value=settings):
         html = client.get("/auth/signin").text
     assert "</script><script>" not in html

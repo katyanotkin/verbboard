@@ -6,19 +6,16 @@ from typing import Any, Callable
 
 from core.paths import DATA_DIR, DATA_SRC_DIR
 from core.supported_languages import supported_languages_with_all
-
 from tools.lexicon_build.common import (
     fail,
     load_json,
     load_optional_json_map,
-    write_json,
     validate_top_level,
+    write_json,
 )
-
 from tools.lexicon_build.english import expand_english_entry
 from tools.lexicon_build.russian import expand_russian_entry
 from tools.lexicon_build.spanish import expand_spanish_entry
-
 
 EXPANDERS: dict[
     str,
@@ -31,9 +28,7 @@ EXPANDERS: dict[
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Generate runtime lexicon.json from source catalog"
-    )
+    parser = argparse.ArgumentParser(description="Generate runtime lexicon.json from source catalog")
     parser.add_argument(
         "--language",
         required=True,
@@ -96,9 +91,7 @@ def generate_for_language(language: str) -> None:
 
     source_payload = load_json(source_path)
 
-    built_in_examples = load_optional_json_map(
-        DATA_DIR / language / "built_in_examples.json"
-    )
+    built_in_examples = load_optional_json_map(DATA_DIR / language / "built_in_examples.json")
 
     runtime_payload = build_runtime_payload(
         language=language,
@@ -109,10 +102,7 @@ def generate_for_language(language: str) -> None:
 
     write_json(output_path, runtime_payload)
 
-    print(
-        f"OK: generated {output_path} with "
-        f"{len(runtime_payload['verbs'])} {language} verbs"
-    )
+    print(f"OK: generated {output_path} with {len(runtime_payload['verbs'])} {language} verbs")
 
 
 def main() -> None:
@@ -121,9 +111,7 @@ def main() -> None:
 
     if requested_language == "all":
         languages = sorted(
-            path.name
-            for path in DATA_SRC_DIR.iterdir()
-            if path.is_dir() and (path / "catalog.json").exists()
+            path.name for path in DATA_SRC_DIR.iterdir() if path.is_dir() and (path / "catalog.json").exists()
         )
     else:
         languages = [requested_language]

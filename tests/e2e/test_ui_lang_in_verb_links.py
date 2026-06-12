@@ -47,9 +47,7 @@ def test_js_verb_links_carry_ui_language(page, live_server_url):
         pytest.skip("No verb items rendered — Firestore has no verbs for language=en")
 
     first_href = page.locator("#vb-list a.vb-item").first.get_attribute("href") or ""
-    assert (
-        "ui_language=ru" in first_href
-    ), f"JS-built verb link must contain ui_language=ru. Got href={first_href!r}"
+    assert "ui_language=ru" in first_href, f"JS-built verb link must contain ui_language=ru. Got href={first_href!r}"
 
 
 def test_js_verb_links_carry_ui_language_he(page, live_server_url):
@@ -62,9 +60,7 @@ def test_js_verb_links_carry_ui_language_he(page, live_server_url):
         pytest.skip("No verb items rendered — Firestore has no verbs for language=en")
 
     first_href = page.locator("#vb-list a.vb-item").first.get_attribute("href") or ""
-    assert (
-        "ui_language=he" in first_href
-    ), f"JS-built verb link must contain ui_language=he. Got href={first_href!r}"
+    assert "ui_language=he" in first_href, f"JS-built verb link must contain ui_language=he. Got href={first_href!r}"
 
 
 def test_js_verb_links_return_to_carries_ui_language(page, live_server_url):
@@ -119,10 +115,9 @@ def test_back_link_on_learn_preserves_ui_language(page, live_server_url):
         pytest.skip("Back button not visible — en_be may not exist in Firestore")
 
     href = back_btn.get_attribute("href") or ""
-    assert "ui_language=ru" in href, (
-        f"Back button on learn page must carry ui_language=ru when return_to includes it. "
-        f"Got href={href!r}"
-    )
+    assert (
+        "ui_language=ru" in href
+    ), f"Back button on learn page must carry ui_language=ru when return_to includes it. Got href={href!r}"
 
 
 def test_back_nav_from_learn_lands_on_verbs_with_ui_language(page, live_server_url):
@@ -176,6 +171,4 @@ def test_bottom_nav_back_tab_carries_ui_language(page, live_server_url):
     back_tab.wait_for(state="attached", timeout=5000)
 
     href = back_tab.get_attribute("href") or ""
-    assert (
-        "ui_language=ru" in href
-    ), f"Bottom-nav Back tab must carry ui_language=ru. Got href={href!r}"
+    assert "ui_language=ru" in href, f"Bottom-nav Back tab must carry ui_language=ru. Got href={href!r}"

@@ -10,9 +10,7 @@ def _stub_render(**kwargs) -> str:
     return "<html><body>board</body></html>"
 
 
-def test_learn_default_verb_returns_200(
-    client: TestClient, monkeypatch, mock_verb: VerbEntry
-) -> None:
+def test_learn_default_verb_returns_200(client: TestClient, monkeypatch, mock_verb: VerbEntry) -> None:
     monkeypatch.setattr(
         "app.routes.learn.load_entries_for_language",
         lambda **kw: [mock_verb],
@@ -24,9 +22,7 @@ def test_learn_default_verb_returns_200(
     assert response.status_code == 200
 
 
-def test_learn_valid_verb_id_returns_200(
-    client: TestClient, monkeypatch, mock_verb: VerbEntry
-) -> None:
+def test_learn_valid_verb_id_returns_200(client: TestClient, monkeypatch, mock_verb: VerbEntry) -> None:
     monkeypatch.setattr(
         "app.routes.learn.load_entries_for_language",
         lambda **kw: [mock_verb],
@@ -42,9 +38,7 @@ def test_learn_valid_verb_id_returns_200(
     assert response.status_code == 200
 
 
-def test_learn_unknown_verb_id_returns_404(
-    client: TestClient, monkeypatch, mock_verb: VerbEntry
-) -> None:
+def test_learn_unknown_verb_id_returns_404(client: TestClient, monkeypatch, mock_verb: VerbEntry) -> None:
     monkeypatch.setattr(
         "app.routes.learn.load_entries_for_language",
         lambda **kw: [mock_verb],
@@ -68,9 +62,7 @@ def test_learn_no_verbs_available_returns_400(client: TestClient, monkeypatch) -
     assert response.status_code == 400
 
 
-def test_learn_candidate_preview_returns_200(
-    client: TestClient, monkeypatch, mock_verb: VerbEntry
-) -> None:
+def test_learn_candidate_preview_returns_200(client: TestClient, monkeypatch, mock_verb: VerbEntry) -> None:
     monkeypatch.setattr(
         "app.routes.learn.load_entry_by_id",
         lambda **kw: mock_verb,

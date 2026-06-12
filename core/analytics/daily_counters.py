@@ -54,16 +54,12 @@ def _write(date: str, page: str, language: str, ui_lang: str, device_type: str) 
         logger.exception("Failed to write analytics counter")
 
 
-async def record(
-    path: str, language: str, ui_lang: str, user_agent: str | None
-) -> None:
+async def record(path: str, language: str, ui_lang: str, user_agent: str | None) -> None:
     page = _PAGE_NAMES.get(path)
     if page is None:
         return
     device_type = detect_device_type(user_agent)
     date = datetime.now(UTC).strftime("%Y-%m-%d")
-    task = asyncio.create_task(
-        asyncio.to_thread(_write, date, page, language, ui_lang, device_type)
-    )
+    task = asyncio.create_task(asyncio.to_thread(_write, date, page, language, ui_lang, device_type))
     _pending.add(task)
     task.add_done_callback(_pending.discard)

@@ -119,9 +119,7 @@ def test_learn_feedback_link_encodes_return_to(page, live_server_url):
 
 
 def test_feedback_blocks_external_return_to(page, live_server_url):
-    page.goto(
-        f"{live_server_url}/feedback?return_to=https://malicious.example.com/path"
-    )
+    page.goto(f"{live_server_url}/feedback?return_to=https://malicious.example.com/path")
     page.wait_for_load_state("networkidle")
 
     back = page.locator("a.feedback-link").first
@@ -173,9 +171,7 @@ def test_known_star_persists_after_reload(page, live_server_url):
 
 @pytest.mark.parametrize("learn_action", _LEARN_ACTIONS)
 @pytest.mark.parametrize("return_via", _RETURN_STRATEGIES)
-def test_verbs_state_survives_learn_roundtrip(
-    page, live_server_url, return_via, learn_action
-):
+def test_verbs_state_survives_learn_roundtrip(page, live_server_url, return_via, learn_action):
     """All /verbs state must survive any learn-page round-trip."""
     page.goto(f"{live_server_url}/verbs?language=en&ui_language=ru")
     page.wait_for_load_state("networkidle")
@@ -198,17 +194,13 @@ def test_verbs_state_survives_learn_roundtrip(
     _return_to_verbs(page, return_via)
 
     tag = f"[{return_via}/{learn_action}]"
-    assert (
-        _active_filter(page) == "all"
-    ), f"{tag} filter reset to {_active_filter(page)!r}"
+    assert _active_filter(page) == "all", f"{tag} filter reset to {_active_filter(page)!r}"
     assert _active_sort(page) == "newest", f"{tag} sort reset to {_active_sort(page)!r}"
     assert "ui_language=ru" in page.url, f"{tag} ui_language lost. URL: {page.url!r}"
 
     if expanded_count is not None:
         restored = page.locator("#vb-list a.vb-item").count()
-        assert (
-            restored >= expanded_count
-        ), f"{tag} display count reset: expected >={expanded_count}, got {restored}"
+        assert restored >= expanded_count, f"{tag} display count reset: expected >={expanded_count}, got {restored}"
 
 
 # ---------------------------------------------------------------------------
@@ -258,14 +250,10 @@ def test_verbs_state_survives_feedback_detour(page, live_server_url, return_via)
         _return_to_verbs(page, "browser_back")
 
     tag = f"[feedback/{return_via}]"
-    assert (
-        _active_filter(page) == "all"
-    ), f"{tag} filter reset to {_active_filter(page)!r}"
+    assert _active_filter(page) == "all", f"{tag} filter reset to {_active_filter(page)!r}"
     assert _active_sort(page) == "newest", f"{tag} sort reset to {_active_sort(page)!r}"
     assert "ui_language=ru" in page.url, f"{tag} ui_language lost. URL: {page.url!r}"
 
     if expanded_count is not None:
         restored = page.locator("#vb-list a.vb-item").count()
-        assert (
-            restored >= expanded_count
-        ), f"{tag} display count reset: expected >={expanded_count}, got {restored}"
+        assert restored >= expanded_count, f"{tag} display count reset: expected >={expanded_count}, got {restored}"

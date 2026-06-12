@@ -37,10 +37,7 @@ class PracticeProgressRequest(BaseModel):
     def badges_must_be_valid_sizes(cls, v: list[int]) -> list[int]:
         invalid = [b for b in v if b not in _VALID_BADGE_SIZES]
         if invalid:
-            raise ValueError(
-                f"badges contains invalid sizes {invalid}; "
-                f"allowed: {sorted(_VALID_BADGE_SIZES)}"
-            )
+            raise ValueError(f"badges contains invalid sizes {invalid}; allowed: {sorted(_VALID_BADGE_SIZES)}")
         return v
 
 

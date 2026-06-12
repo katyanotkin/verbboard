@@ -148,9 +148,7 @@ def test_regen_example_propagates_502_from_claude(client: TestClient) -> None:
     db = _mock_db("en_go", _CANDIDATE)
 
     async def _raise(*a, **kw):
-        raise HTTPException(
-            status_code=502, detail="Example generation returned invalid JSON"
-        )
+        raise HTTPException(status_code=502, detail="Example generation returned invalid JSON")
 
     with (
         patch("app.routes.admin_candidates.get_db", return_value=db),
@@ -209,9 +207,7 @@ def test_regen_endpoint_passes_native_sentence_to_translate_examples(
     assert len(passed_examples) == 1
     # translate_examples must receive {"dst": native_sentence}, using src from regen example
     assert passed_examples[0] == {"dst": "Мы идём вместе."}
-    assert (
-        passed_examples[0]["dst"] == "Мы идём вместе."
-    )  # native sentence, not English
+    assert passed_examples[0]["dst"] == "Мы идём вместе."  # native sentence, not English
 
 
 # ---------------------------------------------------------------------------
@@ -402,9 +398,7 @@ def _stub_render(**kwargs) -> str:
     return "<html><body>board</body></html>"
 
 
-def test_learn_candidate_return_to_defaults_to_admin(
-    client: TestClient, monkeypatch, mock_verb
-) -> None:
+def test_learn_candidate_return_to_defaults_to_admin(client: TestClient, monkeypatch, mock_verb) -> None:
     """When source=candidate and no return_to param is given, render_board_html
     must receive return_to='/admin#candidates'."""
     captured = {}
@@ -426,9 +420,7 @@ def test_learn_candidate_return_to_defaults_to_admin(
     assert captured.get("return_to") == "/admin#candidates"
 
 
-def test_learn_candidate_explicit_return_to_is_respected(
-    client: TestClient, monkeypatch, mock_verb
-) -> None:
+def test_learn_candidate_explicit_return_to_is_respected(client: TestClient, monkeypatch, mock_verb) -> None:
     """An explicit return_to query param must override the default."""
     captured = {}
 
@@ -443,9 +435,7 @@ def test_learn_candidate_explicit_return_to_is_respected(
     )
     monkeypatch.setattr("app.routes.learn.render_board_html", _capturing_render)
 
-    resp = client.get(
-        "/learn?language=en&verb_id=en_go&source=candidate&return_to=/custom"
-    )
+    resp = client.get("/learn?language=en&verb_id=en_go&source=candidate&return_to=/custom")
 
     assert resp.status_code == 200
     assert captured.get("return_to") == "/custom"

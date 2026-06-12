@@ -173,9 +173,7 @@ def run(collection: str, project: str, api_key: str, dry_run: bool) -> None:
 
         if len(update_payload) > 1:
             db.collection(collection).document(doc.id).update(update_payload)
-            logger.info(
-                "SAVED %-20s  (%d tenses added)", verb_id, len(update_payload) - 1
-            )
+            logger.info("SAVED %-20s  (%d tenses added)", verb_id, len(update_payload) - 1)
             saved += 1
         else:
             logger.info("SKIP  %-20s  (nothing new in generated output)", verb_id)
@@ -189,9 +187,7 @@ def run(collection: str, project: str, api_key: str, dry_run: bool) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Backfill imperfect/future/imperative for existing Spanish verbs."
-    )
+    parser = argparse.ArgumentParser(description="Backfill imperfect/future/imperative for existing Spanish verbs.")
     parser.add_argument(
         "--collection",
         default=os.getenv("VERBS_COLLECTION", "verbs"),

@@ -66,10 +66,7 @@ def render_board_html(
 
             if key not in NO_AUDIO_ROW_KEYS:
                 hashed_key = build_hashed_audio_key(key, raw_text)
-                audio_src = (
-                    f"/audio/{board.language}/{board.verb.id}/"
-                    f"{board.voice_key}/{hashed_key}.mp3"
-                )
+                audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{hashed_key}.mp3"
                 audio_id = (
                     f"audio_{board.language}_{board.verb.id}_{board.voice_key}_"
                     f"section{section_index}_row{row_index}_{hashed_key}"
@@ -84,10 +81,7 @@ def render_board_html(
                 audio_html = ""
 
             value_font_size = "15px" if key in ("pair", "aspect") else "22px"
-            form_cell = (
-                f"<span style='font-size:{value_font_size}'>{value_html}</span>"
-                f"{audio_html}"
-            )
+            form_cell = f"<span style='font-size:{value_font_size}'>{value_html}</span>{audio_html}"
 
             gender = str(row.get("gender", ""))
             number_val = str(row.get("number", ""))
@@ -107,24 +101,14 @@ def render_board_html(
         col_form = escape(ui.get("board.col_form", "Form"))
 
         section_title_raw = section.get("title", "")
-        section_title = (
-            ui.get(section_title_raw, section_title_raw) if section_title_raw else ""
-        )
+        section_title = ui.get(section_title_raw, section_title_raw) if section_title_raw else ""
         title_html = f"<h2>{escape(str(section_title))}</h2>" if section_title else ""
 
         show_headers = bool(section_title)
 
-        header_html = (
-            f"<tr><th>{col_label}</th><th>{col_form}</th></tr>" if show_headers else ""
-        )
+        header_html = f"<tr><th>{col_label}</th><th>{col_form}</th></tr>" if show_headers else ""
 
-        sections_html.append(
-            title_html
-            + "<table class='conj-table'>"
-            + header_html
-            + "".join(rows)
-            + "</table>"
-        )
+        sections_html.append(title_html + "<table class='conj-table'>" + header_html + "".join(rows) + "</table>")
 
     if len(sections_html) > 1:
         meta_section_html = sections_html[0]
@@ -134,10 +118,7 @@ def render_board_html(
         conj_sections_html = "".join(sections_html)
 
     translation_dir = "rtl" if ui_lang == "he" else "ltr"
-    has_any_translation = any(
-        ui_lang in ex.translations and board.language != ui_lang
-        for ex in board.verb.examples
-    )
+    has_any_translation = any(ui_lang in ex.translations and board.language != ui_lang for ex in board.verb.examples)
 
     examples_rows = []
     for index, ex in enumerate(board.verb.examples, start=1):
@@ -145,13 +126,8 @@ def render_board_html(
         raw_text = ex.dst
         hashed_key = build_hashed_audio_key(base_key, raw_text)
 
-        audio_src = (
-            f"/audio/{board.language}/{board.verb.id}/"
-            f"{board.voice_key}/{hashed_key}.mp3"
-        )
-        audio_id = (
-            f"audio_{board.language}_{board.verb.id}_{board.voice_key}_{hashed_key}"
-        )
+        audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{hashed_key}.mp3"
+        audio_id = f"audio_{board.language}_{board.verb.id}_{board.voice_key}_{hashed_key}"
 
         # dir and text-align on the sentence cell handle RTL languages correctly.
         # The audio cell is always the adjacent column -- the table layout keeps
@@ -164,8 +140,7 @@ def render_board_html(
             translation_text = ex.translations.get(ui_lang, "")
 
         translation_span = (
-            f"<span class='example-translation' dir='{translation_dir}'>"
-            f"{escape(translation_text)}</span>"
+            f"<span class='example-translation' dir='{translation_dir}'>{escape(translation_text)}</span>"
         )
 
         examples_rows.append(
@@ -193,10 +168,7 @@ def render_board_html(
     resolved_return_to = safe_rt or f"/?language={escape(board.language)}{ui_suffix}"
 
     source_suffix = "&source=candidate" if candidate_verb_id else ""
-    learn_href = (
-        f"/learn?language={escape(board.language)}"
-        f"&verb_id={escape(board.verb.id)}{source_suffix}{ui_suffix}"
-    )
+    learn_href = f"/learn?language={escape(board.language)}&verb_id={escape(board.verb.id)}{source_suffix}{ui_suffix}"
     # Include return_to so the feedback page's Back button returns here, not home.
     full_learn_href = learn_href + f"&return_to={quote(resolved_return_to, safe='')}"
 
@@ -243,17 +215,11 @@ def render_board_html(
     if translated_from:
         voice_source_input += f'<input type="hidden" name="translated_from" value="{escape(translated_from)}">'
     if source_lang:
-        voice_source_input += (
-            f'<input type="hidden" name="source_lang" value="{escape(source_lang)}">'
-        )
+        voice_source_input += f'<input type="hidden" name="source_lang" value="{escape(source_lang)}">'
 
     if has_any_translation:
-        toggle_label_show = escape(
-            ui.get("board.show_translations", "Show translations")
-        )
-        toggle_label_hide = escape(
-            ui.get("board.hide_translations", "Hide translations")
-        )
+        toggle_label_show = escape(ui.get("board.show_translations", "Show translations"))
+        toggle_label_hide = escape(ui.get("board.hide_translations", "Hide translations"))
         examples_toggle = (
             f"<button id='toggle-translations' class='btn-secondary toggle-translations-btn' "
             f"data-label-show='{toggle_label_show}' "
@@ -272,13 +238,9 @@ def render_board_html(
             "practice.of": ui.get("practice.of", "of"),
             "practice.finish": ui.get("practice.finish", "Finish"),
             "practice.abandon": ui.get("practice.abandon", "Abandon"),
-            "practice.listen_first": ui.get(
-                "practice.listen_first", "Listen to the audio first"
-            ),
+            "practice.listen_first": ui.get("practice.listen_first", "Listen to the audio first"),
             "practice.wrap_up": ui.get("practice.wrap_up", "Practice complete"),
-            "practice.learned_prompt": ui.get(
-                "practice.learned_prompt", "Which verbs did you learn?"
-            ),
+            "practice.learned_prompt": ui.get("practice.learned_prompt", "Which verbs did you learn?"),
             "practice.done": ui.get("practice.done", "Done"),
             "auth.login": ui.get("auth.login", "Login"),
             "auth.logout": ui.get("auth.logout", "Logout"),

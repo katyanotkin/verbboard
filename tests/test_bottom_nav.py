@@ -91,9 +91,7 @@ def test_verbs_bottom_nav_browse_link_carries_language(client: TestClient) -> No
         ("/verbs?language=ru", "ru", "app.routes.verbs.load_entries_for_language"),
     ],
 )
-def test_bottom_nav_lang_hrefs_contain_language(
-    client: TestClient, url: str, lang: str, patch_target: str
-) -> None:
+def test_bottom_nav_lang_hrefs_contain_language(client: TestClient, url: str, lang: str, patch_target: str) -> None:
     """Search and Browse links must carry both language and ui_language as URL params."""
     with patch(patch_target, return_value=[]):
         html = client.get(url).text
@@ -178,9 +176,7 @@ def test_verbs_bottom_nav_practice_tab_href(client: TestClient) -> None:
 
 
 @pytest.mark.parametrize("lang", ["en", "ru", "he"])
-def test_verbs_bottom_nav_practice_tab_carries_language(
-    client: TestClient, lang: str
-) -> None:
+def test_verbs_bottom_nav_practice_tab_carries_language(client: TestClient, lang: str) -> None:
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         html = client.get(f"/verbs?language={lang}").text
     assert f"/verbs?language={lang}" in html

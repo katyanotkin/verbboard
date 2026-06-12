@@ -52,36 +52,26 @@ def test_translation_toggle_adds_visible_class_on_first_click(page, live_server_
     is present in the DOM.
     """
     if not _find_learn_page_with_toggle(page, live_server_url):
-        pytest.skip(
-            "No verb with translations found in Firestore — skipping toggle test"
-        )
+        pytest.skip("No verb with translations found in Firestore — skipping toggle test")
 
     table = page.locator(".examples-table")
     toggle = page.locator("#toggle-translations")
 
     # Before click: class must be absent
-    has_class_before = table.evaluate(
-        "el => el.classList.contains('translations-visible')"
-    )
+    has_class_before = table.evaluate("el => el.classList.contains('translations-visible')")
     assert not has_class_before, "translations-visible must be absent before any click"
 
     toggle.click()
     page.wait_for_timeout(100)
 
-    has_class_after = table.evaluate(
-        "el => el.classList.contains('translations-visible')"
-    )
+    has_class_after = table.evaluate("el => el.classList.contains('translations-visible')")
     assert has_class_after, "translations-visible must be present after first click"
 
 
-def test_translation_toggle_removes_visible_class_on_second_click(
-    page, live_server_url
-):
+def test_translation_toggle_removes_visible_class_on_second_click(page, live_server_url):
     """A second click must remove `translations-visible`, hiding translations again."""
     if not _find_learn_page_with_toggle(page, live_server_url):
-        pytest.skip(
-            "No verb with translations found in Firestore — skipping toggle test"
-        )
+        pytest.skip("No verb with translations found in Firestore — skipping toggle test")
 
     table = page.locator(".examples-table")
     toggle = page.locator("#toggle-translations")
@@ -104,9 +94,7 @@ def test_translation_toggle_button_text_updates_on_click(page, live_server_url):
     swaps the text content.  If this breaks, the button appears stuck on one label.
     """
     if not _find_learn_page_with_toggle(page, live_server_url):
-        pytest.skip(
-            "No verb with translations found in Firestore — skipping toggle test"
-        )
+        pytest.skip("No verb with translations found in Firestore — skipping toggle test")
 
     toggle = page.locator("#toggle-translations")
     label_show = toggle.get_attribute("data-label-show") or ""
@@ -117,24 +105,19 @@ def test_translation_toggle_button_text_updates_on_click(page, live_server_url):
     assert label_show != label_hide, "show and hide labels must differ"
 
     initial_text = toggle.inner_text().strip()
-    assert (
-        initial_text == label_show
-    ), f"Initial button text must be label_show={label_show!r}, got {initial_text!r}"
+    assert initial_text == label_show, f"Initial button text must be label_show={label_show!r}, got {initial_text!r}"
 
     toggle.click()
     page.wait_for_timeout(100)
     after_first = toggle.inner_text().strip()
-    assert (
-        after_first == label_hide
-    ), f"After first click text must be label_hide={label_hide!r}, got {after_first!r}"
+    assert after_first == label_hide, f"After first click text must be label_hide={label_hide!r}, got {after_first!r}"
 
     toggle.click()
     page.wait_for_timeout(100)
     after_second = toggle.inner_text().strip()
-    assert after_second == label_show, (
-        f"After second click text must return to label_show={label_show!r}, "
-        f"got {after_second!r}"
-    )
+    assert (
+        after_second == label_show
+    ), f"After second click text must return to label_show={label_show!r}, got {after_second!r}"
 
 
 def test_toggle_absent_when_ui_language_matches_verb_language(page, live_server_url):

@@ -45,9 +45,7 @@ def test_verbs_has_back_to_home_link(client: TestClient, monkeypatch) -> None:
     assert 'href="/?language=en&amp;ui_language=en"' in html
 
 
-def test_verbs_feedback_link_carries_page_context(
-    client: TestClient, monkeypatch
-) -> None:
+def test_verbs_feedback_link_carries_page_context(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [])
     html = client.get("/verbs?language=en").text
     assert "page=verbs" in html
@@ -81,9 +79,7 @@ def test_feedback_back_link_reflects_return_to(client: TestClient) -> None:
 def test_feedback_back_link_for_learn_return_to(client: TestClient) -> None:
     """URL-encoded learn page return_to must survive the roundtrip (regression)."""
     return_to = quote("/learn?language=en&verb_id=en_go", safe="/")
-    html = client.get(
-        f"/feedback?page=learn&language=en&verb_id=en_go&return_to={return_to}"
-    ).text
+    html = client.get(f"/feedback?page=learn&language=en&verb_id=en_go&return_to={return_to}").text
     assert "feedback-link" in html
     assert "/learn" in html
 
@@ -127,9 +123,7 @@ def test_feedback_submit_returns_to_verbs_page(client: TestClient, monkeypatch) 
     assert "/verbs" in response.headers["location"]
 
 
-def test_feedback_submit_rejects_external_return_to(
-    client: TestClient, monkeypatch
-) -> None:
+def test_feedback_submit_rejects_external_return_to(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routes.feedback.save_feedback", lambda **kw: "ok")
     response = client.post(
         "/feedback",

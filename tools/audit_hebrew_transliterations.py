@@ -55,9 +55,7 @@ def main() -> None:
 
     print()
 
-    print(
-        f"{'EXISTING ID':<24}" f"{'GENERATED ID':<24}" f"{'CANONICAL':<24}" f"{'LEMMA'}"
-    )
+    print(f"{'EXISTING ID':<24}{'GENERATED ID':<24}{'CANONICAL':<24}{'LEMMA'}")
 
     print("-" * 120)
 
@@ -76,13 +74,7 @@ def main() -> None:
         if existing_id != generated_id:
             marker = "  <-- MIGRATE"
 
-        print(
-            f"{existing_id:<24}"
-            f"{generated_id:<24}"
-            f"{canonical:<24}"
-            f"{lemma}"
-            f"{marker}"
-        )
+        print(f"{existing_id:<24}{generated_id:<24}{canonical:<24}{lemma}{marker}")
 
         if not args.execute:
             continue
@@ -96,7 +88,7 @@ def main() -> None:
 
         if new_ref.get().exists:
             print()
-            print(f"COLLISION: {existing_id} -> {generated_id} " f"({lemma})")
+            print(f"COLLISION: {existing_id} -> {generated_id} ({lemma})")
             print("Destination document already exists")
             print()
 

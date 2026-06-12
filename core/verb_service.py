@@ -11,8 +11,8 @@ from core.settings import _load_anthropic_api_key
 from core.settings_ai import _GENERATION_SYSTEM_PROMPT
 from core.storage.firestore_db import get_db
 from core.storage.verb_document import (
-    build_storage_verb_id,
     build_search_extract_from_entry,
+    build_storage_verb_id,
 )
 
 logger = logging.getLogger(__name__)
@@ -67,9 +67,7 @@ def generate_and_promote_verb(language: str, lemma: str) -> dict[str, Any] | Non
         "rank": rank,
         "forms": generated.get("forms", {}),
         "examples": generated.get("examples", []),
-        "search_extract": build_search_extract_from_entry(
-            language=language, entry=generated
-        ),
+        "search_extract": build_search_extract_from_entry(language=language, entry=generated),
         "created_at": now,
         "updated_at": now,
     }

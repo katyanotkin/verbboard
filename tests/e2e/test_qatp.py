@@ -35,27 +35,21 @@ def _skip_without_stage():
         pytest.skip("Requires E2E_BASE_URL (stage data)")
 
 
-def _inject_audio_plays(
-    page, language: str, verb_ids: list[str], count: int = _PRACTICE_MIN_PLAYS
-) -> None:
+def _inject_audio_plays(page, language: str, verb_ids: list[str], count: int = _PRACTICE_MIN_PLAYS) -> None:
     """Fake audio play counts so hasListened() passes without real TTS."""
     key = f"audio_plays:{language}"
     plays = {vid: count for vid in verb_ids}
     page.evaluate("([k, v]) => localStorage.setItem(k, v)", [key, json.dumps(plays)])
 
 
-def _seed_practice_session(
-    page, language: str, ids: list[str], lemmas: dict[str, str]
-) -> None:
+def _seed_practice_session(page, language: str, ids: list[str], lemmas: dict[str, str]) -> None:
     """Write a practice session into localStorage (skips the Start button flow)."""
     key = f"practice_session:{language}"
     session = {"ids": ids, "lemmas": lemmas, "size": len(ids)}
     page.evaluate("([k, v]) => localStorage.setItem(k, v)", [key, json.dumps(session)])
 
 
-def _ru_verb_ids(
-    page, live_server_url: str, minimum: int = 3
-) -> tuple[list[str], dict[str, str]]:
+def _ru_verb_ids(page, live_server_url: str, minimum: int = 3) -> tuple[list[str], dict[str, str]]:
     """
     Fetch RU verbs from the verbs page. Returns list of verb IDs.
     Skips the test if fewer than `minimum` verbs are available.
@@ -64,12 +58,8 @@ def _ru_verb_ids(
     page.wait_for_load_state("networkidle")
     verbs = page.evaluate("(window.VB_VERBS || [])")
     if not verbs or len(verbs) < minimum:
-        pytest.skip(
-            f"Need at least {minimum} RU verbs; got {len(verbs) if verbs else 0}"
-        )
-    return [v["id"] for v in verbs[:minimum]], {
-        v["id"]: v["lemma"] for v in verbs[:minimum]
-    }
+        pytest.skip(f"Need at least {minimum} RU verbs; got {len(verbs) if verbs else 0}")
+    return [v["id"] for v in verbs[:minimum]], {v["id"]: v["lemma"] for v in verbs[:minimum]}
 
 
 # ---------------------------------------------------------------------------
@@ -95,9 +85,7 @@ def test_return_to_xss_rejected(page, live_server_url, payload, label):
         back = page.locator("a[href]").filter(has_text="Back").first
 
     href = back.get_attribute("href") or ""
-    assert (
-        "javascript" not in href.lower()
-    ), f"TC-S ({label}): Back href must not contain 'javascript'. Got: {href!r}"
+    assert "javascript" not in href.lower(), f"TC-S ({label}): Back href must not contain 'javascript'. Got: {href!r}"
     assert href.startswith("/") and not href.startswith(
         "//"
     ), f"TC-S ({label}): Back href must be a safe relative path. Got: {href!r}"
@@ -110,9 +98,7 @@ def test_return_to_xss_rejected(page, live_server_url, payload, label):
 
 def test_return_to_legitimate_preserved(page, live_server_url):
     """A safe relative return_to must survive the render path unchanged."""
-    page.goto(
-        f"{live_server_url}/learn?language=en&verb_id=en_be&return_to=/verbs?language=en"
-    )
+    page.goto(f"{live_server_url}/learn?language=en&verb_id=en_be&return_to=/verbs?language=en")
     page.wait_for_load_state("networkidle")
 
     back = page.locator("a.back-link, a[href*='verbs']").first
@@ -131,9 +117,7 @@ def test_voice_switch_preserves_return_to(page, live_server_url):
     page.goto(url)
     page.wait_for_load_state("networkidle")
 
-    male_btn = page.locator(
-        "button.voice-btn[value='male'], button[name='voice'][value='male']"
-    ).first
+    male_btn = page.locator("button.voice-btn[value='male'], button[name='voice'][value='male']").first
     if male_btn.is_visible():
         with page.expect_navigation():
             male_btn.click()
@@ -141,9 +125,7 @@ def test_voice_switch_preserves_return_to(page, live_server_url):
 
     back = page.locator("a.back-link, a[href*='verbs']").first
     href = back.get_attribute("href") or ""
-    assert (
-        "/verbs" in href
-    ), f"TC-S5: Back href must still point to /verbs after voice switch. Got: {href!r}"
+    assert "/verbs" in href, f"TC-S5: Back href must still point to /verbs after voice switch. Got: {href!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -164,14 +146,10 @@ def test_practice_session_carries_ui_language(page, live_server_url):
     )
     page.wait_for_load_state("networkidle")
 
-    assert (
-        "ui_language=en" in page.url
-    ), f"TC-P1: ui_language=en missing from URL. Got: {page.url!r}"
+    assert "ui_language=en" in page.url, f"TC-P1: ui_language=en missing from URL. Got: {page.url!r}"
 
     practice_bar = page.locator(".practice-bar")
-    assert (
-        practice_bar.is_visible()
-    ), "TC-P1: Practice bar must be visible when session exists"
+    assert practice_bar.is_visible(), "TC-P1: Practice bar must be visible when session exists"
 
 
 # ---------------------------------------------------------------------------
@@ -193,20 +171,14 @@ def test_practice_next_carries_ui_language(page, live_server_url):
 
     _inject_audio_plays(page, "ru", ids)
 
-    next_btn = (
-        page.locator(".practice-bar .practice-nav-btn").filter(has_text="Next").first
-    )
+    next_btn = page.locator(".practice-bar .practice-nav-btn").filter(has_text="Next").first
     next_btn.wait_for(state="visible")
     with page.expect_navigation():
         next_btn.click()
     page.wait_for_load_state("networkidle")
 
-    assert (
-        "ui_language=en" in page.url
-    ), f"TC-P2: ui_language=en missing after Next. URL: {page.url!r}"
-    assert (
-        ids[1] in page.url
-    ), f"TC-P2: Expected verb {ids[1]} in URL. Got: {page.url!r}"
+    assert "ui_language=en" in page.url, f"TC-P2: ui_language=en missing after Next. URL: {page.url!r}"
+    assert ids[1] in page.url, f"TC-P2: Expected verb {ids[1]} in URL. Got: {page.url!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -228,20 +200,14 @@ def test_practice_prev_carries_ui_language(page, live_server_url):
     )
     page.wait_for_load_state("networkidle")
 
-    prev_btn = (
-        page.locator(".practice-bar .practice-nav-btn").filter(has_text="Prev").first
-    )
+    prev_btn = page.locator(".practice-bar .practice-nav-btn").filter(has_text="Prev").first
     prev_btn.wait_for(state="visible")
     with page.expect_navigation():
         prev_btn.click()
     page.wait_for_load_state("networkidle")
 
-    assert (
-        "ui_language=en" in page.url
-    ), f"TC-P3: ui_language=en missing after Prev. URL: {page.url!r}"
-    assert (
-        ids[0] in page.url
-    ), f"TC-P3: Expected verb {ids[0]} in URL. Got: {page.url!r}"
+    assert "ui_language=en" in page.url, f"TC-P3: ui_language=en missing after Prev. URL: {page.url!r}"
+    assert ids[0] in page.url, f"TC-P3: Expected verb {ids[0]} in URL. Got: {page.url!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -267,12 +233,8 @@ def test_practice_abandon_returns_with_ui_language(page, live_server_url):
         abandon_btn.click()
     page.wait_for_load_state("networkidle")
 
-    assert (
-        "/verbs" in page.url
-    ), f"TC-P4: Expected /verbs after Abandon. Got: {page.url!r}"
-    assert (
-        "ui_language=en" in page.url
-    ), f"TC-P4: ui_language=en missing after Abandon. URL: {page.url!r}"
+    assert "/verbs" in page.url, f"TC-P4: Expected /verbs after Abandon. Got: {page.url!r}"
+    assert "ui_language=en" in page.url, f"TC-P4: ui_language=en missing after Abandon. URL: {page.url!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -304,12 +266,8 @@ def test_practice_finish_returns_with_ui_language(page, live_server_url):
         finish_btn.click()
     page.wait_for_load_state("networkidle")
 
-    assert (
-        "/verbs" in page.url
-    ), f"TC-P5: Expected /verbs after Finish. Got: {page.url!r}"
-    assert (
-        "ui_language=en" in page.url
-    ), f"TC-P5: ui_language=en missing after Finish. URL: {page.url!r}"
+    assert "/verbs" in page.url, f"TC-P5: Expected /verbs after Finish. Got: {page.url!r}"
+    assert "ui_language=en" in page.url, f"TC-P5: ui_language=en missing after Finish. URL: {page.url!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -334,14 +292,10 @@ def test_practice_continue_button_carries_ui_language(page, live_server_url):
 
     continue_link = page.locator("a.btn-pill-navy[href*='/learn']").first
     if not continue_link.is_visible():
-        pytest.skip(
-            "Continue button not rendered -- practice panel may not show for this verb set"
-        )
+        pytest.skip("Continue button not rendered -- practice panel may not show for this verb set")
 
     href = continue_link.get_attribute("href") or ""
-    assert (
-        "ui_language=en" in href
-    ), f"TC-P6: ui_language=en missing from Continue href. Got: {href!r}"
+    assert "ui_language=en" in href, f"TC-P6: ui_language=en missing from Continue href. Got: {href!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -371,14 +325,10 @@ def test_voice_switch_preserves_translated_from_banner(page, live_server_url):
 
     banner = page.locator(".translated-from-banner, #translated-from-banner")
     if not banner.is_visible():
-        pytest.skip(
-            "translated_from banner not present -- search may not have found a match"
-        )
+        pytest.skip("translated_from banner not present -- search may not have found a match")
 
     # Switch voice
-    male_btn = page.locator(
-        "button.voice-btn[value='male'], button[name='voice'][value='male']"
-    ).first
+    male_btn = page.locator("button.voice-btn[value='male'], button[name='voice'][value='male']").first
     if not male_btn.is_visible():
         pytest.skip("Male voice button not visible")
 
@@ -387,6 +337,4 @@ def test_voice_switch_preserves_translated_from_banner(page, live_server_url):
     page.wait_for_load_state("networkidle")
 
     banner_after = page.locator(".translated-from-banner, #translated-from-banner")
-    assert (
-        banner_after.is_visible()
-    ), "TC-V2: translated_from banner disappeared after voice switch"
+    assert banner_after.is_visible(), "TC-V2: translated_from banner disappeared after voice switch"

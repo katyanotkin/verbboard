@@ -7,7 +7,6 @@ from google.cloud.firestore_v1 import FieldFilter
 
 from core.storage.firestore_db import get_db
 
-
 VERBS_COLLECTION = "verbs"
 
 
@@ -36,11 +35,7 @@ def main() -> None:
     args = parse_args()
     db = get_db()
 
-    docs = (
-        db.collection(VERBS_COLLECTION)
-        .where(filter=FieldFilter("language", "==", "ru"))
-        .stream()
-    )
+    docs = db.collection(VERBS_COLLECTION).where(filter=FieldFilter("language", "==", "ru")).stream()
 
     candidates = []
 

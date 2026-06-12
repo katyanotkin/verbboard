@@ -115,9 +115,7 @@ def expand_spanish_entry(
             if not isinstance(key, str) or not key.strip():
                 fail(f"{context}: imperative keys must be non-empty strings")
             if not isinstance(value, str) or not value.strip():
-                fail(
-                    f"{context}: imperative value for '{key}' must be a non-empty string"
-                )
+                fail(f"{context}: imperative value for '{key}' must be a non-empty string")
             imperative[key] = value
 
     runtime_examples: list[dict[str, str]]

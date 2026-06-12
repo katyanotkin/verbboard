@@ -17,9 +17,7 @@ def _firestore_document_to_verb_entry(document: dict[str, Any]) -> VerbEntry:
             # old-format examples store the native sentence directly in "dst"
             dst=example.get("src") or example["dst"],
             translations={
-                k: v
-                for k, v in example.get("translations", {}).items()
-                if isinstance(k, str) and isinstance(v, str)
+                k: v for k, v in example.get("translations", {}).items() if isinstance(k, str) and isinstance(v, str)
             },
         )
         for example in document.get("examples", [])

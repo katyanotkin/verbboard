@@ -20,10 +20,7 @@ from core.render import render_board_html
 
 def _stub_entries(n: int = 15) -> list[VerbEntry]:
     """Return N minimal VerbEntry objects so the verbs page renders."""
-    return [
-        VerbEntry(id=f"en_verb{i}", rank=i, lemma=f"verb{i}", forms={}, examples=[])
-        for i in range(1, n + 1)
-    ]
+    return [VerbEntry(id=f"en_verb{i}", rank=i, lemma=f"verb{i}", forms={}, examples=[]) for i in range(1, n + 1)]
 
 
 def _board(verb: VerbEntry) -> Board:
@@ -54,9 +51,7 @@ def test_verbs_page_has_practice_panel_element(client: TestClient, monkeypatch) 
     assert 'id="practice-panel"' in html
 
 
-def test_verbs_page_ui_includes_practice_strings(
-    client: TestClient, monkeypatch
-) -> None:
+def test_verbs_page_ui_includes_practice_strings(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routes.verbs.PRACTICE_LOOP_ENABLED", True)
     monkeypatch.setattr(
         "app.routes.verbs.load_entries_for_language",

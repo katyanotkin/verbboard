@@ -80,18 +80,14 @@ class _PageViewMiddleware:
         date = datetime.now(UTC).strftime("%Y-%m-%d")
 
         fingerprint = get_fingerprint_sid(request, date)
-        await start_session(
-            fingerprint, date, detect_device_type(user_agent), language, ui_lang
-        )
+        await start_session(fingerprint, date, detect_device_type(user_agent), language, ui_lang)
         await record(request.url.path, language, ui_lang, user_agent)
 
         await self._app(scope, receive, send)
 
 
 app = FastAPI(lifespan=lifespan, title="VerbBoard")
-app.add_middleware(
-    _PageViewMiddleware
-)  # pure ASGI — preserves all route-handler headers
+app.add_middleware(_PageViewMiddleware)  # pure ASGI — preserves all route-handler headers
 app.mount("/static", _CachedStaticFiles(directory="app/static"), name="static")
 
 app.include_router(about_router)

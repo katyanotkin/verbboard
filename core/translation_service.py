@@ -152,11 +152,7 @@ def translate_examples(
     if target_langs is None:
         target_langs = [lang for lang in SUPPORTED_LANGUAGES if lang != verb_lang]
 
-    sentences = [
-        ex["dst"]
-        for ex in examples
-        if isinstance(ex, dict) and isinstance(ex.get("dst"), str)
-    ]
+    sentences = [ex["dst"] for ex in examples if isinstance(ex, dict) and isinstance(ex.get("dst"), str)]
     if not sentences or not target_langs:
         return examples
 
@@ -175,13 +171,7 @@ def translate_examples(
             results = _call_gemini(verb_lang, lemma, gemini_targets, sentences, project)
             for i, row in enumerate(results):
                 if i < len(translations_by_index):
-                    translations_by_index[i].update(
-                        {
-                            k: v
-                            for k, v in row.items()
-                            if isinstance(v, str) and v.strip()
-                        }
-                    )
+                    translations_by_index[i].update({k: v for k, v in row.items() if isinstance(v, str) and v.strip()})
         except Exception:
             logger.exception("Gemini translation failed for %s/%s", verb_lang, lemma)
 
@@ -190,13 +180,7 @@ def translate_examples(
             results = _call_claude(verb_lang, lemma, claude_targets, sentences, api_key)
             for i, row in enumerate(results):
                 if i < len(translations_by_index):
-                    translations_by_index[i].update(
-                        {
-                            k: v
-                            for k, v in row.items()
-                            if isinstance(v, str) and v.strip()
-                        }
-                    )
+                    translations_by_index[i].update({k: v for k, v in row.items() if isinstance(v, str) and v.strip()})
         except Exception:
             logger.exception("Claude translation failed for %s/%s", verb_lang, lemma)
 
@@ -205,11 +189,7 @@ def translate_examples(
         if not isinstance(ex, dict):
             updated.append(ex)
             continue
-        existing = (
-            ex.get("translations", {})
-            if isinstance(ex.get("translations"), dict)
-            else {}
-        )
+        existing = ex.get("translations", {}) if isinstance(ex.get("translations"), dict) else {}
         merged = {**existing, **new_t}
         updated.append({**ex, "translations": merged} if merged else ex)
 

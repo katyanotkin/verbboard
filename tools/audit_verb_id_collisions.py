@@ -73,11 +73,7 @@ def main() -> None:
         print(f"[COLLISION] {generated_id}")
 
         for row in rows:
-            print(
-                f"  lemma={row['lemma']} "
-                f"verb_id={row['verb_id']} "
-                f"doc_id={row['doc_id']}"
-            )
+            print(f"  lemma={row['lemma']} verb_id={row['verb_id']} doc_id={row['doc_id']}")
 
     if generated_collisions == 0:
         print("No generated-id collisions found")
@@ -99,11 +95,7 @@ def main() -> None:
         print(f"[CANONICAL COLLISION] {key}")
 
         for row in rows:
-            print(
-                f"  lemma={row['lemma']} "
-                f"verb_id={row['verb_id']} "
-                f"doc_id={row['doc_id']}"
-            )
+            print(f"  lemma={row['lemma']} verb_id={row['verb_id']} doc_id={row['doc_id']}")
 
     if canonical_collisions == 0:
         print("No canonical lemma collisions found")

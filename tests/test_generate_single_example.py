@@ -166,11 +166,7 @@ def test_single_example_avoid_note_excludes_replaced_index() -> None:
     assert "A native" in user_content
     assert "A english" not in user_content
     assert "B english" not in user_content
-    avoid_section = (
-        user_content.split("Avoid repeating", 1)[-1]
-        if "Avoid repeating" in user_content
-        else ""
-    )
+    avoid_section = user_content.split("Avoid repeating", 1)[-1] if "Avoid repeating" in user_content else ""
     assert "B native" not in avoid_section
 
 
@@ -181,9 +177,7 @@ def test_single_example_no_avoid_note_when_only_one_example() -> None:
     with _patch_client(mock_client):
         from app.routes.admin_candidates import _call_claude_single_example
 
-        _run_async(
-            _call_claude_single_example("en", "go", [{"src": "A", "dst": "B"}], 0)
-        )
+        _run_async(_call_claude_single_example("en", "go", [{"src": "A", "dst": "B"}], 0))
 
     _, kwargs = mock_client.messages.create.call_args
     user_content = kwargs["messages"][0]["content"]
@@ -197,9 +191,7 @@ def test_single_example_avoid_note_uses_dst_for_old_format_examples() -> None:
         {"dst": "Я иду домой."},
         {"dst": "replace me"},
     ]
-    mock_client = _make_mock_client(
-        '{"src": "Мы идём вместе.", "dst": "We go together."}'
-    )
+    mock_client = _make_mock_client('{"src": "Мы идём вместе.", "dst": "We go together."}')
 
     with _patch_client(mock_client):
         from app.routes.admin_candidates import _call_claude_single_example
@@ -211,11 +203,7 @@ def test_single_example_avoid_note_uses_dst_for_old_format_examples() -> None:
     assert "Я иду домой." in user_content
     assert "replace me" in user_content
     assert "SAME grammatical form" in user_content
-    avoid_section = (
-        user_content.split("Avoid repeating", 1)[-1]
-        if "Avoid repeating" in user_content
-        else ""
-    )
+    avoid_section = user_content.split("Avoid repeating", 1)[-1] if "Avoid repeating" in user_content else ""
     assert "replace me" not in avoid_section
 
 
@@ -226,9 +214,7 @@ def test_single_example_avoid_note_uses_src_for_regen_format_examples() -> None:
         {"src": "Я иду домой.", "dst": "I go home."},
         {"src": "replace me native", "dst": "replace me english"},
     ]
-    mock_client = _make_mock_client(
-        '{"src": "Мы идём вместе.", "dst": "We go together."}'
-    )
+    mock_client = _make_mock_client('{"src": "Мы идём вместе.", "dst": "We go together."}')
 
     with _patch_client(mock_client):
         from app.routes.admin_candidates import _call_claude_single_example
@@ -249,9 +235,7 @@ def test_single_example_avoid_note_mixed_old_and_regen_formats() -> None:
         {"src": "Он идёт на работу.", "dst": "He goes to work."},
         {"src": "replace me", "dst": "replace me en"},
     ]
-    mock_client = _make_mock_client(
-        '{"src": "Мы идём вместе.", "dst": "We go together."}'
-    )
+    mock_client = _make_mock_client('{"src": "Мы идём вместе.", "dst": "We go together."}')
 
     with _patch_client(mock_client):
         from app.routes.admin_candidates import _call_claude_single_example

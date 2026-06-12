@@ -94,13 +94,7 @@ def contains_russian_form_or_compound_future(
     normalized_lemma = normalize_text(lemma)
     future_auxiliaries = ["буду", "будешь", "будет", "будем", "будете", "будут"]
     for auxiliary in future_auxiliaries:
-        pattern = (
-            r"(?<!\w)"
-            + re.escape(auxiliary)
-            + r"\s+"
-            + re.escape(normalized_lemma)
-            + r"(?!\w)"
-        )
+        pattern = r"(?<!\w)" + re.escape(auxiliary) + r"\s+" + re.escape(normalized_lemma) + r"(?!\w)"
         if re.search(pattern, normalized_text, flags=re.IGNORECASE):
             return True
 
@@ -293,9 +287,7 @@ def audit_english_strategy(
 
     elif strategy == "say_content":
         for forbidden in ENGLISH_FORBIDDEN_OBJECTS_BY_STRATEGY[strategy]:
-            if re.search(
-                rf"\bsay(?:s|ing|)\s+{re.escape(forbidden)}\b", text_lower
-            ) or re.search(
+            if re.search(rf"\bsay(?:s|ing|)\s+{re.escape(forbidden)}\b", text_lower) or re.search(
                 rf"\bsaid\s+{re.escape(forbidden)}\b",
                 text_lower,
             ):
@@ -510,9 +502,7 @@ def print_report(issues: list[Issue]) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Audit example quality in runtime lexicons"
-    )
+    parser = argparse.ArgumentParser(description="Audit example quality in runtime lexicons")
     parser.add_argument(
         "--language",
         required=True,
@@ -530,9 +520,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    languages = (
-        supported_languages_list() if args.language == "all" else [args.language]
-    )
+    languages = supported_languages_list() if args.language == "all" else [args.language]
 
     all_issues: list[Issue] = []
     for language in languages:

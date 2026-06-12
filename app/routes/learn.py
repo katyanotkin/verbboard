@@ -50,9 +50,7 @@ async def learn(
     logger.debug("lookup source %s -> verb %s", source, verb_id)
     if source == "candidate":
         if not verb_id:
-            return HTMLResponse(
-                "verb_id required for candidate preview", status_code=400
-            )
+            return HTMLResponse("verb_id required for candidate preview", status_code=400)
         verb = load_entry_by_id(
             language=language,
             verb_id=verb_id,

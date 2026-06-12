@@ -28,9 +28,7 @@ def _other_langs(verb_lang: str) -> list[str]:
 
 
 def _render(verb_lang: str, ui_lang: str, examples: list[Example]) -> str:
-    verb = VerbEntry(
-        id=f"{verb_lang}_test", rank=1, lemma="test", forms={}, examples=examples
-    )
+    verb = VerbEntry(id=f"{verb_lang}_test", rank=1, lemma="test", forms={}, examples=examples)
     board = Board(
         language=verb_lang,
         verb=verb,
@@ -88,9 +86,7 @@ def test_firestore_document_ignores_non_string_translation_values() -> None:
         "rank": 1,
         "lemma": "ir",
         "forms": {},
-        "examples": [
-            {"dst": "Voy.", "translations": {"en": "I go.", "ru": 42, "he": None}}
-        ],
+        "examples": [{"dst": "Voy.", "translations": {"en": "I go.", "ru": 42, "he": None}}],
     }
     entry = _firestore_document_to_verb_entry(doc)
     assert entry.examples[0].translations == {"en": "I go."}
@@ -143,9 +139,7 @@ def test_translation_not_leaked_when_ui_lang_matches_verb_lang() -> None:
 
 
 def test_hebrew_ui_translation_span_has_rtl_dir() -> None:
-    html = _render(
-        "en", "he", [Example(dst="I go home.", translations={"he": "אני הולך הביתה."})]
-    )
+    html = _render("en", "he", [Example(dst="I go home.", translations={"he": "אני הולך הביתה."})])
     assert "dir='rtl'" in html
     assert "אני הולך הביתה." in html
 
@@ -355,12 +349,8 @@ def test_generated_verb_examples_have_translations_for_all_other_langs(
     for i, ex in enumerate(examples):
         translations = ex.get("translations", {})
         for target in _other_langs(verb_lang):
-            assert (
-                target in translations
-            ), f"example {i} lang={verb_lang}: missing translation for '{target}'"
-            assert translations[
-                target
-            ].strip(), f"example {i} lang={verb_lang}: empty translation for '{target}'"
+            assert target in translations, f"example {i} lang={verb_lang}: missing translation for '{target}'"
+            assert translations[target].strip(), f"example {i} lang={verb_lang}: empty translation for '{target}'"
 
 
 # ---------------------------------------------------------------------------
@@ -412,9 +402,7 @@ _RU_VERB_WITH_TRANSLATIONS = VerbEntry(
         ("es", "El cuadro está colgado en la pared."),
     ],
 )
-def test_learn_url_toggle_appears_for_translated_verb(
-    client, monkeypatch, ui_lang: str, expected_phrase: str
-) -> None:
+def test_learn_url_toggle_appears_for_translated_verb(client, monkeypatch, ui_lang: str, expected_phrase: str) -> None:
     from tests.conftest import noop_ensure_audio
 
     monkeypatch.setattr(
@@ -426,14 +414,10 @@ def test_learn_url_toggle_appears_for_translated_verb(
     resp = client.get(f"/learn?language=ru&verb_id=ru_viset&ui_language={ui_lang}")
     assert resp.status_code == 200
     assert "toggle-translations" in resp.text, "toggle button missing"
-    assert (
-        expected_phrase in resp.text
-    ), f"translation phrase not found for ui_lang={ui_lang}"
+    assert expected_phrase in resp.text, f"translation phrase not found for ui_lang={ui_lang}"
 
 
-def test_learn_url_no_toggle_when_ui_lang_matches_verb_lang(
-    client, monkeypatch
-) -> None:
+def test_learn_url_no_toggle_when_ui_lang_matches_verb_lang(client, monkeypatch) -> None:
     from tests.conftest import noop_ensure_audio
 
     monkeypatch.setattr(

@@ -27,9 +27,7 @@ def test_feedback_get_error_flag_shows_error(client: TestClient) -> None:
     assert "comment" in response.text.lower() or "Yes/No" in response.text
 
 
-def test_feedback_submit_comment_calls_save_and_redirects(
-    client: TestClient, monkeypatch
-) -> None:
+def test_feedback_submit_comment_calls_save_and_redirects(client: TestClient, monkeypatch) -> None:
     saved: list[dict] = []
 
     def fake_save(**kwargs):
@@ -77,9 +75,7 @@ def test_feedback_submit_empty_redirects_with_error(client: TestClient) -> None:
     assert "error=empty" in response.headers["location"]
 
 
-def test_feedback_submit_invalid_poll_answer_treated_as_empty(
-    client: TestClient, monkeypatch
-) -> None:
+def test_feedback_submit_invalid_poll_answer_treated_as_empty(client: TestClient, monkeypatch) -> None:
     """An unrecognized poll_answer value is discarded; without a comment it errors."""
     response = client.post(
         "/feedback",
@@ -110,9 +106,7 @@ def test_feedback_submit_detects_mobile_device(client: TestClient, monkeypatch) 
     assert saved[0]["device_type"] == "mobile"
 
 
-def test_feedback_submit_redirects_to_return_to(
-    client: TestClient, monkeypatch
-) -> None:
+def test_feedback_submit_redirects_to_return_to(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr(
         "app.routes.feedback.save_feedback",
         lambda **kw: "doc-000",

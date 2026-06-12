@@ -5,10 +5,9 @@ import concurrent.futures
 
 from fastapi.testclient import TestClient
 
-from core.audio_service import build_hashed_audio_key
 from core.audio_backend.base import AudioBackend
+from core.audio_service import build_hashed_audio_key
 from core.models import VerbEntry
-
 
 # ── shared fixtures ──────────────────────────────────────────────────────────
 
@@ -81,9 +80,7 @@ def test_audio_cache_hit_skips_generation(client: TestClient, monkeypatch) -> No
     assert ensure_called == []
 
 
-def test_audio_miss_generates_and_returns_200(
-    client: TestClient, monkeypatch, mock_verb: VerbEntry
-) -> None:
+def test_audio_miss_generates_and_returns_200(client: TestClient, monkeypatch, mock_verb: VerbEntry) -> None:
     called_with: list[dict] = []
 
     async def _capture_ensure(**kwargs):
@@ -103,9 +100,7 @@ def test_audio_miss_generates_and_returns_200(
     assert called_with[0]["verb_id"] == "en_go"
 
 
-def test_audio_miss_example_generates_on_demand(
-    client: TestClient, monkeypatch, mock_verb: VerbEntry
-) -> None:
+def test_audio_miss_example_generates_on_demand(client: TestClient, monkeypatch, mock_verb: VerbEntry) -> None:
     called_with: list[dict] = []
 
     async def _capture_ensure(**kwargs):
@@ -131,9 +126,7 @@ def test_audio_miss_verb_not_found_returns_404(client: TestClient, monkeypatch) 
     assert resp.status_code == 404
 
 
-def test_audio_miss_unknown_form_key_returns_404(
-    client: TestClient, monkeypatch, mock_verb: VerbEntry
-) -> None:
+def test_audio_miss_unknown_form_key_returns_404(client: TestClient, monkeypatch, mock_verb: VerbEntry) -> None:
     async def _noop(**kwargs):
         pass
 

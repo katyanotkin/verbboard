@@ -14,9 +14,7 @@ from core.settings import Settings
 def _build_request(headers: dict[str, str]) -> Request:
     scope = {
         "type": "http",
-        "headers": [
-            (key.lower().encode(), value.encode()) for key, value in headers.items()
-        ],
+        "headers": [(key.lower().encode(), value.encode()) for key, value in headers.items()],
     }
     return Request(scope)
 
@@ -92,9 +90,7 @@ def test_local_dev_token_rejected_on_stage() -> None:
     """local-dev must not be accepted when environment is stage."""
     request = _build_request({"Authorization": "Bearer local-dev"})
 
-    with patch(
-        "core.auth.firebase_auth.load_settings", return_value=_mock_settings("stage")
-    ):
+    with patch("core.auth.firebase_auth.load_settings", return_value=_mock_settings("stage")):
         user = get_optional_auth_user(request)
 
     assert user is None
@@ -121,9 +117,7 @@ def test_local_dev_token_rejected_when_flag_off() -> None:
 def test_user_stage_token_accepted_on_stage() -> None:
     request = _build_request({"Authorization": "Bearer user-stage"})
 
-    with patch(
-        "core.auth.firebase_auth.load_settings", return_value=_mock_settings("stage")
-    ):
+    with patch("core.auth.firebase_auth.load_settings", return_value=_mock_settings("stage")):
         user = get_optional_auth_user(request)
 
     assert user is not None
@@ -135,9 +129,7 @@ def test_user_stage_token_rejected_on_local() -> None:
     """user-stage must not work in local environment."""
     request = _build_request({"Authorization": "Bearer user-stage"})
 
-    with patch(
-        "core.auth.firebase_auth.load_settings", return_value=_mock_settings("local")
-    ):
+    with patch("core.auth.firebase_auth.load_settings", return_value=_mock_settings("local")):
         user = get_optional_auth_user(request)
 
     assert user is None
@@ -147,9 +139,7 @@ def test_user_stage_token_rejected_on_prod() -> None:
     """user-stage must not work in prod environment."""
     request = _build_request({"Authorization": "Bearer user-stage"})
 
-    with patch(
-        "core.auth.firebase_auth.load_settings", return_value=_mock_settings("prod")
-    ):
+    with patch("core.auth.firebase_auth.load_settings", return_value=_mock_settings("prod")):
         user = get_optional_auth_user(request)
 
     assert user is None
@@ -175,9 +165,7 @@ def test_user_stage_token_rejected_when_flag_off() -> None:
 def test_user_prod_token_accepted_on_prod() -> None:
     request = _build_request({"Authorization": "Bearer user-prod"})
 
-    with patch(
-        "core.auth.firebase_auth.load_settings", return_value=_mock_settings("prod")
-    ):
+    with patch("core.auth.firebase_auth.load_settings", return_value=_mock_settings("prod")):
         user = get_optional_auth_user(request)
 
     assert user is not None
@@ -188,9 +176,7 @@ def test_user_prod_token_accepted_on_prod() -> None:
 def test_user_prod_token_rejected_on_local() -> None:
     request = _build_request({"Authorization": "Bearer user-prod"})
 
-    with patch(
-        "core.auth.firebase_auth.load_settings", return_value=_mock_settings("local")
-    ):
+    with patch("core.auth.firebase_auth.load_settings", return_value=_mock_settings("local")):
         user = get_optional_auth_user(request)
 
     assert user is None
@@ -200,9 +186,7 @@ def test_user_prod_token_rejected_on_stage() -> None:
     """user-prod must not bleed into stage."""
     request = _build_request({"Authorization": "Bearer user-prod"})
 
-    with patch(
-        "core.auth.firebase_auth.load_settings", return_value=_mock_settings("stage")
-    ):
+    with patch("core.auth.firebase_auth.load_settings", return_value=_mock_settings("stage")):
         user = get_optional_auth_user(request)
 
     assert user is None

@@ -39,15 +39,9 @@ def get_prefs(request: Request):
 @router.post("")
 def set_prefs(request: Request, payload: PreferencesPayload):
     user = _require_user(request)
-    if (
-        payload.ui_language is not None
-        and payload.ui_language not in _VALID_UI_LANGUAGES
-    ):
+    if payload.ui_language is not None and payload.ui_language not in _VALID_UI_LANGUAGES:
         raise HTTPException(status_code=422, detail="Invalid ui_language")
-    if (
-        payload.learning_language is not None
-        and payload.learning_language not in all_plugins()
-    ):
+    if payload.learning_language is not None and payload.learning_language not in all_plugins():
         raise HTTPException(status_code=422, detail="Invalid learning_language")
     if payload.practice_session_size is not None and not any(
         payload.practice_session_size == s for s in PracticeSessionSize

@@ -127,7 +127,5 @@ def test_is_mobile_matches_mobile_ua(is_mobile_re: _re.Pattern, ua: str) -> None
 
 
 @pytest.mark.parametrize("ua", _DESKTOP_UAS)
-def test_is_mobile_does_not_match_desktop_ua(
-    is_mobile_re: _re.Pattern, ua: str
-) -> None:
+def test_is_mobile_does_not_match_desktop_ua(is_mobile_re: _re.Pattern, ua: str) -> None:
     assert not is_mobile_re.search(ua), f"Expected desktop UA NOT to match: {ua}"

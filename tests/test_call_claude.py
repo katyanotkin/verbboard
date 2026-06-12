@@ -59,9 +59,7 @@ def test_call_claude_returns_coroutine_without_await() -> None:
     ):
         result = _call_claude("en", "go")
 
-    assert inspect.iscoroutine(result), "expected a coroutine object, got " + repr(
-        result
-    )
+    assert inspect.iscoroutine(result), "expected a coroutine object, got " + repr(result)
     result.close()
 
 
@@ -135,9 +133,7 @@ def test_call_claude_uses_4096_max_tokens_for_hebrew() -> None:
         _run_async(_call_claude("he", "ללכת"))
 
     _, kwargs = mock_client.messages.create.call_args
-    assert (
-        kwargs.get("max_tokens") == 4096
-    ), f"expected max_tokens=4096 for 'he', got {kwargs.get('max_tokens')}"
+    assert kwargs.get("max_tokens") == 4096, f"expected max_tokens=4096 for 'he', got {kwargs.get('max_tokens')}"
 
 
 def test_call_claude_uses_2048_max_tokens_for_non_hebrew() -> None:
@@ -152,9 +148,7 @@ def test_call_claude_uses_2048_max_tokens_for_non_hebrew() -> None:
         _run_async(_call_claude("en", "go"))
 
     _, kwargs = mock_client.messages.create.call_args
-    assert (
-        kwargs.get("max_tokens") == 2048
-    ), f"expected max_tokens=2048 for 'en', got {kwargs.get('max_tokens')}"
+    assert kwargs.get("max_tokens") == 2048, f"expected max_tokens=2048 for 'en', got {kwargs.get('max_tokens')}"
 
 
 # ── per-language model selection ──────────────────────────────────────────────
@@ -172,9 +166,7 @@ def test_call_claude_uses_haiku_for_english() -> None:
         _run_async(_call_claude("en", "go"))
 
     _, kwargs = mock_client.messages.create.call_args
-    assert (
-        kwargs.get("model") == "claude-haiku-4-5-20251001"
-    ), f"expected Haiku for 'en', got {kwargs.get('model')}"
+    assert kwargs.get("model") == "claude-haiku-4-5-20251001", f"expected Haiku for 'en', got {kwargs.get('model')}"
 
 
 def test_call_claude_uses_sonnet_for_non_english() -> None:
@@ -191,9 +183,7 @@ def test_call_claude_uses_sonnet_for_non_english() -> None:
             _run_async(_call_claude(lang, query))
 
         _, kwargs = mock_client.messages.create.call_args
-        assert (
-            kwargs.get("model") == "claude-sonnet-4-6"
-        ), f"expected Sonnet for '{lang}', got {kwargs.get('model')}"
+        assert kwargs.get("model") == "claude-sonnet-4-6", f"expected Sonnet for '{lang}', got {kwargs.get('model')}"
 
 
 # ── message structure ─────────────────────────────────────────────────────────
@@ -239,8 +229,6 @@ def test_get_anthropic_client_returns_same_instance() -> None:
                 second = get_anthropic_client()
 
         assert first is second, "lru_cache must return the same instance on every call"
-        assert (
-            mock_cls.call_count == 1
-        ), f"AsyncAnthropic constructor called {mock_cls.call_count} times, expected 1"
+        assert mock_cls.call_count == 1, f"AsyncAnthropic constructor called {mock_cls.call_count} times, expected 1"
     finally:
         get_anthropic_client.cache_clear()

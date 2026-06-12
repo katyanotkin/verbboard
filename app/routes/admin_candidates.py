@@ -56,9 +56,7 @@ async def _warm_verb_audio(audio_backend, language: str, verb_data: dict) -> Non
         Example(
             dst=ex["dst"],
             translations={
-                k: v
-                for k, v in ex.get("translations", {}).items()
-                if isinstance(k, str) and isinstance(v, str)
+                k: v for k, v in ex.get("translations", {}).items() if isinstance(k, str) and isinstance(v, str)
             },
         )
         for ex in verb_data.get("examples", [])
@@ -120,9 +118,7 @@ async def _warm_verb_audio(audio_backend, language: str, verb_data: dict) -> Non
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for r in results:
             if isinstance(r, Exception):
-                logger.warning(
-                    "Audio pre-generation error %s/%s: %s", language, verb.id, r
-                )
+                logger.warning("Audio pre-generation error %s/%s: %s", language, verb.id, r)
 
 
 router = APIRouter()
@@ -144,9 +140,7 @@ def _get_max_rank(language: str) -> int:
     return max_rank
 
 
-async def _call_claude_single_example(
-    language: str, lemma: str, existing_examples: list, index: int
-) -> dict[str, Any]:
+async def _call_claude_single_example(language: str, lemma: str, existing_examples: list, index: int) -> dict[str, Any]:
     client = get_anthropic_client()
     existing_texts = [
         # regen-format examples: src = native sentence, dst = English translation
@@ -156,19 +150,12 @@ async def _call_claude_single_example(
         if i != index and isinstance(ex, dict) and (ex.get("src") or ex.get("dst"))
     ]
     avoid_note = (
-        "Avoid repeating these existing examples:\n"
-        + "\n".join(f"- {t}" for t in existing_texts)
+        "Avoid repeating these existing examples:\n" + "\n".join(f"- {t}" for t in existing_texts)
         if existing_texts
         else ""
     )
-    original_ex = (
-        existing_examples[index] if 0 <= index < len(existing_examples) else {}
-    )
-    original_native = (
-        original_ex.get("src") or original_ex.get("dst", "")
-        if isinstance(original_ex, dict)
-        else ""
-    )
+    original_ex = existing_examples[index] if 0 <= index < len(existing_examples) else {}
+    original_native = original_ex.get("src") or original_ex.get("dst", "") if isinstance(original_ex, dict) else ""
     form_note = (
         f"Replace this example: {original_native!r}\n"
         "Use the SAME grammatical form (same person, number, tense, aspect) but completely different content.\n"
@@ -195,13 +182,9 @@ async def _call_claude_single_example(
     try:
         result = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise HTTPException(
-            status_code=502, detail="Example generation returned invalid JSON"
-        ) from exc
+        raise HTTPException(status_code=502, detail="Example generation returned invalid JSON") from exc
     if not isinstance(result.get("src"), str) or not isinstance(result.get("dst"), str):
-        raise HTTPException(
-            status_code=502, detail="Example generation returned unexpected format"
-        )
+        raise HTTPException(status_code=502, detail="Example generation returned unexpected format")
     return {"src": result["src"], "dst": result["dst"]}
 
 
@@ -215,10 +198,7 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
         messages=[
             {
                 "role": "user",
-                "content": (
-                    f"language: {language}\n"
-                    f"raw query (may be any inflected form): {query}"
-                ),
+                "content": (f"language: {language}\nraw query (may be any inflected form): {query}"),
             },
         ],
     )
@@ -244,9 +224,7 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
 
 
 @router.get("/api/candidates")
-async def list_candidates(
-    request: Request, language: str | None = None
-) -> JSONResponse:
+async def list_candidates(request: Request, language: str | None = None) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
     col = db.collection(CANDIDATES_COLLECTION)
@@ -340,9 +318,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         "forms": generated.get("forms", {}),
         "examples": generated.get("examples", []),
         # search_extract built locally — no LLM tokens spent
-        "search_extract": build_search_extract_from_entry(
-            language=language, entry=generated
-        ),
+        "search_extract": build_search_extract_from_entry(language=language, entry=generated),
         "updated_at": now,
     }
 
@@ -420,9 +396,7 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
 
     existing_verb = db.collection(VERBS_COLLECTION).document(verb_id).get()
     if existing_verb.exists:
-        candidate_ref.update(
-            {"status": "duplicate", "updated_at": datetime.now(UTC).isoformat()}
-        )
+        candidate_ref.update({"status": "duplicate", "updated_at": datetime.now(UTC).isoformat()})
         raise HTTPException(
             status_code=409,
             detail=f"'{verb_id}' already exists in the verbs collection",
@@ -436,24 +410,18 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
     db.collection(VERBS_COLLECTION).document(verb_id).set(verb_doc)
     candidate_ref.update({"status": "promoted", "updated_at": now})
 
-    return JSONResponse(
-        {"verb_id": verb_id, "promoted": True, "rank": data.get("rank")}
-    )
+    return JSONResponse({"verb_id": verb_id, "promoted": True, "rank": data.get("rank")})
 
 
 @router.get("/api/verbs")
-async def search_live_verbs(
-    request: Request, query: str = "", language: str = ""
-) -> JSONResponse:
+async def search_live_verbs(request: Request, query: str = "", language: str = "") -> JSONResponse:
     require_admin_api(request)
     normalized = normalize_text(query)
     if not normalized:
         raise HTTPException(status_code=400, detail="query parameter is required")
 
     db = get_db()
-    q = db.collection(VERBS_COLLECTION).where(
-        "search_extract", "array_contains", normalized
-    )
+    q = db.collection(VERBS_COLLECTION).where("search_extract", "array_contains", normalized)
     if language:
         q = q.where("language", "==", language)
 
@@ -468,9 +436,7 @@ async def get_live_verb(request: Request, verb_id: str) -> JSONResponse:
     db = get_db()
     doc = db.collection(VERBS_COLLECTION).document(verb_id).get()
     if not doc.exists:
-        raise HTTPException(
-            status_code=404, detail="Verb not found in live verbs collection"
-        )
+        raise HTTPException(status_code=404, detail="Verb not found in live verbs collection")
     return JSONResponse(json_safe(doc.to_dict()))
 
 
@@ -481,17 +447,13 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
     doc_ref = db.collection(VERBS_COLLECTION).document(verb_id)
     doc = doc_ref.get()
     if not doc.exists:
-        raise HTTPException(
-            status_code=404, detail="Verb not found in live verbs collection"
-        )
+        raise HTTPException(status_code=404, detail="Verb not found in live verbs collection")
 
     existing = doc.to_dict()
     language = existing.get("language", "")
     lemma = existing.get("lemma", "")
     if not language or not lemma:
-        raise HTTPException(
-            status_code=422, detail="Verb document is missing language or lemma"
-        )
+        raise HTTPException(status_code=422, detail="Verb document is missing language or lemma")
 
     generated = await _call_claude(language, lemma)
 
@@ -504,9 +466,7 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
         "morph": generated.get("morph") or None,
         "forms": generated.get("forms", {}),
         "examples": generated.get("examples", []),
-        "search_extract": build_search_extract_from_entry(
-            language=language, entry=generated
-        ),
+        "search_extract": build_search_extract_from_entry(language=language, entry=generated),
         "display_lemma": existing.get("display_lemma"),
         "display_forms": existing.get("display_forms"),
         "created_at": existing.get("created_at"),
@@ -543,15 +503,11 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
         )
     )
 
-    return JSONResponse(
-        {"verb_id": verb_id, "regenerated": True, "lemma": lemma, "updated_at": now}
-    )
+    return JSONResponse({"verb_id": verb_id, "regenerated": True, "lemma": lemma, "updated_at": now})
 
 
 @router.post("/api/candidates/{verb_id}/examples/{index}/regen")
-async def regen_candidate_example(
-    request: Request, verb_id: str, index: int
-) -> JSONResponse:
+async def regen_candidate_example(request: Request, verb_id: str, index: int) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
     ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)

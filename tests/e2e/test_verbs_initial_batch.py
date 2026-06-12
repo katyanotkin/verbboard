@@ -84,14 +84,10 @@ def _check_desktop_batch_invariant(page, live_server_url, filter_name, sort_name
 @pytest.mark.parametrize("viewport_name", ["desktop", "mobile"])
 @pytest.mark.parametrize("sort_name", ["alpha", "newest"])
 @pytest.mark.parametrize("filter_name", ["all", "new"])
-def test_initial_render_respects_display_batch(
-    browser, live_server_url, filter_name, sort_name, viewport_name
-):
+def test_initial_render_respects_display_batch(browser, live_server_url, filter_name, sort_name, viewport_name):
     """Both desktop and mobile must show at most VB_DISPLAY_BATCH items on fresh load."""
     with _page_for_viewport(browser, viewport_name) as page:
-        ran = _check_desktop_batch_invariant(
-            page, live_server_url, filter_name, sort_name
-        )
+        ran = _check_desktop_batch_invariant(page, live_server_url, filter_name, sort_name)
         if not ran:
             pytest.skip("Not enough verbs to exercise show-more")
 
@@ -121,10 +117,9 @@ def test_desktop_batch_invariant_holds_after_auth_hydration(browser, live_server
         page.wait_for_timeout(200)
 
         item_count = page.locator("#vb-list .vb-item").count()
-        assert item_count <= batch, (
-            f"desktop: after vb:progress-hydrated re-render, "
-            f"{item_count} items visible -- expected at most {batch}."
-        )
+        assert (
+            item_count <= batch
+        ), f"desktop: after vb:progress-hydrated re-render, {item_count} items visible -- expected at most {batch}."
 
 
 # ── filter/sort change resets to one batch (both viewports) ──────────────────

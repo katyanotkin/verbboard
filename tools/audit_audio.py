@@ -88,10 +88,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--missing-csv",
         default=None,
-        help=(
-            "Missing audio CSV output path "
-            "(default: audio_missing_{env}.csv derived from bucket name)"
-        ),
+        help=("Missing audio CSV output path (default: audio_missing_{env}.csv derived from bucket name)"),
     )
     parser.add_argument(
         "--suspects",
@@ -107,10 +104,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--csv",
         default=None,
-        help=(
-            "Suspects CSV output path "
-            "(default: audio_suspects_{env}.csv derived from bucket name)"
-        ),
+        help=("Suspects CSV output path (default: audio_suspects_{env}.csv derived from bucket name)"),
     )
     return parser.parse_args()
 
@@ -178,11 +172,7 @@ def _build_lookups(
         print(f"[{language}] {len(entries)} verbs")
 
         all_voices = list(VOICES.get(language, {}).keys())
-        active_voices = (
-            all_voices
-            if voices_filter == "all"
-            else [v for v in all_voices if v == voices_filter]
-        )
+        active_voices = all_voices if voices_filter == "all" else [v for v in all_voices if v == voices_filter]
 
         for verb in entries:
             # Text is voice-independent; build lookup from the first available voice.
@@ -192,9 +182,7 @@ def _build_lookups(
                     text_lookup[(language, verb.id, form_key)] = text
 
             for voice_key in active_voices:
-                for base_key, text in _iter_board_items(
-                    verb, language, voice_key, skip_no_audio=True
-                ):
+                for base_key, text in _iter_board_items(verb, language, voice_key, skip_no_audio=True):
                     form_key = build_hashed_audio_key(base_key, text)
                     gcs_key = build_audio_key(language, verb.id, voice_key, form_key)
                     expected_keys[(language, verb.id, voice_key, form_key)] = gcs_key
@@ -237,9 +225,7 @@ def main() -> None:
     suspects_csv = args.csv or f"audio_suspects_{env}.csv"
     missing_csv = args.missing_csv or f"audio_missing_{env}.csv"
 
-    languages = (
-        supported_languages_list() if args.language == "all" else [args.language]
-    )
+    languages = supported_languages_list() if args.language == "all" else [args.language]
 
     text_lookup, expected_keys = _build_lookups(languages, args.voice)
 
@@ -262,9 +248,7 @@ def main() -> None:
             if args.voice != "all" and parsed["voice"] != args.voice:
                 continue
 
-            text = text_lookup.get(
-                (parsed["language"], parsed["verb_id"], parsed["form_key"]), ""
-            )
+            text = text_lookup.get((parsed["language"], parsed["verb_id"], parsed["form_key"]), "")
             rows_by_lang_voice[(parsed["language"], parsed["voice"])].append(
                 {
                     "language": parsed["language"],
@@ -274,11 +258,7 @@ def main() -> None:
                     "text": text,
                     "text_len": len(text),
                     "size_bytes": blob.size or 0,
-                    "updated": (
-                        blob.updated.isoformat()
-                        if isinstance(blob.updated, datetime)
-                        else ""
-                    ),
+                    "updated": (blob.updated.isoformat() if isinstance(blob.updated, datetime) else ""),
                     "blob_name": blob.name,
                 }
             )
@@ -289,16 +269,10 @@ def main() -> None:
         print()
 
         for (language, voice), rows in sorted(rows_by_lang_voice.items()):
-            fit_pairs = [
-                (row["text_len"], row["size_bytes"])
-                for row in rows
-                if row["text_len"] > 0
-            ]
+            fit_pairs = [(row["text_len"], row["size_bytes"]) for row in rows if row["text_len"] > 0]
             intercept, slope = _linear_fit(fit_pairs) if fit_pairs else (0.0, 1.0)
 
-            def expected_size(
-                text_len: int, _ic: float = intercept, _sl: float = slope
-            ) -> float:
+            def expected_size(text_len: int, _ic: float = intercept, _sl: float = slope) -> float:
                 if text_len == 0:
                     return max(1.0, _ic)
                 return max(1.0, _ic + _sl * text_len)
@@ -365,9 +339,7 @@ def main() -> None:
     print()
     missing_rows: list[dict[str, Any]] = []
 
-    for (language, verb_id, voice_key, form_key), gcs_key in sorted(
-        expected_keys.items()
-    ):
+    for (language, verb_id, voice_key, form_key), gcs_key in sorted(expected_keys.items()):
         if gcs_key not in actual_blob_names:
             text = text_lookup.get((language, verb_id, form_key), "")
             missing_rows.append(
