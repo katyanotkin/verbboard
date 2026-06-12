@@ -441,6 +441,20 @@ button {
 }
 .practice-abandon-btn:hover { background: #dbeafe; }
 
+.practice-skip-btn {
+  padding: 6px 12px;
+  border: 1px solid #6ee7b7;
+  border-radius: 999px;
+  background: transparent;
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+.practice-skip-btn:hover { background: #d1fae5; }
+
 .practice-listen-warn {
   flex-basis: 100%;
   font-size: 12px;

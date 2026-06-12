@@ -200,6 +200,10 @@ document.addEventListener("DOMContentLoaded", function () {
     finishBtn.textContent = UI["practice.finish"] || "Finish";
     finishBtn.disabled = !isLast;
 
+    const skipBtn = document.createElement("button");
+    skipBtn.className = "practice-skip-btn";
+    skipBtn.textContent = UI["practice.skip"] || "Skip";
+
     const abandonBtn = document.createElement("button");
     abandonBtn.className = "practice-abandon-btn";
     abandonBtn.textContent = UI["practice.abandon"] || "Abandon";
@@ -213,6 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
     bar.appendChild(progressEl);
     bar.appendChild(nextBtn);
     bar.appendChild(finishBtn);
+    bar.appendChild(skipBtn);
     bar.appendChild(abandonBtn);
     bar.appendChild(warnEl);
 
@@ -264,6 +269,29 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       _finishPractice(session);
+    });
+
+    skipBtn.addEventListener("click", function () {
+      progress.setKnown(language, verbId, true);
+
+      const updatedIds = session.ids.filter(function (id) { return id !== verbId; });
+
+      if (updatedIds.length === 0) {
+        localStorage.removeItem(sessionKey);
+        window.location.href = verbsUrl;
+        return;
+      }
+
+      const updatedLemmas = Object.assign({}, session.lemmas || {});
+      delete updatedLemmas[verbId];
+
+      localStorage.setItem(sessionKey, JSON.stringify({
+        ids: updatedIds,
+        lemmas: updatedLemmas,
+        size: session.size,
+      }));
+
+      navTo(updatedIds[Math.min(idx, updatedIds.length - 1)]);
     });
 
     abandonBtn.addEventListener("click", function () {
