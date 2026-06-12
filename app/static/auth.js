@@ -233,6 +233,9 @@
       known = new Set();
     }
 
+    // Track which verbs the server considers known so we can upload the diff.
+    const serverKnownIds = new Set();
+
     for (const [verbId, state] of Object.entries(verbs)) {
       if (state.seen) {
         seen.add(verbId);
@@ -240,9 +243,10 @@
 
       if (state.known) {
         known.add(verbId);
-      } else {
-        known.delete(verbId);
+        serverKnownIds.add(verbId);
       }
+      // No delete: local knowledge is preserved. Pre-login learned verbs
+      // are not on the server yet -- union wins here.
     }
 
     localStorage.setItem(
@@ -254,6 +258,23 @@
       knownKey,
       JSON.stringify(Array.from(known))
     );
+
+    // Upload any locally-known verbs the server doesn't have yet.
+    const toUpload = Array.from(known).filter(function (id) {
+      return !serverKnownIds.has(id);
+    });
+    if (toUpload.length > 0) {
+      toUpload.forEach(function (verbId) {
+        fetch('/api/progress/known', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token,
+          },
+          body: JSON.stringify({ language: language, verb_id: verbId, known: true }),
+        }).catch(function () {});
+      });
+    }
 
     window.dispatchEvent(
       new CustomEvent('vb:progress-hydrated', { detail: { language } })

@@ -144,11 +144,15 @@
       // Merge strategy: server is authoritative when it has more badges (new
       // device / clean local state). Keep local when it has more badges --
       // protects against a silent server-save failure on _finishPractice losing
-      // locally-earned badges on the next sync.
+      // locally-earned badges on the next sync. Also upload local-only badges
+      // so pre-login earned badges are persisted to the server on first sign-in.
       const localBadges = storage.readJson(practiceBadgesKey, []);
       const badgesToStore = payload.badges.length >= localBadges.length
         ? payload.badges
         : localBadges;
+      if (localBadges.length > payload.badges.length) {
+        savePracticeBadgesToServer(localBadges);
+      }
       storage.writeJson(practiceBadgesKey, badgesToStore);
 
       renderPracticePanel();
