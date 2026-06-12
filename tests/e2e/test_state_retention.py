@@ -66,9 +66,9 @@ def _perform_learn_action(page, action: str) -> None:
             male_btn.click()
             page.wait_for_load_state("networkidle")
     elif action == "visit_feedback":
-        # Go to feedback from learn, then browser-back to restore the original learn
-        # context. The feedback back link only has the bare learn URL (no return_to or
-        # ui_language), so clicking it loses the verbs context; browser-back keeps it.
+        # Go to feedback from learn, then use the app Back link (which now carries
+        # return_to thanks to full_learn_href in render.py), then go_back once more
+        # to restore the original learn URL before _return_to_verbs runs.
         feedback = page.locator("a.feedback-link[href*='feedback']").first
         if feedback.is_visible():
             feedback.click()

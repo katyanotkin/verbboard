@@ -144,19 +144,6 @@
   });
 
 
-  // Mobile: expand to show all pre-loaded verbs on fresh loads so users can
-  // scroll the full list without tapping "show more". Back-nav and return-from-
-  // learn/feedback skip this so sessionStorage restores the previous position.
-  (function () {
-    if (!_isMobile) return;
-    var navType = (performance.getEntriesByType('navigation')[0] || {}).type;
-    var fromInternal = !!document.referrer && (
-      document.referrer.includes('/learn') ||
-      document.referrer.includes('/feedback')
-    );
-    if (navType === 'back_forward' || fromInternal) return;
-    filters.showAll();
-  }());
 
   // Back-nav: re-fetch verbs that were previously loaded but are absent after page
   // reload (VB_VERBS only contains the server-rendered page-limit batch).

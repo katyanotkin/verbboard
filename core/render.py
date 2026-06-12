@@ -197,6 +197,8 @@ def render_board_html(
         f"/learn?language={escape(board.language)}"
         f"&verb_id={escape(board.verb.id)}{source_suffix}{ui_suffix}"
     )
+    # Include return_to so the feedback page's Back button returns here, not home.
+    full_learn_href = learn_href + f"&return_to={quote(resolved_return_to, safe='')}"
 
     voice_key = (board.voice_key or "").lower()
     female_active = "active" if voice_key == "female" else ""
@@ -310,7 +312,7 @@ def render_board_html(
         board_send_feedback=ui.get("board.send_feedback", "Send feedback"),
         language_urlencode=quote(board.language, safe=""),
         verb_id_urlencode=quote(board.verb.id, safe=""),
-        learn_href_urlencode=quote(learn_href, safe="/"),
+        learn_href_urlencode=quote(full_learn_href, safe="/"),
         sections_meta=meta_section_html,
         board_examples_heading=ui.get("board.examples_heading", "Examples"),
         board_examples_toggle=examples_toggle,

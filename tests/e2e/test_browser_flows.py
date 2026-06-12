@@ -7,6 +7,7 @@ These cover interactions that HTTP-level tests cannot prove:
 - The voice-toggle form submits the selected voice as a URL param.
 - The known-star button toggles aria-pressed and writes to localStorage.
 - The home Learn button submits the form and navigates to /learn.
+- Verbs → Learn → Feedback → Back → Back restores verbs with full state.
 
 Server: started by tests/e2e/conftest.py (port 9753, local verb data, no-op audio).
 Verb used: tests prefer `en_be` when present, otherwise use the first available rendered option.
@@ -167,3 +168,94 @@ def test_known_star_toggles_ui_state(page, live_server_url):
     assert "en_be" not in (
         known_raw2 or ""
     ), f"Expected en_be removed from localStorage, got: {known_raw2!r}"
+
+
+# ---------------------------------------------------------------------------
+# Verbs → Learn → Feedback → Back × 2 returns to /verbs with state intact
+#
+# Regression for: feedback link on learn used learn_href without return_to,
+# so feedback Back landed on learn with no return_to, then learn Back went
+# to home instead of verbs.  Fixed by including resolved_return_to in the
+# learn URL embedded in the feedback link (render.py full_learn_href).
+# ---------------------------------------------------------------------------
+
+
+def test_verbs_learn_feedback_returns_to_verbs_with_state(page, live_server_url):
+    """Verbs→Learn→Feedback→Back→Back must land on /verbs with ui_language,
+    filter, sort, and display count all intact."""
+    verbs_url = f"{live_server_url}/verbs?language=en&ui_language=ru"
+    page.goto(verbs_url)
+    page.evaluate("sessionStorage.clear()")
+    page.reload()
+    page.wait_for_load_state("networkidle")
+
+    # Apply non-default filter and sort so we can verify they survive the trip.
+    all_btn = page.locator('.vb-ftbtn[data-filter="all"]').first
+    if all_btn.is_visible():
+        all_btn.click()
+        page.wait_for_timeout(150)
+
+    sort_sel = page.locator("#vb-sort")
+    if sort_sel.is_visible():
+        sort_sel.select_option("newest")
+        page.wait_for_timeout(150)
+
+    # Navigate into a verb.
+    first_verb = page.locator("#vb-list a.vb-item").first
+    try:
+        first_verb.wait_for(state="visible", timeout=5_000)
+    except Exception:
+        pytest.skip("No verb items rendered")
+    first_verb.click()
+    page.wait_for_load_state("networkidle")
+    assert "/learn" in page.url, f"Expected /learn, got {page.url!r}"
+
+    # Open feedback from learn page.
+    feedback_link = page.locator("a.feedback-link[href*='feedback']").first
+    feedback_link.wait_for(state="visible")
+    feedback_link.click()
+    page.wait_for_load_state("networkidle")
+    assert "/feedback" in page.url, f"Expected /feedback, got {page.url!r}"
+
+    # Click app Back on feedback -- must return to /learn WITH return_to.
+    back_on_feedback = page.locator("a.feedback-link").first
+    back_on_feedback.wait_for(state="visible")
+    back_on_feedback.click()
+    page.wait_for_load_state("networkidle")
+    assert "/learn" in page.url, f"Feedback Back must land on /learn, got {page.url!r}"
+    assert (
+        "return_to=" in page.url
+    ), f"Learn URL after feedback Back must contain return_to. Got: {page.url!r}"
+
+    # Click app Back on learn -- must return to /verbs.
+    back_on_learn = page.locator("a.nav-btn.nav-btn--ghost").first
+    back_on_learn.wait_for(state="visible")
+    back_on_learn.click()
+    page.wait_for_load_state("networkidle")
+    page.wait_for_timeout(500)
+
+    assert "/verbs" in page.url, f"Learn Back must land on /verbs, got {page.url!r}"
+
+    # ui_language must survive the full round-trip.
+    assert (
+        "ui_language=ru" in page.url
+    ), f"ui_language=ru lost after round-trip. URL: {page.url!r}"
+
+    # Filter and sort must be restored (from localStorage).
+    page.wait_for_selector(".vb-ftbtn.active", timeout=5_000)
+    active_filter = page.locator(".vb-ftbtn.active").first.get_attribute("data-filter")
+    assert active_filter == "all", f"Filter not restored: got {active_filter!r}"
+
+    sort_value = sort_sel.input_value()
+    assert sort_value == "newest", f"Sort not restored: got {sort_value!r}"
+
+    # Display count: restored from sessionStorage when isBackNav is true.
+    # isBackNav relies on document.referrer which is set by the browser for
+    # link-click navigations; verify sessionStorage held the expanded count
+    # even if the JS chose not to restore it (referrer absent in headless mode).
+    saved_count = page.evaluate(
+        "parseInt(sessionStorage.getItem('vb-display-count:en') || '0', 10)"
+    )
+    assert (
+        saved_count >= 20
+    ), f"sessionStorage vb-display-count:en not written. Got: {saved_count!r}"

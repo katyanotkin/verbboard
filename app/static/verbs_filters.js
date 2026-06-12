@@ -61,7 +61,7 @@
 
     const VALID_SORTS = new Set(['alpha', 'newest']);
 
-    let activeFilter = fromHash.filter || fromStorage.filter || 'new';
+    let activeFilter = fromHash.filter || fromStorage.filter || 'all';
     let activeSort = fromHash.sort || fromStorage.sort || 'alpha';
     if (!VALID_SORTS.has(activeSort)) {
       activeSort = 'alpha';
