@@ -17,10 +17,14 @@ router = APIRouter(prefix="/api/preferences")
 _VALID_UI_LANGUAGES = set(LANGUAGE.keys())
 
 
+_VALID_MIN_PLAYS = {1, 3, 5, 8, "all"}
+
+
 class PreferencesPayload(BaseModel):
     ui_language: str | None = None
     learning_language: str | None = None
     practice_session_size: int | None = None
+    practice_min_plays: int | str | None = None
 
 
 def _require_user(request: Request):
@@ -47,5 +51,7 @@ def set_prefs(request: Request, payload: PreferencesPayload):
         payload.practice_session_size == s for s in PracticeSessionSize
     ):
         raise HTTPException(status_code=422, detail="Invalid practice_session_size")
+    if payload.practice_min_plays is not None and payload.practice_min_plays not in _VALID_MIN_PLAYS:
+        raise HTTPException(status_code=422, detail="Invalid practice_min_plays")
     set_preferences(user_id=user.uid, prefs=payload.model_dump(exclude_none=True))
     return {"ok": True}

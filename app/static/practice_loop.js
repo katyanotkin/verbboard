@@ -20,6 +20,8 @@
     const practiceSizeKey = `practice_size:${lang}`;
     const practiceBadgesKey = `practice_badges:${lang}`;
     const practiceWrapupKey = `practice_wrapup:${lang}`;
+    const practiceMinPlaysKey = 'practice_min_plays';
+    const PRACTICE_LISTENS = [1, 3, 5, 8, 'all'];
 
     const SIZE_THREE = 3;
     const SIZE_SIX = 6;
@@ -38,6 +40,13 @@
 
     if (!PRACTICE_SIZES.includes(activePracticeSize)) {
       activePracticeSize = SIZE_THREE;
+    }
+
+    const _storedListens = localStorage.getItem(practiceMinPlaysKey);
+    let activeListens = _storedListens === 'all' ? 'all'
+      : (_storedListens !== null ? (parseInt(_storedListens, 10) || 5) : 5);
+    if (activeListens !== 'all' && !PRACTICE_LISTENS.includes(activeListens)) {
+      activeListens = 5;
     }
 
     function known() {
@@ -270,6 +279,21 @@
         })
         .join('');
 
+      const listenButtons = PRACTICE_LISTENS
+        .map(function (n) {
+          const label = n === 'all' ? (ui['practice.listens_all'] || 'All') : String(n);
+          const isActive = String(n) === String(activeListens);
+          return `
+            <button
+              class="practice-size-btn${isActive ? ' active' : ''}"
+              data-listens="${n}"
+            >
+              ${label}
+            </button>
+          `;
+        })
+        .join('');
+
       practiceEl.innerHTML = `
         <div class="practice-panel-card">
           <div class="practice-card-header">
@@ -282,6 +306,12 @@
             </div>
 
             <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
+
+            <div class="practice-size-group">
+              ${listenButtons}
+            </div>
+
+            <span class="practice-size-hint">${ui['practice.listens_unit'] || 'play # audios / verb'}</span>
 
             <button class="btn-pill-navy" id="practice-start">
               ${startLabel}
@@ -297,6 +327,18 @@
             activePracticeSize = parseInt(button.dataset.size, 10);
             localStorage.setItem(practiceSizeKey, String(activePracticeSize));
             _saveSessionSizeToServer(activePracticeSize);
+            renderPracticePanel();
+          });
+        });
+
+      practiceEl
+        .querySelectorAll('.practice-size-btn[data-listens]')
+        .forEach(function (button) {
+          button.addEventListener('click', function () {
+            const val = button.dataset.listens;
+            activeListens = val === 'all' ? 'all' : (parseInt(val, 10) || 5);
+            localStorage.setItem(practiceMinPlaysKey, String(activeListens));
+            _saveListensToServer(activeListens);
             renderPracticePanel();
           });
         });
@@ -445,6 +487,18 @@
         render();
         updateProgress();
         renderPracticePanel();
+      });
+    }
+
+    function _saveListensToServer(listens) {
+      if (!window.VerbBoardAuth) return;
+      window.VerbBoardAuth.getIdToken().then(function (token) {
+        if (!token) return;
+        fetch('/api/preferences', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ practice_min_plays: listens }),
+        });
       });
     }
 

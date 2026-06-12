@@ -45,6 +45,8 @@
   "verbs.load_more": "Mostrar más",
   "practice.label": "Práctica",
   "practice.size_unit": "# verbos",
+  "practice.listens_unit": "# audios / verbo",
+  "practice.listens_all": "Todas",
   "practice.start": "Empezar",
   "practice.start_mixed": "Empezar (con aprendidos)",
   "practice.finish": "Terminar",

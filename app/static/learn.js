@@ -17,8 +17,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const seenKey = `seen:${language}`;
   const audioPlaysKey = `audio_plays:${language}`;
+  const heardSrcsKey = `audio_heard_srcs:${language}`;
   const sessionKey = `practice_session:${language}`;
   const badgesKey = `practice_badges:${language}`;
+
+  const _minPlaysRaw = localStorage.getItem('practice_min_plays') || '5';
+  const PRACTICE_MIN_PLAYS = _minPlaysRaw === 'all' ? 'all' : (parseInt(_minPlaysRaw, 10) || 5);
+  const audioTotal = document.querySelectorAll('audio').length;
+
+  function _readHeardSrcs() {
+    try { return JSON.parse(localStorage.getItem(heardSrcsKey) || '{}'); } catch (_) { return {}; }
+  }
+
+  function _audioProgressText() {
+    if (PRACTICE_MIN_PLAYS === 'all') {
+      const data = _readHeardSrcs();
+      return '♪ ' + (data[verbId] || []).length + ' / ' + audioTotal;
+    }
+    let plays;
+    try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || '{}'); } catch (_) { plays = {}; }
+    return '♪ ' + Math.min(plays[verbId] || 0, PRACTICE_MIN_PLAYS) + ' / ' + PRACTICE_MIN_PLAYS;
+  }
 
   function updateKnownButton(shouldPop) {
     const isKnown = progress.isKnown(language, verbId);
@@ -79,16 +98,30 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // ── audio play tracking ────────────────────────────────────────────────────
-  document.querySelectorAll("audio").forEach(function (audio) {
+  const allAudioEls = Array.from(document.querySelectorAll("audio"));
+  allAudioEls.forEach(function (audio) {
     audio.addEventListener("play", function () {
+      // Stop any other playing audio
+      allAudioEls.forEach(function (other) {
+        if (other !== audio && !other.paused) other.pause();
+      });
+
+      // Total plays
       let plays;
-      try {
-        plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}");
-      } catch (_) {
-        plays = {};
-      }
+      try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}"); } catch (_) { plays = {}; }
       plays[verbId] = (plays[verbId] || 0) + 1;
       localStorage.setItem(audioPlaysKey, JSON.stringify(plays));
+
+      // Per-src tracking (used for 'all' mode)
+      const heardData = _readHeardSrcs();
+      const srcs = new Set(heardData[verbId] || []);
+      srcs.add(audio.currentSrc || audio.src || '');
+      heardData[verbId] = Array.from(srcs);
+      localStorage.setItem(heardSrcsKey, JSON.stringify(heardData));
+
+      // Live-update progress indicator if bar is mounted
+      const progressEl = document.getElementById("practice-audio-progress");
+      if (progressEl) progressEl.textContent = _audioProgressText();
     });
   });
 
@@ -152,7 +185,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ── practice session bar ──────────────────────────────────────────────────
-  const PRACTICE_MIN_PLAYS = 5;
 
   let practiceSession;
   try {
@@ -178,6 +210,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const total = session.ids.length;
     const isLast = idx === total - 1;
 
+    // Store audio count for this verb so _finishPractice can verify 'all' mode
+    if (audioTotal > 0) {
+      localStorage.setItem(`audio_total:${language}:${verbId}`, String(audioTotal));
+    }
+
     const bar = document.createElement("div");
     bar.className = "practice-bar";
 
@@ -189,6 +226,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const progressEl = document.createElement("span");
     progressEl.className = "practice-progress";
     progressEl.textContent = `${idx + 1} ${UI["practice.of"] || "of"} ${total}`;
+
+    const audioProgressEl = document.createElement("span");
+    audioProgressEl.id = "practice-audio-progress";
+    audioProgressEl.className = "practice-audio-progress";
+    audioProgressEl.textContent = _audioProgressText();
 
     const nextBtn = document.createElement("button");
     nextBtn.className = "practice-nav-btn";
@@ -215,6 +257,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     bar.appendChild(prevBtn);
     bar.appendChild(progressEl);
+    bar.appendChild(audioProgressEl);
     bar.appendChild(nextBtn);
     bar.appendChild(finishBtn);
     bar.appendChild(skipBtn);
@@ -232,12 +275,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function hasListened() {
-      let plays;
-      try {
-        plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}");
-      } catch (_) {
-        plays = {};
+      if (PRACTICE_MIN_PLAYS === 'all') {
+        return (_readHeardSrcs()[verbId] || []).length >= audioTotal;
       }
+      let plays;
+      try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}"); } catch (_) { plays = {}; }
       return (plays[verbId] || 0) >= PRACTICE_MIN_PLAYS;
     }
 
@@ -310,9 +352,16 @@ document.addEventListener("DOMContentLoaded", function () {
       } catch (_) {
         plays = {};
       }
-      accomplished = session.ids.every(
-        (id) => seenSet.has(id) && (plays[id] || 0) >= PRACTICE_MIN_PLAYS
-      );
+      accomplished = session.ids.every(function (id) {
+        if (!seenSet.has(id)) return false;
+        if (PRACTICE_MIN_PLAYS === 'all') {
+          const heardData = _readHeardSrcs();
+          const heardCount = (heardData[id] || []).length;
+          const storedTotal = parseInt(localStorage.getItem(`audio_total:${language}:${id}`) || '0', 10);
+          return storedTotal > 0 && heardCount >= storedTotal;
+        }
+        return (plays[id] || 0) >= PRACTICE_MIN_PLAYS;
+      });
     } catch (_) {}
 
     if (accomplished) {

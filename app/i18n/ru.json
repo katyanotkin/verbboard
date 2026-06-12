@@ -45,6 +45,8 @@
   "verbs.load_more": "Показать ещё",
   "practice.label": "Тренировка",
   "practice.size_unit": "кол-во гл.",
+  "practice.listens_unit": "прослушать # аудио / гл.",
+  "practice.listens_all": "Все",
   "practice.start": "Начать",
   "practice.start_mixed": "Начать (с выученными)",
   "practice.finish": "Завершить",

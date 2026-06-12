@@ -83,10 +83,19 @@ def get_preferences(*, user_id: str) -> dict:
     except ValueError:
         practice_session_size = None
 
+    raw_min_plays = payload.get("practice_min_plays")
+    if raw_min_plays == "all":
+        practice_min_plays: int | str | None = "all"
+    elif raw_min_plays in (1, 3, 5, 8):
+        practice_min_plays = raw_min_plays
+    else:
+        practice_min_plays = None
+
     return {
         "ui_language": payload.get("ui_language") or None,
         "learning_language": payload.get("learning_language") or None,
         "practice_session_size": practice_session_size,
+        "practice_min_plays": practice_min_plays,
     }
 
 

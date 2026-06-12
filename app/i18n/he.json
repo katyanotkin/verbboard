@@ -45,6 +45,8 @@
   "verbs.load_more": "הצג עוד",
   "practice.label": "תרגול",
   "practice.size_unit": "# פעלים",
+  "practice.listens_unit": "# הקלטות / פועל",
+  "practice.listens_all": "הכל",
   "practice.start": "התחל",
   "practice.start_mixed": "התחל (עם נלמדים)",
   "practice.finish": "סיים",
