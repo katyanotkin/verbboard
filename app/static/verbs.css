@@ -376,7 +376,6 @@
   flex-wrap: wrap;
 }
 
-.practice-picker,
 .practice-inprogress {
   display: flex;
   align-items: center;
@@ -386,7 +385,25 @@
 }
 
 .practice-picker {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px 16px;
+  padding: 10px 14px;
+  flex-wrap: wrap;
   background: transparent;
+}
+
+.practice-picker-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.practice-picker-start {
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 4px;
 }
 
 .practice-inprogress {
@@ -446,17 +463,17 @@
 
 .practice-abandon-btn {
   padding: 6px 12px;
-  border: 1px solid var(--notice-border);
+  border: 1px solid #fca5a5;
   border-radius: 999px;
   background: transparent;
-  color: var(--notice-text);
+  color: #b91c1c;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.1s;
   white-space: nowrap;
 }
-.practice-abandon-btn:hover { background: #fef3c7; }
+.practice-abandon-btn:hover { background: #fee2e2; }
 
 /* ── badges ───────────────────────────────────────────────────────────────── */
 .practice-badges {

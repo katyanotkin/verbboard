@@ -237,6 +237,7 @@ def render_board_html(
             "practice.next": ui.get("practice.next", "Next"),
             "practice.of": ui.get("practice.of", "of"),
             "practice.finish": ui.get("practice.finish", "Finish"),
+            "practice.skip": ui.get("practice.skip", "Skip"),
             "practice.abandon": ui.get("practice.abandon", "Abandon"),
             "practice.listen_first": ui.get("practice.listen_first", "Listen to the audio first"),
             "practice.wrap_up": ui.get("practice.wrap_up", "Practice complete"),

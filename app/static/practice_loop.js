@@ -301,21 +301,23 @@
             ${badgesHtml}
           </div>
           <div class="practice-picker">
-            <div class="practice-size-group">
-              ${sizeButtons}
+            <div class="practice-picker-col">
+              <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
+              <div class="practice-size-group">
+                ${sizeButtons}
+              </div>
             </div>
-
-            <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
-
-            <div class="practice-size-group">
-              ${listenButtons}
+            <div class="practice-picker-col">
+              <span class="practice-size-hint">${ui['practice.listens_unit'] || 'play # audios / verb'}</span>
+              <div class="practice-size-group">
+                ${listenButtons}
+              </div>
             </div>
-
-            <span class="practice-size-hint">${ui['practice.listens_unit'] || 'play # audios / verb'}</span>
-
-            <button class="btn-pill-navy" id="practice-start">
-              ${startLabel}
-            </button>
+            <div class="practice-picker-start">
+              <button class="btn-pill-navy" id="practice-start">
+                ${startLabel}
+              </button>
+            </div>
           </div>
         </div>
       `;

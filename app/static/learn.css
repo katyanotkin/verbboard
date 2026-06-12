@@ -429,17 +429,17 @@ button {
 
 .practice-abandon-btn {
   padding: 6px 12px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid #fca5a5;
   border-radius: 999px;
   background: transparent;
-  color: #1e40af;
+  color: #b91c1c;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.1s;
   white-space: nowrap;
 }
-.practice-abandon-btn:hover { background: #dbeafe; }
+.practice-abandon-btn:hover { background: #fee2e2; }
 
 .practice-skip-btn {
   padding: 6px 12px;
