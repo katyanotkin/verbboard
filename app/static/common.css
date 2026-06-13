@@ -452,7 +452,6 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
     min-height: 56px;
     padding: 6px 2px;
     border: none;
@@ -461,12 +460,19 @@ body {
     text-decoration: none;
     color: var(--text-muted);
     font: inherit;
-    font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     transition: color 0.12s ease;
+  }
+
+  .bnav-tab--dim {
+    opacity: 0.35;
+  }
+
+  .bnav-dual-icon {
+    display: flex;
+    align-items: center;
+    gap: 3px;
   }
 
   .bnav-tab--active {

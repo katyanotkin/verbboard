@@ -1,19 +1,15 @@
 """Tests for the bottom navigation bar (_bottom_nav.html).
 
-The bottom nav is a 5-tab bar (Back / Search / List / Practice / Login) included
-in every major page template. Labels are intentionally hardcoded English and must
-not be localized.
+4-tab icon-only bar: Back / Verbs / Search / Login.
+No text labels -- tabs are distinguished by SVG icons and aria-labels.
 
 Covers:
 - Presence: bottom-nav included in home, verbs, about
 - Active state: correct tab highlighted per page
-- Language propagation: Search and Browse links carry language + ui_language as
-  URL params (cookies are stripped by Firebase Hosting / Fastly CDN)
-- Back tab: present on verbs/about, absent on home
-- Back link destination: links to home with language params
-- Practice tab: present, links to #practice-panel anchor with language
-- Login button: initial aria-label="Login"; auth.js updates it after sign-in
-- hashchange handler in verbs_page.js syncs Practice tab active state
+- Language propagation: Search and Verbs links carry language + ui_language
+- Back tab: linked when bnav_back_href is set; falls back to history.back() on home
+- Login button: person icon, aria-label="Login"; auth.js updates aria-label after sign-in
+- Practice tab removed (same destination as Verbs)
 """
 
 from __future__ import annotations
@@ -46,6 +42,29 @@ def test_about_includes_bottom_nav(client: TestClient) -> None:
     assert "bnav-tab" in html
 
 
+# ── 4 tabs, no text labels ────────────────────────────────────────────────────
+
+
+def test_bottom_nav_has_four_tabs(client: TestClient) -> None:
+    with patch("app.routes.home.list_verbs_recent", return_value=[]):
+        html = client.get("/?language=en").text
+    nav_start = html.index("bottom-nav")
+    nav_end = html.index("</nav>", nav_start)
+    nav_html = html[nav_start:nav_end]
+    assert nav_html.count("bnav-tab") >= 4
+
+
+def test_bottom_nav_has_no_text_labels(client: TestClient) -> None:
+    """All tabs are icon-only -- no visible text labels inside the nav."""
+    with patch("app.routes.home.list_verbs_recent", return_value=[]):
+        html = client.get("/?language=en").text
+    nav_start = html.index('<nav class="bottom-nav"')
+    nav_end = html.index("</nav>", nav_start) + len("</nav>")
+    nav_html = html[nav_start:nav_end]
+    for label in (">Back<", ">Search<", ">List<", ">Verbs<", ">Practice<", ">Login<", ">Logout<"):
+        assert label not in nav_html
+
+
 # ── active state ──────────────────────────────────────────────────────────────
 
 
@@ -53,17 +72,12 @@ def test_home_bottom_nav_search_tab_active(client: TestClient) -> None:
     with patch("app.routes.home.list_verbs_recent", return_value=[]):
         html = client.get("/?language=en").text
     assert "bnav-tab--active" in html
-    browse_idx = html.index(">List<")
-    active_idx = html.index("bnav-tab--active")
-    assert active_idx < browse_idx
 
 
 def test_verbs_bottom_nav_browse_tab_active(client: TestClient) -> None:
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         html = client.get("/verbs?language=en").text
-    browse_idx = html.index(">List<")
-    nav_fragment = html[:browse_idx]
-    assert "bnav-tab--active" in nav_fragment
+    assert "bnav-tab--active" in html
 
 
 # ── language propagation ──────────────────────────────────────────────────────
@@ -92,7 +106,7 @@ def test_verbs_bottom_nav_browse_link_carries_language(client: TestClient) -> No
     ],
 )
 def test_bottom_nav_lang_hrefs_contain_language(client: TestClient, url: str, lang: str, patch_target: str) -> None:
-    """Search and Browse links must carry both language and ui_language as URL params."""
+    """Search and Verbs links must carry both language and ui_language as URL params."""
     with patch(patch_target, return_value=[]):
         html = client.get(url).text
     assert f'href="/?language={lang}&amp;ui_language=en"' in html
@@ -102,17 +116,19 @@ def test_bottom_nav_lang_hrefs_contain_language(client: TestClient, url: str, la
 # ── back tab ──────────────────────────────────────────────────────────────────
 
 
-def test_bottom_nav_home_has_no_back_tab(client: TestClient) -> None:
-    """Home page has no meaningful back destination -- Back tab must be absent."""
+def test_bottom_nav_home_back_uses_history_back(client: TestClient) -> None:
+    """Home has no back destination -- Back tab falls back to history.back()."""
     with patch("app.routes.home.list_verbs_recent", return_value=[]):
         html = client.get("/?language=en").text
-    assert ">Back<" not in html
+    assert "history.back()" in html
 
 
-def test_bottom_nav_verbs_has_back_tab(client: TestClient) -> None:
+def test_bottom_nav_verbs_back_is_a_link(client: TestClient) -> None:
+    """Verbs page has a back href -- Back tab must be an <a> tag."""
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         html = client.get("/verbs?language=en").text
-    assert ">Back<" in html
+    assert 'aria-label="Back"' in html
+    assert "history.back()" not in html
 
 
 def test_bottom_nav_verbs_back_links_to_home(client: TestClient) -> None:
@@ -121,72 +137,32 @@ def test_bottom_nav_verbs_back_links_to_home(client: TestClient) -> None:
     assert 'href="/?language=ru&amp;ui_language=en"' in html
 
 
-def test_bottom_nav_about_has_back_tab(client: TestClient) -> None:
+def test_bottom_nav_about_back_is_a_link(client: TestClient) -> None:
     html = client.get("/about").text
-    assert ">Back<" in html
+    assert 'aria-label="Back"' in html
 
 
-# ── profile / login button ────────────────────────────────────────────────────
+# ── login button ──────────────────────────────────────────────────────────────
 
 
 def test_bottom_nav_profile_button_calls_tap_profile(client: TestClient) -> None:
-    """Profile tab must call VerbBoardAuth.tapProfile() directly (not .click())."""
+    """Login tab must call VerbBoardAuth.tapProfile()."""
     with patch("app.routes.home.list_verbs_recent", return_value=[]):
         html = client.get("/?language=en").text
     assert "tapProfile()" in html
 
 
-def test_bottom_nav_login_label_present(client: TestClient) -> None:
-    """bnav-login-label span must be present for auth.js to update dynamically."""
-    with patch("app.routes.home.list_verbs_recent", return_value=[]):
-        html = client.get("/?language=en").text
-    assert 'id="bnav-login-label"' in html
-
-
 def test_bottom_nav_login_button_initial_aria_label(client: TestClient) -> None:
-    """Profile button must start with aria-label='Login' before auth.js runs."""
+    """Login button must start with aria-label='Login' (icon-only, no text label)."""
     with patch("app.routes.home.list_verbs_recent", return_value=[]):
         html = client.get("/?language=en").text
     assert 'aria-label="Login"' in html
+    assert 'id="bnav-login-label"' not in html
 
 
 def test_auth_js_updates_bnav_aria_label() -> None:
-    """auth.js must call setAttribute('aria-label', ...) on the profile button."""
+    """auth.js must update the Login button aria-label after auth state changes."""
     import pathlib
 
     auth_js = pathlib.Path("app/static/auth.js").read_text()
     assert "setAttribute('aria-label'" in auth_js
-
-
-# ── practice tab ─────────────────────────────────────────────────────────────
-
-
-def test_bottom_nav_has_practice_tab(client: TestClient) -> None:
-    with patch("app.routes.home.list_verbs_recent", return_value=[]):
-        html = client.get("/?language=en").text
-    assert ">Practice<" in html
-
-
-def test_verbs_bottom_nav_practice_tab_href(client: TestClient) -> None:
-    """Practice tab must link to the practice panel anchor on the verbs page."""
-    with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
-        html = client.get("/verbs?language=en").text
-    assert "/verbs?language=en" in html
-    assert "#practice-panel" in html
-
-
-@pytest.mark.parametrize("lang", ["en", "ru", "he"])
-def test_verbs_bottom_nav_practice_tab_carries_language(client: TestClient, lang: str) -> None:
-    with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
-        html = client.get(f"/verbs?language={lang}").text
-    assert f"/verbs?language={lang}" in html
-    assert "#practice-panel" in html
-
-
-def test_verbs_page_js_has_hashchange_handler() -> None:
-    """verbs_page.js must register a hashchange listener to sync Practice tab state."""
-    import pathlib
-
-    js = pathlib.Path("app/static/verbs_page.js").read_text()
-    assert "hashchange" in js
-    assert "bnav-tab--active" in js

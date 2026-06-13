@@ -159,13 +159,8 @@
 
     target.appendChild(button);
 
-    const bnavLabel = document.getElementById('bnav-login-label');
-    if (bnavLabel) {
-      const bnavText = currentUser ? 'Logout' : 'Login';
-      bnavLabel.textContent = bnavText;
-      const bnavBtn = bnavLabel.closest('button');
-      if (bnavBtn) bnavBtn.setAttribute('aria-label', bnavText);
-    }
+    const bnavBtn = document.querySelector('.bottom-nav button[aria-label="Login"], .bottom-nav button[aria-label="Logout"]');
+    if (bnavBtn) bnavBtn.setAttribute('aria-label', currentUser ? 'Logout' : 'Login');
   }
 
   async function hydrateProgress() {
