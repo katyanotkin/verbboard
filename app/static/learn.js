@@ -119,9 +119,6 @@ document.addEventListener("DOMContentLoaded", function () {
       heardData[verbId] = Array.from(srcs);
       localStorage.setItem(heardSrcsKey, JSON.stringify(heardData));
 
-      // Live-update progress indicator if bar is mounted
-      const progressEl = document.getElementById("practice-audio-progress");
-      if (progressEl) progressEl.textContent = _audioProgressText();
     });
   });
 
@@ -209,6 +206,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const verbsUrl = `/verbs?language=${encodeURIComponent(language)}${_uiSuffix}`;
     const total = session.ids.length;
     const isLast = idx === total - 1;
+    const isRTL = document.documentElement.dir === 'rtl';
 
     // Store audio count for this verb so _finishPractice can verify 'all' mode
     if (audioTotal > 0) {
@@ -220,21 +218,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const prevBtn = document.createElement("button");
     prevBtn.className = "practice-nav-btn";
-    prevBtn.textContent = UI["practice.prev"] || "Prev";
+    prevBtn.textContent = isRTL ? '>' : '<';
+    prevBtn.setAttribute('aria-label', UI["practice.prev"] || "Previous");
     prevBtn.disabled = idx === 0;
 
     const progressEl = document.createElement("span");
     progressEl.className = "practice-progress";
-    progressEl.textContent = `${idx + 1} ${UI["practice.of"] || "of"} ${total}`;
-
-    const audioProgressEl = document.createElement("span");
-    audioProgressEl.id = "practice-audio-progress";
-    audioProgressEl.className = "practice-audio-progress";
-    audioProgressEl.textContent = _audioProgressText();
+    progressEl.textContent = `${idx + 1}/${total}`;
 
     const nextBtn = document.createElement("button");
     nextBtn.className = "practice-nav-btn";
-    nextBtn.textContent = UI["practice.next"] || "Next";
+    nextBtn.textContent = isRTL ? '<' : '>';
+    nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
     nextBtn.disabled = isLast;
 
     const finishBtn = document.createElement("button");
@@ -253,16 +248,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const warnEl = document.createElement("span");
     warnEl.className = "practice-listen-warn";
     warnEl.hidden = true;
-    warnEl.textContent = UI["practice.listen_first"] || "Listen to the audio first";
+
+    const rowBreak = document.createElement("span");
+    rowBreak.className = "practice-row-break";
 
     bar.appendChild(prevBtn);
     bar.appendChild(progressEl);
-    bar.appendChild(audioProgressEl);
     bar.appendChild(nextBtn);
-    bar.appendChild(finishBtn);
+    bar.appendChild(warnEl);
+    bar.appendChild(rowBreak);
     bar.appendChild(skipBtn);
     bar.appendChild(abandonBtn);
-    bar.appendChild(warnEl);
+    bar.appendChild(finishBtn);
 
     pageRoot.insertBefore(bar, pageRoot.firstChild);
 
@@ -285,6 +282,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let warnTimer;
     function showWarn() {
+      warnEl.textContent = (UI["practice.listen_first"] || "Listen to audio") + ' ' + _audioProgressText();
       warnEl.hidden = false;
       clearTimeout(warnTimer);
       warnTimer = setTimeout(function () {

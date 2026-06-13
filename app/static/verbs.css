@@ -294,6 +294,8 @@
 
 [dir="rtl"] .vb-item::after {
   content: "‹";
+  margin-left: 0;
+  margin-right: 4px;
 }
 
 .vb-badge        { font-size: 13px; flex-shrink: 0; margin-left: 4px; }
@@ -316,6 +318,10 @@
   text-transform: uppercase;
   color: #9ca3af;
   padding: 6px 2px 2px;
+}
+
+[dir="rtl"] .vb-section-label {
+  letter-spacing: 0;
 }
 
 .vb-section-divider {
@@ -408,7 +414,7 @@
 .practice-picker-start {
   flex-basis: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   padding-top: 10px;
 }
 

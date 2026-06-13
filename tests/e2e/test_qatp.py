@@ -171,7 +171,7 @@ def test_practice_next_carries_ui_language(page, live_server_url):
 
     _inject_audio_plays(page, "ru", ids)
 
-    next_btn = page.locator(".practice-bar .practice-nav-btn").filter(has_text="Next").first
+    next_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Next"]').first
     next_btn.wait_for(state="visible")
     with page.expect_navigation():
         next_btn.click()
@@ -200,7 +200,7 @@ def test_practice_prev_carries_ui_language(page, live_server_url):
     )
     page.wait_for_load_state("networkidle")
 
-    prev_btn = page.locator(".practice-bar .practice-nav-btn").filter(has_text="Prev").first
+    prev_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Prev"]').first
     prev_btn.wait_for(state="visible")
     with page.expect_navigation():
         prev_btn.click()

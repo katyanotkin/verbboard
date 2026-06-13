@@ -197,7 +197,7 @@ def test_audio_min_plays_1_enables_next(page, live_server_url):
     # Inject exactly 1 play for ids[0] -- should satisfy min_plays=1
     _inject_audio_plays(page, "ru", [ids[0]], count=1)
 
-    next_btn = page.locator(".practice-bar .practice-nav-btn").filter(has_text="Next").first
+    next_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Next"]').first
     next_btn.wait_for(state="visible")
     with page.expect_navigation():
         next_btn.click()
@@ -230,7 +230,7 @@ def test_audio_min_plays_all_blocks_next_without_srcs(page, live_server_url):
     # Make sure audio_heard_srcs is absent for this verb
     page.evaluate("() => localStorage.removeItem('audio_heard_srcs:ru')")
 
-    next_btn = page.locator(".practice-bar .practice-nav-btn").filter(has_text="Next").first
+    next_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Next"]').first
     next_btn.wait_for(state="visible")
     # Click without expecting navigation -- it should be blocked
     next_btn.click()
@@ -277,7 +277,7 @@ def test_audio_min_plays_all_enables_next_with_all_srcs(page, live_server_url):
         [total_key, str(len(audio_srcs))],
     )
 
-    next_btn = page.locator(".practice-bar .practice-nav-btn").filter(has_text="Next").first
+    next_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Next"]').first
     next_btn.wait_for(state="visible")
     with page.expect_navigation():
         next_btn.click()
@@ -293,18 +293,21 @@ def test_audio_min_plays_all_enables_next_with_all_srcs(page, live_server_url):
 # ---------------------------------------------------------------------------
 
 
-def test_audio_progress_indicator_visible(page, live_server_url):
-    """The #practice-audio-progress span must be visible and contain '♪' and '/'."""
+def test_audio_progress_shown_in_warn(page, live_server_url):
+    """Audio count must appear in the warning message when Next is clicked without listening."""
     ids, lemmas = _ru_verb_ids(page, live_server_url, minimum=2)
 
     _seed_practice_session(page, "ru", ids[:2], {ids[0]: lemmas[ids[0]], ids[1]: lemmas[ids[1]]})
+    page.evaluate("() => localStorage.setItem('practice_min_plays', '5')")
 
     page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[0]}&return_to=/verbs?language=ru")
     page.wait_for_load_state("networkidle")
 
-    progress_el = page.locator("#practice-audio-progress").first
-    progress_el.wait_for(state="visible")
+    next_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Next"]').first
+    next_btn.click()
 
-    text = progress_el.text_content() or ""
-    assert "♪" in text, f"TC-A4: #practice-audio-progress must contain '♪'. Got: {text!r}"
-    assert "/" in text, f"TC-A4: #practice-audio-progress must contain '/'. Got: {text!r}"
+    warn_el = page.locator(".practice-listen-warn").first
+    warn_el.wait_for(state="visible")
+    text = warn_el.text_content() or ""
+    assert "♪" in text, f"TC-A4: warn must contain '♪'. Got: {text!r}"
+    assert "/" in text, f"TC-A4: warn must contain '/'. Got: {text!r}"

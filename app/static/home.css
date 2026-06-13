@@ -73,9 +73,6 @@ label {
   color: var(--text-body);
 }
 
-label::first-letter {
-  margin-right: 4px;
-}
 
 .label-icon {
   display: inline-block;
