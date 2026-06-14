@@ -53,7 +53,7 @@ app/
                    # manifest.json    -- PWA manifest (icons, display, scope)
                    # icons/           -- PNG icons for PWA (48/72/96/144/192/512px + maskable)
   templates/       # Jinja2 templates
-                   # _bottom_nav.html -- shared 5-tab bottom nav (Back/Search/List/Practice/Login)
+                   # _bottom_nav.html -- shared 4-tab icon-only bottom nav (Back/Verbs/Search/Login)
                    # signin.html      -- /auth/signin page
                    # feedback.html    -- feedback page (converted from f-string to Jinja2)
                    # privacy.html     -- /privacy page (required for Google Play OAuth consent)
@@ -104,20 +104,24 @@ Use the **Explore** agent for detailed file navigation.
 
 **Auth and progress sync:**
 - Firebase Auth via `auth.js` (deferred); `authReadyPromise` resolves once per page load
-- On login: `hydrateProgress()` merges server state into localStorage, dispatches `vb:progress-hydrated`
+- On login: `hydrateProgress()` union-merges server state into localStorage (never deletes local knowledge); dispatches `vb:progress-hydrated`
+- First sign-in upload: local-only known verbs not yet on server are POSTed to `/api/progress/known` during `hydrateProgress()`
 - On sign-out: dispatches `vb:auth-signed-out` -- only when transitioning from logged-in to null
-- Badge merge: keep whichever list (local vs server) is longer; `syncPracticeBadgesFromServer()` called inside `vb:progress-hydrated` handler
+- Badge merge: keep whichever list (local vs server) is longer; local-only badges are uploaded to server on `vb:progress-hydrated`; `syncPracticeBadgesFromServer()` called inside that handler
 
 **Practice loop:**
 - Session: `localStorage` key `practice_session:{lang}` -- `{ids, lemmas, size}`; sizes 3/6/9
-- Requires 5 audio plays before Next/Finish; completion earns a badge
+- Audio listens per verb: 3 / 5 / All (configurable; stored in `practice_min_plays` localStorage key)
+- Requires N audio plays before Next; on the last verb Next calls `_finishPractice()` (no separate Finish button)
+- Skip = "Skip & mark as learned" -- marks verb as known and removes it from the session
+- Completion earns a badge (session size appended to `badges` list)
 - `BADGE_COMPACT_THRESHOLD` (from `VB_BADGE_COMPACT_THRESHOLD`) switches to compact grouped badge display
 - Wrap-up modal on return to verbs page (`practice_wrapup:{lang}`)
 
 **PWA / Mobile:**
 - Manifest at `/manifest.json`, service worker at `/sw.js` (cache `vb-v18`), icons in `app/static/icons/`
 - Install prompt: `pwa.js` listens for `beforeinstallprompt` (must not be deferred); shows install button; on mobile tap shows hint, second tap triggers prompt
-- 5-tab bottom nav (`_bottom_nav.html`): Back / Search / List / Practice / Login; min-height 56px; uses `env(safe-area-inset-bottom)` padding; included on all pages
+- 4-tab icon-only bottom nav (`_bottom_nav.html`): Back (chevron) / Verbs (list) / Search (magnifier+home) / Login (person); min-height 56px; uses `env(safe-area-inset-bottom)` padding; included on all pages; labels intentionally hardcoded English
 - Sign-in flow (`auth_pages.py` + `signin.html`): standalone PWA uses `window.open('/auth/signin', '_blank')`; mobile browser navigates to `/auth/signin?return_to=...`; desktop uses `signInWithPopup`
 - Digital Asset Links at `/.well-known/assetlinks.json` (`well_known.py`) -- SHA-256 fingerprint needed for TWA (currently PLACEHOLDER)
 - Per-environment Firebase secrets: `verbboard-firebase-web-config-stage` (stage), `verbboard-firebase-web-config` (prod)

@@ -131,23 +131,9 @@ Middleware: `_PageViewMiddleware` in `app/main.py` intercepts GET requests to tr
 
 ### Testing
 
-Four layers; see `TESTING.md` for full commands and principles.
+See **`TESTING.md`** for layers, commands, parallelization, and principles.
 
-| Layer | Location | Tool | Runs against |
-|---|---|---|---|
-| Unit | `tests/*.py` | pytest | stubs (in-memory FakeDB, no-op audio) |
-| E2E | `tests/e2e/` | pytest + Playwright (Chromium) | live FastAPI server on a free port; real Firestore |
-| Integration | `tests/integration/` | pytest | real Firestore (requires ADC credentials) |
-| Smoke | `scripts/smoke*.py` | plain HTTP | running service (local / stage / prod) |
-
-**Playwright** controls a real Chromium browser. The `live_server_url` session fixture starts the FastAPI app in a background thread on a random port; each test gets a fresh page. E2E tests skip gracefully when Firestore is empty, so they are safe without credentials.
-
-**Parallelization** via `pytest-xdist`:
-- Unit tests: `-n auto` (each worker is an isolated process with its own stubs)
-- E2E tests: `-n 2` (each worker starts its own server on a different port with its own browser)
-- Integration tests: sequential only (shared Firestore state)
-
-Pre-commit hook runs the full unit suite on every commit (`pytest` without `-n`).
+Pre-commit hook runs the full test suite (unit + e2e) on every commit (`pytest tests/` without `-n`). E2E tests connect to real Firestore and can be slow -- run them separately with `-n 2` against stage if the hook times out.
 
 ---
 
@@ -184,10 +170,8 @@ Generated from lead-architect audit (2026-06-10). Tracks divergences from intend
   - `core/render.py` lines 87, 172: `style="font-size:..."` and `style="text-align:..."` baked into f-strings
   - Fix: use CSS classes instead of inline styles
 
-- [ ] **`_firebase_auth.html`: apply `_html_safe_json()` to `firebase_web_config_json` in all routes**
-  - Currently only `signin.py` calls `_html_safe_json()`; other routes pass the raw JSON string via `| safe`
-  - A `</script>` in the secret manager value would break every page
-  - Fix: centralise encoding in `load_settings()` or apply `_html_safe_json()` in every route that sets `firebase_web_config_json`
+- [x] **`_firebase_auth.html`: apply `_html_safe_json()` to `firebase_web_config_json` in all routes**
+  - Fixed by `_safe_firebase_config()` in `core/settings.py` -- called once in `load_settings()`, pre-escapes `<`, `>`, `&` so all routes are safe without per-route encoding
 
 - [ ] **`practice_loop.js`: replace biased shuffle with Fisher-Yates**
   - `startPractice()` line 313 uses `sort(() => Math.random() - 0.5)` -- not uniformly random (V8 TimSort bias)

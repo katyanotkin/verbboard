@@ -37,7 +37,7 @@ Or via Makefile:
 make test-unit-fast
 ```
 
-Pre-commit hook runs all unit tests on every commit.
+Pre-commit hook runs the full test suite (unit + e2e) on every commit.
 
 ---
 
@@ -52,6 +52,8 @@ Each test gets:
 The live server connects to the real Firestore, so tests that need verb data skip gracefully when Firestore is empty (`pytest.skip`). This makes them safe to run locally without credentials and safe in CI with credentials.
 
 `ensure_audio` is patched to a no-op in the e2e conftest so tests never call TTS.
+
+The `live_server_url` session fixture also fires warm-up requests to `/`, `/verbs?language=en`, and `/verbs?language=ru` after server startup to prime Firestore caches before the first test runs.
 
 What they cover:
 - JS-rendered UI (Playwright waits for JS execution, so server-rendered HTML alone is not enough)
@@ -124,7 +126,7 @@ Used in the `gcp-promote-stage-to-prod` pipeline to validate stage before promot
 
 `pytest-xdist` is declared in `pyproject.toml` under `[dependency-groups] dev` and is available in `.venv`.
 
-For pre-commit (unit only), parallelization is not used — the hook runs `pytest` directly without `-n` so failures are easy to read.
+For pre-commit, parallelization is not used — the hook runs `pytest` directly without `-n` so failures are easy to read. If e2e tests time out in the hook, run them separately against stage (`E2E_BASE_URL=https://stage.verbboard.com pytest tests/e2e -n 2`).
 
 ---
 
