@@ -158,8 +158,8 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    skipBtn.addEventListener("click", function () {
-      progress.setKnown(language, verbId, true);
+    skipBtn.addEventListener("click", async function () {
+      await progress.setKnown(language, verbId, true);
 
       const updatedIds = session.ids.filter(function (id) { return id !== verbId; });
 
@@ -172,13 +172,21 @@ document.addEventListener("DOMContentLoaded", function () {
       const updatedLemmas = Object.assign({}, session.lemmas || {});
       delete updatedLemmas[verbId];
 
-      localStorage.setItem(sessionKey, JSON.stringify({
+      const updatedSession = {
         ids: updatedIds,
         lemmas: updatedLemmas,
         size: session.size,
-      }));
+      };
+      localStorage.setItem(sessionKey, JSON.stringify(updatedSession));
 
-      navTo(updatedIds[Math.min(idx, updatedIds.length - 1)]);
+      const navTarget = Math.min(idx, updatedIds.length - 1);
+      // If clamping moved us backwards, every remaining verb was already visited.
+      // Finish the session rather than landing on a verb the user already completed.
+      if (navTarget < idx) {
+        await _finishPractice(updatedSession);
+      } else {
+        navTo(updatedIds[navTarget]);
+      }
     });
 
     abandonBtn.addEventListener("click", function () {
