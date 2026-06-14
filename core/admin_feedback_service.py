@@ -148,7 +148,6 @@ def _read_sessions_summary(*, days: int = 60) -> dict[str, Any]:
     cutoff_date = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%d")
     docs = db.collection("analytics_sessions").where("date", ">=", cutoff_date).stream()
 
-    by_os: Counter[str] = Counter()
     by_device: Counter[str] = Counter()
     by_language: Counter[str] = Counter()
     by_ui_lang: Counter[str] = Counter()
@@ -157,7 +156,6 @@ def _read_sessions_summary(*, days: int = 60) -> dict[str, Any]:
 
     for doc in docs:
         data = doc.to_dict() or {}
-        by_os[str(data.get("os") or "unknown").lower()] += 1
         by_device[str(data.get("device_type") or "unknown").lower()] += 1
         by_language[str(data.get("language") or "none")] += 1
         by_ui_lang[str(data.get("ui_lang") or "none")] += 1
@@ -168,7 +166,6 @@ def _read_sessions_summary(*, days: int = 60) -> dict[str, Any]:
     return {
         "total_sessions": total,
         "logged_in_sessions": logged_in,
-        "by_os": dict(by_os),
         "by_device": dict(by_device),
         "by_language": dict(by_language),
         "by_ui_lang": dict(by_ui_lang),
@@ -241,7 +238,6 @@ def get_device_mix(*, days: int = 60) -> dict[str, Any]:
         "total_sessions": sessions["total_sessions"],
         "logged_in_sessions": sessions["logged_in_sessions"],
         "by_device": sessions["by_device"],
-        "by_os": sessions["by_os"],
         "by_language": sessions["by_language"],
         "by_ui_lang": sessions["by_ui_lang"],
         "users": users,

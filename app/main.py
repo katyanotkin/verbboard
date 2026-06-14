@@ -65,7 +65,7 @@ class _PageViewMiddleware:
 
         from datetime import UTC, datetime
 
-        from core.analytics.client_context import detect_device_type, detect_os
+        from core.analytics.client_context import detect_device_type
         from core.analytics.session_tracker import get_fingerprint_sid, start_session
         from core.i18n import resolve_ui_language
 
@@ -79,7 +79,7 @@ class _PageViewMiddleware:
         date = datetime.now(UTC).strftime("%Y-%m-%d")
 
         fingerprint = get_fingerprint_sid(request, date)
-        await start_session(fingerprint, date, detect_device_type(user_agent), detect_os(user_agent), language, ui_lang)
+        await start_session(fingerprint, date, detect_device_type(user_agent), language, ui_lang)
 
         await self._app(scope, receive, send)
 

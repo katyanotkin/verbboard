@@ -148,7 +148,6 @@
   function renderUsageSummary(deviceMix) {
     const dims = [
       { label: "Devices",          data: deviceMix?.by_device   || {} },
-      { label: "OS",               data: deviceMix?.by_os       || {} },
       { label: "Language studied", data: deviceMix?.by_language || {} },
       { label: "UI language",      data: deviceMix?.by_ui_lang  || {} },
     ];
