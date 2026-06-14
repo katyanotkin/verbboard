@@ -226,8 +226,12 @@ document.addEventListener("DOMContentLoaded", function () {
     progressEl.className = "practice-progress";
     progressEl.textContent = `${idx + 1}/${total}`;
 
+    const progressWrapper = document.createElement("div");
+    progressWrapper.className = "practice-progress-wrapper";
+    progressWrapper.appendChild(progressEl);
+
     const nextBtn = document.createElement("button");
-    nextBtn.className = "practice-nav-btn";
+    nextBtn.className = "practice-nav-btn practice-nav-btn--primary";
     nextBtn.textContent = isRTL ? '<' : '>';
     nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
 
@@ -243,16 +247,16 @@ document.addEventListener("DOMContentLoaded", function () {
     warnEl.className = "practice-listen-warn";
     warnEl.hidden = true;
 
-    const rowBreak = document.createElement("span");
-    rowBreak.className = "practice-row-break";
+    const actionsRow = document.createElement("div");
+    actionsRow.className = "practice-bar-actions";
+    actionsRow.appendChild(skipBtn);
+    actionsRow.appendChild(abandonBtn);
 
     bar.appendChild(prevBtn);
-    bar.appendChild(progressEl);
+    bar.appendChild(progressWrapper);
     bar.appendChild(nextBtn);
     bar.appendChild(warnEl);
-    bar.appendChild(rowBreak);
-    bar.appendChild(skipBtn);
-    bar.appendChild(abandonBtn);
+    bar.appendChild(actionsRow);
 
     pageRoot.insertBefore(bar, pageRoot.firstChild);
 
@@ -271,6 +275,12 @@ document.addEventListener("DOMContentLoaded", function () {
       let plays;
       try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}"); } catch (_) { plays = {}; }
       return (plays[verbId] || 0) >= PRACTICE_MIN_PLAYS;
+    }
+
+    if (isLast) {
+      document.addEventListener('vb:learn-audio-played', function () {
+        if (hasListened()) progressEl.classList.add('practice-progress--done');
+      });
     }
 
     let warnTimer;
