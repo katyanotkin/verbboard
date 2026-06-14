@@ -68,8 +68,9 @@ Visual indicators:
 
 ## Guided learning experience
 
-- Guided practice sessions of 3, 6, or 9 verbs
-- Audio listening required before advancing through practice
+- Practice sessions of 3, 6, or 9 verbs; configurable audio listens per verb (3 / 5 / All)
+- Audio listening required before advancing to the next verb
+- Skip & mark as learned — for verbs you already know
 - Complete a session to earn a badge
 - Learning badges and persistent progress tracking
 - Cross-device sync for authenticated users
@@ -80,14 +81,14 @@ Visual indicators:
 - Google sign-in via Firebase Auth
 - By default, progress stays on the current device only
 - Sign in to sync seen verbs, known verbs, and practice badges across devices
-- Local progress merges automatically with server state on login
+- Words learned and badges earned before signing in are preserved on first login
 
 ---
 
 ## PWA / Mobile
 
 - PWA manifest, service worker, and icons in `app/static/`
-- 5-tab bottom nav on mobile: Back / Search / List / Practice / Login
+- 4-tab icon-only bottom nav on mobile: Back / Verbs / Search / Login
 - Install prompt on Android via `beforeinstallprompt`
 - Three-branch sign-in: standalone PWA → new tab, mobile browser → `/auth/signin`, desktop → popup
 - `/privacy` page for Google Play OAuth consent screen
@@ -97,8 +98,8 @@ Visual indicators:
 
 ## State persistence
 
-- Language and voice persist via cookies
-- Seen / known / practice state stored in localStorage per language
+- Language and UI language travel as URL query params (no cookies — Firebase Hosting CDN strips all except `__session`)
+- Voice, seen / known / practice state stored in localStorage per language
 - Authenticated users sync state to Firestore (`user_progress`, `user_practice`)
 
 ---
