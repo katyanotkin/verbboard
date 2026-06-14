@@ -77,6 +77,27 @@ async def start_session(fingerprint: str, date: str, device_type: str, language:
     task.add_done_callback(_pending.discard)
 
 
+def _enrich_lang(fingerprint: str, date: str, language: str, ui_lang: str) -> None:
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    update: dict = {}
+    if language:
+        update["language"] = language
+    if ui_lang:
+        update["ui_lang"] = ui_lang
+    try:
+        get_db().collection(COLLECTION).document(doc_id).set(update, merge=True)
+    except Exception:
+        logger.exception("Failed to enrich session lang")
+
+
+async def enrich_lang(fingerprint: str, date: str, language: str, ui_lang: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_enrich_lang, fingerprint, date, language, ui_lang))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
 def _attach_uid(fingerprint: str, date: str, uid: str) -> None:
     from core.storage.firestore_db import get_db
 

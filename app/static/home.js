@@ -41,6 +41,21 @@ document.addEventListener("DOMContentLoaded", function () {
     return languageSelect ? languageSelect.value : "";
   }
 
+  function getUiLang() {
+    return new URLSearchParams(location.search).get('ui_language') || document.documentElement.lang || '';
+  }
+
+  function reportLanguageChoice() {
+    const language = getLanguage();
+    const uiLang = getUiLang();
+    if (!language && !uiLang) return;
+    fetch('/api/analytics/enrich', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language, ui_lang: uiLang }),
+    }).catch(function () {});
+  }
+
   function hideSuggestions() {
     if (blurHideTimer !== null) {
       window.clearTimeout(blurHideTimer);
@@ -205,6 +220,19 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   updatePrimaryAction();
+
+  // Analytics: report language choice on intentional actions.
+  const languageSelect = document.querySelector('select[name="language"]');
+  if (languageSelect) {
+    languageSelect.addEventListener('change', reportLanguageChoice);
+  }
+  ['browse-btn'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', reportLanguageChoice);
+  });
+  document.querySelectorAll('.browse-practice-btn').forEach(function (el) {
+    el.addEventListener('click', reportLanguageChoice);
+  });
 
   // Search mode pill toggle
   const searchModePills = document.getElementById("search-mode-pills");

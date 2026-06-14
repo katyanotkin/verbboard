@@ -376,6 +376,16 @@
               headers: { Authorization: 'Bearer ' + token },
             }).catch(function () {});
           });
+          // Enrich session with the language the user is actually seeing.
+          const language = new URLSearchParams(location.search).get('language') || '';
+          const uiLang = new URLSearchParams(location.search).get('ui_language') || document.documentElement.lang || '';
+          if (language || uiLang) {
+            fetch('/api/analytics/enrich', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ language, ui_lang: uiLang }),
+            }).catch(function () {});
+          }
         }
 
         await hydrateProgress();
