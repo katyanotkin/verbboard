@@ -153,11 +153,11 @@
       { label: "UI language",      data: deviceMix?.by_ui_lang  || {} },
     ];
 
+    const totalSessions = deviceMix?.total_sessions ?? 0;
     if (!totalSessions) return "";
 
     const u = deviceMix?.users || {};
     const pr = deviceMix?.practice || {};
-    const totalSessions = deviceMix?.total_sessions ?? 0;
     const loggedIn = deviceMix?.logged_in_sessions ?? null;
     const anon = loggedIn != null ? totalSessions - loggedIn : null;
     const loginPct = totalSessions && loggedIn != null ? Math.round((loggedIn / totalSessions) * 100) : "—";
