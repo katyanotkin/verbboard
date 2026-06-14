@@ -45,7 +45,7 @@
   "verbs.load_more": "Show more verbs",
   "practice.label": "Practice",
   "practice.size_unit": "# of verbs",
-  "practice.listens_unit": "play # audios / verb",
+  "practice.listens_unit": "# audios / verb",
   "practice.listens_all": "All",
   "practice.start": "Start",
   "practice.start_mixed": "Start (includes learned)",

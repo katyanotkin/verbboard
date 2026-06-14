@@ -135,6 +135,11 @@
 .vb-ftbtn.active              { background: var(--color-navy); color: white; }
 .vb-ftbtn:not(.active):hover  { background: #e5e7eb; }
 
+[dir="rtl"] .vb-ftbtn + .vb-ftbtn {
+  border-left: none;
+  border-right: 1px solid var(--card-border);
+}
+
 @media (max-width: 480px) {
   .vb-filter-row {
     flex-direction: column;
@@ -301,6 +306,10 @@
 .vb-badge        { font-size: 13px; flex-shrink: 0; margin-left: 4px; }
 .vb-badge.known  { color: #4a90e2; }
 
+[dir="rtl"] .vb-badge {
+  margin-left: 0;
+  margin-right: 4px;
+}
 
 .vb-empty {
   grid-column: 1 / -1;
@@ -431,6 +440,11 @@
   letter-spacing: 0.04em;
 }
 
+[dir="rtl"] .practice-label {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .practice-size-group {
   display: flex;
   gap: 4px;
@@ -473,20 +487,6 @@
   color: var(--notice-text);
   white-space: nowrap;
 }
-
-.practice-abandon-btn {
-  padding: 6px 12px;
-  border: 1px solid #fca5a5;
-  border-radius: 999px;
-  background: transparent;
-  color: #b91c1c;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.1s;
-  white-space: nowrap;
-}
-.practice-abandon-btn:hover { background: #fee2e2; }
 
 /* ── badges ───────────────────────────────────────────────────────────────── */
 .practice-badges {
@@ -620,6 +620,10 @@
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+}
+
+[dir="rtl"] .practice-wrapup-actions {
+  justify-content: flex-start;
 }
 
 .practice-wrapup-star {

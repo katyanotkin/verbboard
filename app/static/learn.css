@@ -66,6 +66,11 @@ td {
   border-bottom: 1px solid var(--card-border);
 }
 
+[dir="rtl"] th,
+[dir="rtl"] td {
+  text-align: right;
+}
+
 th {
   background: var(--page-bg);
   color: #374151;
@@ -188,6 +193,11 @@ button {
   margin-right: 3px;
 }
 
+[dir="rtl"] .voice-gender-icon {
+  margin-right: 0;
+  margin-left: 3px;
+}
+
 .voice-icon {
   display: inline-flex;
   align-items: center;
@@ -231,6 +241,11 @@ button {
   border-left: 1px solid var(--card-border);
 }
 
+[dir="rtl"] .voice-btn + .voice-btn {
+  border-left: none;
+  border-right: 1px solid var(--card-border);
+}
+
 .voice-btn.active {
   background: #4a90e2;
   color: white;
@@ -257,6 +272,11 @@ button {
   text-transform: uppercase;
   color: var(--text-subtle);
   white-space: nowrap;
+}
+
+[dir="rtl"] .filter-label {
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .persona-toggle,
@@ -330,7 +350,6 @@ button {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-body);
-  white-space: nowrap;
   line-height: 1;
 }
 
@@ -427,32 +446,6 @@ button {
   cursor: default;
 }
 
-.practice-abandon-btn {
-  padding: 6px 12px;
-  border: 1px solid #fca5a5;
-  border-radius: 999px;
-  background: transparent;
-  color: #b91c1c;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.practice-abandon-btn:hover { background: #fee2e2; }
-
-.practice-skip-btn {
-  padding: 6px 12px;
-  border: 1px solid #6ee7b7;
-  border-radius: 999px;
-  background: transparent;
-  color: #065f46;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.practice-skip-btn:hover { background: #d1fae5; }
-
 .practice-audio-progress {
   font-size: 12px;
   color: #6b7280;
@@ -476,7 +469,7 @@ button {
   flex: 1;
   font-size: 12px;
   color: #b45309;
-  text-align: right;
+  text-align: end;
 }
 
 .practice-progress {

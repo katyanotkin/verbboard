@@ -59,6 +59,11 @@ body {
   flex-direction: row-reverse;
 }
 
+[dir="rtl"] .topbar-nav-right {
+  margin-left: 0;
+  margin-right: auto;
+}
+
 [dir="rtl"] .vb-filter-row,
 [dir="rtl"] .vb-search-row {
   flex-direction: row-reverse;
@@ -501,3 +506,32 @@ body {
     animation: none !important;
   }
 }
+
+/* ===== Practice pill buttons (shared: learn + verbs) ===== */
+
+.practice-abandon-btn {
+  padding: 6px 12px;
+  border: 1px solid #fca5a5;
+  border-radius: 999px;
+  background: transparent;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+.practice-abandon-btn:hover { background: #fee2e2; }
+
+.practice-skip-btn {
+  padding: 6px 12px;
+  border: 1px solid #6ee7b7;
+  border-radius: 999px;
+  background: transparent;
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.practice-skip-btn:hover { background: #d1fae5; }

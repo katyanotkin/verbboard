@@ -21,7 +21,7 @@
     const practiceBadgesKey = `practice_badges:${lang}`;
     const practiceWrapupKey = `practice_wrapup:${lang}`;
     const practiceMinPlaysKey = 'practice_min_plays';
-    const PRACTICE_LISTENS = [1, 3, 5, 8, 'all'];
+    const PRACTICE_LISTENS = [3, 5, 'all'];
 
     const SIZE_THREE = 3;
     const SIZE_SIX = 6;
@@ -313,7 +313,7 @@
                 </div>
               </div>
               <div class="practice-picker-row">
-                <span class="practice-size-hint">${ui['practice.listens_unit'] || 'play # audios / verb'}</span>
+                <span class="practice-size-hint">${ui['practice.listens_unit'] || '# audios / verb'}</span>
                 <div class="practice-size-group">
                   ${listenButtons}
                 </div>
