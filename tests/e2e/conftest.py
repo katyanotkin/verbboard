@@ -4,6 +4,7 @@ import os
 import socket
 import threading
 import time
+import urllib.request
 from typing import Any
 
 import pytest
@@ -68,7 +69,21 @@ def live_server_url() -> str:
     if not _wait_for_port("127.0.0.1", port):
         raise RuntimeError(f"Test server did not start on port {port}")
 
-    return f"http://127.0.0.1:{port}"
+    # Warm up: prime Firestore caches so the first test does not hit a cold app.
+    base = f"http://127.0.0.1:{port}"
+    for warmup_url in (
+        f"{base}/?language=en",
+        f"{base}/verbs?language=en",
+        f"{base}/verbs?language=ru",
+    ):
+        for _ in range(10):
+            try:
+                urllib.request.urlopen(warmup_url, timeout=10)
+                break
+            except Exception:
+                time.sleep(1)
+
+    return base
 
 
 @pytest.fixture(scope="session")
@@ -83,7 +98,13 @@ def browser() -> Any:
 
 @pytest.fixture
 def page(browser: Any, live_server_url: str) -> Any:
-    page_instance = browser.new_page()
-    page_instance.set_default_timeout(8_000)
+    # Isolated context per test: each test gets its own localStorage/cookies so
+    # one test's practice sessions or known-verb state cannot leak into the next.
+    ctx = browser.new_context()
+    page_instance = ctx.new_page()
+    page_instance.set_default_timeout(30_000)
+    # Belt-and-suspenders: abort Firebase CDN requests so networkidle never
+    # stalls waiting for gstatic.com, even if FIREBASE_WEB_CONFIG_JSON is set.
+    page_instance.route("https://www.gstatic.com/firebasejs/**", lambda route: route.abort())
     yield page_instance
-    page_instance.close()
+    ctx.close()

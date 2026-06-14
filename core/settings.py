@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
 from functools import lru_cache
@@ -108,7 +109,7 @@ def load_settings() -> Settings:
         verb_candidates_collection=os.getenv("VERB_CANDIDATES_COLLECTION", "verb_candidates"),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         admin_secret=_load_admin_secret(),
-        firebase_web_config_json=os.getenv("FIREBASE_WEB_CONFIG_JSON", ""),
+        firebase_web_config_json=_safe_firebase_config(os.getenv("FIREBASE_WEB_CONFIG_JSON", "")),
         allow_local_dev_auth=os.getenv("ALLOW_LOCAL_DEV_AUTH", "").lower() == "true",
         badge_compact_threshold=int(os.getenv("BADGE_COMPACT_THRESHOLD", "20")),
         verbs_page_limit=int(os.getenv("VERBS_PAGE_LIMIT", "300")),
@@ -116,6 +117,20 @@ def load_settings() -> Settings:
     )
     _validate(settings)
     return settings
+
+
+def _safe_firebase_config(raw: str) -> str:
+    """Re-parse and re-serialize Firebase config JSON with <, >, & unicode-escaped.
+
+    Stored once at settings load time so every route that embeds this value
+    inside an HTML <script> block is safe even if the secret value contains
+    </script> or other HTML-breaking sequences.
+    """
+    try:
+        parsed = json.loads(raw or "null")
+    except (TypeError, ValueError):
+        return "null"
+    return json.dumps(parsed).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
 
 def _validate(settings: Settings) -> None:

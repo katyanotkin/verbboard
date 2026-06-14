@@ -305,16 +305,18 @@
             ${badgesHtml}
           </div>
           <div class="practice-picker">
-            <div class="practice-picker-col">
-              <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
-              <div class="practice-size-group">
-                ${sizeButtons}
+            <div class="practice-picker-rows">
+              <div class="practice-picker-row">
+                <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
+                <div class="practice-size-group">
+                  ${sizeButtons}
+                </div>
               </div>
-            </div>
-            <div class="practice-picker-col">
-              <span class="practice-size-hint">${ui['practice.listens_unit'] || 'play # audios / verb'}</span>
-              <div class="practice-size-group">
-                ${listenButtons}
+              <div class="practice-picker-row">
+                <span class="practice-size-hint">${ui['practice.listens_unit'] || 'play # audios / verb'}</span>
+                <div class="practice-size-group">
+                  ${listenButtons}
+                </div>
               </div>
             </div>
             <div class="practice-picker-start">

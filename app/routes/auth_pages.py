@@ -21,14 +21,12 @@ def _html_safe_json(value: object) -> str:
 @router.get("/auth/signin", response_class=HTMLResponse, include_in_schema=False)
 def auth_signin_page(request: Request, return_to: str = "") -> HTMLResponse:
     settings = load_settings()
-    # Re-serialize to guarantee well-formed JSON, then unicode-escape <, >, & so
-    # the value is safe inside an HTML <script> block (json.dumps alone does not
-    # escape these, and a value containing </script> would break the block).
+    # load_settings() pre-escapes via _safe_firebase_config(); re-escape here as
+    # defence-in-depth in case the value was set directly (e.g. in tests).
     try:
         firebase_cfg_json = _html_safe_json(json.loads(settings.firebase_web_config_json or "null"))
     except (TypeError, ValueError):
         firebase_cfg_json = "null"
-
     safe_return_json = _html_safe_json(safe_return_to(return_to, fallback=""))
 
     return templates.TemplateResponse(

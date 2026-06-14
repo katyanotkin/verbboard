@@ -33,7 +33,7 @@ def _page_for_viewport(browser, viewport_name: str):
         viewport=_VIEWPORTS[viewport_name],
     )
     page = context.new_page()
-    page.set_default_timeout(8_000)
+    page.set_default_timeout(15_000)
     try:
         yield page
     finally:

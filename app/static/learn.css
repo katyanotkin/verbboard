@@ -437,7 +437,6 @@ button {
   font-weight: 500;
   cursor: pointer;
   transition: background 0.1s;
-  white-space: nowrap;
 }
 .practice-abandon-btn:hover { background: #fee2e2; }
 
@@ -451,7 +450,6 @@ button {
   font-weight: 500;
   cursor: pointer;
   transition: background 0.1s;
-  white-space: nowrap;
 }
 .practice-skip-btn:hover { background: #d1fae5; }
 
@@ -467,7 +465,6 @@ button {
   height: 0;
 }
 
-.practice-bar .btn-pill-navy,
 .practice-bar .practice-skip-btn,
 .practice-bar .practice-abandon-btn {
   flex: 1 1 0;

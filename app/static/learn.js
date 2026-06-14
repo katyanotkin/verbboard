@@ -230,12 +230,6 @@ document.addEventListener("DOMContentLoaded", function () {
     nextBtn.className = "practice-nav-btn";
     nextBtn.textContent = isRTL ? '<' : '>';
     nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
-    nextBtn.disabled = isLast;
-
-    const finishBtn = document.createElement("button");
-    finishBtn.className = "btn-pill-navy";
-    finishBtn.textContent = UI["practice.finish"] || "Finish";
-    finishBtn.disabled = !isLast;
 
     const skipBtn = document.createElement("button");
     skipBtn.className = "practice-skip-btn";
@@ -259,7 +253,6 @@ document.addEventListener("DOMContentLoaded", function () {
     bar.appendChild(rowBreak);
     bar.appendChild(skipBtn);
     bar.appendChild(abandonBtn);
-    bar.appendChild(finishBtn);
 
     pageRoot.insertBefore(bar, pageRoot.firstChild);
 
@@ -294,21 +287,16 @@ document.addEventListener("DOMContentLoaded", function () {
       if (idx > 0) navTo(session.ids[idx - 1]);
     });
 
-    nextBtn.addEventListener("click", function () {
-      if (idx >= total - 1) return;
+    nextBtn.addEventListener("click", async function () {
       if (!hasListened()) {
         showWarn();
         return;
       }
-      navTo(session.ids[idx + 1]);
-    });
-
-    finishBtn.addEventListener("click", async function () {
-      if (!hasListened()) {
-        showWarn();
-        return;
+      if (isLast) {
+        _finishPractice(session);
+      } else {
+        navTo(session.ids[idx + 1]);
       }
-      _finishPractice(session);
     });
 
     skipBtn.addEventListener("click", function () {

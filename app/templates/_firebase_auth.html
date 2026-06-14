@@ -6,8 +6,12 @@
    Each page must set window.UI (with auth.login / auth.logout) in its own
    isolated script block BEFORE this include.
    Requires firebase_web_config_json to be in the template context.
+   The value must already be HTML-safe JSON (pre-escaped via _safe_firebase_config()
+   in core/settings.py -- <, >, & are unicode-escaped so </script> cannot appear).
 #}
 <script>window.FIREBASE_WEB_CONFIG = {{ (firebase_web_config_json if firebase_web_config_json else "null") | safe }};</script>
+{% if firebase_web_config_json and firebase_web_config_json != "null" %}
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+{% endif %}
 <script defer src="/static/auth.js"></script>

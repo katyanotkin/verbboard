@@ -32,7 +32,7 @@ def _dropdown_hidden(page) -> bool:
     return page.locator("#ui-lang-dropdown[hidden]").count() == 1
 
 
-def _new_page(browser, locale: str, timeout: int = 8_000):
+def _new_page(browser, locale: str, timeout: int = 15_000):
     ctx = browser.new_context(locale=locale)
     p = ctx.new_page()
     p.set_default_timeout(timeout)
