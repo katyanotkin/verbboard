@@ -3,14 +3,12 @@
 Covers:
 - get_fingerprint_sid: deterministic SHA256(ip|ua|date)[:32]; stable across
   calls, varies by IP / UA / date; uses X-Forwarded-For when present
-- tracked_page: maps URL paths to page names; returns None for untracked paths
 """
 
 from __future__ import annotations
 
 from starlette.requests import Request
 
-from core.analytics.daily_counters import tracked_page
 from core.analytics.session_tracker import get_fingerprint_sid
 
 # ── request helper ─────────────────────────────────────────────────────────────
@@ -96,40 +94,3 @@ def test_fingerprint_falls_back_to_client_host() -> None:
     req = _build_request(forwarded_for="", user_agent="UA", client_host="192.168.1.1")
     sid = get_fingerprint_sid(req, "2026-06-10")
     assert len(sid) == 32
-
-
-# ── tracked_page ──────────────────────────────────────────────────────────────
-
-
-import pytest  # noqa: E402
-
-
-@pytest.mark.parametrize(
-    "path,expected",
-    [
-        ("/", "home"),
-        ("/verbs", "verbs"),
-        ("/learn", "learn"),
-        ("/feedback", "feedback"),
-    ],
-)
-def test_tracked_page_known_paths(path: str, expected: str) -> None:
-    assert tracked_page(path) == expected
-
-
-@pytest.mark.parametrize(
-    "path",
-    [
-        "/auth/signin",
-        "/.well-known/assetlinks.json",
-        "/static/sw.js",
-        "/health",
-        "/api/analytics/session",
-        "/about",
-        "/audio/en/en_go/female/base.mp3",
-        "",
-        "/unknown",
-    ],
-)
-def test_tracked_page_untracked_paths_return_none(path: str) -> None:
-    assert tracked_page(path) is None

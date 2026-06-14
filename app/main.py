@@ -65,23 +65,21 @@ class _PageViewMiddleware:
 
         from datetime import UTC, datetime
 
-        from core.analytics.client_context import detect_device_type
-        from core.analytics.daily_counters import record, tracked_page
+        from core.analytics.client_context import detect_device_type, detect_os
         from core.analytics.session_tracker import get_fingerprint_sid, start_session
+        from core.i18n import resolve_ui_language
 
-        page = tracked_page(request.url.path)
-        if page is None:
+        if request.url.path not in {"/", "/verbs", "/learn", "/feedback"}:
             await self._app(scope, receive, send)
             return
 
         language = request.query_params.get("language", "")
-        ui_lang = request.query_params.get("ui_language", "")
+        ui_lang = resolve_ui_language(request)
         user_agent = request.headers.get("user-agent")
         date = datetime.now(UTC).strftime("%Y-%m-%d")
 
         fingerprint = get_fingerprint_sid(request, date)
-        await start_session(fingerprint, date, detect_device_type(user_agent), language, ui_lang)
-        await record(request.url.path, language, ui_lang, user_agent)
+        await start_session(fingerprint, date, detect_device_type(user_agent), detect_os(user_agent), language, ui_lang)
 
         await self._app(scope, receive, send)
 

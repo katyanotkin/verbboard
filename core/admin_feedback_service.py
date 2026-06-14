@@ -143,66 +143,107 @@ def get_active_poll_meta() -> dict:
     }
 
 
-def _count_device_types_feedback(*, days: int = 60, limit: int = 2000) -> dict[str, int]:
-    db = get_db()
-    cutoff = datetime.now(UTC) - timedelta(days=days)
-    docs = (
-        db.collection("feedback")
-        .where("created_at", ">=", cutoff)
-        .order_by("created_at", direction="DESCENDING")
-        .limit(limit)
-        .stream()
-    )
-    counter: Counter[str] = Counter()
-    for doc in docs:
-        data = doc.to_dict() or {}
-        device_type = str(data.get("device_type") or "unknown").lower()
-        counter[device_type] += 1
-    return dict(counter)
-
-
-def _read_analytics_counters(*, days: int = 60) -> dict[str, Any]:
+def _read_sessions_summary(*, days: int = 60) -> dict[str, Any]:
     db = get_db()
     cutoff_date = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%d")
-    docs = db.collection("analytics_daily").where("date", ">=", cutoff_date).stream()
+    docs = db.collection("analytics_sessions").where("date", ">=", cutoff_date).stream()
 
-    by_page: Counter[str] = Counter()
+    by_os: Counter[str] = Counter()
     by_device: Counter[str] = Counter()
     by_language: Counter[str] = Counter()
     by_ui_lang: Counter[str] = Counter()
+    total = 0
+    logged_in = 0
 
     for doc in docs:
         data = doc.to_dict() or {}
-        n = int(data.get("count") or 0)
-        by_page[str(data.get("page") or "unknown")] += n
-        by_device[str(data.get("device_type") or "unknown").lower()] += n
-        lang = str(data.get("language") or "none")
-        by_language[lang] += n
-        ui = str(data.get("ui_lang") or "none")
-        by_ui_lang[ui] += n
+        by_os[str(data.get("os") or "unknown").lower()] += 1
+        by_device[str(data.get("device_type") or "unknown").lower()] += 1
+        by_language[str(data.get("language") or "none")] += 1
+        by_ui_lang[str(data.get("ui_lang") or "none")] += 1
+        total += 1
+        if data.get("uid"):
+            logged_in += 1
 
     return {
-        "by_page": dict(by_page),
+        "total_sessions": total,
+        "logged_in_sessions": logged_in,
+        "by_os": dict(by_os),
         "by_device": dict(by_device),
         "by_language": dict(by_language),
         "by_ui_lang": dict(by_ui_lang),
     }
 
 
-def get_device_mix(*, days: int = 60) -> dict[str, Any]:
-    feedback_counts = _count_device_types_feedback(days=days)
-    analytics = _read_analytics_counters(days=days)
+def _read_practice_summary() -> dict[str, Any]:
+    db = get_db()
+    docs = db.collection_group("languages").stream()
 
-    combined = Counter(feedback_counts)
-    combined.update(analytics["by_device"])
+    by_language: Counter[str] = Counter()
+    users_with_practice: set[str] = set()
+
+    for doc in docs:
+        parts = doc.reference.path.split("/")
+        if len(parts) != 4 or parts[0] != "user_practice":
+            continue
+        data = doc.to_dict() or {}
+        if not data.get("badges"):
+            continue
+        uid = parts[1]
+        lang = str(data.get("language") or parts[3])
+        by_language[lang] += 1
+        users_with_practice.add(uid)
+
+    return {
+        "practice_users_total": len(users_with_practice),
+        "practice_by_language": dict(by_language),
+    }
+
+
+def _read_users_summary(*, days: int = 60) -> dict[str, Any]:
+    db = get_db()
+    now = datetime.now(UTC)
+    cutoff = now - timedelta(days=days)
+    cutoff_7 = now - timedelta(days=7)
+
+    docs = list(db.collection("users").stream())
+    total = len(docs)
+    new_users = 0
+    active_60 = 0
+    active_7 = 0
+
+    for doc in docs:
+        data = doc.to_dict() or {}
+        created_at = data.get("created_at")
+        updated_at = data.get("updated_at")
+        if created_at and created_at >= cutoff:
+            new_users += 1
+        if updated_at and updated_at >= cutoff:
+            active_60 += 1
+        if updated_at and updated_at >= cutoff_7:
+            active_7 += 1
+
+    return {
+        "total": total,
+        "new_last_60d": new_users,
+        "active_last_7d": active_7,
+        "active_last_60d": active_60,
+    }
+
+
+def get_device_mix(*, days: int = 60) -> dict[str, Any]:
+    sessions = _read_sessions_summary(days=days)
+    users = _read_users_summary(days=days)
+    practice = _read_practice_summary()
 
     return {
         "days": days,
-        "feedback": feedback_counts,
-        "page_views": analytics["by_device"],
-        "by_page": analytics["by_page"],
-        "by_device": analytics["by_device"],
-        "by_language": analytics["by_language"],
-        "by_ui_lang": analytics["by_ui_lang"],
-        "combined": dict(combined),
+        "total_sessions": sessions["total_sessions"],
+        "logged_in_sessions": sessions["logged_in_sessions"],
+        "by_device": sessions["by_device"],
+        "by_os": sessions["by_os"],
+        "by_language": sessions["by_language"],
+        "by_ui_lang": sessions["by_ui_lang"],
+        "users": users,
+        "practice": practice,
     }

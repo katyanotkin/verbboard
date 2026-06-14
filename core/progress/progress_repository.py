@@ -61,16 +61,18 @@ def upsert_user_profile(
     picture: str,
 ) -> None:
     db = get_db()
-    db.collection(USERS_COLLECTION).document(user_id).set(
-        {
-            "email": email,
-            "name": name,
-            "picture": picture,
-            "last_seen_at": firestore.SERVER_TIMESTAMP,
-            "updated_at": firestore.SERVER_TIMESTAMP,
-        },
-        merge=True,
-    )
+    doc_ref = db.collection(USERS_COLLECTION).document(user_id)
+    data: dict[str, Any] = {
+        "email": email,
+        "name": name,
+        "picture": picture,
+        "last_seen_at": firestore.SERVER_TIMESTAMP,
+        "updated_at": firestore.SERVER_TIMESTAMP,
+    }
+    existing = doc_ref.get()
+    if not existing.exists or not (existing.to_dict() or {}).get("created_at"):
+        data["created_at"] = firestore.SERVER_TIMESTAMP
+    doc_ref.set(data, merge=True)
 
 
 def get_preferences(*, user_id: str) -> dict:

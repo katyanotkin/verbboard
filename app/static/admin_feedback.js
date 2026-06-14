@@ -147,14 +147,20 @@
 
   function renderUsageSummary(deviceMix) {
     const dims = [
-      { label: "Pages",             data: deviceMix?.by_page     || {} },
-      { label: "Devices",           data: deviceMix?.by_device   || {} },
-      { label: "Language studied",  data: deviceMix?.by_language || {} },
-      { label: "UI language",       data: deviceMix?.by_ui_lang  || {} },
+      { label: "Devices",          data: deviceMix?.by_device   || {} },
+      { label: "OS",               data: deviceMix?.by_os       || {} },
+      { label: "Language studied", data: deviceMix?.by_language || {} },
+      { label: "UI language",      data: deviceMix?.by_ui_lang  || {} },
     ];
 
-    const grandTotal = Object.values(deviceMix?.by_page || {}).reduce((s, n) => s + n, 0);
-    if (!grandTotal) return "";
+    if (!totalSessions) return "";
+
+    const u = deviceMix?.users || {};
+    const pr = deviceMix?.practice || {};
+    const totalSessions = deviceMix?.total_sessions ?? 0;
+    const loggedIn = deviceMix?.logged_in_sessions ?? null;
+    const anon = loggedIn != null ? totalSessions - loggedIn : null;
+    const loginPct = totalSessions && loggedIn != null ? Math.round((loggedIn / totalSessions) * 100) : "—";
 
     function dimTable(data) {
       const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
@@ -170,6 +176,32 @@
       return `<table style="border-collapse:collapse;font-size:12px;">${rows}</table>`;
     }
 
+    function statRow(label, value) {
+      return `<tr>
+        <td style="padding:1px 8px 1px 0;color:#374151;">${label}</td>
+        <td style="padding:1px 0;text-align:right;color:#374151;">${value}</td>
+      </tr>`;
+    }
+
+    const usersTable = `<table style="border-collapse:collapse;font-size:12px;">
+      ${statRow("Total registered", u.total ?? "—")}
+      ${statRow("New (60d)", u.new_last_60d ?? "—")}
+      ${statRow("Active (7d)", u.active_last_7d ?? "—")}
+      ${statRow("Active (60d)", u.active_last_60d ?? "—")}
+      ${statRow("Sessions logged-in", loggedIn != null ? `${loggedIn} (${loginPct}%)` : "—")}
+      ${statRow("Sessions anon", anon != null ? anon : "—")}
+    </table>`;
+
+    const practiceSection = pr.practice_users_total != null ? `
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Practice users</div>
+        <table style="border-collapse:collapse;font-size:12px;">
+          ${statRow("Total ever", pr.practice_users_total ?? "—")}
+          ${Object.entries(pr.practice_by_language || {}).sort((a, b) => b[1] - a[1]).map(([lang, n]) => statRow(lang, n)).join("")}
+        </table>
+      </div>
+    ` : "";
+
     const sections = dims.map(({ label, data }) => `
       <div>
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">${label}</div>
@@ -180,10 +212,15 @@
     return `
       <div class="card" style="padding:14px 16px;margin-bottom:12px;background:#f1f5f9;">
         <div style="font-weight:700;margin-bottom:10px;">
-          Usage summary · last ${escapeHtml(String(deviceMix.days || 60))} days · ${grandTotal} page views
+          Usage summary · last ${escapeHtml(String(deviceMix.days || 60))} days · ${escapeHtml(String(totalSessions))} sessions
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,auto);gap:16px 24px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,auto));gap:16px 24px;align-items:start;">
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Users</div>
+            ${usersTable}
+          </div>
           ${sections}
+          ${practiceSection}
         </div>
       </div>
     `;
