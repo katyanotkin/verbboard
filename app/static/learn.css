@@ -523,6 +523,17 @@ button {
   transform: scale(1.12);
 }
 
+@keyframes practice-done-pulse {
+  0%   { transform: scale(1);    }
+  40%  { transform: scale(1.18); }
+  100% { transform: scale(1.12); }
+}
+
+.practice-progress--done-pulse {
+  transition: none;
+  animation: practice-done-pulse 0.35s ease-out forwards;
+}
+
 /* ── audio loading state ──────────────────────────────────────────────────── */
 
 @keyframes audio-pulse {

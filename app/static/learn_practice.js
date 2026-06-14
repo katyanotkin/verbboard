@@ -128,10 +128,16 @@ document.addEventListener("DOMContentLoaded", function () {
       return (plays[verbId] || 0) >= PRACTICE_MIN_PLAYS;
     }
 
-    if (isLast) {
-      window.addEventListener('vb:learn-audio-played', function () {
-        if (hasListened()) progressEl.classList.add('practice-progress--done');
-      });
+    function _showCompletionAndRedirect(completionSession) {
+      progressEl.textContent = `${total}/${total}!`;
+      progressEl.classList.add('practice-progress--done');
+      progressEl.classList.add('practice-progress--done-pulse');
+      nextBtn.disabled = true;
+      prevBtn.disabled = true;
+      skipBtn.disabled = true;
+      abandonBtn.disabled = true;
+      const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1200;
+      setTimeout(function () { _finishPractice(completionSession); }, delay);
     }
 
     let warnTimer;
@@ -152,7 +158,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       if (isLast) {
-        await _finishPractice(session);
+        _showCompletionAndRedirect(session);
+        return;
       } else {
         navTo(session.ids[idx + 1]);
       }
@@ -183,7 +190,8 @@ document.addEventListener("DOMContentLoaded", function () {
       // If clamping moved us backwards, every remaining verb was already visited.
       // Finish the session rather than landing on a verb the user already completed.
       if (navTarget < idx) {
-        await _finishPractice(updatedSession);
+        _showCompletionAndRedirect(updatedSession);
+        return;
       } else {
         navTo(updatedIds[navTarget]);
       }
