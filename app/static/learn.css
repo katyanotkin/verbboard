@@ -472,10 +472,16 @@ button {
 }
 
 .practice-audio-counter {
-  font-size: 11px;
-  color: #6b7280;
+  font-size: 13px;
+  color: #374151;
   white-space: nowrap;
   margin-top: 2px;
+  font-weight: 500;
+}
+
+.practice-note-icon {
+  font-size: 1.3em;
+  line-height: 1;
 }
 
 

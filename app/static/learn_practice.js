@@ -20,10 +20,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const _minPlaysRaw = parseInt(localStorage.getItem('practice_min_plays'), 10);
   const PRACTICE_MIN_PLAYS = (_minPlaysRaw >= 1 && _minPlaysRaw <= 12) ? _minPlaysRaw : 5;
 
-  function _audioProgressText() {
+  function _audioProgressHtml() {
     let plays;
     try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || '{}'); } catch (_) { plays = {}; }
-    return '♪ ' + Math.min(plays[verbId] || 0, PRACTICE_MIN_PLAYS) + ' / ' + PRACTICE_MIN_PLAYS;
+    return '<span class="practice-note-icon">♪</span> ' + Math.min(plays[verbId] || 0, PRACTICE_MIN_PLAYS) + ' / ' + PRACTICE_MIN_PLAYS;
   }
 
   let practiceSession;
@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const audioCounterEl = document.createElement("span");
     audioCounterEl.className = "practice-audio-counter";
-    audioCounterEl.textContent = _audioProgressText();
+    audioCounterEl.innerHTML = _audioProgressHtml();
 
     const progressWrapper = document.createElement("div");
     progressWrapper.className = "practice-progress-wrapper";
@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     window.addEventListener('vb:learn-audio-played', function () {
-      audioCounterEl.textContent = _audioProgressText();
+      audioCounterEl.innerHTML = _audioProgressHtml();
     });
 
     let warnTimer;

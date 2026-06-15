@@ -286,15 +286,16 @@ input[type="text"]:focus {
 }
 
 .about-page-link {
-  font-size: 0.8rem;
-  color: var(--text-subtle);
+  font-size: 0.875rem;
+  color: var(--color-navy);
+  font-weight: 600;
   text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.1s;
+  text-underline-offset: 3px;
+  transition: color 0.1s, opacity 0.1s;
 }
 
 .about-page-link:hover {
-  color: var(--text-body);
+  opacity: 0.75;
 }
 
 
