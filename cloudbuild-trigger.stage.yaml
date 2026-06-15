@@ -1,5 +1,6 @@
 name: stage-release
 description: release stage on push
+location: us-east1
 filename: cloudbuild.stage.yaml
 serviceAccount: projects/knotmem26/serviceAccounts/cloudbuild-deployer@knotmem26.iam.gserviceaccount.com
 
