@@ -32,6 +32,7 @@ class Settings:
     badge_compact_threshold: int
     verbs_page_limit: int
     verbs_display_batch: int
+    gcp_region: str
 
 
 def _resolve_environment() -> str:
@@ -114,6 +115,7 @@ def load_settings() -> Settings:
         badge_compact_threshold=int(os.getenv("BADGE_COMPACT_THRESHOLD", "20")),
         verbs_page_limit=int(os.getenv("VERBS_PAGE_LIMIT", "300")),
         verbs_display_batch=int(os.getenv("VERBS_DISPLAY_BATCH", "20")),
+        gcp_region=os.getenv("GCP_REGION", "us-east1"),
     )
     _validate(settings)
     return settings
@@ -136,6 +138,8 @@ def _safe_firebase_config(raw: str) -> str:
 def _validate(settings: Settings) -> None:
     if settings.environment not in {"local", "stage", "prod"}:
         raise ValueError(f"Unsupported ENVIRONMENT={settings.environment}. Expected local|stage|prod")
+    if settings.allow_local_dev_auth and settings.environment == "prod":
+        raise ValueError("ALLOW_LOCAL_DEV_AUTH must not be enabled in prod")
     if not settings.google_cloud_project:
         raise ValueError("GOOGLE_CLOUD_PROJECT must be set")
     if not settings.audio_bucket:

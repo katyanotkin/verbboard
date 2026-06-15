@@ -12,12 +12,15 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 
 import anthropic
 import vertexai
 from vertexai.generative_models import GenerationConfig, GenerativeModel
 
 logger = logging.getLogger(__name__)
+
+_GCP_LOCATION = os.getenv("GCP_REGION", "us-east1")
 
 SUPPORTED_LANGUAGES = ["en", "ru", "he", "es"]
 HEBREW = "he"
@@ -68,14 +71,13 @@ def _call_gemini(
     target_langs: list[str],
     sentences: list[str],
     project: str,
-    location: str = "us-central1",
 ) -> list[dict[str, str]]:
-    vertexai.init(project=project, location=location)
+    vertexai.init(project=project, location=_GCP_LOCATION)
     model = GenerativeModel(GEMINI_MODEL)
     prompt = _translation_prompt(verb_lang, lemma, target_langs, sentences)
     response = model.generate_content(
         prompt,
-        generation_config=GenerationConfig(response_mime_type="application/json"),
+        generation_config=GenerationConfig(response_mime_type="application/json", temperature=0),
     )
     return json.loads(response.text)
 
@@ -92,6 +94,7 @@ def _call_claude(
     message = client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=2048,
+        temperature=0,
         messages=[{"role": "user", "content": prompt}],
     )
     return json.loads(message.content[0].text.strip())
@@ -101,8 +104,6 @@ def translate_search_query(
     query: str,
     source_lang: str,
     target_lang: str,
-    project: str,
-    location: str = "us-central1",
 ) -> str | None:
     """Translate a single search query word to the target language verb lemma.
 
@@ -117,9 +118,8 @@ def translate_search_query(
         f"Rules: reply with exactly one word in {tgt_name} script, no punctuation, no explanation."
     )
     try:
-        vertexai.init(project=project, location=location)
         model = GenerativeModel(GEMINI_MODEL)
-        response = model.generate_content(prompt)
+        response = model.generate_content(prompt, generation_config=GenerationConfig(temperature=0))
         text = (response.text or "").strip()
         return text or None
     except Exception:

@@ -42,7 +42,7 @@ _CORRER_ENTRY = VerbEntry(
 )
 
 
-def _stub_translate_es(query, source_lang, target_lang, project, **kwargs):
+def _stub_translate_es(query, source_lang, target_lang, **kwargs):
     mapping = {("run", "en", "es"): "correr"}
     return mapping.get((query.lower(), source_lang, target_lang))
 
@@ -68,7 +68,7 @@ _BEZHAT_ENTRY = VerbEntry(
 )
 
 
-def _stub_translate_ru(query, source_lang, target_lang, project, **kwargs):
+def _stub_translate_ru(query, source_lang, target_lang, **kwargs):
     mapping = {("run", "en", "ru"): "бежать"}
     return mapping.get((query.lower(), source_lang, target_lang))
 
@@ -94,7 +94,7 @@ _LARUTZ_ENTRY = VerbEntry(
 )
 
 
-def _stub_translate_he(query, source_lang, target_lang, project, **kwargs):
+def _stub_translate_he(query, source_lang, target_lang, **kwargs):
     mapping = {("run", "en", "he"): "לרוץ"}
     return mapping.get((query.lower(), source_lang, target_lang))
 
@@ -143,7 +143,7 @@ def test_search_by_lang_includes_translated_from_param(client: TestClient, monke
 def test_search_by_lang_token_fallback_handles_punctuation(client: TestClient, monkeypatch) -> None:
     """If Gemini returns 'correr.' with trailing punctuation, token fallback strips it."""
 
-    def translate_with_punctuation(query, source_lang, target_lang, project, **kwargs):
+    def translate_with_punctuation(query, source_lang, target_lang, **kwargs):
         return "correr."
 
     call_count = {"n": 0}

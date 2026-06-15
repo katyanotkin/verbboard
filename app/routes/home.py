@@ -79,13 +79,11 @@ async def search_verb_by_lang(
     if not query:
         return RedirectResponse(url=f"/?language={language}{_ui_suffix}")
 
-    settings = load_settings()
     translated = await asyncio.to_thread(
         translate_search_query,
         query,
         source_lang,
         language,
-        settings.google_cloud_project,
     )
 
     logger.debug("search_verb_by_lang q=%r translated=%r lang=%s", query, translated, language)

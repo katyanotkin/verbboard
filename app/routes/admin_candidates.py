@@ -9,6 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ValidationError
 
 from app.routes.admin_utils import (
     CANDIDATE_STATUSES,
@@ -37,6 +38,15 @@ from core.translation_service import translate_examples
 from core.utils import json_safe
 
 _GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
+
+
+class _ClaudeVerbResponse(BaseModel):
+    lemma: str | None = None
+    morph: str | None = None
+    forms: dict[str, Any] = {}
+    examples: list[Any] = []
+    pronoun_forms: dict[str, Any] | None = None
+
 
 _NO_AUDIO_ROW_KEYS: frozenset[str] = frozenset({"aspect", "pair", "binyan", "root"})
 
@@ -128,16 +138,8 @@ def _get_max_rank(language: str) -> int:
     # Concurrent generations can both read the same max before either writes,
     # so duplicate ranks are possible. Rank is a loose ordering hint, not a unique key.
     db = get_db()
-    docs = db.collection(VERBS_COLLECTION).where("language", "==", language).stream()
-
-    max_rank = 0
-    for doc in docs:
-        data = doc.to_dict()
-        rank = data.get("rank")
-        if isinstance(rank, (int, float)) and rank > max_rank:
-            max_rank = int(rank)
-
-    return max_rank
+    result = db.collection(VERBS_COLLECTION).where("language", "==", language).count().get()
+    return result[0][0].value
 
 
 async def _call_claude_single_example(language: str, lemma: str, existing_examples: list, index: int) -> dict[str, Any]:
@@ -172,6 +174,7 @@ async def _call_claude_single_example(language: str, lemma: str, existing_exampl
     message = await client.messages.create(
         model=_MODEL.get(language, _MODEL_DEFAULT),
         max_tokens=512,
+        temperature=0,
         system=get_cached_system(language),
         messages=[{"role": "user", "content": prompt}],
     )
@@ -194,6 +197,7 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
     message = await client.messages.create(
         model=_MODEL.get(language, _MODEL_DEFAULT),
         max_tokens=_MAX_TOKENS.get(language, _MAX_TOKENS_DEFAULT),
+        temperature=0,
         system=get_cached_system(language),
         messages=[
             {
@@ -284,6 +288,12 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         )
 
     generated = await _call_claude(language, query)
+    try:
+        _ClaudeVerbResponse.model_validate(generated)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=502, detail=f"Generation returned unexpected shape: {exc.error_count()} field errors"
+        ) from exc
 
     lemma = generated.get("lemma") or query
     new_id = build_storage_verb_id(language=language, lemma=lemma)
@@ -456,6 +466,12 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
         raise HTTPException(status_code=422, detail="Verb document is missing language or lemma")
 
     generated = await _call_claude(language, lemma)
+    try:
+        _ClaudeVerbResponse.model_validate(generated)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=502, detail=f"Regeneration returned unexpected shape: {exc.error_count()} field errors"
+        ) from exc
 
     now = datetime.now(UTC).isoformat()
     payload: dict[str, Any] = {

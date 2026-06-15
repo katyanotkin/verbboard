@@ -38,6 +38,7 @@ def _mock_settings(environment: str, allow_local_dev_auth: bool = True) -> Setti
         badge_compact_threshold=20,
         verbs_page_limit=300,
         verbs_display_batch=20,
+        gcp_region="us-east1",
     )
 
 
