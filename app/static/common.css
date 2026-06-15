@@ -518,10 +518,15 @@ body {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background 0.1s, opacity 0.1s;
   white-space: nowrap;
 }
 .practice-abandon-btn:hover { background: #fee2e2; }
+.practice-abandon-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
 
 .practice-skip-btn {
   padding: 6px 12px;
@@ -532,6 +537,11 @@ body {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background 0.1s, opacity 0.1s;
 }
 .practice-skip-btn:hover { background: #d1fae5; }
+.practice-skip-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}

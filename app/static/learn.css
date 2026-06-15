@@ -612,4 +612,28 @@ button {
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
     padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
   }
+
+  /* Practice bar: two-row layout on narrow screens.
+     Row 1: Prev | counter | Next  (nav controls stay in thumb zone)
+     Row 2: Skip pill + Abandon pill (action buttons, centered below)
+     DOM order is Prev / Skip / counter / Abandon / Next, so we use
+     `order` to pull Skip and Abandon after Next without touching the HTML. */
+  .practice-bar {
+    flex-wrap: wrap;
+    gap: 6px 8px;
+  }
+
+  /* Nav circles and counter stay on row 1 */
+  .practice-nav-btn { order: 1; }
+  .practice-progress-wrapper { order: 1; }
+
+  /* Action pills drop to row 2 and share the full width */
+  .practice-skip-btn,
+  .practice-abandon-btn {
+    order: 2;
+    flex: 1 1 auto;
+    text-align: center;
+    /* Allow text to wrap inside the pill if even row 2 is very tight */
+    white-space: normal;
+  }
 }
