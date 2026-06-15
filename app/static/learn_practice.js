@@ -129,7 +129,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function _showCompletionAndRedirect(completionSession) {
-      progressEl.textContent = `${total}/${total}!`;
+      const n = completionSession.size || total;
+      progressEl.textContent = `${n}/${n}!`;
       progressEl.classList.add('practice-progress--done');
       progressEl.classList.add('practice-progress--done-pulse');
       nextBtn.disabled = true;
