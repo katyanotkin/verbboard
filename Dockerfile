@@ -19,14 +19,6 @@ RUN pip install --no-cache-dir uv \
 
 COPY app ./app
 COPY core ./core
-COPY data_src ./data_src
-COPY runtime ./runtime
-COPY tools ./tools
-copy tests ./tests
-COPY README.md ./
-
-RUN python -m tools.generate_lexicon --language all
-RUN python -m tools.audit_examples --language all
 
 EXPOSE 8080
 
