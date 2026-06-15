@@ -7,12 +7,14 @@ the audio min_plays preference (`practice_min_plays` localStorage key).
 TC-SK1  Skip (middle verb) navigates to next and removes from session
 TC-SK2  Skip (sole verb) clears session and returns to /verbs
 TC-SK3  Skip marks verb as known
-TC-SK4  Skip blocked when not listened (shows warn, stays on page)
-TC-SK5  Skip unblocked after injecting enough plays
 TC-A1   practice_min_plays=1: Next enabled after 1 injected play
 TC-A2   practice_min_plays=all: Next blocked when no srcs heard
 TC-A3   practice_min_plays=all: Next enabled when all srcs injected as heard
 TC-A4   Audio progress indicator shows "♪ X / Y" on load
+
+Note: Skip has no audio gate -- users may skip freely. The audio gate (Next
+button) and badge protection (accomplished check in _finishPractice) are
+tested separately.
 """
 
 from __future__ import annotations
@@ -99,9 +101,6 @@ def test_skip_middle_navigates_to_next(page, live_server_url):
     page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[0]}&return_to=/verbs?language=ru")
     page.wait_for_load_state("networkidle")
 
-    # Skip is now audio-gated; inject plays so hasListened() passes.
-    _inject_audio_plays(page, "ru", [ids[0]])
-
     skip_btn = page.locator(".practice-skip-btn").first
     skip_btn.wait_for(state="visible")
     with page.expect_navigation():
@@ -133,8 +132,6 @@ def test_skip_sole_verb_clears_session(page, live_server_url):
 
     page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[0]}&return_to=/verbs?language=ru")
     page.wait_for_load_state("networkidle")
-
-    _inject_audio_plays(page, "ru", [ids[0]])
 
     skip_btn = page.locator(".practice-skip-btn").first
     skip_btn.wait_for(state="visible")
@@ -172,8 +169,6 @@ def test_skip_marks_verb_as_known(page, live_server_url):
     page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[0]}&return_to=/verbs?language=ru")
     page.wait_for_load_state("networkidle")
 
-    _inject_audio_plays(page, "ru", [ids[0]])
-
     skip_btn = page.locator(".practice-skip-btn").first
     skip_btn.wait_for(state="visible")
     with page.expect_navigation():
@@ -182,60 +177,6 @@ def test_skip_marks_verb_as_known(page, live_server_url):
 
     known_list = _read_known(page, "ru")
     assert ids[0] in known_list, f"TC-SK3: Skipped verb {ids[0]} must appear in known:ru. Got: {known_list!r}"
-
-
-# ---------------------------------------------------------------------------
-# TC-SK4  Skip blocked when not listened (shows warn, stays on page)
-# ---------------------------------------------------------------------------
-
-
-def test_skip_blocked_without_audio(page, live_server_url):
-    """Clicking Skip without meeting the audio threshold must show the listen-warn
-    element and keep the user on the same page."""
-    ids, lemmas = _ru_verb_ids(page, live_server_url, minimum=3)
-    # _ru_verb_ids already landed on /verbs; set pref without an extra navigation.
-    page.evaluate("() => localStorage.setItem('practice_min_plays', '5')")
-
-    _seed_practice_session(page, "ru", ids, lemmas)
-
-    page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[0]}&return_to=/verbs?language=ru")
-    page.wait_for_load_state("networkidle")
-
-    # Do NOT inject audio plays -- hasListened() must return false.
-    skip_btn = page.locator(".practice-skip-btn").first
-    skip_btn.wait_for(state="visible")
-    skip_btn.click()  # no expect_navigation -- should be blocked
-
-    warn_el = page.locator(".practice-listen-warn").first
-    warn_el.wait_for(state="visible", timeout=2000)
-
-    assert ids[0] in page.url, f"TC-SK4: URL must still contain {ids[0]} after blocked Skip. Got: {page.url!r}"
-
-
-# ---------------------------------------------------------------------------
-# TC-SK5  Skip unblocked after injecting enough plays
-# ---------------------------------------------------------------------------
-
-
-def test_skip_unblocked_after_audio(page, live_server_url):
-    """After injecting enough plays Skip must navigate to the next verb."""
-    ids, lemmas = _ru_verb_ids(page, live_server_url, minimum=3)
-    page.evaluate("() => localStorage.setItem('practice_min_plays', '5')")
-
-    _seed_practice_session(page, "ru", ids, lemmas)
-
-    page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[0]}&return_to=/verbs?language=ru")
-    page.wait_for_load_state("networkidle")
-
-    _inject_audio_plays(page, "ru", [ids[0]], count=5)
-
-    skip_btn = page.locator(".practice-skip-btn").first
-    skip_btn.wait_for(state="visible")
-    with page.expect_navigation():
-        skip_btn.click()
-    page.wait_for_load_state("networkidle")
-
-    assert ids[1] in page.url, f"TC-SK5: Expected navigation to {ids[1]} after Skip with audio. Got: {page.url!r}"
 
 
 # ---------------------------------------------------------------------------

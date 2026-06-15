@@ -104,5 +104,6 @@
   "board.number_sg": "Sg",
   "board.number_pl": "Pl",
   "home.install_hint": "Toca ⋮ en el navegador y elige «Agregar a inicio»",
-  "home.install_hint_dismiss": "Cerrar"
+  "home.install_hint_dismiss": "Cerrar",
+  "practice.no_badge": "Sin medalla"
 }

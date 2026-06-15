@@ -521,6 +521,13 @@ button {
   animation: practice-done-pulse 0.35s ease-out forwards;
 }
 
+.practice-progress--no-badge {
+  background: #fef3c7;
+  border-color: #d97706;
+  color: #92400e;
+  transform: scale(1);
+}
+
 /* ── audio loading state ──────────────────────────────────────────────────── */
 
 @keyframes audio-pulse {

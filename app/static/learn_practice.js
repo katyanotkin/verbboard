@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", function () {
       skipBtn.disabled = true;
       abandonBtn.disabled = true;
       const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1200;
-      setTimeout(function () { _finishPractice(completionSession); }, delay);
+      setTimeout(function () { _finishPractice(completionSession, progressEl); }, delay);
     }
 
     let warnTimer;
@@ -170,10 +170,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     skipBtn.addEventListener("click", async function () {
-      if (!hasListened()) {
-        showWarn();
-        return;
-      }
       await progress.setKnown(language, verbId, true);
 
       const updatedIds = session.ids.filter(function (id) { return id !== verbId; });
@@ -211,7 +207,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  async function _finishPractice(session) {
+  async function _finishPractice(session, capsuleEl) {
     let accomplished = false;
     try {
       const seenSet = progress.readSet(seenKey);
@@ -256,6 +252,12 @@ document.addEventListener("DOMContentLoaded", function () {
         `practice_wrapup:${language}`,
         JSON.stringify({ ids: session.ids, lemmas: session.lemmas || {} })
       );
+    } else if (capsuleEl) {
+      const UI = window.UI || {};
+      capsuleEl.textContent = UI["practice.no_badge"] || "No badge";
+      capsuleEl.classList.remove("practice-progress--done-pulse");
+      capsuleEl.classList.add("practice-progress--no-badge");
+      await new Promise(function (r) { setTimeout(r, 1500); });
     }
 
     localStorage.removeItem(sessionKey);
