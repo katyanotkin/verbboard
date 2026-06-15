@@ -1,6 +1,6 @@
 name: stage-release
 description: release stage on push
-location: us-east1
+# region is passed via --region=us-east1 flag on import, not a YAML field
 filename: cloudbuild.stage.yaml
 serviceAccount: projects/knotmem26/serviceAccounts/cloudbuild-deployer@knotmem26.iam.gserviceaccount.com
 

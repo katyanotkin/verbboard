@@ -185,6 +185,13 @@ gcp-stage-image: gcp-check ## GCP: print stage image reference
 		--region $(GCP_REGION) \
 		--format='value(spec.template.spec.containers[0].image)'
 
+## GCP: apply Cloud Build trigger for stage from cloudbuild-trigger.stage.yaml
+apply-trigger-stage: gcp-check ## GCP: import/update stage Cloud Build trigger (region=us-east1)
+	gcloud builds triggers import \
+		--source=cloudbuild-trigger.stage.yaml \
+		--region=$(GCP_REGION) \
+		--project=$(GCP_PROJECT)
+
 ## GCP: build current branch locally and deploy to stage (any branch, no Cloud Build trigger needed)
 gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branch to stage
 	$(eval SHA := $(shell git rev-parse HEAD))
