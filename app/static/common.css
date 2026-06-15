@@ -519,7 +519,6 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: background 0.1s, opacity 0.1s;
-  white-space: nowrap;
 }
 .practice-abandon-btn:hover { background: #fee2e2; }
 .practice-abandon-btn:disabled {
