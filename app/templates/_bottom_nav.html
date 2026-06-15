@@ -41,31 +41,23 @@
      class="bnav-tab{% if bnav_active == 'search' %} bnav-tab--active{% endif %}"
      aria-label="Search"
      aria-current="{{ 'page' if bnav_active == 'search' else 'false' }}">
-    <span class="bnav-dual-icon" aria-hidden="true">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2.2"
-           stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2.2"
-           stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
-    </span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
   </a>
 
-  <button type="button"
-          class="bnav-tab{% if bnav_active == 'profile' %} bnav-tab--active{% endif %}"
-          onclick="window.VerbBoardAuth?.tapProfile()"
-          aria-label="Login">
+  <a href="/?language={{ bnav_lang | urlencode }}{{ _ui_suffix }}"
+     class="bnav-tab{% if bnav_active == 'home' %} bnav-tab--active{% endif %}"
+     aria-label="Home"
+     aria-current="{{ 'page' if bnav_active == 'home' else 'false' }}">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" stroke-width="2"
          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-      <circle cx="12" cy="7" r="4"/>
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
     </svg>
-  </button>
+  </a>
 
 </nav>

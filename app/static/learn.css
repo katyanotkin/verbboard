@@ -471,12 +471,21 @@ button {
   padding: 0 2px;
 }
 
+.practice-audio-counter {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
 
 .practice-progress-wrapper {
   flex: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 1px;
 }
 
 /* Floats below the bar row without shifting button layout */

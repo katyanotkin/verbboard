@@ -14,22 +14,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const seenKey = `seen:${language}`;
   const audioPlaysKey = `audio_plays:${language}`;
-  const heardSrcsKey = `audio_heard_srcs:${language}`;
   const sessionKey = `practice_session:${language}`;
   const badgesKey = `practice_badges:${language}`;
 
-  const _minPlaysRaw = localStorage.getItem('practice_min_plays') || '5';
-  const PRACTICE_MIN_PLAYS = _minPlaysRaw === 'all' ? 'all' : (parseInt(_minPlaysRaw, 10) || 5);
-  const audioTotal = document.querySelectorAll('audio').length;
-
-  function _readHeardSrcs() {
-    try { return JSON.parse(localStorage.getItem(heardSrcsKey) || '{}'); } catch (_) { return {}; }
-  }
+  const _minPlaysRaw = parseInt(localStorage.getItem('practice_min_plays'), 10);
+  const PRACTICE_MIN_PLAYS = (_minPlaysRaw >= 1 && _minPlaysRaw <= 12) ? _minPlaysRaw : 5;
 
   function _audioProgressText() {
-    if (PRACTICE_MIN_PLAYS === 'all') {
-      return '♪ ' + (_readHeardSrcs()[verbId] || []).length + ' / ' + audioTotal;
-    }
     let plays;
     try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || '{}'); } catch (_) { plays = {}; }
     return '♪ ' + Math.min(plays[verbId] || 0, PRACTICE_MIN_PLAYS) + ' / ' + PRACTICE_MIN_PLAYS;
@@ -62,10 +53,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const isLast = idx === total - 1;
     const isRTL = document.documentElement.dir === 'rtl';
 
-    if (audioTotal > 0) {
-      localStorage.setItem(`audio_total:${language}:${verbId}`, String(audioTotal));
-    }
-
     const bar = document.createElement("div");
     bar.className = "practice-bar";
 
@@ -79,9 +66,14 @@ document.addEventListener("DOMContentLoaded", function () {
     progressEl.className = "practice-progress";
     progressEl.textContent = `${skippedSoFar + idx + 1}/${sessionTotal}`;
 
+    const audioCounterEl = document.createElement("span");
+    audioCounterEl.className = "practice-audio-counter";
+    audioCounterEl.textContent = _audioProgressText();
+
     const progressWrapper = document.createElement("div");
     progressWrapper.className = "practice-progress-wrapper";
     progressWrapper.appendChild(progressEl);
+    progressWrapper.appendChild(audioCounterEl);
 
     const nextBtn = document.createElement("button");
     nextBtn.className = "practice-nav-btn practice-nav-btn--primary";
@@ -123,9 +115,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function hasListened() {
-      if (PRACTICE_MIN_PLAYS === 'all') {
-        return (_readHeardSrcs()[verbId] || []).length >= audioTotal;
-      }
       let plays;
       try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}"); } catch (_) { plays = {}; }
       return (plays[verbId] || 0) >= PRACTICE_MIN_PLAYS;
@@ -144,9 +133,13 @@ document.addEventListener("DOMContentLoaded", function () {
       setTimeout(function () { _finishPractice(completionSession, progressEl); }, delay);
     }
 
+    window.addEventListener('vb:learn-audio-played', function () {
+      audioCounterEl.textContent = _audioProgressText();
+    });
+
     let warnTimer;
     function showWarn() {
-      warnEl.textContent = (UI["practice.listen_first"] || "Listen to audio") + ' ' + _audioProgressText();
+      warnEl.textContent = UI["practice.listen_first"] || "Listen to audio";
       warnEl.hidden = false;
       clearTimeout(warnTimer);
       warnTimer = setTimeout(function () { warnEl.hidden = true; }, 2500);
@@ -215,12 +208,6 @@ document.addEventListener("DOMContentLoaded", function () {
       try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}"); } catch (_) { plays = {}; }
       accomplished = session.ids.every(function (id) {
         if (!seenSet.has(id)) return false;
-        if (PRACTICE_MIN_PLAYS === 'all') {
-          const heardData = _readHeardSrcs();
-          const heardCount = (heardData[id] || []).length;
-          const storedTotal = parseInt(localStorage.getItem(`audio_total:${language}:${id}`) || '0', 10);
-          return storedTotal > 0 && heardCount >= storedTotal;
-        }
         return (plays[id] || 0) >= PRACTICE_MIN_PLAYS;
       });
     } catch (_) {}

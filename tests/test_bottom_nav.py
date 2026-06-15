@@ -1,15 +1,13 @@
 """Tests for the bottom navigation bar (_bottom_nav.html).
 
-4-tab icon-only bar: Back / Verbs / Search / Login.
+4-tab icon-only bar: Back / Verbs / Search / Home.
 No text labels -- tabs are distinguished by SVG icons and aria-labels.
 
 Covers:
 - Presence: bottom-nav included in home, verbs, about
 - Active state: correct tab highlighted per page
-- Language propagation: Search and Verbs links carry language + ui_language
+- Language propagation: Search and Home links carry language + ui_language
 - Back tab: linked when bnav_back_href is set; falls back to history.back() on home
-- Login button: person icon, aria-label="Login"; auth.js updates aria-label after sign-in
-- Practice tab removed (same destination as Verbs)
 """
 
 from __future__ import annotations
@@ -68,7 +66,7 @@ def test_bottom_nav_has_no_text_labels(client: TestClient) -> None:
 # ── active state ──────────────────────────────────────────────────────────────
 
 
-def test_home_bottom_nav_search_tab_active(client: TestClient) -> None:
+def test_home_bottom_nav_home_tab_active(client: TestClient) -> None:
     with patch("app.routes.home.list_verbs_recent", return_value=[]):
         html = client.get("/?language=en").text
     assert "bnav-tab--active" in html
@@ -142,27 +140,18 @@ def test_bottom_nav_about_back_is_a_link(client: TestClient) -> None:
     assert 'aria-label="Back"' in html
 
 
-# ── login button ──────────────────────────────────────────────────────────────
+# ── home tab ──────────────────────────────────────────────────────────────────
 
 
-def test_bottom_nav_profile_button_calls_tap_profile(client: TestClient) -> None:
-    """Login tab must call VerbBoardAuth.tapProfile()."""
+def test_bottom_nav_has_home_tab(client: TestClient) -> None:
+    """Home tab (house icon) must be present with aria-label='Home'."""
     with patch("app.routes.home.list_verbs_recent", return_value=[]):
         html = client.get("/?language=en").text
-    assert "tapProfile()" in html
+    assert 'aria-label="Home"' in html
 
 
-def test_bottom_nav_login_button_initial_aria_label(client: TestClient) -> None:
-    """Login button must start with aria-label='Login' (icon-only, no text label)."""
+def test_bottom_nav_home_tab_active_on_home_page(client: TestClient) -> None:
+    """Home page sets bnav_active='home' so the house tab gets bnav-tab--active."""
     with patch("app.routes.home.list_verbs_recent", return_value=[]):
         html = client.get("/?language=en").text
-    assert 'aria-label="Login"' in html
-    assert 'id="bnav-login-label"' not in html
-
-
-def test_auth_js_updates_bnav_aria_label() -> None:
-    """auth.js must update the Login button aria-label after auth state changes."""
-    import pathlib
-
-    auth_js = pathlib.Path("app/static/auth.js").read_text()
-    assert "setAttribute('aria-label'" in auth_js
+    assert "bnav-tab--active" in html

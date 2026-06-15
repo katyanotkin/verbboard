@@ -21,7 +21,8 @@
     const practiceBadgesKey = `practice_badges:${lang}`;
     const practiceWrapupKey = `practice_wrapup:${lang}`;
     const practiceMinPlaysKey = 'practice_min_plays';
-    const PRACTICE_LISTENS = [3, 5, 'all'];
+    const LISTENS_MIN = 1;
+    const LISTENS_MAX = 12;
 
     const SIZE_THREE = 3;
     const SIZE_SIX = 6;
@@ -42,12 +43,8 @@
       activePracticeSize = SIZE_THREE;
     }
 
-    const _storedListens = localStorage.getItem(practiceMinPlaysKey);
-    let activeListens = _storedListens === 'all' ? 'all'
-      : (_storedListens !== null ? (parseInt(_storedListens, 10) || 5) : 5);
-    if (activeListens !== 'all' && !PRACTICE_LISTENS.includes(activeListens)) {
-      activeListens = 5;
-    }
+    const _storedListens = parseInt(localStorage.getItem(practiceMinPlaysKey), 10);
+    let activeListens = (_storedListens >= LISTENS_MIN && _storedListens <= LISTENS_MAX) ? _storedListens : 5;
 
     function known() {
       return storage.readSet(`known:${lang}`);
@@ -283,20 +280,13 @@
         })
         .join('');
 
-      const listenButtons = PRACTICE_LISTENS
-        .map(function (n) {
-          const label = n === 'all' ? (ui['practice.listens_all'] || 'All') : String(n);
-          const isActive = String(n) === String(activeListens);
-          return `
-            <button
-              class="practice-size-btn${isActive ? ' active' : ''}"
-              data-listens="${n}"
-            >
-              ${label}
-            </button>
-          `;
-        })
-        .join('');
+      const listenStepper = `
+        <div class="practice-listens-stepper">
+          <button class="practice-listens-btn" id="listens-dec" aria-label="Decrease"${activeListens <= LISTENS_MIN ? ' disabled' : ''}>&#8722;</button>
+          <span class="practice-listens-val" id="listens-val">${activeListens}</span>
+          <button class="practice-listens-btn" id="listens-inc" aria-label="Increase"${activeListens >= LISTENS_MAX ? ' disabled' : ''}>+</button>
+        </div>
+      `;
 
       practiceEl.innerHTML = `
         <div class="practice-panel-card">
@@ -314,9 +304,7 @@
               </div>
               <div class="practice-picker-row">
                 <span class="practice-size-hint">${ui['practice.listens_unit'] || '# audios / verb'}</span>
-                <div class="practice-size-group">
-                  ${listenButtons}
-                </div>
+                ${listenStepper}
               </div>
             </div>
             <div class="practice-picker-start">
@@ -339,17 +327,37 @@
           });
         });
 
-      practiceEl
-        .querySelectorAll('.practice-size-btn[data-listens]')
-        .forEach(function (button) {
-          button.addEventListener('click', function () {
-            const val = button.dataset.listens;
-            activeListens = val === 'all' ? 'all' : (parseInt(val, 10) || 5);
+      function _updateListensStepper() {
+        const valEl = document.getElementById('listens-val');
+        const decBtn = document.getElementById('listens-dec');
+        const incBtn = document.getElementById('listens-inc');
+        if (valEl) valEl.textContent = activeListens;
+        if (decBtn) decBtn.disabled = activeListens <= LISTENS_MIN;
+        if (incBtn) incBtn.disabled = activeListens >= LISTENS_MAX;
+      }
+
+      const decBtn = document.getElementById('listens-dec');
+      const incBtn = document.getElementById('listens-inc');
+      if (decBtn) {
+        decBtn.addEventListener('click', function () {
+          if (activeListens > LISTENS_MIN) {
+            activeListens--;
             localStorage.setItem(practiceMinPlaysKey, String(activeListens));
             _saveListensToServer(activeListens);
-            renderPracticePanel();
-          });
+            _updateListensStepper();
+          }
         });
+      }
+      if (incBtn) {
+        incBtn.addEventListener('click', function () {
+          if (activeListens < LISTENS_MAX) {
+            activeListens++;
+            localStorage.setItem(practiceMinPlaysKey, String(activeListens));
+            _saveListensToServer(activeListens);
+            _updateListensStepper();
+          }
+        });
+      }
 
       document
         .getElementById('practice-start')

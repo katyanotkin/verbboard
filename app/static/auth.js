@@ -158,9 +158,6 @@
     }
 
     target.appendChild(button);
-
-    const bnavBtn = document.querySelector('.bottom-nav button[aria-label="Login"], .bottom-nav button[aria-label="Logout"]');
-    if (bnavBtn) bnavBtn.setAttribute('aria-label', currentUser ? 'Logout' : 'Login');
   }
 
   async function hydrateProgress() {
