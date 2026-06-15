@@ -90,28 +90,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const skipBtn = document.createElement("button");
     skipBtn.className = "practice-skip-btn";
-    skipBtn.textContent = UI["practice.skip"] || "Skip";
+    skipBtn.textContent = UI["practice.skip"] || "Skip & learn";
 
     const abandonBtn = document.createElement("button");
     abandonBtn.className = "practice-abandon-btn";
-    abandonBtn.textContent = UI["practice.abandon"] || "Abandon";
+    abandonBtn.textContent = UI["practice.abandon"] || "Abandon practice";
 
     const warnEl = document.createElement("span");
     warnEl.className = "practice-listen-warn";
     warnEl.hidden = true;
 
-    const actionsRow = document.createElement("div");
-    actionsRow.className = "practice-bar-actions";
-    actionsRow.appendChild(skipBtn);
-    actionsRow.appendChild(abandonBtn);
-
     bar.appendChild(prevBtn);
+    bar.appendChild(skipBtn);
     bar.appendChild(progressWrapper);
+    bar.appendChild(abandonBtn);
     bar.appendChild(nextBtn);
     bar.appendChild(warnEl);
-    bar.appendChild(actionsRow);
 
-    pageRoot.insertBefore(bar, pageRoot.firstChild);
+    const topbar = pageRoot.querySelector(".topbar");
+    if (topbar && topbar.nextSibling) {
+      pageRoot.insertBefore(bar, topbar.nextSibling);
+    } else {
+      pageRoot.insertBefore(bar, pageRoot.firstChild);
+    }
 
     function navTo(targetId) {
       window.location.href =

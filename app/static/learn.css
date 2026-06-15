@@ -413,15 +413,16 @@ button {
 /* Finish button uses .btn-pill-navy from common.css. */
 
 .practice-bar {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 10px 16px;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
   border-radius: 12px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
+  /* Extra bottom clearance for the absolutely-positioned listen-warn tooltip */
+  margin-bottom: 28px;
 }
 
 /* Prev: bordered ghost circle. Next/Finish: filled navy circle (primary action). */
@@ -478,30 +479,16 @@ button {
   align-items: center;
 }
 
-.practice-bar-actions {
-  flex-basis: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.practice-bar .practice-skip-btn,
-.practice-bar .practice-abandon-btn {
-  flex: 0 1 auto;
-  max-width: 140px;
-  text-align: center;
-  min-width: 0;
-  white-space: normal;
-  font-size: 12px;
-  line-height: 1.3;
-  padding: 5px 10px;
-}
-
+/* Floats below the bar row without shifting button layout */
 .practice-listen-warn {
-  flex: 1;
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  right: 0;
   font-size: 12px;
   color: #b45309;
-  text-align: end;
+  text-align: center;
+  pointer-events: none;
 }
 
 .practice-progress {
