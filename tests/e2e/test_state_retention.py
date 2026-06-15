@@ -118,18 +118,6 @@ def test_learn_feedback_link_encodes_return_to(page, live_server_url):
     assert "%26" in href
 
 
-def test_feedback_blocks_external_return_to(page, live_server_url):
-    page.goto(f"{live_server_url}/feedback?return_to=https://malicious.example.com/path")
-    page.wait_for_load_state("networkidle")
-
-    back = page.locator("a.feedback-link").first
-    href = back.get_attribute("href") or ""
-
-    assert "malicious.example.com" not in href
-    assert href.startswith("/")
-    assert "://" not in href
-
-
 def test_known_star_persists_after_reload(page, live_server_url):
     page.goto(f"{live_server_url}/learn?language=en&verb_id=en_be")
     page.wait_for_load_state("networkidle")

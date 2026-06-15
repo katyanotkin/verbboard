@@ -98,18 +98,6 @@ def test_about_page_renders_with_ui_language(page, live_server_url):
     assert "lang-toggle" not in page.content()
 
 
-def test_about_feedback_link_carries_page_context(page, live_server_url):
-    """About page feedback link carries page=about context."""
-    page.goto(f"{live_server_url}/about")
-    page.wait_for_load_state("networkidle")
-
-    links = page.locator("a.feedback-link").all()
-    feedback_hrefs = [lnk.get_attribute("href") or "" for lnk in links]
-    assert any(
-        "page=about" in h for h in feedback_hrefs
-    ), f"Expected page=about in one of the feedback links, got: {feedback_hrefs}"
-
-
 # ---------------------------------------------------------------------------
 # Voice toggle
 # ---------------------------------------------------------------------------

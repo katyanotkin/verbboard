@@ -7,7 +7,7 @@ from core.models import Example, VerbEntry
 from core.storage.verb_repository import get_candidate, get_verb, list_verbs
 
 _ENTRIES_CACHE: dict[str, tuple[float, list[VerbEntry]]] = {}
-_CACHE_TTL = 60.0
+_CACHE_TTL = 300.0
 
 
 def _firestore_document_to_verb_entry(document: dict[str, Any]) -> VerbEntry:
@@ -69,6 +69,14 @@ def load_entry_by_id(
         if document.get("language") != language:
             return None
         return _firestore_document_to_verb_entry(document)
+    # Serve from the in-process list cache when it's warm -- avoids a Firestore
+    # round-trip on every /learn page load after /verbs has been fetched.
+    cached = _ENTRIES_CACHE.get(language)
+    if cached is not None and time.monotonic() - cached[0] < _CACHE_TTL:
+        for entry in cached[1]:
+            if entry.id == verb_id:
+                return entry
+
     document = get_verb(verb_id)
     if document is None:
         return None

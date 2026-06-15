@@ -162,3 +162,9 @@ For pre-commit, parallelization is not used — the hook runs `pytest` directly 
 
 - **Verbs display batch** — `tests/test_verbs_display_batch.py`: 7 unit tests covering
   `window.VB_DISPLAY_BATCH` embed from Settings and show-more wrapper presence.
+
+- **Practice skip audio gate** -- `tests/e2e/test_practice_skip_audio.py`: 9 e2e tests covering
+  the audio gate on both Skip and Next (TC-SK1-5), `practice_min_plays` preference for numeric
+  and `all` modes (TC-A1-3), and warn-element content (TC-A4). TC-SK4/5 specifically verify
+  that Skip is blocked without listening and unblocked after enough plays -- enforcing that
+  users must listen or abandon, not skip through an entire session unheard.

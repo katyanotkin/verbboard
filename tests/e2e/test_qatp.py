@@ -1,13 +1,16 @@
 """
 QATP regression suite -- gates promotion to prod.
 
-Covers changes introduced in commit ca73b85 (XSS fixes, ui_language
-state propagation, voice form round-trip, bottom nav).
+Covers changes introduced in commit ca73b85 (ui_language state propagation,
+voice form round-trip, bottom nav).
 
-TC-S1-S5  return_to XSS sanitisation (safe_return_to in render.py)
+TC-S5     voice switch preserves sanitised return_to
 TC-P1-P6  practice navigation carries ui_language
           (audio plays injected via localStorage -- no real TTS needed)
-TC-V2     voice switch preserves translated_from banner (stage only)
+
+Removed (now covered by unit tests):
+  TC-S1-S4  return_to XSS / safe_return_to -- tests/test_safe_return_and_privacy.py
+  TC-V2     translated_from banner after voice switch -- stage-only, always skips locally
 
 Tests that overlap with existing files are omitted to avoid duplication:
   - paging behaviour: test_verbs_initial_batch.py (TC-M1/M3/D1/D2)
@@ -18,7 +21,6 @@ Tests that overlap with existing files are omitted to avoid duplication:
 from __future__ import annotations
 
 import json
-import os
 
 import pytest
 
@@ -26,13 +28,7 @@ import pytest
 # Helpers
 # ---------------------------------------------------------------------------
 
-_STAGE_URL = os.getenv("E2E_BASE_URL", "")
 _PRACTICE_MIN_PLAYS = 5  # must match PRACTICE_MIN_PLAYS in learn.js
-
-
-def _skip_without_stage():
-    if not _STAGE_URL:
-        pytest.skip("Requires E2E_BASE_URL (stage data)")
 
 
 def _inject_audio_plays(page, language: str, verb_ids: list[str], count: int = _PRACTICE_MIN_PLAYS) -> None:
@@ -60,50 +56,6 @@ def _ru_verb_ids(page, live_server_url: str, minimum: int = 3) -> tuple[list[str
     if not verbs or len(verbs) < minimum:
         pytest.skip(f"Need at least {minimum} RU verbs; got {len(verbs) if verbs else 0}")
     return [v["id"] for v in verbs[:minimum]], {v["id"]: v["lemma"] for v in verbs[:minimum]}
-
-
-# ---------------------------------------------------------------------------
-# TC-S1-S3  Malicious return_to values are sanitised to safe fallback
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "payload,label",
-    [
-        ("javascript:alert(1)", "bare-javascript"),
-        ("javascript%3Aalert(1)", "encoded-javascript"),
-        ("//evil.example.com", "protocol-relative"),
-    ],
-)
-def test_return_to_xss_rejected(page, live_server_url, payload, label):
-    """Malicious return_to must not appear in Back button href."""
-    page.goto(f"{live_server_url}/learn?language=en&verb_id=en_be&return_to={payload}")
-    page.wait_for_load_state("networkidle")
-
-    back = page.locator("a.back-link, a[data-role='back'], a.feedback-link").first
-    if not back.is_visible():
-        back = page.locator("a[href]").filter(has_text="Back").first
-
-    href = back.get_attribute("href") or ""
-    assert "javascript" not in href.lower(), f"TC-S ({label}): Back href must not contain 'javascript'. Got: {href!r}"
-    assert href.startswith("/") and not href.startswith(
-        "//"
-    ), f"TC-S ({label}): Back href must be a safe relative path. Got: {href!r}"
-
-
-# ---------------------------------------------------------------------------
-# TC-S4  Legitimate return_to is preserved
-# ---------------------------------------------------------------------------
-
-
-def test_return_to_legitimate_preserved(page, live_server_url):
-    """A safe relative return_to must survive the render path unchanged."""
-    page.goto(f"{live_server_url}/learn?language=en&verb_id=en_be&return_to=/verbs?language=en")
-    page.wait_for_load_state("networkidle")
-
-    back = page.locator("a.back-link, a[href*='verbs']").first
-    href = back.get_attribute("href") or ""
-    assert "/verbs" in href, f"TC-S4: Back href must contain '/verbs'. Got: {href!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -296,45 +248,3 @@ def test_practice_continue_button_carries_ui_language(page, live_server_url):
 
     href = continue_link.get_attribute("href") or ""
     assert "ui_language=en" in href, f"TC-P6: ui_language=en missing from Continue href. Got: {href!r}"
-
-
-# ---------------------------------------------------------------------------
-# TC-V2  Voice switch preserves translated_from banner (stage only)
-# ---------------------------------------------------------------------------
-
-
-def test_voice_switch_preserves_translated_from_banner(page, live_server_url):
-    """After a voice switch the 'Found via English' banner must still appear."""
-    _skip_without_stage()
-
-    # Find a RU verb via cross-language search
-    page.goto(f"{live_server_url}/?language=ru")
-    page.wait_for_load_state("networkidle")
-
-    search_input = page.locator("input[name='q'], input[type='search']").first
-    if not search_input.is_visible():
-        pytest.skip("Search input not found on home page")
-
-    search_input.fill("to be")
-    with page.expect_navigation():
-        search_input.press("Enter")
-    page.wait_for_load_state("networkidle")
-
-    if "/learn" not in page.url:
-        pytest.skip("Cross-language search did not redirect to /learn")
-
-    banner = page.locator(".translated-from-banner, #translated-from-banner")
-    if not banner.is_visible():
-        pytest.skip("translated_from banner not present -- search may not have found a match")
-
-    # Switch voice
-    male_btn = page.locator("button.voice-btn[value='male'], button[name='voice'][value='male']").first
-    if not male_btn.is_visible():
-        pytest.skip("Male voice button not visible")
-
-    with page.expect_navigation():
-        male_btn.click()
-    page.wait_for_load_state("networkidle")
-
-    banner_after = page.locator(".translated-from-banner, #translated-from-banner")
-    assert banner_after.is_visible(), "TC-V2: translated_from banner disappeared after voice switch"

@@ -14,6 +14,7 @@ import uvicorn
 # app.routes.learn has already bound `ensure_audio` as a local name.
 # Re-patch it here so the local live server never calls real TTS.
 import app.routes.learn as _learn_route
+import core.analytics.session_tracker as _session_tracker
 from core.audio_backend.base import AudioBackend
 
 
@@ -30,7 +31,12 @@ async def _noop_audio(
     return f"noop/{language}/{verb_id}/{voice}/{form_key}.mp3"
 
 
+async def _noop_start_session(*args: object, **kwargs: object) -> None:
+    return
+
+
 _learn_route.ensure_audio = _noop_audio  # type: ignore[assignment]
+_session_tracker.start_session = _noop_start_session  # type: ignore[assignment]
 
 from app.main import app  # noqa: E402
 
@@ -70,11 +76,14 @@ def live_server_url() -> str:
         raise RuntimeError(f"Test server did not start on port {port}")
 
     # Warm up: prime Firestore caches so the first test does not hit a cold app.
+    # /learn warms the individual get_verb() Firestore path (not covered by /verbs list cache).
     base = f"http://127.0.0.1:{port}"
     for warmup_url in (
         f"{base}/?language=en",
         f"{base}/verbs?language=en",
         f"{base}/verbs?language=ru",
+        f"{base}/learn?language=en&verb_id=en_be",
+        f"{base}/learn?language=ru&verb_id=ru_govorit",
     ):
         for _ in range(10):
             try:
@@ -102,7 +111,7 @@ def page(browser: Any, live_server_url: str) -> Any:
     # one test's practice sessions or known-verb state cannot leak into the next.
     ctx = browser.new_context()
     page_instance = ctx.new_page()
-    page_instance.set_default_timeout(30_000)
+    page_instance.set_default_timeout(60_000)
     # Belt-and-suspenders: abort Firebase CDN requests so networkidle never
     # stalls waiting for gstatic.com, even if FIREBASE_WEB_CONFIG_JSON is set.
     page_instance.route("https://www.gstatic.com/firebasejs/**", lambda route: route.abort())

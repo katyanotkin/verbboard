@@ -169,6 +169,10 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     skipBtn.addEventListener("click", async function () {
+      if (!hasListened()) {
+        showWarn();
+        return;
+      }
       await progress.setKnown(language, verbId, true);
 
       const updatedIds = session.ids.filter(function (id) { return id !== verbId; });
