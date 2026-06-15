@@ -56,6 +56,8 @@ document.addEventListener("DOMContentLoaded", function () {
   function _mountPracticeBar(session, idx) {
     const UI = window.UI || {};
     const verbsUrl = `/verbs?language=${encodeURIComponent(language)}${_uiSuffix}`;
+    const sessionTotal = session.size || session.ids.length;
+    const skippedSoFar = sessionTotal - session.ids.length;
     const total = session.ids.length;
     const isLast = idx === total - 1;
     const isRTL = document.documentElement.dir === 'rtl';
@@ -75,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const progressEl = document.createElement("span");
     progressEl.className = "practice-progress";
-    progressEl.textContent = `${idx + 1}/${total}`;
+    progressEl.textContent = `${skippedSoFar + idx + 1}/${sessionTotal}`;
 
     const progressWrapper = document.createElement("div");
     progressWrapper.className = "practice-progress-wrapper";

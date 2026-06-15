@@ -170,7 +170,7 @@ def test_sw_cache_version_is_v19() -> None:
     import pathlib
 
     sw = pathlib.Path("app/static/sw.js").read_text()
-    assert '"vb-v19"' in sw
+    assert '"vb-v20"' in sw
 
 
 def test_sw_precache_includes_pwa_js() -> None:
