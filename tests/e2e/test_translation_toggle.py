@@ -82,9 +82,9 @@ def test_translation_toggle_removes_visible_class_on_second_click(page, live_ser
 
     toggle.click()
     page.wait_for_timeout(100)
-    assert not table.evaluate(
-        "el => el.classList.contains('translations-visible')"
-    ), "translations-visible must be removed after second click"
+    assert not table.evaluate("el => el.classList.contains('translations-visible')"), (
+        "translations-visible must be removed after second click"
+    )
 
 
 def test_translation_toggle_button_text_updates_on_click(page, live_server_url):
@@ -115,9 +115,9 @@ def test_translation_toggle_button_text_updates_on_click(page, live_server_url):
     toggle.click()
     page.wait_for_timeout(100)
     after_second = toggle.inner_text().strip()
-    assert (
-        after_second == label_show
-    ), f"After second click text must return to label_show={label_show!r}, got {after_second!r}"
+    assert after_second == label_show, (
+        f"After second click text must return to label_show={label_show!r}, got {after_second!r}"
+    )
 
 
 def test_toggle_absent_when_ui_language_matches_verb_language(page, live_server_url):
@@ -133,6 +133,6 @@ def test_toggle_absent_when_ui_language_matches_verb_language(page, live_server_
     if not page.locator(".conj-table").first.is_visible():
         pytest.skip("ru_govorit not in Firestore — cannot verify toggle absence")
 
-    assert (
-        page.locator("#toggle-translations").count() == 0
-    ), "Toggle button must be absent when ui_language == verb language"
+    assert page.locator("#toggle-translations").count() == 0, (
+        "Toggle button must be absent when ui_language == verb language"
+    )

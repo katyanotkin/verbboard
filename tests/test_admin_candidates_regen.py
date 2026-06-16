@@ -248,9 +248,9 @@ def test_regen_endpoint_merges_translations_into_returned_example(
     assert resp.status_code == 200
     body = resp.json()
     returned = body["example"]
-    assert (
-        "translations" in returned
-    ), "translations dict from translate_examples must be present in the returned example"
+    assert "translations" in returned, (
+        "translations dict from translate_examples must be present in the returned example"
+    )
     assert returned["translations"]["ru"] == "Я иду в магазин."
     assert returned["translations"]["es"] == "Voy a la tienda."
 

@@ -74,9 +74,9 @@ def test_vb_display_batch_changes_with_settings(client: TestClient) -> None:
             resp = client.get("/verbs?language=en")
 
         raw = _extract(resp.text, "window.VB_DISPLAY_BATCH = ")
-        assert (
-            int(raw) == expected_batch
-        ), f"Batch={expected_batch}: expected VB_DISPLAY_BATCH={expected_batch}, got {raw!r}"
+        assert int(raw) == expected_batch, (
+            f"Batch={expected_batch}: expected VB_DISPLAY_BATCH={expected_batch}, got {raw!r}"
+        )
 
 
 # ── Show-more wrapper always present ─────────────────────────────────────────

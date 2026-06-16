@@ -72,9 +72,9 @@ def test_admin_login_correct_password_sets_session_cookie(client: TestClient) ->
         data={"password": _correct_password()},
         follow_redirects=False,
     )
-    assert (
-        ADMIN_SESSION_COOKIE in resp.cookies
-    ), f"Expected '{ADMIN_SESSION_COOKIE}' cookie in response. Cookies present: {list(resp.cookies.keys())}"
+    assert ADMIN_SESSION_COOKIE in resp.cookies, (
+        f"Expected '{ADMIN_SESSION_COOKIE}' cookie in response. Cookies present: {list(resp.cookies.keys())}"
+    )
 
 
 def test_admin_login_correct_password_redirects_to_callback(

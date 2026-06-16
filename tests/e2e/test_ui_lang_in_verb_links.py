@@ -115,9 +115,9 @@ def test_back_link_on_learn_preserves_ui_language(page, live_server_url):
         pytest.skip("Back button not visible — en_be may not exist in Firestore")
 
     href = back_btn.get_attribute("href") or ""
-    assert (
-        "ui_language=ru" in href
-    ), f"Back button on learn page must carry ui_language=ru when return_to includes it. Got href={href!r}"
+    assert "ui_language=ru" in href, (
+        f"Back button on learn page must carry ui_language=ru when return_to includes it. Got href={href!r}"
+    )
 
 
 def test_back_nav_from_learn_lands_on_verbs_with_ui_language(page, live_server_url):
@@ -150,9 +150,9 @@ def test_back_nav_from_learn_lands_on_verbs_with_ui_language(page, live_server_u
     page.wait_for_load_state("networkidle")
 
     final_url = page.url
-    assert (
-        "ui_language=ru" in final_url
-    ), f"After Back from learn page, URL must contain ui_language=ru. Got: {final_url!r}"
+    assert "ui_language=ru" in final_url, (
+        f"After Back from learn page, URL must contain ui_language=ru. Got: {final_url!r}"
+    )
 
 
 # ── Bottom-nav back tab also carries ui_language ──────────────────────────────

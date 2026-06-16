@@ -123,9 +123,9 @@ def test_verbs_search_placeholder_per_ui_lang(client: TestClient, monkeypatch, u
 
 @pytest.mark.parametrize("lang", sorted(SUPPORTED_UI_LANGS))
 def test_verbs_search_placeholder_key_absent_from_locale(lang: str) -> None:
-    assert "verbs.search_placeholder" not in get_strings(
-        lang
-    ), f"{lang}.json still contains removed key verbs.search_placeholder"
+    assert "verbs.search_placeholder" not in get_strings(lang), (
+        f"{lang}.json still contains removed key verbs.search_placeholder"
+    )
 
 
 @pytest.mark.parametrize("lang", sorted(SUPPORTED_UI_LANGS))

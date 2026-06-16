@@ -231,9 +231,9 @@ def test_board_ui_and_firebase_config_in_separate_script_blocks() -> None:
     """window.UI and window.FIREBASE_WEB_CONFIG must not share a <script> tag."""
     verb = _minimal_verb("en")
     html = render_board_html(_board(verb, "en"), ui_strings=get_strings("en"))
-    assert _ui_and_firebase_in_separate_blocks(
-        html
-    ), "board: window.UI and window.FIREBASE_WEB_CONFIG are in the same <script> block"
+    assert _ui_and_firebase_in_separate_blocks(html), (
+        "board: window.UI and window.FIREBASE_WEB_CONFIG are in the same <script> block"
+    )
 
 
 def test_verbs_ui_and_firebase_config_in_separate_script_blocks(
@@ -242,9 +242,9 @@ def test_verbs_ui_and_firebase_config_in_separate_script_blocks(
     with patch("app.routes.verbs.load_entries_for_language", return_value=[]):
         resp = client.get("/verbs?language=en")
     assert resp.status_code == 200
-    assert _ui_and_firebase_in_separate_blocks(
-        resp.text
-    ), "verbs: window.UI and window.FIREBASE_WEB_CONFIG are in the same <script> block"
+    assert _ui_and_firebase_in_separate_blocks(resp.text), (
+        "verbs: window.UI and window.FIREBASE_WEB_CONFIG are in the same <script> block"
+    )
 
 
 def test_home_ui_and_firebase_config_in_separate_script_blocks(
@@ -256,9 +256,9 @@ def test_home_ui_and_firebase_config_in_separate_script_blocks(
     ):
         resp = client.get("/")
     assert resp.status_code == 200
-    assert _ui_and_firebase_in_separate_blocks(
-        resp.text
-    ), "home: window.UI and window.FIREBASE_WEB_CONFIG are in the same <script> block"
+    assert _ui_and_firebase_in_separate_blocks(resp.text), (
+        "home: window.UI and window.FIREBASE_WEB_CONFIG are in the same <script> block"
+    )
 
 
 # ---------------------------------------------------------------------------

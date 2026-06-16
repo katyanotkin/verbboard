@@ -117,9 +117,9 @@ def test_desktop_batch_invariant_holds_after_auth_hydration(browser, live_server
         page.wait_for_timeout(200)
 
         item_count = page.locator("#vb-list .vb-item").count()
-        assert (
-            item_count <= batch
-        ), f"desktop: after vb:progress-hydrated re-render, {item_count} items visible -- expected at most {batch}."
+        assert item_count <= batch, (
+            f"desktop: after vb:progress-hydrated re-render, {item_count} items visible -- expected at most {batch}."
+        )
 
 
 # ── filter/sort change resets to one batch (both viewports) ──────────────────

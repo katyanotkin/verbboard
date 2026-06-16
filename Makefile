@@ -37,7 +37,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
 	audit-examples audit-en audit-ru audit-he audit-es audit-verb-ids \
-	test test-unit test-unit-fast \
+	lint test test-unit test-unit-fast \
 	test-e2e-local test-e2e-stage test-e2e-parallel \
 	test-demand test-progress-stage test-progress-prod \
 	test-qatp-stage \
@@ -61,6 +61,12 @@ help:
 	@echo "  make docker-dev"
 	@echo "  make docker-run HOST_PORT=8001"
 	@echo ""
+
+## QA: run linting only (ruff check + format check + mypy), no tests
+lint: ## QA: run ruff check, ruff format --check, and mypy
+	ruff check .
+	ruff format --check .
+	mypy --ignore-missing-imports .
 
 ## QA: run all tests (unit + browser e2e)
 test: ## QA: run all tests — unit + Playwright e2e

@@ -142,12 +142,18 @@ Admin workflow:
 
 ## Development
 
-### Pre-commit linting
+### Linting
+
+```bash
+make lint        # ruff check + ruff format --check + mypy, no tests
+```
+
+### Pre-commit
 
 ```bash
 pip install pre-commit
 pre-commit install
-pre-commit run --all-files
+pre-commit run --all-files   # also runs the full pytest suite
 ```
 
 ### Testing

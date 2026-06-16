@@ -129,12 +129,12 @@ def test_no_language_param_triggers_preference_redirect_on_home(page, live_serve
     result = _run_apply_prefs(page, {"ui_language": None, "learning_language": "ru"})
 
     assert result["explicitLearningLang"] is False, "No ?language= param should mean no explicit switch"
-    assert (
-        result["needsRedirect"] is True
-    ), "Missing explicit language param + differing server pref must trigger redirect"
-    assert "language=ru" in (
-        result["redirectUrl"] or ""
-    ), f"Redirect URL should contain 'language=ru', got: {result['redirectUrl']!r}"
+    assert result["needsRedirect"] is True, (
+        "Missing explicit language param + differing server pref must trigger redirect"
+    )
+    assert "language=ru" in (result["redirectUrl"] or ""), (
+        f"Redirect URL should contain 'language=ru', got: {result['redirectUrl']!r}"
+    )
 
 
 def test_explicit_language_param_is_saved_to_server_as_authoritative(page, live_server_url):
@@ -148,9 +148,9 @@ def test_explicit_language_param_is_saved_to_server_as_authoritative(page, live_
     # Server already has Hebrew; user just switched to English explicitly
     result = _run_apply_prefs(page, {"ui_language": None, "learning_language": "he"})
 
-    assert (
-        "learning_language" in result["toSave"]
-    ), f"An explicit language switch must save the new value to the server. toSave={result['toSave']!r}"
+    assert "learning_language" in result["toSave"], (
+        f"An explicit language switch must save the new value to the server. toSave={result['toSave']!r}"
+    )
     assert result["toSave"]["learning_language"] == "en"
 
 
@@ -165,9 +165,9 @@ def test_no_save_when_server_matches_current_language(page, live_server_url):
     result = _run_apply_prefs(page, {"ui_language": None, "learning_language": "en"})
 
     assert result["needsRedirect"] is False
-    assert (
-        "learning_language" not in result["toSave"]
-    ), f"No save should happen when server pref matches current language. toSave={result['toSave']!r}"
+    assert "learning_language" not in result["toSave"], (
+        f"No save should happen when server pref matches current language. toSave={result['toSave']!r}"
+    )
 
 
 def test_new_user_with_no_server_pref_saves_current_language(page, live_server_url):
@@ -180,9 +180,9 @@ def test_new_user_with_no_server_pref_saves_current_language(page, live_server_u
     # Server has no learning_language yet
     result = _run_apply_prefs(page, {"ui_language": None, "learning_language": None})
 
-    assert (
-        result["needsRedirect"] is False
-    ), "No redirect when server has no pref -- current language becomes the initial preference"
+    assert result["needsRedirect"] is False, (
+        "No redirect when server has no pref -- current language becomes the initial preference"
+    )
     # The current language should be saved to the server
     if result["currentLearningLang"]:
         assert "learning_language" in result["toSave"], (
@@ -230,9 +230,9 @@ def test_missing_ui_language_param_triggers_ui_lang_redirect(page, live_server_u
 
     assert result["explicitUiLang"] is False
     assert result["needsRedirect"] is True, "Missing ui_language param + differing server UI pref must trigger redirect"
-    assert "ui_language=ru" in (
-        result["redirectUrl"] or ""
-    ), f"Redirect URL should contain 'ui_language=ru', got: {result['redirectUrl']!r}"
+    assert "ui_language=ru" in (result["redirectUrl"] or ""), (
+        f"Redirect URL should contain 'ui_language=ru', got: {result['redirectUrl']!r}"
+    )
 
 
 def test_explicit_ui_language_is_saved_to_server(page, live_server_url):
@@ -243,9 +243,9 @@ def test_explicit_ui_language_is_saved_to_server(page, live_server_url):
     # Server had Russian; user explicitly switched to English
     result = _run_apply_prefs(page, {"ui_language": "ru", "learning_language": None})
 
-    assert (
-        "ui_language" in result["toSave"]
-    ), f"Explicit UI language switch must save to server. toSave={result['toSave']!r}"
+    assert "ui_language" in result["toSave"], (
+        f"Explicit UI language switch must save to server. toSave={result['toSave']!r}"
+    )
     assert result["toSave"]["ui_language"] == "en"
 
 
@@ -294,9 +294,9 @@ def test_set_language_redirects_to_home_with_correct_param(page, live_server_url
     page.wait_for_load_state("networkidle")
 
     final_url = page.url
-    assert (
-        "language=he" in final_url
-    ), f"/set_language?language=he must redirect to URL containing 'language=he', got: {final_url!r}"
+    assert "language=he" in final_url, (
+        f"/set_language?language=he must redirect to URL containing 'language=he', got: {final_url!r}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -347,9 +347,9 @@ def test_vb_language_localStorage_updated_on_language_change(page, live_server_u
 
     page.goto(f"{live_server_url}/?language=en&ui_language=en")
     page.wait_for_load_state("networkidle")
-    assert (
-        page.evaluate("localStorage.getItem('vb_language')") == "en"
-    ), "Visiting /?language=en after /?language=he must update localStorage to 'en'"
+    assert page.evaluate("localStorage.getItem('vb_language')") == "en", (
+        "Visiting /?language=en after /?language=he must update localStorage to 'en'"
+    )
 
     # Bare visit must now follow the updated preference
     page.goto(f"{live_server_url}/")

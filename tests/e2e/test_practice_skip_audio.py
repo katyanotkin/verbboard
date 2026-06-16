@@ -109,9 +109,9 @@ def test_skip_middle_navigates_to_next(page, live_server_url):
 
     session = _read_session(page, "ru")
     assert session is not None, "TC-SK1: Session must still exist after skipping a non-sole verb"
-    assert (
-        ids[0] not in session["ids"]
-    ), f"TC-SK1: Skipped verb {ids[0]} must be removed from session.ids. Got: {session['ids']!r}"
+    assert ids[0] not in session["ids"], (
+        f"TC-SK1: Skipped verb {ids[0]} must be removed from session.ids. Got: {session['ids']!r}"
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -168,9 +168,9 @@ def test_filter_buttons_present_for_correct_languages(
     gender_present = "persona-btn" in html
     number_present = "number-btn" in html
 
-    assert (
-        gender_present == expect_gender_btn
-    ), f"language={language}: expected persona-btn present={expect_gender_btn}, got {gender_present}"
-    assert (
-        number_present == expect_number_btn
-    ), f"language={language}: expected number-btn present={expect_number_btn}, got {number_present}"
+    assert gender_present == expect_gender_btn, (
+        f"language={language}: expected persona-btn present={expect_gender_btn}, got {gender_present}"
+    )
+    assert number_present == expect_number_btn, (
+        f"language={language}: expected number-btn present={expect_number_btn}, got {number_present}"
+    )
