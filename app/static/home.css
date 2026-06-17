@@ -29,7 +29,7 @@ h1 {
 
 /* ===== Card ===== */
 
-form.controls {
+.controls {
   max-width: 420px;
   margin: 0 auto;
   padding: 24px 24px 22px;
