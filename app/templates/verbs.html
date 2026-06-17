@@ -54,52 +54,6 @@
         {% if practice_loop_enabled %}
         <div id="practice-panel" class="practice-panel"></div>
         {% endif %}
-        <form
-          action="/search_verb"
-          method="get"
-          class="vb-toolbar"
-        >
-          <input type="hidden" name="language" value="{{ selected_language }}"/>
-          <input type="hidden" name="ui_language" value="{{ ui_lang }}"/>
-          <input type="hidden" name="return_to" value="/verbs?language={{ selected_language }}&ui_language={{ ui_lang }}"/>
-          {% if selected_language != 'en' %}
-          <input type="hidden" id="vb-source-lang-input" name="source_lang" value="{{ 'en' if search_mode == 'en' else '' }}"/>
-          {% endif %}
-
-          <div class="search-row-header vb-search-header">
-            <label for="vb-search">{{ ui['home.search_label'] }}</label>
-            {% if selected_language != 'en' %}
-            <div class="search-mode-pills" id="vb-search-mode-pills">
-              <button type="button" class="search-mode-pill{% if search_mode != 'en' %} active{% endif %}" data-mode="native">{{ ui['lang.' + selected_language] }}</button>
-              <button type="button" class="search-mode-pill{% if search_mode == 'en' %} active{% endif %}" data-mode="en" data-source-lang="en">{{ ui['lang.en'] }}</button>
-            </div>
-            {% endif %}
-          </div>
-
-          <div class="vb-search-row">
-            <input
-              id="vb-search"
-              name="q"
-              class="vb-search"
-              type="text"
-              value="{{ search_value }}"
-              placeholder="{{ ui['home.search_placeholder_en'] if search_mode == 'en' else ui['home.search_placeholder'] }}"
-              data-placeholder-en="{{ ui['home.search_placeholder_en'] }}"
-              autocomplete="off"
-            />
-            <button
-              type="submit"
-              id="vb-search-submit-btn"
-              class="search-btn"
-            >
-              {{ ui['verbs.find_button'] }}
-            </button>
-          </div>
-
-          {% if notice_text %}
-          <div class="notice" id="vb-notice">{{ ui['home.no_match'] }} <b>{{ notice_text }}</b></div>
-          {% endif %}
-        </form>
 
         <div class="vb-controls-row">
           <div class="progress-row vb-progress-row">
@@ -129,7 +83,53 @@
           </div>
         </div>
 
-        <h1 class="vb-title">{{ ui['verbs.heading'] }}</h1>
+        <div class="vb-heading-search-row">
+          <h1 class="vb-title">{{ ui['verbs.heading'] }}</h1>
+
+          <form
+            action="/search_verb"
+            method="get"
+            class="vb-inline-search"
+          >
+            <input type="hidden" name="language" value="{{ selected_language }}"/>
+            <input type="hidden" name="ui_language" value="{{ ui_lang }}"/>
+            <input type="hidden" name="return_to" value="/verbs?language={{ selected_language }}&ui_language={{ ui_lang }}"/>
+            {% if selected_language != 'en' %}
+            <input type="hidden" id="vb-source-lang-input" name="source_lang" value="{{ 'en' if search_mode == 'en' else '' }}"/>
+            {% endif %}
+
+            {% if selected_language != 'en' %}
+            <div class="search-mode-pills" id="vb-search-mode-pills">
+              <button type="button" class="search-mode-pill{% if search_mode != 'en' %} active{% endif %}" data-mode="native">{{ ui['lang.' + selected_language] }}</button>
+              <button type="button" class="search-mode-pill{% if search_mode == 'en' %} active{% endif %}" data-mode="en" data-source-lang="en">{{ ui['lang.en'] }}</button>
+            </div>
+            {% endif %}
+
+            <div class="vb-search-row">
+              <input
+                id="vb-search"
+                name="q"
+                class="vb-search"
+                type="text"
+                value="{{ search_value }}"
+                placeholder="{{ ui['home.search_placeholder_en'] if search_mode == 'en' else ui['home.search_placeholder'] }}"
+                data-placeholder-en="{{ ui['home.search_placeholder_en'] }}"
+                autocomplete="off"
+              />
+              <button
+                type="submit"
+                id="vb-search-submit-btn"
+                class="search-btn"
+              >
+                {{ ui['verbs.find_button'] }}
+              </button>
+            </div>
+
+            {% if notice_text %}
+            <div class="notice" id="vb-notice">{{ ui['home.no_match'] }} <b>{{ notice_text }}</b></div>
+            {% endif %}
+          </form>
+        </div>
       </div>
 
       <div id="vb-list" class="vb-list"></div>

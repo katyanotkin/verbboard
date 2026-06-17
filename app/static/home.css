@@ -188,6 +188,30 @@ input[type="text"]:focus {
   transform: translateY(-1px);
 }
 
+/* ===== Secondary actions row (inside card) ===== */
+
+.home-secondary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--card-border);
+  flex-wrap: wrap;
+}
+
+.home-sec-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.home-sec-link:hover {
+  color: var(--text-body);
+}
+
 /* ===== Search ===== */
 
 .search-row {

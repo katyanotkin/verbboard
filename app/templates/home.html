@@ -21,11 +21,32 @@
 </head>
 <body>
   <div class="page">
-    <div class="topbar-nav">
-      <div class="topbar-nav-right">
-        <a href="/feedback?page=home&amp;language={{ learning_lang | urlencode }}&amp;return_to={{ ('/?language=' ~ learning_lang ~ '&ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}"
-           class="feedback-link">{{ ui['home.feedback_link'] }}</a>
+    <div class="page-header">
+      <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
+    </div>
 
+    <div class="controls" id="home-card">
+      <div class="row">
+        <label for="language-select">{{ ui['home.language_label'] }}</label>
+        <select id="language-select" name="language" onchange="window.location='/set_language?language=' + this.value + '&ui_language={{ lang | urlencode }}';">
+          {% for code, label, selected in lang_options %}
+          <option value="{{ code }}"{% if selected %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="row browse-row">
+        <a href="/verbs?language={{ learning_lang }}&ui_language={{ lang }}" class="browse-main-link" id="browse-btn">
+          <span class="browse-icon">🧩</span>
+          <span>{{ ui['home.browse_link'] }}</span>
+        </a>
+        <a href="/verbs?language={{ learning_lang }}&ui_language={{ lang }}#practice-panel" class="browse-practice-btn">
+          <span class="browse-icon">▶</span>
+          <span>{{ ui['practice.label'] }}</span>
+        </a>
+      </div>
+
+      <div class="home-secondary">
         <div class="ui-lang-menu" id="ui-lang-menu">
           <button class="ui-lang-trigger" id="ui-lang-trigger"
                   aria-haspopup="menu" aria-expanded="false"
@@ -54,86 +75,14 @@
           </div>
         </div>
 
+        <a href="/about?ui_language={{ lang }}" class="home-sec-link">{{ ui['home.about'] }}</a>
+
+        <a href="/feedback?page=home&amp;language={{ learning_lang | urlencode }}&amp;return_to={{ ('/?language=' ~ learning_lang ~ '&ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}"
+           class="home-sec-link">{{ ui['home.feedback_link'] }}</a>
+
         <div id="auth-slot" class="auth-slot"></div>
       </div>
     </div>
-
-    <div class="page-header">
-      <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
-      <a href="/about?ui_language={{ lang }}" class="about-page-link">{{ ui['home.about'] }}</a>
-    </div>
-
-    <form action="/learn" method="get" class="controls" id="home-form">
-      <div class="row">
-        <label for="language-select">{{ ui['home.language_label'] }}</label>
-        <select id="language-select" name="language" onchange="window.location='/set_language?language=' + this.value + '&ui_language={{ lang | urlencode }}';">
-          {% for code, label, selected in lang_options %}
-          <option value="{{ code }}"{% if selected %} selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="row browse-row">
-        <a href="/verbs?language={{ learning_lang }}&ui_language={{ lang }}" class="browse-main-link" id="browse-btn">
-          <span class="browse-icon">🧩</span>
-          <span>{{ ui['home.browse_link'] }}</span>
-        </a>
-        <a href="/verbs?language={{ learning_lang }}&ui_language={{ lang }}#practice-panel" class="browse-practice-btn">
-          <span class="browse-icon">▶</span>
-          <span>{{ ui['practice.label'] }}</span>
-        </a>
-      </div>
-
-      <div class="row search-row">
-        <div class="search-row-header">
-          <label for="search-input">{{ ui['home.search_label'] }}</label>
-          {% if learning_lang != 'en' %}
-          <div class="search-mode-pills" id="search-mode-pills">
-            <button type="button" class="search-mode-pill{% if search_mode != 'en' %} active{% endif %}" data-mode="native">{{ ui['lang.' + learning_lang] }}</button>
-            <button type="button" class="search-mode-pill{% if search_mode == 'en' %} active{% endif %}" data-mode="en" data-source-lang="en">{{ ui['lang.en'] }}</button>
-          </div>
-          {% endif %}
-        </div>
-        <input type="hidden" name="ui_language" value="{{ lang }}">
-        {% if learning_lang != 'en' %}
-        <input type="hidden" id="source-lang-input" name="source_lang" value="{{ 'en' if search_mode == 'en' else '' }}">
-        {% endif %}
-
-        <div class="search-input-row">
-          <div class="search-input-wrap">
-            <input
-              type="text"
-              name="q"
-              id="search-input"
-              value="{{ search_value }}"
-              placeholder="{{ ui['home.search_placeholder'] }}"
-              data-placeholder-en="{{ ui['home.search_placeholder_en'] }}"
-              autocomplete="off"
-              inputmode="search"
-              autocorrect="off"
-              autocapitalize="off"
-              spellcheck="false"
-            />
-            <div id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Verb suggestions"></div>
-          </div>
-
-          <button
-            type="submit"
-            formaction="/search_verb"
-            formmethod="get"
-            class="search-btn"
-            id="search-btn"
-            name="search_submit"
-            value="1"
-          >{{ ui['home.find_button'] }}</button>
-        </div>
-
-        {% if notice_text %}
-        <div class="notice">{{ ui['home.no_match'] }} <b>{{ notice_text }}</b></div>
-        {% endif %}
-      </div>
-
-    </form>
 
     <button id="install-btn" hidden onclick="vbInstall()" class="install-btn">
       Install VerbBoard

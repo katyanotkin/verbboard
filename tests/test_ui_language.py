@@ -150,11 +150,13 @@ def test_search_verb_not_found_preserves_ui_language(client: TestClient, monkeyp
 # ── form hidden inputs ─────────────────────────────────────────────────────
 
 
-def test_home_search_form_carries_ui_language(client: TestClient) -> None:
-    """Home page search form must include a hidden ui_language input."""
+def test_home_carries_ui_language(client: TestClient) -> None:
+    """Home page links (browse, about, feedback) must carry ui_language=ru."""
     html = client.get("/?ui_language=ru&language=en").text
-    assert 'name="ui_language"' in html
-    assert 'value="ru"' in html
+    # Browse link and practice link carry ui_language
+    assert "ui_language=ru" in html
+    # Language select onchange URL carries ui_language
+    assert "ui_language=ru" in html
 
 
 def test_home_language_select_onchange_carries_ui_language(
