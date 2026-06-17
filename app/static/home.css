@@ -188,17 +188,7 @@ input[type="text"]:focus {
   transform: translateY(-1px);
 }
 
-/* ===== Secondary actions row (inside card) ===== */
-
-.home-secondary {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--card-border);
-  flex-wrap: wrap;
-}
+/* ===== Utility nav links (header-subnav) ===== */
 
 .home-sec-link {
   font-size: 0.875rem;
@@ -303,10 +293,25 @@ input[type="text"]:focus {
 
 .page-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  /* ui-lang-menu is position:relative; overflow must stay visible */
+}
+
+/* ui-lang-menu sits at the end of the header row; dropdown anchors right:0
+   which keeps it within the page boundary even at 375px */
+
+.header-subnav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+[dir="rtl"] .header-subnav {
+  flex-direction: row-reverse;
 }
 
 .about-page-link {
@@ -320,6 +325,17 @@ input[type="text"]:focus {
 
 .about-page-link:hover {
   opacity: 0.75;
+}
+
+/* ===== Card footer (auth-slot) ===== */
+
+.card-footer-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--card-border);
+  min-height: 36px;
 }
 
 
