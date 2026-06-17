@@ -50,7 +50,7 @@ def main(base: str) -> None:
     print(f"\nNav smoke: {base}\n")
 
     # ── home ──────────────────────────────────────────────────────────────
-    _check(f"{base}/?language=en", "home: renders", require=("<form",))
+    _check(f"{base}/?language=en", "home: renders", require=('id="home-card"',))
     _check(f"{base}/?language=en", "home: about link", require=("/about",))
     _check(f"{base}/?language=en", "home: verbs link", require=("/verbs",))
     _check(
