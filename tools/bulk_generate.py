@@ -153,6 +153,10 @@ def _save_candidate(
     if pronoun_forms:
         payload["pronoun_forms"] = pronoun_forms
 
+    tts_forms = generated.get("tts_forms")
+    if tts_forms:
+        payload["tts_forms"] = tts_forms
+
     db.collection(CANDIDATES_COLLECTION).document(verb_id).set(payload)
     return verb_id, payload
 

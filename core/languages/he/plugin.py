@@ -14,59 +14,63 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     past = forms.get("past", {}) or {}
     future = forms.get("future", {}) or {}
 
+    tts = getattr(verb, "tts_forms", None) or {}
+    tts_present = tts.get("present", {}) or {}
+    tts_past = tts.get("past", {}) or {}
+    tts_future = tts.get("future", {}) or {}
+
+    def _row(key: str, label: str, text: str, tts_src: dict, tts_key: str, **extra) -> dict:
+        r: dict = {"key": key, "label": label, "text": text, **extra}
+        tts_text = (tts_src.get(tts_key) or "").strip()
+        if tts_text and tts_text != text:
+            r["tts_text"] = tts_text
+        return r
+
     infinitive = str(verb.display_lemma or verb.lemma or "")
 
     sections: list[dict[str, object]] = [
         {
             "rows": [
-                {
-                    "key": "infinitive",
-                    "label": "שם פועל",
-                    "text": infinitive,
-                },
-                {
-                    "key": "binyan",
-                    "label": "בניין",
-                    "text": str(morph.get("binyan", "")),
-                },
+                {"key": "infinitive", "label": "שם פועל", "text": infinitive},
+                {"key": "binyan", "label": "בניין", "text": str(morph.get("binyan", ""))},
                 {"key": "root", "label": "שורש", "text": str(morph.get("root", ""))},
             ],
         },
         {
             "title": "board.tense_present",
             "rows": [
-                {"key": "pres_m_sg", "label": "הוא", "text": present.get("m_sg", ""), "gender": "m", "number": "sg"},
-                {"key": "pres_f_sg", "label": "היא", "text": present.get("f_sg", ""), "gender": "f", "number": "sg"},
-                {"key": "pres_m_pl", "label": "הם", "text": present.get("m_pl", ""), "gender": "m", "number": "pl"},
-                {"key": "pres_f_pl", "label": "הן", "text": present.get("f_pl", ""), "gender": "f", "number": "pl"},
+                _row("pres_m_sg", "הוא", present.get("m_sg", ""), tts_present, "m_sg", gender="m", number="sg"),
+                _row("pres_f_sg", "היא", present.get("f_sg", ""), tts_present, "f_sg", gender="f", number="sg"),
+                _row("pres_m_pl", "הם", present.get("m_pl", ""), tts_present, "m_pl", gender="m", number="pl"),
+                _row("pres_f_pl", "הן", present.get("f_pl", ""), tts_present, "f_pl", gender="f", number="pl"),
             ],
         },
         {
             "title": "board.tense_past",
             "rows": [
-                {"key": "past_1sg", "label": "אני", "text": past.get("1sg", ""), "number": "sg"},
-                {"key": "past_2msg", "label": "אתה", "text": past.get("2msg", ""), "gender": "m", "number": "sg"},
-                {"key": "past_2fsg", "label": "את", "text": past.get("2fsg", ""), "gender": "f", "number": "sg"},
-                {"key": "past_3msg", "label": "הוא", "text": past.get("3msg", ""), "gender": "m", "number": "sg"},
-                {"key": "past_3fsg", "label": "היא", "text": past.get("3fsg", ""), "gender": "f", "number": "sg"},
-                {"key": "past_1pl", "label": "אנחנו", "text": past.get("1pl", ""), "number": "pl"},
-                {"key": "past_2mpl", "label": "אתם", "text": past.get("2mpl", ""), "gender": "m", "number": "pl"},
-                {"key": "past_2fpl", "label": "אתן", "text": past.get("2fpl", ""), "gender": "f", "number": "pl"},
-                {"key": "past_3pl", "label": "הם / הן", "text": past.get("3pl", ""), "number": "pl"},
+                _row("past_1sg", "אני", past.get("1sg", ""), tts_past, "1sg", number="sg"),
+                _row("past_2msg", "אתה", past.get("2msg", ""), tts_past, "2msg", gender="m", number="sg"),
+                _row("past_2fsg", "את", past.get("2fsg", ""), tts_past, "2fsg", gender="f", number="sg"),
+                _row("past_3msg", "הוא", past.get("3msg", ""), tts_past, "3msg", gender="m", number="sg"),
+                _row("past_3fsg", "היא", past.get("3fsg", ""), tts_past, "3fsg", gender="f", number="sg"),
+                _row("past_1pl", "אנחנו", past.get("1pl", ""), tts_past, "1pl", number="pl"),
+                _row("past_2mpl", "אתם", past.get("2mpl", ""), tts_past, "2mpl", gender="m", number="pl"),
+                _row("past_2fpl", "אתן", past.get("2fpl", ""), tts_past, "2fpl", gender="f", number="pl"),
+                _row("past_3pl", "הם / הן", past.get("3pl", ""), tts_past, "3pl", number="pl"),
             ],
         },
         {
             "title": "board.tense_future",
             "rows": [
-                {"key": "fut_1sg", "label": "אני", "text": future.get("1sg", ""), "number": "sg"},
-                {"key": "fut_2msg", "label": "אתה", "text": future.get("2msg", ""), "gender": "m", "number": "sg"},
-                {"key": "fut_2fsg", "label": "את", "text": future.get("2fsg", ""), "gender": "f", "number": "sg"},
-                {"key": "fut_3msg", "label": "הוא", "text": future.get("3msg", ""), "gender": "m", "number": "sg"},
-                {"key": "fut_3fsg", "label": "היא", "text": future.get("3fsg", ""), "gender": "f", "number": "sg"},
-                {"key": "fut_1pl", "label": "אנחנו", "text": future.get("1pl", ""), "number": "pl"},
-                {"key": "fut_2mpl", "label": "אתם", "text": future.get("2mpl", ""), "gender": "m", "number": "pl"},
-                {"key": "fut_2fpl", "label": "אתן", "text": future.get("2fpl", ""), "gender": "f", "number": "pl"},
-                {"key": "fut_3pl", "label": "הם / הן", "text": future.get("3pl", ""), "number": "pl"},
+                _row("fut_1sg", "אני", future.get("1sg", ""), tts_future, "1sg", number="sg"),
+                _row("fut_2msg", "אתה", future.get("2msg", ""), tts_future, "2msg", gender="m", number="sg"),
+                _row("fut_2fsg", "את", future.get("2fsg", ""), tts_future, "2fsg", gender="f", number="sg"),
+                _row("fut_3msg", "הוא", future.get("3msg", ""), tts_future, "3msg", gender="m", number="sg"),
+                _row("fut_3fsg", "היא", future.get("3fsg", ""), tts_future, "3fsg", gender="f", number="sg"),
+                _row("fut_1pl", "אנחנו", future.get("1pl", ""), tts_future, "1pl", number="pl"),
+                _row("fut_2mpl", "אתם", future.get("2mpl", ""), tts_future, "2mpl", gender="m", number="pl"),
+                _row("fut_2fpl", "אתן", future.get("2fpl", ""), tts_future, "2fpl", gender="f", number="pl"),
+                _row("fut_3pl", "הם / הן", future.get("3pl", ""), tts_future, "3pl", number="pl"),
             ],
         },
     ]

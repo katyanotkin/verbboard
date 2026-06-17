@@ -38,6 +38,7 @@ def _firestore_document_to_verb_entry(document: dict[str, Any]) -> VerbEntry:
         tags=document.get("tags"),
         display_lemma=document.get("display_lemma"),
         display_forms=document.get("display_forms"),
+        tts_forms=document.get("tts_forms"),
         created_at=document.get("created_at", ""),
     )
 

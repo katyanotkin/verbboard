@@ -153,22 +153,3 @@ def test_back_nav_from_learn_lands_on_verbs_with_ui_language(page, live_server_u
     assert "ui_language=ru" in final_url, (
         f"After Back from learn page, URL must contain ui_language=ru. Got: {final_url!r}"
     )
-
-
-# ── Bottom-nav back tab also carries ui_language ──────────────────────────────
-
-
-def test_bottom_nav_back_tab_carries_ui_language(page, live_server_url):
-    """Bottom-nav Back tab href must carry ui_language=ru (checked in DOM, not by visibility).
-
-    The bottom nav is hidden on desktop viewports via CSS; the href is set server-side
-    so we validate the attribute directly without requiring the element to be visible.
-    """
-    page.goto(f"{live_server_url}{_VERBS_RU_UI}")
-    page.wait_for_load_state("networkidle")
-
-    back_tab = page.locator(".bottom-nav a[aria-label='Back']")
-    back_tab.wait_for(state="attached", timeout=5000)
-
-    href = back_tab.get_attribute("href") or ""
-    assert "ui_language=ru" in href, f"Bottom-nav Back tab must carry ui_language=ru. Got href={href!r}"

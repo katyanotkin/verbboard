@@ -4,11 +4,9 @@
 <nav class="bottom-nav" aria-label="Main navigation">
 
   {% if bnav_back_href %}
-  <a href="{{ bnav_back_href }}"
-     class="bnav-tab"
-     aria-label="Back">
+  <a href="{{ bnav_back_href }}" class="bnav-tab bnav-back" aria-label="Back">
   {% else %}
-  <button type="button" class="bnav-tab bnav-tab--dim" aria-label="Back" onclick="history.back()">
+  <button type="button" class="bnav-tab bnav-back" aria-label="Back" onclick="history.back()">
   {% endif %}
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" stroke-width="2"

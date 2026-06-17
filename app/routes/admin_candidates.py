@@ -46,6 +46,7 @@ class _ClaudeVerbResponse(BaseModel):
     forms: dict[str, Any] = {}
     examples: list[Any] = []
     pronoun_forms: dict[str, Any] | None = None
+    tts_forms: dict[str, Any] | None = None
 
 
 _NO_AUDIO_ROW_KEYS: frozenset[str] = frozenset({"aspect", "pair", "binyan", "root"})
@@ -82,6 +83,7 @@ async def _warm_verb_audio(audio_backend, language: str, verb_data: dict) -> Non
         tags=verb_data.get("tags"),
         display_lemma=verb_data.get("display_lemma"),
         display_forms=verb_data.get("display_forms"),
+        tts_forms=verb_data.get("tts_forms"),
     )
 
     tasks = []
@@ -95,11 +97,12 @@ async def _warm_verb_audio(audio_backend, language: str, verb_data: dict) -> Non
                 text = str(row["text"] or "").strip()
                 if not text:
                     continue
+                tts_text = str(row.get("tts_text") or "").strip() or text
                 form_key = build_hashed_audio_key(base_key, text)
                 tasks.append(
                     ensure_audio(
                         audio_backend=audio_backend,
-                        text=text,
+                        text=tts_text,
                         language=language,
                         verb_id=verb.id,
                         voice=voice_key,
@@ -331,6 +334,10 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         "search_extract": build_search_extract_from_entry(language=language, entry=generated),
         "updated_at": now,
     }
+    if generated.get("pronoun_forms"):
+        updated["pronoun_forms"] = generated["pronoun_forms"]
+    if generated.get("tts_forms"):
+        updated["tts_forms"] = generated["tts_forms"]
 
     if new_id != verb_id:
         db.collection(CANDIDATES_COLLECTION).document(new_id).set(updated)
@@ -491,6 +498,9 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
     pronoun_forms = generated.get("pronoun_forms")
     if pronoun_forms:
         payload["pronoun_forms"] = pronoun_forms
+    tts_forms = generated.get("tts_forms")
+    if tts_forms:
+        payload["tts_forms"] = tts_forms
 
     doc_ref.set(payload)
 

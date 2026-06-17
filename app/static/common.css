@@ -423,13 +423,13 @@ body {
   color: var(--text-muted);
 }
 
-/* ===== Bottom navigation (mobile / PWA) ===== */
+/* ===== Bottom navigation (PWA standalone only) ===== */
 
 .bottom-nav {
   display: none;
 }
 
-@media (max-width: 639px) {
+@media (display-mode: standalone) and (max-width: 639px) {
   .bottom-nav {
     display: flex;
     position: fixed;

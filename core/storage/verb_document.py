@@ -138,10 +138,11 @@ def build_verb_document(
     display_forms: dict[str, Any] | None,
     morph: dict[str, Any] | None,
     search_extract: list[str],
+    tts_forms: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     now = datetime.now(timezone.utc).isoformat()
 
-    return {
+    doc: dict[str, Any] = {
         "language": language,
         "verb_id": verb_id,
         "lemma": lemma,
@@ -155,6 +156,9 @@ def build_verb_document(
         "created_at": now,
         "updated_at": now,
     }
+    if tts_forms:
+        doc["tts_forms"] = tts_forms
+    return doc
 
 
 def _dedupe(values: list[str]) -> list[str]:
