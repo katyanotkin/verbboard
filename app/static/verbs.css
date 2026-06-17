@@ -43,10 +43,13 @@
 }
 
 .vb-title {
-  margin: 0 0 10px;
-  font-size: 20px;
+  margin: 0;
+  font-size: 15px;
   font-weight: 700;
   color: #111827;
+  flex-shrink: 0;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .vb-lang-select {
@@ -59,35 +62,13 @@
   cursor: pointer;
 }
 
-/* ── heading + inline search ─────────────────────────────────────────────── */
+/* ── inline search row (below merged controls bar) ───────────────────────── */
 .vb-heading-search-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 6px 0 4px;
+  padding: 4px 0 2px;
 }
 
 .vb-inline-search {
   width: 100%;
-}
-
-@media (min-width: 640px) {
-  .vb-heading-search-row {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  .vb-inline-search {
-    width: auto;
-    min-width: 240px;
-    max-width: 340px;
-  }
-
-  .vb-title {
-    white-space: nowrap;
-  }
 }
 
 /* ── search + controls ───────────────────────────────────────────────────── */
@@ -172,15 +153,9 @@
 }
 
 @media (max-width: 480px) {
-  .vb-filter-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .vb-filter-toggle {
-    flex: none;
-  }
-  .vb-sort-select {
+  .vb-controls-row .vb-sort-select {
     max-width: none;
+    flex: 1 1 100%;
   }
   .vb-ftbtn {
     flex: 1 1 auto;
@@ -198,53 +173,35 @@
   margin-bottom: 8px;
 }
 
-/* controls row: progress bar left, filter+sort right */
+/* controls row: title label | filter toggle | sort -- single compact bar */
 .vb-controls-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-.vb-controls-row .vb-progress-row {
-  flex: 1;
-  min-width: 80px;
-  margin-bottom: 0;
+  margin-bottom: 6px;
 }
 
 .vb-controls-row .vb-filter-row {
-  flex-shrink: 0;
+  flex: 1;
   flex-direction: row;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   margin-bottom: 0;
+  min-width: 0;
 }
 
 .vb-controls-row .vb-sort-select {
   max-width: 130px;
 }
 
-@media (max-width: 639px) {
-  .vb-controls-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .vb-controls-row .vb-filter-row {
-    flex-wrap: wrap;
-  }
-
-  .vb-controls-row .vb-sort-select {
-    max-width: none;
-    flex: 1;
-  }
+/* static progress bar: scrolls with content, sits between sticky and list */
+.vb-progress-static {
+  padding: 6px 0 4px;
 }
 
-/* standalone progress row (above hints, below practice) */
 .vb-progress-row {
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .vb-sort-select {

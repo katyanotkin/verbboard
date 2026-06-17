@@ -56,17 +56,7 @@
         {% endif %}
 
         <div class="vb-controls-row">
-          <div class="progress-row vb-progress-row">
-            <div class="progress-bar">
-              <div class="progress-fill" style="width:0%"></div>
-            </div>
-
-            <div class="progress-meta">
-              <span class="progress-star">★</span>
-              <span class="progress-count">0</span>
-              <span class="progress-total"> / {{ total_verb_count }}</span>
-            </div>
-          </div>
+          <h1 class="vb-title">{{ ui['verbs.heading'] }}</h1>
 
           <div class="vb-filter-row">
             <div id="vb-filter-toggle" class="vb-filter-toggle">
@@ -84,8 +74,6 @@
         </div>
 
         <div class="vb-heading-search-row">
-          <h1 class="vb-title">{{ ui['verbs.heading'] }}</h1>
-
           <form
             action="/search_verb"
             method="get"
@@ -129,6 +117,20 @@
             <div class="notice" id="vb-notice">{{ ui['home.no_match'] }} <b>{{ notice_text }}</b></div>
             {% endif %}
           </form>
+        </div>
+      </div>
+
+      <div class="vb-progress-static">
+        <div class="progress-row vb-progress-row">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:0%"></div>
+          </div>
+
+          <div class="progress-meta">
+            <span class="progress-star">★</span>
+            <span class="progress-count">0</span>
+            <span class="progress-total"> / {{ total_verb_count }}</span>
+          </div>
         </div>
       </div>
 
