@@ -216,4 +216,11 @@
         });
     });
   }());
+
+  // Bottom nav Search tab adds ?focus_search=1 -- auto-focus the search input
+  (function () {
+    if (new URLSearchParams(location.search).get('focus_search') === '1' && searchEl) {
+      setTimeout(function () { searchEl.focus(); }, 120);
+    }
+  }());
 })();

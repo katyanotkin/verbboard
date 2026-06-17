@@ -293,25 +293,21 @@ input[type="text"]:focus {
 
 .page-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 6px;
-  /* ui-lang-menu is position:relative; overflow must stay visible */
+  justify-content: center;
+  margin-bottom: 4px;
 }
 
-/* ui-lang-menu sits at the end of the header row; dropdown anchors right:0
-   which keeps it within the page boundary even at 375px */
+/* Title + ui-lang picker grouped and centered together */
+.page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 .header-subnav {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  justify-content: center;
   margin-bottom: 16px;
-}
-
-[dir="rtl"] .header-subnav {
-  flex-direction: row-reverse;
 }
 
 .about-page-link {
@@ -327,14 +323,15 @@ input[type="text"]:focus {
   opacity: 0.75;
 }
 
-/* ===== Card footer (auth-slot) ===== */
+/* ===== Card top row (feedback + login, localized) ===== */
 
-.card-footer-row {
+.card-top-row {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--card-border);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--card-border);
   min-height: 36px;
 }
 

@@ -88,15 +88,16 @@ def test_verbs_russian_ui(client: TestClient) -> None:
     assert ru["verbs.find_button"] in resp.text
 
 
-def test_verbs_filter_buttons_all_present(client: TestClient) -> None:
+def test_verbs_filter_options_all_present(client: TestClient) -> None:
     with (
         patch("app.routes.verbs.load_entries_for_language", return_value=[]),
         patch("app.routes.verbs.list_verbs_recent", return_value=[]),
     ):
         resp = client.get("/verbs?language=ru&ui_language=ru")
     assert resp.status_code == 200
+    assert 'id="vb-filter-toggle"' in resp.text
     for f in ("new", "seen", "known", "all"):
-        assert f'data-filter="{f}"' in resp.text, f"filter button '{f}' missing from HTML"
+        assert f'value="{f}"' in resp.text, f"filter option '{f}' missing from HTML"
 
 
 def test_verbs_hebrew_has_rtl(client: TestClient) -> None:

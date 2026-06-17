@@ -34,8 +34,8 @@ def _require_verb_items(page, timeout: int = 5_000) -> None:
 
 
 def _active_filter(page) -> str:
-    """Return the data-filter value of the currently active filter button."""
-    return page.locator(".vb-ftbtn.active").first.get_attribute("data-filter") or ""
+    """Return the current value of the filter select."""
+    return page.locator("#vb-filter-toggle").input_value()
 
 
 def _active_sort(page) -> str:
@@ -167,7 +167,7 @@ def test_verbs_state_survives_learn_roundtrip(page, live_server_url, return_via,
 
     # Filter and sort first -- applyFilter(non-init) resets displayCount to batch,
     # so expanding must happen AFTER to get the correct expanded count in sessionStorage.
-    page.locator(".vb-ftbtn[data-filter='all']").click()
+    page.locator("#vb-filter-toggle").select_option("all")
     page.wait_for_timeout(200)
     page.locator("#vb-sort").wait_for(state="visible")
     page.locator("#vb-sort").select_option("newest")
@@ -212,7 +212,7 @@ def test_verbs_state_survives_feedback_detour(page, live_server_url, return_via)
     page.wait_for_load_state("networkidle")
     _require_verb_items(page)
 
-    page.locator(".vb-ftbtn[data-filter='all']").click()
+    page.locator("#vb-filter-toggle").select_option("all")
     page.wait_for_timeout(200)
     page.locator("#vb-sort").wait_for(state="visible")
     page.locator("#vb-sort").select_option("newest")

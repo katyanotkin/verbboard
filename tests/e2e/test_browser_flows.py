@@ -170,9 +170,9 @@ def test_verbs_learn_feedback_returns_to_verbs_with_state(page, live_server_url)
     page.wait_for_load_state("networkidle")
 
     # Apply non-default filter and sort so we can verify they survive the trip.
-    all_btn = page.locator('.vb-ftbtn[data-filter="all"]').first
-    if all_btn.is_visible():
-        all_btn.click()
+    filter_sel = page.locator("#vb-filter-toggle")
+    if filter_sel.is_visible():
+        filter_sel.select_option("all")
         page.wait_for_timeout(150)
 
     sort_sel = page.locator("#vb-sort")
@@ -218,8 +218,8 @@ def test_verbs_learn_feedback_returns_to_verbs_with_state(page, live_server_url)
     assert "ui_language=ru" in page.url, f"ui_language=ru lost after round-trip. URL: {page.url!r}"
 
     # Filter and sort must be restored (from localStorage).
-    page.wait_for_selector(".vb-ftbtn.active", timeout=5_000)
-    active_filter = page.locator(".vb-ftbtn.active").first.get_attribute("data-filter")
+    page.wait_for_selector("#vb-filter-toggle", timeout=5_000)
+    active_filter = page.locator("#vb-filter-toggle").input_value()
     assert active_filter == "all", f"Filter not restored: got {active_filter!r}"
 
     sort_value = sort_sel.input_value()

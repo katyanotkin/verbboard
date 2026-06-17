@@ -204,7 +204,8 @@
   margin-bottom: 0;
 }
 
-.vb-sort-select {
+.vb-sort-select,
+.vb-filter-select {
   height: 44px;
   padding: 0 8px;
   border: 1px solid var(--card-border);
@@ -213,6 +214,9 @@
   font-size: 13px;
   color: #374151;
   cursor: pointer;
+}
+
+.vb-sort-select {
   max-width: 160px;
 }
 

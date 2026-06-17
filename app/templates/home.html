@@ -22,8 +22,9 @@
 <body>
   <div class="page">
     <div class="page-header">
-      <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
-      <div class="ui-lang-menu" id="ui-lang-menu">
+      <div class="page-title-row">
+        <h1 class="page-title">VerbBoard <span class="copyright">©</span></h1>
+        <div class="ui-lang-menu" id="ui-lang-menu">
         <button class="ui-lang-trigger" id="ui-lang-trigger"
                 aria-haspopup="menu" aria-expanded="false"
                 aria-label="{{ ui['home.ui_lang_label'] }}">
@@ -50,15 +51,20 @@
           {% endfor %}
         </div>
       </div>
-    </div>
+      </div><!-- /page-title-row -->
+    </div><!-- /page-header -->
 
     <div class="header-subnav">
       <a href="/about?ui_language={{ lang }}" class="home-sec-link">{{ ui['home.about'] }}</a>
-      <a href="/feedback?page=home&amp;language={{ learning_lang | urlencode }}&amp;return_to={{ ('/?language=' ~ learning_lang ~ '&ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}"
-         class="home-sec-link">{{ ui['home.feedback_link'] }}</a>
     </div>
 
     <div class="controls" id="home-card">
+      <div class="card-top-row">
+        <a href="/feedback?page=home&amp;language={{ learning_lang | urlencode }}&amp;return_to={{ ('/?language=' ~ learning_lang ~ '&ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}"
+           class="home-sec-link">{{ ui['home.feedback_link'] }}</a>
+        <div id="auth-slot" class="auth-slot"></div>
+      </div>
+
       <div class="row">
         <label for="language-select">{{ ui['home.language_label'] }}</label>
         <select id="language-select" name="language" onchange="window.location='/set_language?language=' + this.value + '&ui_language={{ lang | urlencode }}';">
@@ -77,10 +83,6 @@
           <span class="browse-icon">▶</span>
           <span>{{ ui['practice.label'] }}</span>
         </a>
-      </div>
-
-      <div class="card-footer-row">
-        <div id="auth-slot" class="auth-slot"></div>
       </div>
     </div>
 

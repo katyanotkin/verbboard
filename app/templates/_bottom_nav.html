@@ -35,7 +35,7 @@
     </svg>
   </a>
 
-  <a href="/?language={{ bnav_lang | urlencode }}{{ _ui_suffix }}"
+  <a href="/verbs?language={{ bnav_lang | urlencode }}{{ _ui_suffix }}&focus_search=1"
      class="bnav-tab{% if bnav_active == 'search' %} bnav-tab--active{% endif %}"
      aria-label="Search"
      aria-current="{{ 'page' if bnav_active == 'search' else 'false' }}">

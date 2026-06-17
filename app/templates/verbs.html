@@ -59,12 +59,12 @@
           <h1 class="vb-title">{{ ui['verbs.heading'] }}</h1>
 
           <div class="vb-filter-row">
-            <div id="vb-filter-toggle" class="vb-filter-toggle">
-              <button class="vb-ftbtn" data-filter="new">{{ ui['verbs.filter_new'] }}</button>
-              <button class="vb-ftbtn" data-filter="seen">{{ ui['verbs.filter_seen'] }}</button>
-              <button class="vb-ftbtn" data-filter="known">{{ ui['verbs.filter_known'] }}</button>
-              <button class="vb-ftbtn" data-filter="all">{{ ui['verbs.filter_all'] }}</button>
-            </div>
+            <select id="vb-filter-toggle" class="vb-filter-select">
+              <option value="new">{{ ui['verbs.filter_new'] }}</option>
+              <option value="seen">{{ ui['verbs.filter_seen'] }}</option>
+              <option value="known">{{ ui['verbs.filter_known'] }}</option>
+              <option value="all">{{ ui['verbs.filter_all'] }}</option>
+            </select>
 
             <select id="vb-sort" class="vb-sort-select">
               <option value="newest">{{ ui['verbs.sort_newest'] }}</option>
