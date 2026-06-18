@@ -47,7 +47,7 @@ def _page_for_viewport(browser, viewport_name: str):
 def _check_desktop_batch_invariant(page, live_server_url, filter_name, sort_name):
     """Desktop: initial render must show at most VB_DISPLAY_BATCH items."""
     hash_fragment = f"filter={filter_name}&sort={sort_name}"
-    page.goto(f"{live_server_url}/verbs?language=en#{hash_fragment}")
+    page.goto(f"{live_server_url}/verbs?language=he#{hash_fragment}")
     page.evaluate("sessionStorage.clear()")
     page.reload()
     page.wait_for_load_state("networkidle")
@@ -98,7 +98,7 @@ def test_initial_render_respects_display_batch(browser, live_server_url, filter_
 def test_desktop_batch_invariant_holds_after_auth_hydration(browser, live_server_url):
     """Desktop: vb:progress-hydrated re-render must not expand beyond VB_DISPLAY_BATCH."""
     with _page_for_viewport(browser, "desktop") as page:
-        page.goto(f"{live_server_url}/verbs?language=en")
+        page.goto(f"{live_server_url}/verbs?language=he")
         page.evaluate("sessionStorage.clear()")
         page.reload()
         page.wait_for_load_state("networkidle")
@@ -129,7 +129,7 @@ def test_desktop_batch_invariant_holds_after_auth_hydration(browser, live_server
 def test_filter_change_resets_to_one_batch(browser, live_server_url, viewport_name):
     """Switching filter must reset display count to one batch on any viewport."""
     with _page_for_viewport(browser, viewport_name) as page:
-        page.goto(f"{live_server_url}/verbs?language=en")
+        page.goto(f"{live_server_url}/verbs?language=he")
         page.evaluate("sessionStorage.clear()")
         page.reload()
         page.wait_for_load_state("networkidle")

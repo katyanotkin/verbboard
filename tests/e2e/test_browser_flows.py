@@ -67,7 +67,7 @@ def test_about_roundtrip_from_home(page, live_server_url):
     page.goto(f"{live_server_url}/?language=en")
     page.wait_for_load_state("networkidle")
 
-    about_link = page.locator("a.about-page-link").first
+    about_link = page.locator("a.home-sec-link").first
     if not about_link.is_visible():
         pytest.skip("About link not visible on home page")
     about_link.click()
