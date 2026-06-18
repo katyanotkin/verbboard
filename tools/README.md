@@ -142,6 +142,16 @@ python -m tools.backfill_es_tenses --dry-run
 python -m tools.backfill_es_tenses --collection verb_candidates
 ```
 
+`backfill_es_vosotros.py` — Add missing `vosotros` conjugation slot to all
+four tenses (present/preterite/imperfect/future) for existing Spanish verbs via
+Anthropic Message Batches. Only writes `forms.<tense>.vosotros`; all other
+fields are left untouched. Requires `ANTHROPIC_API_KEY`.
+```
+python -m tools.backfill_es_vosotros
+python -m tools.backfill_es_vosotros --dry-run
+python -m tools.backfill_es_vosotros --collection verb_candidates
+```
+
 `fix_ru_perfective_form_slots.py` — Remove erroneous `present` form slots from
 Russian perfective verbs in Firestore. Dry-run by default.
 ```

@@ -81,10 +81,10 @@ SPANISH (es)
   lemma: infinitive form
   morph: {}
   forms (all nested):
-    present:    { yo, tu, el, nos, ellos }
-    preterite:  { yo, tu, el, nos, ellos }
-    imperfect:  { yo, tu, el, nos, ellos }
-    future:     { yo, tu, el, nos, ellos }
+    present:    { yo, tu, el, nos, vosotros, ellos }
+    preterite:  { yo, tu, el, nos, vosotros, ellos }
+    imperfect:  { yo, tu, el, nos, vosotros, ellos }
+    future:     { yo, tu, el, nos, vosotros, ellos }
     imperative: { tu, vosotros, usted, ustedes }  ← always include all four slots
     gerund: "<gerund>"              (string)
     participle: "<past participle>" (string)

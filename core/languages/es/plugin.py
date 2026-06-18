@@ -6,13 +6,16 @@ from core.registry import LanguagePlugin, register
 
 
 def _tense_rows(prefix: str, tense: dict) -> list:
-    return [
+    rows = [
         {"key": f"{prefix}_yo", "label": "yo", "text": tense.get("yo", ""), "number": "sg"},
         {"key": f"{prefix}_tu", "label": "tú", "text": tense.get("tu", ""), "number": "sg"},
-        {"key": f"{prefix}_el", "label": "él/ella", "text": tense.get("el", ""), "number": "sg"},
+        {"key": f"{prefix}_el", "label": "él/ella/Ud.", "text": tense.get("el", ""), "number": "sg"},
         {"key": f"{prefix}_nos", "label": "nosotros", "text": tense.get("nos", ""), "number": "pl"},
-        {"key": f"{prefix}_ellos", "label": "ellos", "text": tense.get("ellos", ""), "number": "pl"},
     ]
+    if tense.get("vosotros"):
+        rows.append({"key": f"{prefix}_vos", "label": "vosotros", "text": tense["vosotros"], "number": "pl"})
+    rows.append({"key": f"{prefix}_ellos", "label": "ellos/Uds.", "text": tense.get("ellos", ""), "number": "pl"})
+    return rows
 
 
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:

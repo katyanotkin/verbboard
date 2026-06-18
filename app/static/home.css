@@ -194,7 +194,8 @@ input[type="text"]:focus {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-muted);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   white-space: nowrap;
 }
 
