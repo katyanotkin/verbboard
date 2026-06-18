@@ -334,6 +334,9 @@ def main() -> None:
     if args.input:
         with open(args.input) as fh:
             raw_lines = fh.readlines()
+    elif sys.stdin.isatty():
+        logger.error("No --input file provided and stdin is a terminal. Use --input or pipe data.")
+        sys.exit(1)
     else:
         raw_lines = sys.stdin.readlines()
 

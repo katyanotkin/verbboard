@@ -65,7 +65,8 @@ def render_board_html(
                 value_html = text
 
             if key not in NO_AUDIO_ROW_KEYS:
-                hashed_key = build_hashed_audio_key(key, raw_text)
+                tts_key_text = str(row.get("tts_text") or "").strip() or raw_text
+                hashed_key = build_hashed_audio_key(key, tts_key_text)
                 audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{hashed_key}.mp3"
                 audio_id = (
                     f"audio_{board.language}_{board.verb.id}_{board.voice_key}_"

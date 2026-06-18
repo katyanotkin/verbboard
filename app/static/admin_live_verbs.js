@@ -38,6 +38,7 @@ function renderLiveVerbsTable(verbs) {
     const exampleCount = (verb.examples || []).length;
     const hasPronounForms = verb.pronoun_forms && Object.keys(verb.pronoun_forms).length > 0;
     const updated = (verb.updated_at || '').replace('T', ' ').slice(0, 16);
+    const previewHref = `/learn?language=${esc(verb.language || '')}&verb_id=${safeId}&ui_language=en&return_to=${encodeURIComponent('/admin#live_verbs')}`;
 
     return `<tr id="live-row-${safeId}">
       <td><code>${safeId}</code></td>
@@ -48,19 +49,24 @@ function renderLiveVerbsTable(verbs) {
       <td>${hasPronounForms ? '✓' : '<span style="color:var(--muted)">—</span>'}</td>
       <td style="font-size:12px;color:var(--muted)">${esc(updated)}</td>
       <td>
-        <button class="action-btn" onclick="regenerateLiveVerb('${safeId}')">Regenerate</button>
-        <span id="regen-status-${safeId}" style="font-size:12px;margin-left:6px"></span>
+        <div class="btn-row">
+          <a class="btn-preview" href="${previewHref}" target="_blank">👁 Preview</a>
+          <button class="btn-regen" onclick="regenLiveExamples('${safeId}')">⟳ Examples</button>
+          <button class="btn-regen" onclick="regenLiveForms('${safeId}')">⟳ Forms</button>
+          <button class="btn-needs-fix" onclick="regenLiveFull('${safeId}')">⟳ Full</button>
+        </div>
+        <span id="regen-status-${safeId}" style="font-size:12px;margin-left:2px"></span>
       </td>
     </tr>`;
   }).join('');
 }
 
-async function regenerateLiveVerb(verbId) {
+async function _liveRegenCall(verbId, path, label) {
   const statusEl = document.getElementById(`regen-status-${verbId}`);
-  if (statusEl) statusEl.textContent = 'Regenerating…';
+  if (statusEl) statusEl.textContent = `${label}…`;
 
   try {
-    const resp = await fetch(`${LIVE_ROOT}/api/verbs/${encodeURIComponent(verbId)}/regenerate`, {
+    const resp = await fetch(`${LIVE_ROOT}/api/verbs/${encodeURIComponent(verbId)}/${path}`, {
       method: 'POST',
     });
     const data = await resp.json().catch(() => ({}));
@@ -69,11 +75,23 @@ async function regenerateLiveVerb(verbId) {
       return;
     }
     if (statusEl) statusEl.textContent = `Done ${(data.updated_at || '').slice(0, 16)}`;
-    // Re-fetch the updated row to reflect new pronoun_forms status
     refreshLiveVerbRow(verbId);
   } catch (err) {
     if (statusEl) statusEl.textContent = `Error: ${err.message}`;
   }
+}
+
+function regenLiveExamples(verbId) {
+  _liveRegenCall(verbId, 'regen_examples', 'Regen examples');
+}
+
+function regenLiveForms(verbId) {
+  _liveRegenCall(verbId, 'regen_forms', 'Regen forms');
+}
+
+function regenLiveFull(verbId) {
+  if (!confirm(`Regenerate ALL fields for ${verbId}? This replaces forms, examples, and tts_forms.`)) return;
+  _liveRegenCall(verbId, 'regenerate', 'Regen full');
 }
 
 async function refreshLiveVerbRow(verbId) {

@@ -57,7 +57,8 @@ def _iter_form_items(verb, language: str, voice_key: str):
         for row in section["rows"]:
             text = str(row["text"] or "").strip()
             if text:
-                yield str(row["key"]), text
+                tts_key_text = str(row.get("tts_text") or "").strip() or text
+                yield str(row["key"]), tts_key_text
 
     for index, example in enumerate(board.verb.examples, start=1):
         text = example.dst.strip()

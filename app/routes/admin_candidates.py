@@ -42,7 +42,7 @@ _GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
 
 class _ClaudeVerbResponse(BaseModel):
     lemma: str | None = None
-    morph: str | None = None
+    morph: str | dict[str, Any] | None = None
     forms: dict[str, Any] = {}
     examples: list[Any] = []
     pronoun_forms: dict[str, Any] | None = None
@@ -98,7 +98,7 @@ async def _warm_verb_audio(audio_backend, language: str, verb_data: dict) -> Non
                 if not text:
                     continue
                 tts_text = str(row.get("tts_text") or "").strip() or text
-                form_key = build_hashed_audio_key(base_key, text)
+                form_key = build_hashed_audio_key(base_key, tts_text)
                 tasks.append(
                     ensure_audio(
                         audio_backend=audio_backend,
@@ -498,9 +498,7 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
     pronoun_forms = generated.get("pronoun_forms")
     if pronoun_forms:
         payload["pronoun_forms"] = pronoun_forms
-    tts_forms = generated.get("tts_forms")
-    if tts_forms:
-        payload["tts_forms"] = tts_forms
+    # tts_forms intentionally omitted: forms now carry nikud directly
 
     doc_ref.set(payload)
 
@@ -530,6 +528,85 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
     )
 
     return JSONResponse({"verb_id": verb_id, "regenerated": True, "lemma": lemma, "updated_at": now})
+
+
+@router.post("/api/verbs/{verb_id}/regen_examples")
+async def regen_verb_examples(request: Request, verb_id: str) -> JSONResponse:
+    require_admin_api(request)
+    db = get_db()
+    doc_ref = db.collection(VERBS_COLLECTION).document(verb_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Verb not found in live verbs collection")
+
+    existing = doc.to_dict()
+    language = existing.get("language", "")
+    lemma = existing.get("lemma", "")
+    if not language or not lemma:
+        raise HTTPException(status_code=422, detail="Verb document is missing language or lemma")
+
+    generated = await _call_claude(language, lemma)
+    new_examples = generated.get("examples", [])
+
+    translated = await asyncio.to_thread(
+        translate_examples,
+        verb_lang=language,
+        lemma=lemma,
+        examples=new_examples,
+        project=_GCP_PROJECT,
+        api_key=_load_anthropic_api_key(),
+    )
+
+    now = datetime.now(UTC).isoformat()
+    doc_ref.update({"examples": translated, "updated_at": now})
+
+    return JSONResponse({"verb_id": verb_id, "examples_count": len(translated), "updated_at": now})
+
+
+@router.post("/api/verbs/{verb_id}/regen_forms")
+async def regen_verb_forms(request: Request, verb_id: str) -> JSONResponse:
+    require_admin_api(request)
+    db = get_db()
+    doc_ref = db.collection(VERBS_COLLECTION).document(verb_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Verb not found in live verbs collection")
+
+    existing = doc.to_dict()
+    language = existing.get("language", "")
+    lemma = existing.get("lemma", "")
+    if not language or not lemma:
+        raise HTTPException(status_code=422, detail="Verb document is missing language or lemma")
+
+    generated = await _call_claude(language, lemma)
+    try:
+        _ClaudeVerbResponse.model_validate(generated)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=502, detail=f"Regeneration returned unexpected shape: {exc.error_count()} field errors"
+        ) from exc
+
+    now = datetime.now(UTC).isoformat()
+    update: dict[str, Any] = {
+        "morph": generated.get("morph") or None,
+        "forms": generated.get("forms", {}),
+        "search_extract": build_search_extract_from_entry(language=language, entry=generated),
+        "pronoun_forms": generated.get("pronoun_forms") or None,
+        "tts_forms": None,  # forms now carry nikud directly; clear legacy tts_forms
+        "updated_at": now,
+    }
+    doc_ref.update(update)
+
+    updated_verb_data = {**existing, **update}
+    asyncio.create_task(
+        _warm_verb_audio(
+            audio_backend=request.app.state.audio_backend,
+            language=language,
+            verb_data=updated_verb_data,
+        )
+    )
+
+    return JSONResponse({"verb_id": verb_id, "regenerated": True, "updated_at": now})
 
 
 @router.post("/api/candidates/{verb_id}/examples/{index}/regen")

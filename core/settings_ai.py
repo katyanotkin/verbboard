@@ -98,14 +98,13 @@ HEBREW (he)
   morph:
     binyan: one of פָּעַל, נִפְעַל, פִּיעֵל, פֻּעַל, הִתְפַּעֵל, הִפְעִיל, הוּפְעַל
     root: letters separated by dots, e.g. "ל.מ.ד"
-  forms (all nested) — plain text, no nikud:
+  forms (all nested) — WITH full nikud so learners can read pronunciation:
     present:   { m_sg, f_sg, m_pl, f_pl }
     past:      { 1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl }
     future:    { 1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl }
     imperative: { ms, fs, mp, fp }
-  tts_forms — top-level key (same structure as forms), all values WITH full nikud for TTS pronunciation.
-    Critical: past 2msg ends in ָּ (qamatz + dagesh), 2fsg ends in ְ (shva). Never omit.
-    Example for הלך: tts_forms.past.2msg = "הָלַכְתָּ", tts_forms.past.2fsg = "הָלַכְתְּ"
+    Critical homographs: past 2msg ends in ָּ (qamatz + dagesh), 2fsg ends in ְ (shva). Never omit.
+    Example for הלך: past.2msg = "הָלַכְתָּ", past.2fsg = "הָלַכְתְּ"
   examples: 4 to 6 sentences in Hebrew script, each using a distinct grammatical form:
     at least one present, one past, one future, and others from different forms."""
 

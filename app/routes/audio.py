@@ -50,8 +50,9 @@ async def _generate_on_demand(
             row_text = str(row["text"] or "").strip()
             if not row_text:
                 continue
-            if build_hashed_audio_key(str(row["key"]), row_text) == form_key:
-                text = str(row.get("tts_text") or "").strip() or row_text
+            tts_key_text = str(row.get("tts_text") or "").strip() or row_text
+            if build_hashed_audio_key(str(row["key"]), tts_key_text) == form_key:
+                text = tts_key_text
                 break
         if text is not None:
             break
