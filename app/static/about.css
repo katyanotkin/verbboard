@@ -61,3 +61,9 @@ h1 {
     display: none !important;
   }
 }
+
+.about-privacy-link {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.85rem;
+}

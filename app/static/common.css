@@ -95,6 +95,7 @@ body {
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
+  touch-action: manipulation;
   transition: filter 0.1s ease;
 }
 
@@ -141,7 +142,8 @@ body {
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.12s ease;
+  touch-action: manipulation;
+  transition: filter 0.12s ease, transform 0.12s ease;
 }
 
 .nav-btn:hover {
@@ -151,6 +153,7 @@ body {
 
 .nav-btn:active {
   transform: translateY(0);
+  filter: brightness(0.9);
 }
 
 /* Ghost variant: matches .feedback-link weight — for the Back link in topbar-nav */
@@ -260,13 +263,19 @@ body {
   text-decoration: none;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.12s ease;
+  touch-action: manipulation;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
 }
 
 .feedback-link:hover {
   background: #f8fafc;
   border-color: #cbd5e1;
   transform: translateY(-1px);
+}
+
+.feedback-link:active {
+  transform: translateY(0);
+  background: #f1f5f9;
 }
 
 /* ===== Shared page nav row ===== */
@@ -350,6 +359,8 @@ body {
 
 .search-mode-pill {
   padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
   border-radius: 999px;
   border: 1px solid var(--input-border);
   background: #e2e8f0;
@@ -358,7 +369,14 @@ body {
   font-weight: 600;
   cursor: pointer;
   line-height: 1.5;
+  touch-action: manipulation;
   transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+@media (pointer: coarse) {
+  .search-mode-pill {
+    min-height: 44px;
+  }
 }
 
 .search-mode-pill.active {

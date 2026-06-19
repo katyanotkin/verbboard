@@ -39,7 +39,6 @@
   z-index: 10;
   background: var(--page-bg);
   padding-top: calc(8px + env(safe-area-inset-top));
-  will-change: transform;
 }
 
 .vb-title {
@@ -101,7 +100,7 @@
   padding: 0 12px;
   border: 1.5px solid #94a3b8;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: 16px;
   background: white;
   color: #111827;
 }
@@ -129,6 +128,7 @@
 .vb-ftbtn {
   flex: 1 1 0;
   min-width: 0;
+  min-height: 44px;
   padding: 8px 12px;
   border: none;
   background: transparent;
@@ -138,6 +138,7 @@
   cursor: pointer;
   white-space: nowrap;
   text-align: center;
+  touch-action: manipulation;
   transition: background 0.1s, color 0.1s;
   display: flex;
   align-items: center;
@@ -313,7 +314,7 @@
 
 .vb-section-label {
   grid-column: 1 / -1;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -444,6 +445,7 @@
 
 .practice-size-btn {
   padding: 4px 12px;
+  min-height: 44px;
   border-radius: 999px;
   border: 1px solid #93c5fd;
   background: white;
@@ -451,6 +453,7 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  touch-action: manipulation;
   transition: background 0.1s, color 0.1s;
 }
 
@@ -495,6 +498,13 @@
   justify-content: center;
   transition: background 0.1s, color 0.1s;
   touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  .practice-listens-btn {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 .practice-listens-btn:hover:not(:disabled) {
@@ -611,6 +621,7 @@
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
 }
 

@@ -26,6 +26,7 @@ def about_page(request: Request) -> HTMLResponse:
             "title": ui.get("about.title", "About VerbBoard"),
             "back_label": ui.get("about.back", "Back"),
             "feedback_label": ui.get("about.feedback", "Feedback"),
+            "privacy_label": ui.get("about.privacy", "Privacy Policy"),
             "firebase_web_config_json": settings.firebase_web_config_json,
             "auth_login": ui.get("auth.login", "Login"),
             "auth_logout": ui.get("auth.logout", "Logout"),

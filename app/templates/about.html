@@ -141,6 +141,10 @@
 
     <div id="auth-slot" class="auth-slot" style="display:contents"></div>
   </div>
+
+  <p class="about-privacy-link">
+    <a href="/privacy" class="about-page-link">{{ privacy_label }}</a>
+  </p>
 </div>
 
 {% set bnav_lang = '' %}{% set bnav_active = '' %}{% set bnav_back_href = '/?ui_language=' ~ (lang | urlencode) %}{% include '_bottom_nav.html' %}

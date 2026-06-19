@@ -18,9 +18,21 @@
   font-size: 1.1rem;
   cursor: pointer;
   padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   opacity: 0.6;
   flex-shrink: 0;
   line-height: 1;
+  touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  .translated-from-dismiss {
+    padding: 0;
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .translated-from-dismiss:hover {
@@ -229,11 +241,13 @@ button {
 
 .voice-btn {
   padding: 8px 14px;
+  min-height: 44px;
   border: none;
   background: transparent;
   color: #6b7280;
   font-weight: 600;
   cursor: pointer;
+  touch-action: manipulation;
   transition: all 0.12s ease;
 }
 
@@ -266,7 +280,7 @@ button {
 }
 
 .filter-label {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -613,6 +627,10 @@ button {
     margin-top: 0;
     /* Preserve horizontal padding from the base rule; add clearance for bottom nav */
     padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  h1 {
+    font-size: 26px;
   }
 
   .topbar {
