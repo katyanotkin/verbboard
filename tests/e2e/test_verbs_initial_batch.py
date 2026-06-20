@@ -144,12 +144,11 @@ def test_filter_change_resets_to_one_batch(browser, live_server_url, viewport_na
         except Exception:
             pytest.skip("List never rendered")
 
-        all_btn = page.locator('.vb-ftbtn[data-filter="all"]').first
-        new_btn = page.locator('.vb-ftbtn[data-filter="new"]').first
-        if not all_btn.is_visible():
-            pytest.skip("Filter buttons not present on this page")
+        filter_select = page.locator("#vb-filter-toggle")
+        if not filter_select.is_visible():
+            pytest.skip("Filter select not present on this page")
 
-        all_btn.click()
+        filter_select.select_option("all")
         page.wait_for_timeout(150)
 
         show_more = page.locator("#vb-load-more")
@@ -157,7 +156,7 @@ def test_filter_change_resets_to_one_batch(browser, live_server_url, viewport_na
             show_more.click()
             page.wait_for_timeout(200)
 
-        new_btn.click()
+        filter_select.select_option("new")
         page.wait_for_timeout(150)
 
         item_count = page.locator("#vb-list .vb-item").count()
