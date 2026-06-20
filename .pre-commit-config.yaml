@@ -44,7 +44,7 @@ repos:
 
       - id: pytest-all
         name: pytest all regression tests
-        entry: bash -c 'PYTHONPATH=. .venv/bin/pytest -q -x --tb=short tests/'
+        entry: tools/run_pytest_hook.sh
         language: system
         pass_filenames: false
         files: \.(py|js|css|html|json)$
