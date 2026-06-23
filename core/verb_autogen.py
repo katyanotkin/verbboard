@@ -168,8 +168,14 @@ async def autogenerate_missing_verb(*, language: str, query: str, audio_backend:
             logger.exception("autogen response failed validation for %s/%s", language, query)
             return
 
-        lemma = (parsed.lemma or query).strip()
+        if parsed.lemma is None:
+            logger.info("autogen: Gemini rejected %s/%s as non-verb", language, query)
+            return
+        lemma = parsed.lemma.strip()
         if not lemma:
+            return
+        if not parsed.forms:
+            logger.info("autogen: empty forms for %s/%s, aborting write", language, query)
             return
 
         verb_id = build_storage_verb_id(language=language, lemma=lemma)

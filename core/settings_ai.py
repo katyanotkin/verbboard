@@ -19,6 +19,8 @@ Task: identify the dictionary lemma, then output full conjugation data.
 
 Return raw valid JSON only — no markdown fences, comments, or prose. Double-quote all keys and strings. Begin your response with `{`.
 
+If the query is NOT a verb (e.g. it is a noun, adjective, number, proper name, or nonsense), return exactly: {"lemma": null, "forms": {}} — nothing else.
+
 Schema:
 {
   "lemma": "<dictionary base form>",
