@@ -106,6 +106,30 @@ def _verb_id_exists(verb_id: str) -> bool:
     return db.collection(_VERBS_COLLECTION).document(verb_id).get().exists
 
 
+def _write_rejection(*, language: str, query: str) -> None:
+    """Record that Gemini confirmed this query is not a verb."""
+    db = get_db()
+    verb_id = build_storage_verb_id(language=language, lemma=query)
+    db.collection(_CANDIDATES_COLLECTION).document(verb_id).set(
+        {
+            "verb_id": verb_id,
+            "language": language,
+            "query": query,
+            "status": "rejected_non_verb",
+            "source": "autogen",
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+    )
+
+
+def check_verb_rejected(language: str, query: str) -> bool:
+    """Return True if AI previously confirmed this query is not a verb."""
+    db = get_db()
+    verb_id = build_storage_verb_id(language=language, lemma=query)
+    doc = db.collection(_CANDIDATES_COLLECTION).document(verb_id).get()
+    return doc.exists and doc.to_dict().get("status") == "rejected_non_verb"
+
+
 def _write_promoted_verb(
     *,
     language: str,
@@ -169,7 +193,8 @@ async def autogenerate_missing_verb(*, language: str, query: str, audio_backend:
             return
 
         if parsed.lemma is None:
-            logger.info("autogen: Gemini rejected %s/%s as non-verb", language, query)
+            logger.info("autogen: Gemini rejected %s/%s as non-verb, recording rejection", language, query)
+            await asyncio.to_thread(_write_rejection, language=language, query=query)
             return
         lemma = parsed.lemma.strip()
         if not lemma:

@@ -23,6 +23,7 @@
   "home.generating": "se está añadiendo...",
   "home.try_again": "Reintentar en",
   "home.not_a_verb": "No parece un verbo, omitiendo.",
+  "home.not_a_verb_confirmed": "No existe ese verbo, omitiendo.",
   "home.ui_language_label": "Idioma de la app",
   "verbs.title": "VerbBoard — Explorar verbos",
   "verbs.back_home": "⟵ Volver",

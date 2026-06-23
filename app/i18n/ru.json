@@ -23,6 +23,7 @@
   "home.generating": "добавляется...",
   "home.try_again": "Повторить через",
   "home.not_a_verb": "Не похоже на глагол, пропускаем.",
+  "home.not_a_verb_confirmed": "Такого глагола нет, пропускаем.",
   "home.ui_language_label": "Язык приложения",
   "verbs.title": "VerbBoard — Глаголы",
   "verbs.back_home": "⟵ Назад",

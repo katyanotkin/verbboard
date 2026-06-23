@@ -136,6 +136,8 @@
             </script>
             {% elif garbage_query %}
             <div class="notice notice--skip" id="vb-notice">{{ ui['home.not_a_verb'] }}</div>
+            {% elif not_a_verb_query %}
+            <div class="notice notice--skip" id="vb-notice">{{ ui['home.not_a_verb_confirmed'] }}</div>
             {% elif notice_text %}
             <div class="notice" id="vb-notice">{{ ui['home.no_match'] }} <b>{{ notice_text }}</b></div>
             {% endif %}

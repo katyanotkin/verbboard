@@ -23,6 +23,7 @@
   "home.generating": "is being added...",
   "home.try_again": "Try again in",
   "home.not_a_verb": "Doesn't look like a verb, skipping.",
+  "home.not_a_verb_confirmed": "No such verb, skipping.",
   "home.ui_language_label": "App language",
   "verbs.title": "VerbBoard — Browse verbs",
   "verbs.back_home": "⟵ Back",

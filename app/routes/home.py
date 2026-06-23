@@ -19,7 +19,7 @@ from core.search_utils import find_best_entry, tokenize_text
 from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 from core.translation_service import translate_search_query
-from core.verb_autogen import AUTOGEN_LANGUAGES, autogenerate_missing_verb, is_plausible_verb_query
+from core.verb_autogen import AUTOGEN_LANGUAGES, autogenerate_missing_verb, check_verb_rejected, is_plausible_verb_query
 from core.verb_loader import load_entries_for_language
 
 logger = logging.getLogger(__name__)
@@ -141,6 +141,10 @@ async def search_verb_by_lang(
     )
     if language in AUTOGEN_LANGUAGES:
         if is_plausible_verb_query(translated, language):
+            if await asyncio.to_thread(check_verb_rejected, language, translated):
+                return RedirectResponse(
+                    url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native&not_a_verb=1"
+                )
             asyncio.create_task(
                 autogenerate_missing_verb(
                     language=language,
@@ -199,6 +203,8 @@ async def search_verb(
     sep = "&" if "?" in base else "?"
     if language in AUTOGEN_LANGUAGES:
         if is_plausible_verb_query(query, language):
+            if await asyncio.to_thread(check_verb_rejected, language, query):
+                return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&not_a_verb=1")
             asyncio.create_task(
                 autogenerate_missing_verb(
                     language=language,
@@ -220,6 +226,7 @@ def home(
     search_mode: str | None = Query(None),
     generating: int | None = Query(None),
     garbage: int | None = Query(None),
+    not_a_verb: int | None = Query(None),
 ) -> HTMLResponse:
     plugins = all_plugins()
 
@@ -246,6 +253,7 @@ def home(
     notice_text = raw_search_value.strip() if str(not_available) == "1" else None
     generating_verb = notice_text if (notice_text and generating == 1) else None
     garbage_query = notice_text if (notice_text and garbage == 1 and not generating_verb) else None
+    not_a_verb_query = notice_text if (notice_text and not_a_verb == 1 and not generating_verb) else None
 
     response = templates.TemplateResponse(
         request,
@@ -266,6 +274,7 @@ def home(
             "search_mode": search_mode or "native",
             "generating_verb": generating_verb,
             "garbage_query": garbage_query,
+            "not_a_verb_query": not_a_verb_query,
             "firebase_web_config_json": settings.firebase_web_config_json,
         },
     )

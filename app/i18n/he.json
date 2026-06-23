@@ -23,6 +23,7 @@
   "home.generating": "מתווסף...",
   "home.try_again": "נסה שוב בעוד",
   "home.not_a_verb": "לא נראה כמו פועל, מדלגים.",
+  "home.not_a_verb_confirmed": "פועל כזה לא קיים, מדלגים.",
   "home.ui_language_label": "שפת האפליקציה",
   "verbs.title": "VerbBoard — פעלים",
   "verbs.back_home": "ראשי ⟶",
