@@ -32,15 +32,44 @@ Never use em dashes (use commas, colons, or parentheses instead).
 
 ## LinkedIn article format
 
-- Heavy blank lines between sections; spacing does the work, not bold headers or horizontal rules
-- `***Feature Name***` for section headers (three asterisks each side)
-- Category labels inline before details: "Unit tests:", "Browser tests:" (not bold headers or plain dashes)
-- Arrow notation for flows: usage -> signal -> generation -> live
-- Current open questions listed with `--` prefix (two dashes), not bullets
+Two post types. Pick one before writing -- do not mix them.
+
+**Format A: Product update** (what shipped)
+- `***Feature Name***` headers, one per feature
+- Structure per feature: name -> user-facing consequence -> system implication
+- Close: reflection on what building taught you, then `--` current questions, then one sentence on next iteration
+
+**Format B: Decision/reasoning** (what I chose and why)
+- Numbered list (1. / 2.) with plain title
+- Structure per item: scenario -> tension -> resolution -> one-line principle
+- Close: broader pattern or direction in arrow notation, then "Curious how others think about decisions like these."
+- No `--` questions in this format
+
+**Both formats:**
+- Heavy blank lines between sections; spacing does the work, not headers
+- Short punchy sentences, one idea per line
+- First-person throughout ("I made", "I want", "I'm not convinced")
+- State opinions directly; do not hedge
+- Arrow notation for flows: usage -> signal -> generation -> validation -> live
 - Hashtags at the very end, generous topic coverage including #verbboard
 - No italicized product meta-descriptions
-- Each feature section: name, then user-facing consequence, then what it means for the product system
-- Close with a reflection on what building taught you, not a summary of what you built
+
+**Bullets within a section (posts only):** Dash bullets (`- `) are acceptable for listing concrete capabilities or features (3-5 items max). Do not use bullets for reasoning or narrative -- use line breaks instead.
+
+**"At first glance / but" contrast:** When a decision seems obvious but isn't, state the intuitive read first, then cut to the actual position as a short declarative sentence. "At first glance: more translations = easier learning. But VerbBoard is not trying to be a translation tool."
+
+**Pedagogical/product philosophy:** State product philosophy plainly and own it. "I want learners to do a little work." "Translation should support comprehension, not replace thinking." Strong opinions, not hedged suggestions.
+
+## LinkedIn article format (long-form, Pulse)
+
+Articles are longer-form than posts and use richer formatting:
+
+- Bullet points are welcome and expected for lists, steps, and structured comparisons
+- Bold text is used for emphasis, section sub-labels, and key terms
+- Numbered lists for ordered steps or ranked points
+- The post-format rules (line breaks instead of bullets, no bold mid-paragraph) do NOT apply here
+- `***` headers still work but standard markdown headings (`##`) are also fine
+- Paragraphs can be longer than in posts -- 2-4 sentences is acceptable when reasoning through a point
 
 ## Before writing
 
@@ -52,10 +81,10 @@ Never use em dashes (use commas, colons, or parentheses instead).
 ## What to avoid
 
 - "seamlessly", "robust", "powerful", "intuitive", "elegant" -- vague filler
-- Bullet lists in LinkedIn posts (use line breaks and `--` for open questions instead)
-- Bold text mid-paragraph for LinkedIn content
 - Passive voice
+- Hedging: "might", "could potentially", "in some cases"
 - Summary paragraphs that restate what was just said
+- Mixing Format A and Format B structure in the same post
 
 ## VerbBoard product context
 

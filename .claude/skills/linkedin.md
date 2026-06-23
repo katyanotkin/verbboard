@@ -1,10 +1,20 @@
-# /linkedin — LinkedIn Article Draft
+# /linkedin — LinkedIn Post or Article Draft
 
-Draft a LinkedIn article in the established VerbBoard voice. Pass a topic, a theme, or paste grep/log output as context. If no args, defaults to recent shipped changes.
+Draft LinkedIn content in the established VerbBoard voice. Pass a topic, theme, or context as args. If no args, defaults to recent shipped changes.
+
+## Step 0 — Determine the format
+
+Ask (or infer from the args) which format is needed:
+
+**Post** (short-form, feed): line breaks do the work, minimal formatting, punchy sentences. Bullets only for short concrete lists. No bold mid-paragraph.
+
+**Article** (long-form, Pulse): bullets and bold are desired and expected. Paragraphs can develop a point over 2-4 sentences.
+
+If unclear, ask before proceeding.
 
 ## Step 1 — Gather context
 
-If args were passed, use them as the topic. Also run:
+Use the args as the topic. Also run:
 
 ```bash
 git log --oneline -20
@@ -20,14 +30,20 @@ PYTHONPATH=. pytest --collect-only -q 2>/dev/null | tail -3
 
 to get the current test count.
 
-## Step 2 — Identify the angle
+## Step 2 — Identify the angle and post type
 
-Before writing, state in one sentence: what is the non-obvious thing the reader will learn or feel by the end? That is the spine of the article. Everything else is support.
+Before writing, decide two things:
+
+**Post type (for posts only):**
+- Format A (product update): use `***Feature Name***` headers, close with `--` current questions
+- Format B (decision/reasoning): use numbered list, close with "Curious how others think about decisions like these."
+
+**Angle:** one sentence -- what is the non-obvious thing the reader will learn or feel by the end? That is the spine. Everything else is support.
 
 Good angles:
 - A counterintuitive decision ("I deleted 200 tests and confidence went up")
 - A constraint that forced a better design
-- A user behavior that changed how the product was built
+- A product philosophy revealed by a real tradeoff
 - A lesson that only becomes visible in production
 
 Weak angles:
@@ -37,12 +53,13 @@ Weak angles:
 ## Step 3 — Invoke the writer agent
 
 Hand off to the **writer** agent with:
+- Format (post or article) and post type (A or B) if a post
 - The angle (one sentence)
 - All facts gathered in Step 1
 - Any specific phrasing or examples the user provided
 
-The writer agent handles format, tone, and LinkedIn style rules. Do not apply formatting yourself.
+The writer agent handles tone, style rules, and formatting. Do not apply formatting yourself before handing off.
 
 ## Step 4 — Output
 
-Present the draft. Note the angle you chose at the top so the user can redirect it if needed. Do not ask placement questions -- if a new section is needed, insert it at the most logical spot and note the choice inline.
+Present the draft. State the format and angle chosen at the top so the user can redirect if needed. Do not ask placement questions -- if a new section is needed, insert it at the most logical spot and note the choice inline.
