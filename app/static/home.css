@@ -63,6 +63,15 @@ h1 {
   vertical-align: middle;
 }
 
+.page-tagline {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
 /* ===== Labels ===== */
 
 label {

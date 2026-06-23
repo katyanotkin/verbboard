@@ -287,6 +287,14 @@ body {
   padding-bottom: 12px;
   border-bottom: 1px solid var(--card-border);
   margin-bottom: 14px;
+  position: relative;
+}
+
+.auth-brand-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: block;
 }
 
 .topbar-nav-right {

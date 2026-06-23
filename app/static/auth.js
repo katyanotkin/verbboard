@@ -123,6 +123,15 @@
     button.className = "btn-secondary auth-btn";
     button.type = "button";
 
+    const snailIcon = document.createElement("img");
+    snailIcon.src = "/static/snail-logo.svg";
+    snailIcon.alt = "";
+    snailIcon.setAttribute("aria-hidden", "true");
+    snailIcon.className = "auth-brand-icon";
+    snailIcon.width = 14;
+    snailIcon.height = 14;
+    button.appendChild(snailIcon);
+
     if (currentUser) {
       const photoURL = currentUser.photoURL;
 
@@ -144,7 +153,7 @@
         await signOut();
       });
     } else {
-      button.textContent = loginLabel;
+      button.appendChild(document.createTextNode(loginLabel));
 
       button.addEventListener("click", async function () {
         try {
