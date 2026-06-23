@@ -58,6 +58,42 @@
       <p class="page-tagline">Every language runs on verbs.</p>
     </div><!-- /page-header -->
 
+{% if generating_verb or notice_text %}
+    <div class="search-notice"
+      {% if generating_verb %}data-retry-url="/search_verb?language={{ learning_lang | urlencode }}&amp;q={{ generating_verb | urlencode }}&amp;ui_language={{ lang | urlencode }}"{% endif %}>
+      <span class="search-notice-icon" aria-hidden="true">{% if generating_verb %}⏳{% else %}🔍{% endif %}</span>
+      {% if generating_verb %}
+        <span class="search-notice-text">&ldquo;{{ generating_verb }}&rdquo; is being added&hellip;</span>
+        <a class="search-notice-retry" id="search-notice-retry"
+           href="/search_verb?language={{ learning_lang | urlencode }}&amp;q={{ generating_verb | urlencode }}&amp;ui_language={{ lang | urlencode }}">Try again in <span id="search-notice-countdown">20</span>s</a>
+      {% else %}
+        <span class="search-notice-text">&ldquo;{{ notice_text }}&rdquo; was not found</span>
+      {% endif %}
+    </div>
+    {% if generating_verb %}
+    <script>
+    (function () {
+      var el = document.getElementById('search-notice-countdown');
+      var link = document.getElementById('search-notice-retry');
+      var notice = link && link.closest('[data-retry-url]');
+      if (!el || !link || !notice) return;
+      var url = notice.dataset.retryUrl;
+      var secs = 20;
+      var timer = setInterval(function () {
+        secs -= 1;
+        if (secs <= 0) {
+          clearInterval(timer);
+          window.location.href = url;
+        } else {
+          el.textContent = secs;
+        }
+      }, 1000);
+      link.addEventListener('click', function () { clearInterval(timer); });
+    })();
+    </script>
+    {% endif %}
+{% endif %}
+
     <div class="header-subnav">
       <a href="/about?ui_language={{ lang }}" class="home-sec-link">{{ ui['home.about'] }}</a>
     </div>

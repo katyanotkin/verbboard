@@ -19,6 +19,7 @@ from core.search_utils import find_best_entry, tokenize_text
 from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 from core.translation_service import translate_search_query
+from core.verb_autogen import AUTOGEN_LANGUAGES, autogenerate_missing_verb, is_plausible_verb_query
 from core.verb_loader import load_entries_for_language
 
 logger = logging.getLogger(__name__)
@@ -138,11 +139,22 @@ async def search_verb_by_lang(
         page="home",
         source="search_by_lang",
     )
+    if language in AUTOGEN_LANGUAGES and is_plausible_verb_query(translated, language):
+        asyncio.create_task(
+            autogenerate_missing_verb(
+                language=language,
+                query=translated,
+                audio_backend=request.app.state.audio_backend,
+            )
+        )
+        return RedirectResponse(
+            url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native&generating=1"
+        )
     return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native")
 
 
 @router.get("/search_verb", response_model=None)
-def search_verb(
+async def search_verb(
     request: Request,
     language: str,
     q: str = "",
@@ -181,6 +193,15 @@ def search_verb(
 
     base = safe_return_to(return_to or "", fallback="") or f"/?language={language}{_ui_suffix}"
     sep = "&" if "?" in base else "?"
+    if language in AUTOGEN_LANGUAGES and is_plausible_verb_query(query, language):
+        asyncio.create_task(
+            autogenerate_missing_verb(
+                language=language,
+                query=query,
+                audio_backend=request.app.state.audio_backend,
+            )
+        )
+        return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&generating=1")
     return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}")
 
 
@@ -191,6 +212,7 @@ def home(
     search: str | None = Query(None),
     not_available: int | None = Query(None),
     search_mode: str | None = Query(None),
+    generating: int | None = Query(None),
 ) -> HTMLResponse:
     plugins = all_plugins()
 
@@ -215,6 +237,7 @@ def home(
     lang_options = [(key, _lang_label(key), key == selected_language) for key, plugin in plugins.items()]
 
     notice_text = raw_search_value.strip() if str(not_available) == "1" else None
+    generating_verb = notice_text if (notice_text and generating == 1) else None
 
     response = templates.TemplateResponse(
         request,
@@ -233,6 +256,7 @@ def home(
             "search_value": search_value,
             "notice_text": notice_text,
             "search_mode": search_mode or "native",
+            "generating_verb": generating_verb,
             "firebase_web_config_json": settings.firebase_web_config_json,
         },
     )

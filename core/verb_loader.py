@@ -57,6 +57,10 @@ def load_entries_for_language(*, language: str) -> list[VerbEntry]:
     return entries
 
 
+def invalidate_entries_cache(language: str) -> None:
+    _ENTRIES_CACHE.pop(language, None)
+
+
 def load_entry_by_id(
     *,
     language: str,

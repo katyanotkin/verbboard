@@ -601,3 +601,39 @@ input[type="text"]:focus {
 .install-hint-close:hover {
   opacity: 1;
 }
+
+/* ===== Search notice (generating / not-found) ===== */
+
+.search-notice {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 420px;
+  margin: 0 auto 12px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.search-notice-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.search-notice-text {
+  font-weight: 500;
+}
+
+.search-notice-retry {
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.search-notice-retry:hover {
+  color: var(--text-body);
+}
