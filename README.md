@@ -2,7 +2,7 @@
 
 Verb-focused language learning app: conjugation tables, TTS audio, guided practice, and AI-assisted content expansion. Supports English, Spanish, Hebrew, and Russian.
 
-Unknown searches become demand signals that drive future verb coverage.
+For English and Spanish, missing verbs are generated on the spot via AI. For Hebrew and Russian, unknown searches become demand signals that drive future verb coverage.
 
 ---
 
@@ -61,8 +61,9 @@ Visual indicators:
 
 - Search across infinitives, conjugated forms, and partial matches
 - Cross-language: type an English word, select English — Gemini translates and finds the matching verb in your studied language
-- Unknown searches become demand signals for future verb generation
-- Human-reviewed AI workflows expand live verb coverage over time
+- For English and Spanish: missing verbs are generated automatically via Gemini (VertexAI), no admin review, added directly to the live verb set within ~30 seconds
+- For Hebrew and Russian: unknown searches are logged as demand signals for human-reviewed AI generation
+- Human-reviewed workflow: admin reviews signals, Claude + Gemini generate candidate, human promotes to live verbs
 
 ---
 
@@ -119,14 +120,17 @@ Visual indicators:
 
 ## Demand-driven generation pipeline
 
-Unknown verb searches are logged as demand signals.
+Two tracks depending on language.
 
-Admin workflow:
+**EN/ES (automatic):** Search miss triggers Gemini (VertexAI) generation inline. Verb is promoted directly to the live set. Available within ~30 seconds. No Anthropic calls, no admin review.
 
-1. Signals reviewed and classified
-2. AI workflows generate structured verb data: conjugation, examples, morphology, and translations
-3. Candidates previewed directly inside the live learning UX
-4. Human-reviewed candidates promoted into the live verb set
+**HE/RU (human-reviewed):**
+
+1. Unknown search logged as a demand signal
+2. Admin reviews and classifies signals
+3. Claude + Gemini generate structured verb data: conjugation, examples, morphology, and translations
+4. Candidate previewed directly inside the live learning UX
+5. Human-reviewed candidate promoted into the live verb set
 
 ---
 
