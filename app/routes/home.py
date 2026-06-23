@@ -109,11 +109,12 @@ async def search_verb_by_lang(
 
         if doc:
             matched_verb_id = doc.get("verb_id")
+            _rt_suffix = f"&return_to={quote(return_to, safe='/')}" if return_to else ""
             return RedirectResponse(
                 url=(
                     f"/learn?language={language}&verb_id={matched_verb_id}"
                     f"&translated_from={quote(query, safe='')}&source_lang={source_lang}"
-                    f"{_ui_suffix}"
+                    f"{_ui_suffix}{_rt_suffix}"
                 )
             )
 
@@ -180,17 +181,19 @@ async def search_verb(
             url=f"/search_verb_by_lang?language={language}&q={quote(query, safe='')}&source_lang=en{_ui_suffix}{_rt}"
         )
 
+    _rt_suffix = f"&return_to={quote(return_to, safe='/')}" if return_to else ""
+
     doc = find_verb_by_search_extract(language, query)
 
     if doc:
         matched_verb_id = doc.get("verb_id")
-        return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}")
+        return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}{_rt_suffix}")
 
     entries = _load_entries(language)
     matched_entry = find_best_entry(entries, query)
 
     if matched_entry:
-        return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_entry.id}{_ui_suffix}")
+        return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_entry.id}{_ui_suffix}{_rt_suffix}")
 
     log_missing_verb_search(
         language=language,
