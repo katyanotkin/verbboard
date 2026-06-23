@@ -338,6 +338,14 @@ body {
   font-weight: 600;
 }
 
+.notice--skip {
+  background: #f8f8f8;
+  border-color: #e0e0e0;
+  color: var(--text-subtle);
+  font-size: 0.875rem;
+  opacity: 0.85;
+}
+
 /* ===== Search row header: label + mode pills (shared: home + verbs) ===== */
 
 .search-row-header {

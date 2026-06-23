@@ -22,6 +22,7 @@
   "home.no_match": "Не найдено в текущем наборе:",
   "home.generating": "добавляется...",
   "home.try_again": "Повторить через",
+  "home.not_a_verb": "Не похоже на глагол, пропускаем.",
   "home.ui_language_label": "Язык приложения",
   "verbs.title": "VerbBoard — Глаголы",
   "verbs.back_home": "⟵ Назад",

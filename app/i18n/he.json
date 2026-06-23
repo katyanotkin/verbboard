@@ -22,6 +22,7 @@
   "home.no_match": "לא נמצא בסט הנוכחי:",
   "home.generating": "מתווסף...",
   "home.try_again": "נסה שוב בעוד",
+  "home.not_a_verb": "לא נראה כמו פועל, מדלגים.",
   "home.ui_language_label": "שפת האפליקציה",
   "verbs.title": "VerbBoard — פעלים",
   "verbs.back_home": "ראשי ⟶",

@@ -637,3 +637,12 @@ input[type="text"]:focus {
 .search-notice-retry:hover {
   color: var(--text-body);
 }
+
+.search-notice--skip {
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.search-notice--skip .search-notice-text {
+  font-weight: 400;
+}

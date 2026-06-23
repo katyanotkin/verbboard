@@ -139,16 +139,20 @@ async def search_verb_by_lang(
         page="home",
         source="search_by_lang",
     )
-    if language in AUTOGEN_LANGUAGES and is_plausible_verb_query(translated, language):
-        asyncio.create_task(
-            autogenerate_missing_verb(
-                language=language,
-                query=translated,
-                audio_backend=request.app.state.audio_backend,
+    if language in AUTOGEN_LANGUAGES:
+        if is_plausible_verb_query(translated, language):
+            asyncio.create_task(
+                autogenerate_missing_verb(
+                    language=language,
+                    query=translated,
+                    audio_backend=request.app.state.audio_backend,
+                )
             )
-        )
+            return RedirectResponse(
+                url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native&generating=1"
+            )
         return RedirectResponse(
-            url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native&generating=1"
+            url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native&garbage=1"
         )
     return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native")
 
@@ -193,15 +197,17 @@ async def search_verb(
 
     base = safe_return_to(return_to or "", fallback="") or f"/?language={language}{_ui_suffix}"
     sep = "&" if "?" in base else "?"
-    if language in AUTOGEN_LANGUAGES and is_plausible_verb_query(query, language):
-        asyncio.create_task(
-            autogenerate_missing_verb(
-                language=language,
-                query=query,
-                audio_backend=request.app.state.audio_backend,
+    if language in AUTOGEN_LANGUAGES:
+        if is_plausible_verb_query(query, language):
+            asyncio.create_task(
+                autogenerate_missing_verb(
+                    language=language,
+                    query=query,
+                    audio_backend=request.app.state.audio_backend,
+                )
             )
-        )
-        return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&generating=1")
+            return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&generating=1")
+        return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&garbage=1")
     return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}")
 
 
@@ -213,6 +219,7 @@ def home(
     not_available: int | None = Query(None),
     search_mode: str | None = Query(None),
     generating: int | None = Query(None),
+    garbage: int | None = Query(None),
 ) -> HTMLResponse:
     plugins = all_plugins()
 
@@ -238,6 +245,7 @@ def home(
 
     notice_text = raw_search_value.strip() if str(not_available) == "1" else None
     generating_verb = notice_text if (notice_text and generating == 1) else None
+    garbage_query = notice_text if (notice_text and garbage == 1 and not generating_verb) else None
 
     response = templates.TemplateResponse(
         request,
@@ -257,6 +265,7 @@ def home(
             "notice_text": notice_text,
             "search_mode": search_mode or "native",
             "generating_verb": generating_verb,
+            "garbage_query": garbage_query,
             "firebase_web_config_json": settings.firebase_web_config_json,
         },
     )

@@ -43,6 +43,7 @@ def verb_browser(
     search: str | None = Query(None),
     search_mode: str | None = Query(None),
     generating: int | None = Query(None),
+    garbage: int | None = Query(None),
 ) -> HTMLResponse:
     settings = load_settings()
 
@@ -111,6 +112,7 @@ def verb_browser(
     notice_text = raw_search if str(not_available) == "1" else None
     search_value = raw_search if str(not_available) == "1" else ""
     generating_verb = notice_text if (notice_text and generating == 1) else None
+    garbage_query = notice_text if (notice_text and garbage == 1 and not generating_verb) else None
 
     response = templates.TemplateResponse(
         request,
@@ -129,6 +131,7 @@ def verb_browser(
             "notice_text": notice_text,
             "search_value": search_value,
             "generating_verb": generating_verb,
+            "garbage_query": garbage_query,
             "search_mode": search_mode or "native",
             "practice_loop_enabled": PRACTICE_LOOP_ENABLED,
             "badge_compact_threshold": settings.badge_compact_threshold,
