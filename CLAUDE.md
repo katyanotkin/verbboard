@@ -123,7 +123,7 @@ Use the **Explore** agent for detailed file navigation.
 - Install prompt: `pwa.js` listens for `beforeinstallprompt` (must not be deferred); shows install button; on mobile tap shows hint, second tap triggers prompt
 - 4-tab icon-only bottom nav (`_bottom_nav.html`): Back (chevron) / Verbs (list) / Search (magnifier+home) / Login (person); min-height 56px; uses `env(safe-area-inset-bottom)` padding; included on all pages; labels intentionally hardcoded English
 - Sign-in flow (`auth_pages.py` + `signin.html`): standalone PWA uses `window.open('/auth/signin', '_blank')`; mobile browser navigates to `/auth/signin?return_to=...`; desktop uses `signInWithPopup`
-- Digital Asset Links at `/.well-known/assetlinks.json` (`well_known.py`) -- SHA-256 fingerprint needed for TWA (currently PLACEHOLDER)
+- Digital Asset Links at `/.well-known/assetlinks.json` (`well_known.py`) -- SHA-256 fingerprint is committed; must match the Play App Signing certificate in Play Console (Google re-signs uploads, so the local keystore fingerprint is wrong). Verify in Play Console > Setup > App Signing before Play Store submission.
 - Per-environment Firebase secrets: `verbboard-firebase-web-config-stage` (stage), `verbboard-firebase-web-config` (prod)
 - TWA / Google Play: target is ~50KB Android shell via PWABuilder; requires assetlinks fingerprint + OAuth consent screen verification
 

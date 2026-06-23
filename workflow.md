@@ -23,7 +23,10 @@ Never start implementation until design is settled.
 | Task type | Agent or inline |
 |---|---|
 | UI layout, CSS, interaction | `ui-ux-engineer` |
-| Backend Python, data model | Inline (main context) |
+| Route handlers, RedirectResponse assembly, nav-link param wiring | `senior-web-engineer` |
+| `/api/*` endpoints, fetch calls, Firebase auth flow, cookie usage | `senior-web-engineer` |
+| XSS-sensitive HTML assembly (render.py, admin JS template literals) | `senior-web-engineer` |
+| Backend Python, data model (non-routing) | Inline (main context) |
 | Writing/copy/changelog | `writer` |
 | Any other code | Inline |
 
