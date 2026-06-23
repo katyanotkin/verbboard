@@ -64,10 +64,11 @@ h1 {
 }
 
 .page-tagline {
-  margin: 4px 0 0;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-muted);
+  margin: 6px 0 0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-subtle);
   letter-spacing: 0.01em;
   text-align: center;
 }
@@ -304,7 +305,8 @@ input[type="text"]:focus {
 
 .page-header {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   margin-bottom: 4px;
 }
 
