@@ -181,6 +181,11 @@ def translate_examples(
             for i, row in enumerate(results):
                 if i < len(translations_by_index):
                     translations_by_index[i].update({k: v for k, v in row.items() if isinstance(v, str) and v.strip()})
+        except anthropic.OverloadedError:
+            if verb_lang == HEBREW:
+                # Hebrew source: Claude is the only backend; no translations at all is a hard failure.
+                raise
+            logger.warning("Claude overloaded (529), skipping Hebrew target translation for %s/%s", verb_lang, lemma)
         except Exception:
             logger.exception("Claude translation failed for %s/%s", verb_lang, lemma)
 
