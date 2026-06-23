@@ -20,6 +20,8 @@
   "home.hint_browse": "Tap a verb to study its conjugation table with audio",
   "home.hint_known": "Tap ★ on the verb page once you mastered it — your progress is saved",
   "home.no_match": "No match in the current set:",
+  "home.generating": "is being added...",
+  "home.try_again": "Try again in",
   "home.ui_language_label": "App language",
   "verbs.title": "VerbBoard — Browse verbs",
   "verbs.back_home": "⟵ Back",

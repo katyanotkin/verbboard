@@ -20,6 +20,8 @@
   "home.hint_browse": "Pulsa un verbo para estudiar su conjugación con audio",
   "home.hint_known": "Pulsa ★ en la página del verbo cuando lo hayas dominado — tu progreso se guarda",
   "home.no_match": "Sin coincidencias en el conjunto actual:",
+  "home.generating": "se está añadiendo...",
+  "home.try_again": "Reintentar en",
   "home.ui_language_label": "Idioma de la app",
   "verbs.title": "VerbBoard — Explorar verbos",
   "verbs.back_home": "⟵ Volver",

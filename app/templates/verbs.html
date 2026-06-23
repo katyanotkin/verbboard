@@ -117,7 +117,24 @@
               </button>
             </div>
 
-            {% if notice_text %}
+            {% if generating_verb %}
+            <div class="notice" id="vb-notice">⏳ &ldquo;{{ generating_verb }}&rdquo; {{ ui['home.generating'] }} <a id="vb-notice-retry" href="/search_verb?language={{ selected_language | urlencode }}&amp;q={{ generating_verb | urlencode }}&amp;ui_language={{ ui_lang | urlencode }}&amp;return_to={{ verbs_return_to }}">{{ ui['home.try_again'] }} <span id="vb-notice-countdown">20</span>s</a></div>
+            <script>
+            (function () {
+              var el = document.getElementById('vb-notice-countdown');
+              var link = document.getElementById('vb-notice-retry');
+              if (!el || !link) return;
+              var url = link.href;
+              var secs = 20;
+              var timer = setInterval(function () {
+                secs -= 1;
+                if (secs <= 0) { clearInterval(timer); window.location.href = url; }
+                else { el.textContent = secs; }
+              }, 1000);
+              link.addEventListener('click', function () { clearInterval(timer); });
+            }());
+            </script>
+            {% elif notice_text %}
             <div class="notice" id="vb-notice">{{ ui['home.no_match'] }} <b>{{ notice_text }}</b></div>
             {% endif %}
           </form>
