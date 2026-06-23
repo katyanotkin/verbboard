@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import pytest
 
+pytestmark = pytest.mark.e2e
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 # Try a Russian verb with English UI -- the most likely combination to have

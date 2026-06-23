@@ -16,6 +16,8 @@ from contextlib import contextmanager
 
 import pytest
 
+pytestmark = pytest.mark.e2e
+
 # ── viewports ─────────────────────────────────────────────────────────────────
 
 _VIEWPORTS = {

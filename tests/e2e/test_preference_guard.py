@@ -24,6 +24,10 @@ Server: started by tests/e2e/conftest.py (no-op audio, Firestore-backed).
 
 from __future__ import annotations
 
+import pytest
+
+pytestmark = pytest.mark.e2e
+
 HOME_EN = "/?ui_language=en&language=en"
 HOME_EN_NO_LANG_PARAM = "/?ui_language=en"
 

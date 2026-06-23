@@ -17,6 +17,8 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 import pytest
 
+pytestmark = pytest.mark.e2e
+
 _VERBS_RU_UI = "/verbs?language=en&ui_language=ru"
 _VERBS_HE_UI = "/verbs?language=en&ui_language=he"
 

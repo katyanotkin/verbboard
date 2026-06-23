@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 
 import pytest
 
+pytestmark = pytest.mark.e2e
+
 # ---------------------------------------------------------------------------
 # Parametrize axes -- add new entries here, no new test functions needed
 # ---------------------------------------------------------------------------
@@ -95,7 +97,7 @@ def _return_to_verbs(page, return_via: str) -> None:
                 break
             page.go_back()
             page.wait_for_load_state("networkidle")
-    page.wait_for_timeout(1500)
+    page.wait_for_function("!!(document.querySelector('#vb-filter-toggle')?.value)")
 
 
 # ---------------------------------------------------------------------------
@@ -233,7 +235,7 @@ def test_verbs_state_survives_feedback_detour(page, live_server_url, return_via)
             pytest.skip("Feedback back link to verbs not visible")
         back.click()
         page.wait_for_load_state("networkidle")
-        page.wait_for_timeout(1500)
+        page.wait_for_function("!!(document.querySelector('#vb-filter-toggle')?.value)")
     else:
         _return_to_verbs(page, "browser_back")
 

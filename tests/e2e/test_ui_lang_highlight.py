@@ -13,6 +13,10 @@ Dropdown interaction:
 
 from __future__ import annotations
 
+import pytest
+
+pytestmark = pytest.mark.e2e
+
 SEEN_KEY = "vb_ui_lang_seen"
 HOME_EN = "/?ui_language=en&language=en"
 

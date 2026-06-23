@@ -93,7 +93,7 @@ test-e2e-stage: ## QA: run Playwright browser flow tests against stage
 
 ## QA: run QATP security + practice regression tests against stage
 test-qatp-stage: ## QA: QATP (XSS, practice ui_language, voice banner) vs stage
-	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e/test_qatp.py -v
+	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e/test_qatp.py -n 2 -v
 
 ## QA: run progress API integration tests against stage (mock user, requires ALLOW_LOCAL_DEV_AUTH=true)
 test-progress-stage: ## QA: progress API integration tests vs stage

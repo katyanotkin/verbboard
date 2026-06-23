@@ -21,6 +21,8 @@ import json
 
 import pytest
 
+pytestmark = pytest.mark.e2e
+
 # ---------------------------------------------------------------------------
 # Helpers  (modelled on tests/e2e/test_qatp.py)
 # ---------------------------------------------------------------------------
