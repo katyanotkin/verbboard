@@ -16,9 +16,8 @@ def render_form_value(value: Any) -> str:
 def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     forms = verb.forms
 
-    sections = [
+    sections: list[dict[str, object]] = [
         {
-            "title": "Infinitive",
             "rows": [
                 {
                     "key": "base",
@@ -28,7 +27,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
         {
-            "title": "Present",
+            "title": "board.tense_present",
             "rows": [
                 {
                     "key": "present_1sg",
@@ -48,7 +47,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
         {
-            "title": "Past",
+            "title": "board.tense_past",
             "rows": [
                 {
                     "key": "past",

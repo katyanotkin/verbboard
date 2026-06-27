@@ -80,36 +80,36 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
         metadata_rows.append({"key": "pair", "label": "пара", "text": pair_lemma, "href": pair_href})
 
     if is_biaspectual:
-        tense_sections = [
+        tense_sections: list[dict[str, object]] = [
             {
-                "title": "Настоящее время",
+                "title": "board.tense_present",
                 "rows": _tense_rows("present", forms.get("present", {}) or {}),
             },
             {
-                "title": "Будущее время",
+                "title": "board.tense_future",
                 "rows": _tense_rows("future", forms.get("future", {}) or {}),
             },
         ]
     elif is_perfective:
         tense_sections = [
             {
-                "title": "Будущее время",
+                "title": "board.tense_future",
                 "rows": _tense_rows("future", forms.get("future", {}) or {}),
             }
         ]
     else:
         tense_sections = [
             {
-                "title": "Настоящее время",
+                "title": "board.tense_present",
                 "rows": _tense_rows("present", forms.get("present", {}) or {}),
             }
         ]
 
-    sections = [
-        {"title": "Основное", "rows": metadata_rows},
+    sections: list[dict[str, object]] = [
+        {"rows": metadata_rows},
         *tense_sections,
         {
-            "title": "Прошедшее время",
+            "title": "board.tense_past",
             "rows": [
                 {"key": "past_m", "label": "он", "text": past.get("m", ""), "gender": "m", "number": "sg"},
                 {"key": "past_f", "label": "она", "text": past.get("f", ""), "gender": "f", "number": "sg"},
@@ -118,7 +118,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
         {
-            "title": "Повелительное наклонение",
+            "title": "board.tense_imperative",
             "rows": [
                 {"key": "imp_sg", "label": "ты", "text": imperative.get("sg", ""), "number": "sg"},
                 {"key": "imp_pl", "label": "вы", "text": imperative.get("pl", ""), "number": "pl"},
