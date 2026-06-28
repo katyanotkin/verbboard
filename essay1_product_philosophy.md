@@ -1,6 +1,6 @@
 # Every Language Runs on Verbs
 
-**1. Language runs on verbs**
+**Language runs on verbs**
 
 Most language-learning products start with vocabulary.
 
@@ -24,7 +24,7 @@ A language is not a list of words. It is a system of transformations. Verbs are 
 
 ---
 
-**2. Some effort is exactly where learning happens**
+**Effort is exactly where learning happens**
 
 One of the most common questions: why not translate every conjugated form?
 
@@ -46,7 +46,7 @@ The same principle shapes guided practice. Advancing requires sustained engageme
 
 The barrier is intentional -- VerbBoard favors active exposure over passive browsing.
 
-Many products optimize for reducing effort. Language learning is different: some effort is exactly where the learning happens.
+Many products optimize for reducing effort. Language learning is different: some effort, friction is exactly where the learning happens.
 
 ---
 
