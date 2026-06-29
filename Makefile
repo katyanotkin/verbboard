@@ -44,6 +44,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	smoke-nav-local smoke-nav-stage validate-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
 	firebase-deploy-hosting gcp-grant-firebase-hosting-admin \
+	gcp-update-secrets-stage gcp-update-secrets-prod \
 	cache-audio-stage cache-audio-prod \
 	audit-audio-stage audit-audio-prod \
 	clean-audio-stage clean-audio-prod \
@@ -326,6 +327,20 @@ gcp-setup-stage-firestore: gcp-check
 ## GCP: ensure prod runtime has Firestore access
 gcp-setup-prod-firestore: gcp-check
 	$(MAKE) gcp-grant-firestore-access SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+
+## GCP: redeploy stage with latest secret versions (no image rebuild -- use after Secret Manager updates)
+gcp-update-secrets-stage: gcp-check ## GCP: pull latest secrets into stage without rebuilding
+	gcloud run services update $(GCP_STAGE_SERVICE) \
+		--region=$(GCP_REGION) \
+		--project=$(GCP_PROJECT) \
+		--update-secrets=$(STAGE_SECRETS)
+
+## GCP: redeploy prod with latest secret versions (no image rebuild -- use after Secret Manager updates)
+gcp-update-secrets-prod: gcp-check ## GCP: pull latest secrets into prod without rebuilding
+	gcloud run services update $(GCP_SERVICE) \
+		--region=$(GCP_REGION) \
+		--project=$(GCP_PROJECT) \
+		--update-secrets=$(PROD_SECRETS)
 
 ## GCP: grant Cloud Build deployer SA Firebase Hosting Admin (one-time setup; required for firebase deploy in CI)
 gcp-grant-firebase-hosting-admin: gcp-check
