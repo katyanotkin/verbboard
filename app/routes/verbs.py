@@ -106,6 +106,8 @@ def verb_browser(
                 "practice.wrap_up": ui["practice.wrap_up"],
                 "practice.learned_prompt": ui["practice.learned_prompt"],
                 "practice.done": ui["practice.done"],
+                "practice.size_unit": ui["practice.size_unit"],
+                "practice.listens_unit": ui["practice.listens_unit"],
             }
         )
 
