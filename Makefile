@@ -43,6 +43,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	test-qatp-stage \
 	smoke-nav-local smoke-nav-stage validate-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
+	firebase-deploy-hosting \
 	cache-audio-stage cache-audio-prod \
 	audit-audio-stage audit-audio-prod \
 	clean-audio-stage clean-audio-prod \
@@ -214,6 +215,11 @@ gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branc
 		--project=$(GCP_PROJECT) \
 		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE) \
 		--set-secrets=$(STAGE_SECRETS)
+	$(MAKE) firebase-deploy-hosting
+
+## Firebase: deploy Hosting static files (public/) to both prod + stage sites
+firebase-deploy-hosting: ## Firebase: push public/ to Firebase Hosting (both verbboard.com + stage.verbboard.com)
+	firebase deploy --only hosting --project $(GCP_PROJECT)
 
 ## GCP: promote currently deployed stage image to prod
 gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod (TAG=label, default: YYYYMMDD)
@@ -234,6 +240,7 @@ gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-pro
 	gcloud artifacts docker tags add $(STAGE_IMAGE) \
 		$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(_PROD_LABEL)
 	@echo "Tagged: $(_PROD_LABEL)"
+	$(MAKE) firebase-deploy-hosting
 
 ## GCP: create bucket if missing
 gcp-ensure-bucket: gcp-check
