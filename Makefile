@@ -43,7 +43,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	test-qatp-stage \
 	smoke-nav-local smoke-nav-stage validate-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
-	firebase-deploy-hosting \
+	firebase-deploy-hosting gcp-grant-firebase-hosting-admin \
 	cache-audio-stage cache-audio-prod \
 	audit-audio-stage audit-audio-prod \
 	clean-audio-stage clean-audio-prod \
@@ -326,6 +326,12 @@ gcp-setup-stage-firestore: gcp-check
 ## GCP: ensure prod runtime has Firestore access
 gcp-setup-prod-firestore: gcp-check
 	$(MAKE) gcp-grant-firestore-access SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
+
+## GCP: grant Cloud Build deployer SA Firebase Hosting Admin (one-time setup; required for firebase deploy in CI)
+gcp-grant-firebase-hosting-admin: gcp-check
+	gcloud projects add-iam-policy-binding $(GCP_PROJECT) \
+		--member="serviceAccount:cloudbuild-deployer@$(GCP_PROJECT).iam.gserviceaccount.com" \
+		--role="roles/firebasehosting.admin"
 
 ## GCP: map preview domain to prod service
 gcp-map-preview: gcp-check ## GCP: create domain mapping for preview.verbboard.com -> prod service
