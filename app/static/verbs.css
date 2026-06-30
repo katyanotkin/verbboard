@@ -475,6 +475,11 @@
   flex-shrink: 0;
 }
 
+[dir="rtl"] .practice-size-hint {
+  direction: rtl;
+  unicode-bidi: embed;
+}
+
 .practice-listens-stepper {
   display: flex;
   align-items: center;
