@@ -25,6 +25,7 @@ from app.routes.health import router as health_router
 from app.routes.home import router as home_router
 from app.routes.learn import router as learn_router
 from app.routes.privacy import router as privacy_router
+from app.routes.terms import router as terms_router
 from app.routes.verbs import router as verbs_router
 from app.routes.well_known import router as well_known_router
 from core.audio_backend.factory import create_audio_backend
@@ -93,6 +94,7 @@ app.mount("/static", _CachedStaticFiles(directory="app/static"), name="static")
 app.include_router(about_router)
 app.include_router(auth_pages_router)
 app.include_router(privacy_router)
+app.include_router(terms_router)
 app.include_router(well_known_router)
 app.include_router(admin_router)
 app.include_router(api_analytics_router)

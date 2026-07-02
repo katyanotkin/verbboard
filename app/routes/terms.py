@@ -11,26 +11,20 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 
-@router.get("/about", response_class=HTMLResponse)
-def about_page(request: Request) -> HTMLResponse:
+@router.get("/terms", response_class=HTMLResponse)
+def terms_page(request: Request) -> HTMLResponse:
     lang = resolve_ui_language(request)
     ui = get_strings(lang)
     settings = load_settings()
 
-    response = templates.TemplateResponse(
+    return templates.TemplateResponse(
         request,
-        "about.html",
+        "terms.html",
         {
             "lang": lang,
             "html_dir": "rtl" if lang == "he" else "ltr",
-            "title": ui.get("about.title", "About VerbBoard"),
-            "back_label": ui.get("about.back", "Back"),
-            "feedback_label": ui.get("about.feedback", "Feedback"),
-            "privacy_label": ui.get("about.privacy", "Privacy Policy"),
-            "terms_label": ui.get("about.terms", "Terms of Use"),
             "firebase_web_config_json": settings.firebase_web_config_json,
             "auth_login": ui.get("auth.login", "Login"),
             "auth_logout": ui.get("auth.logout", "Logout"),
         },
     )
-    return response
