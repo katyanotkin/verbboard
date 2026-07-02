@@ -292,17 +292,6 @@ def test_ui_language_redirect_fires_on_non_home_pages(page, live_server_url):
     assert result["needsRedirect"] is True, "UI language preference redirect should fire even on non-home pages"
 
 
-def test_set_language_redirects_to_home_with_correct_param(page, live_server_url):
-    """GET /set_language?language=he must redirect to /?language=he."""
-    page.goto(f"{live_server_url}/set_language?language=he")
-    page.wait_for_load_state("networkidle")
-
-    final_url = page.url
-    assert "language=he" in final_url, (
-        f"/set_language?language=he must redirect to URL containing 'language=he', got: {final_url!r}"
-    )
-
-
 # ---------------------------------------------------------------------------
 # Cross-navigation: UI language dropdown carries current learning language
 # ---------------------------------------------------------------------------

@@ -44,12 +44,14 @@ def test_about_includes_bottom_nav(client: TestClient) -> None:
 
 
 def test_bottom_nav_has_four_tabs(client: TestClient) -> None:
+    """Four distinct tabs -- identified by aria-label, not a bnav-tab class count."""
     with patch("app.routes.home.list_verbs_recent", return_value=[]):
         html = client.get("/?language=en").text
     nav_start = html.index("bottom-nav")
     nav_end = html.index("</nav>", nav_start)
     nav_html = html[nav_start:nav_end]
-    assert nav_html.count("bnav-tab") >= 4
+    for label in ("Back", "Verbs", "Search", "Home"):
+        assert f'aria-label="{label}"' in nav_html, f"{label} tab missing from bottom nav"
 
 
 def test_bottom_nav_has_no_text_labels(client: TestClient) -> None:
