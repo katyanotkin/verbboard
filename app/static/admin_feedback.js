@@ -160,6 +160,8 @@
     const loggedIn = deviceMix?.logged_in_sessions ?? null;
     const anon = loggedIn != null ? totalSessions - loggedIn : null;
     const loginPct = totalSessions && loggedIn != null ? Math.round((loggedIn / totalSessions) * 100) : "—";
+    const verbViewed = deviceMix?.verb_viewed_sessions ?? null;
+    const engagedPct = totalSessions && verbViewed != null ? Math.round((verbViewed / totalSessions) * 100) : "—";
 
     function dimTable(data) {
       const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
@@ -189,6 +191,8 @@
       ${statRow("Active (60d)", u.active_last_60d ?? "—")}
       ${statRow("Sessions logged-in", loggedIn != null ? `${loggedIn} (${loginPct}%)` : "—")}
       ${statRow("Sessions anon", anon != null ? anon : "—")}
+      ${statRow("Viewed a verb", verbViewed != null ? `${verbViewed} (${engagedPct}%)` : "—")}
+      ${statRow("No engagement", verbViewed != null ? `${totalSessions - verbViewed} (${100 - engagedPct}%)` : "—")}
     </table>`;
 
     const practiceSection = pr.practice_users_total != null ? `

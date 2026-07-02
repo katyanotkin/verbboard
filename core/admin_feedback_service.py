@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from core.polls import ACTIVE_POLL_ID, POLL_OPTIONS, POLL_QUESTIONS
+from core.settings import load_settings
 from core.storage.firestore_db import get_db
 
 
@@ -143,7 +144,19 @@ def get_active_poll_meta() -> dict:
     }
 
 
-def _read_sessions_summary(*, days: int = 60) -> dict[str, Any]:
+def _excluded_uids() -> set[str]:
+    """Firebase UIDs for own/test emails (ANALYTICS_EXCLUDED_EMAILS secret) to drop from counts."""
+    excluded_emails = load_settings().analytics_excluded_emails
+    if not excluded_emails:
+        return set()
+
+    db = get_db()
+    docs = db.collection("users").where("email", "in", list(excluded_emails)).stream()
+    return {doc.id for doc in docs}
+
+
+def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = None) -> dict[str, Any]:
+    excluded_uids = excluded_uids or set()
     db = get_db()
     cutoff_date = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%d")
     docs = db.collection("analytics_sessions").where("date", ">=", cutoff_date).stream()
@@ -153,26 +166,33 @@ def _read_sessions_summary(*, days: int = 60) -> dict[str, Any]:
     by_ui_lang: Counter[str] = Counter()
     total = 0
     logged_in = 0
+    verb_viewed = 0
 
     for doc in docs:
         data = doc.to_dict() or {}
+        if data.get("uid") in excluded_uids:
+            continue
         by_device[str(data.get("device_type") or "unknown").lower()] += 1
         by_language[str(data.get("language") or "none")] += 1
         by_ui_lang[str(data.get("ui_lang") or "none")] += 1
         total += 1
         if data.get("uid"):
             logged_in += 1
+        if data.get("verb_viewed"):
+            verb_viewed += 1
 
     return {
         "total_sessions": total,
         "logged_in_sessions": logged_in,
+        "verb_viewed_sessions": verb_viewed,
         "by_device": dict(by_device),
         "by_language": dict(by_language),
         "by_ui_lang": dict(by_ui_lang),
     }
 
 
-def _read_practice_summary() -> dict[str, Any]:
+def _read_practice_summary(*, excluded_uids: set[str] | None = None) -> dict[str, Any]:
+    excluded_uids = excluded_uids or set()
     db = get_db()
     docs = db.collection_group("languages").stream()
 
@@ -183,10 +203,12 @@ def _read_practice_summary() -> dict[str, Any]:
         parts = doc.reference.path.split("/")
         if len(parts) != 4 or parts[0] != "user_practice":
             continue
+        uid = parts[1]
+        if uid in excluded_uids:
+            continue
         data = doc.to_dict() or {}
         if not data.get("badges"):
             continue
-        uid = parts[1]
         lang = str(data.get("language") or parts[3])
         by_language[lang] += 1
         users_with_practice.add(uid)
@@ -197,13 +219,14 @@ def _read_practice_summary() -> dict[str, Any]:
     }
 
 
-def _read_users_summary(*, days: int = 60) -> dict[str, Any]:
+def _read_users_summary(*, days: int = 60, excluded_uids: set[str] | None = None) -> dict[str, Any]:
+    excluded_uids = excluded_uids or set()
     db = get_db()
     now = datetime.now(UTC)
     cutoff = now - timedelta(days=days)
     cutoff_7 = now - timedelta(days=7)
 
-    docs = list(db.collection("users").stream())
+    docs = [doc for doc in db.collection("users").stream() if doc.id not in excluded_uids]
     total = len(docs)
     new_users = 0
     active_60 = 0
@@ -229,14 +252,16 @@ def _read_users_summary(*, days: int = 60) -> dict[str, Any]:
 
 
 def get_device_mix(*, days: int = 60) -> dict[str, Any]:
-    sessions = _read_sessions_summary(days=days)
-    users = _read_users_summary(days=days)
-    practice = _read_practice_summary()
+    excluded_uids = _excluded_uids()
+    sessions = _read_sessions_summary(days=days, excluded_uids=excluded_uids)
+    users = _read_users_summary(days=days, excluded_uids=excluded_uids)
+    practice = _read_practice_summary(excluded_uids=excluded_uids)
 
     return {
         "days": days,
         "total_sessions": sessions["total_sessions"],
         "logged_in_sessions": sessions["logged_in_sessions"],
+        "verb_viewed_sessions": sessions["verb_viewed_sessions"],
         "by_device": sessions["by_device"],
         "by_language": sessions["by_language"],
         "by_ui_lang": sessions["by_ui_lang"],

@@ -80,9 +80,10 @@ class _PageViewMiddleware:
         ui_lang = resolve_ui_language(request)
         user_agent = request.headers.get("user-agent")
         date = datetime.now(UTC).strftime("%Y-%m-%d")
+        verb_viewed = request.url.path == "/learn" and bool(request.query_params.get("verb_id"))
 
         fingerprint = get_fingerprint_sid(request, date)
-        await start_session(fingerprint, date, detect_device_type(user_agent), language, ui_lang)
+        await start_session(fingerprint, date, detect_device_type(user_agent), language, ui_lang, verb_viewed)
 
         await self._app(scope, receive, send)
 

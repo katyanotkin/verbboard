@@ -12,6 +12,7 @@ load_dotenv(override=True)
 
 _ADMIN_SECRET_NAME = "verbboard-admin-secret"
 _ANTHROPIC_SECRET_NAME = "verbboard-anthropic-api-key"
+_ANALYTICS_EXCLUDED_EMAILS_SECRET_NAME = "verbboard-analytics-excluded-emails"
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,7 @@ class Settings:
     verbs_page_limit: int
     verbs_display_batch: int
     gcp_region: str
+    analytics_excluded_emails: tuple[str, ...]
 
 
 def _resolve_environment() -> str:
@@ -93,6 +95,34 @@ def _load_anthropic_api_key() -> str:
     return secret_value
 
 
+def _parse_excluded_emails(raw: str) -> tuple[str, ...]:
+    return tuple(sorted({email.strip().lower() for email in raw.split(",") if email.strip()}))
+
+
+@lru_cache(maxsize=1)
+def _load_analytics_excluded_emails() -> tuple[str, ...]:
+    """Comma-separated allowlist of own/test emails to drop from analytics counts.
+
+    Optional -- unlike admin_secret/anthropic_api_key, a missing value just
+    means no exclusions, not a broken deployment.
+    """
+    env_value = os.getenv("ANALYTICS_EXCLUDED_EMAILS", "").strip()
+    if env_value:
+        return _parse_excluded_emails(env_value)
+
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
+    if _resolve_environment() == "local" or not project_id:
+        return ()
+
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{project_id}/secrets/{_ANALYTICS_EXCLUDED_EMAILS_SECRET_NAME}/versions/latest"
+        response = client.access_secret_version(request={"name": name})
+        return _parse_excluded_emails(response.payload.data.decode("utf-8"))
+    except Exception:
+        return ()
+
+
 def load_settings() -> Settings:
     environment = _resolve_environment()
     settings = Settings(
@@ -116,6 +146,7 @@ def load_settings() -> Settings:
         verbs_page_limit=int(os.getenv("VERBS_PAGE_LIMIT", "300")),
         verbs_display_batch=int(os.getenv("VERBS_DISPLAY_BATCH", "20")),
         gcp_region=os.getenv("GCP_REGION", "us-east1"),
+        analytics_excluded_emails=_load_analytics_excluded_emails(),
     )
     _validate(settings)
     return settings

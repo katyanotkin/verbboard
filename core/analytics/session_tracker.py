@@ -34,7 +34,9 @@ def get_fingerprint_sid(request: Request, date: str) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()[:32]
 
 
-def _create_session(fingerprint: str, date: str, device_type: str, language: str, ui_lang: str) -> None:
+def _create_session(
+    fingerprint: str, date: str, device_type: str, language: str, ui_lang: str, verb_viewed: bool = False
+) -> None:
     from google.api_core.exceptions import AlreadyExists
 
     from core.storage.firestore_db import get_db
@@ -51,18 +53,22 @@ def _create_session(fingerprint: str, date: str, device_type: str, language: str
                 "language": clean_language,
                 "ui_lang": clean_ui_lang,
                 "uid": None,
+                "verb_viewed": verb_viewed,
                 "created_at": datetime.now(UTC),
             }
         )
     except AlreadyExists:
         # Session already exists for this day. Enrich language/ui_lang if the
-        # session was created on a paramless first hit and now we have values.
-        if clean_language or clean_ui_lang:
-            update: dict = {}
-            if clean_language:
-                update["language"] = clean_language
-            if clean_ui_lang:
-                update["ui_lang"] = clean_ui_lang
+        # session was created on a paramless first hit and now we have values;
+        # verb_viewed only ever flips false -> true, never back.
+        update: dict = {}
+        if clean_language:
+            update["language"] = clean_language
+        if clean_ui_lang:
+            update["ui_lang"] = clean_ui_lang
+        if verb_viewed:
+            update["verb_viewed"] = True
+        if update:
             try:
                 get_db().collection(COLLECTION).document(doc_id).set(update, merge=True)
             except Exception:
@@ -71,8 +77,12 @@ def _create_session(fingerprint: str, date: str, device_type: str, language: str
         logger.exception("Failed to write analytics session")
 
 
-async def start_session(fingerprint: str, date: str, device_type: str, language: str, ui_lang: str) -> None:
-    task = asyncio.create_task(asyncio.to_thread(_create_session, fingerprint, date, device_type, language, ui_lang))
+async def start_session(
+    fingerprint: str, date: str, device_type: str, language: str, ui_lang: str, verb_viewed: bool = False
+) -> None:
+    task = asyncio.create_task(
+        asyncio.to_thread(_create_session, fingerprint, date, device_type, language, ui_lang, verb_viewed)
+    )
     _pending.add(task)
     task.add_done_callback(_pending.discard)
 

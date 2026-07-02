@@ -23,8 +23,8 @@ IMAGE_TAG=$(shell git rev-parse --short HEAD)
 GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 COMMON_ENV_VARS=GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),PRACTICE_LOOP_ENABLED=true
-STAGE_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config-stage:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest
-PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest
+STAGE_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config-stage:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest,ANALYTICS_EXCLUDED_EMAILS=verbboard-analytics-excluded-emails:latest
+PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest,ANALYTICS_EXCLUDED_EMAILS=verbboard-analytics-excluded-emails:latest
 
 .DEFAULT_GOAL := help
 
