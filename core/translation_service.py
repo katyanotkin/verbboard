@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 
 import anthropic
 import vertexai
@@ -111,8 +112,11 @@ Rules:
 - Return the dictionary/infinitive form in each target language, not a conjugated form.
 - Keep each translation to a single word or short phrase (e.g. English infinitives may include "to").
 
+If the source word is ambiguous, silently pick the single most common meaning --
+do not explain the ambiguity or second-guess yourself.
+
 Return ONLY a JSON object with language codes as keys, e.g. {{"en": "...", "ru": "..."}}.
-Do not wrap in markdown fences.
+No commentary, no markdown fences, no text before or after the JSON object.
 """
 
 
@@ -142,11 +146,16 @@ def _call_claude_lemma(
     prompt = _lemma_prompt(verb_lang, lemma, target_langs)
     message = client.messages.create(
         model=CLAUDE_MODEL,
-        max_tokens=256,
+        max_tokens=512,
         temperature=0,
         messages=[{"role": "user", "content": prompt}],
     )
-    return json.loads(message.content[0].text.strip())
+    raw = message.content[0].text.strip()
+    # Claude occasionally prepends commentary or second-guesses itself before
+    # settling on an answer despite instructions -- pull out the last {...}
+    # block (the model's final answer) rather than parsing the whole response.
+    matches = re.findall(r"\{[^{}]*\}", raw)
+    return json.loads(matches[-1] if matches else raw)
 
 
 def translate_lemma(
