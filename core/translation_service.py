@@ -193,10 +193,13 @@ def translate_lemma(
         try:
             row = _call_claude_lemma(verb_lang, lemma, claude_targets, api_key)
             result.update({k: v for k, v in row.items() if isinstance(v, str) and v.strip()})
-        except anthropic.OverloadedError:
-            if verb_lang == HEBREW:
+        except anthropic.APIStatusError as exc:
+            if exc.status_code != 529:
+                logger.exception("Claude lemma translation failed for %s/%s", verb_lang, lemma)
+            elif verb_lang == HEBREW:
                 raise
-            logger.warning("Claude overloaded (529), skipping Hebrew lemma translation for %s/%s", verb_lang, lemma)
+            else:
+                logger.warning("Claude overloaded (529), skipping Hebrew lemma translation for %s/%s", verb_lang, lemma)
         except Exception:
             logger.exception("Claude lemma translation failed for %s/%s", verb_lang, lemma)
 
@@ -284,11 +287,16 @@ def translate_examples(
             for i, row in enumerate(results):
                 if i < len(translations_by_index):
                     translations_by_index[i].update({k: v for k, v in row.items() if isinstance(v, str) and v.strip()})
-        except anthropic.OverloadedError:
-            if verb_lang == HEBREW:
+        except anthropic.APIStatusError as exc:
+            if exc.status_code != 529:
+                logger.exception("Claude translation failed for %s/%s", verb_lang, lemma)
+            elif verb_lang == HEBREW:
                 # Hebrew source: Claude is the only backend; no translations at all is a hard failure.
                 raise
-            logger.warning("Claude overloaded (529), skipping Hebrew target translation for %s/%s", verb_lang, lemma)
+            else:
+                logger.warning(
+                    "Claude overloaded (529), skipping Hebrew target translation for %s/%s", verb_lang, lemma
+                )
         except Exception:
             logger.exception("Claude translation failed for %s/%s", verb_lang, lemma)
 
