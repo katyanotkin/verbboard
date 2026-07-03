@@ -5,7 +5,8 @@ The toggle button (#toggle-translations) appears when:
   - at least one example sentence has a translation for the current ui_language.
 
 When clicked:
-  - `.examples-table` receives the `translations-visible` CSS class
+  - `#learn-page` receives the `translations-visible` CSS class (gates both
+    `.example-translation` spans and the `.lemma-translation` infinitive span)
   - the button text switches to the "hide" label
   - a second click removes the class and restores the "show" label
 
@@ -47,26 +48,26 @@ def _find_learn_page_with_toggle(page, live_server_url: str) -> bool:
 
 
 def test_translation_toggle_adds_visible_class_on_first_click(page, live_server_url):
-    """Clicking the toggle once must add `translations-visible` to .examples-table.
+    """Clicking the toggle once must add `translations-visible` to #learn-page.
 
-    This is the class learn.css uses to reveal .example-translation spans.
-    Without it, translated example sentences are hidden even though the data
-    is present in the DOM.
+    This is the class learn.css uses to reveal .example-translation spans and
+    the .lemma-translation infinitive span. Without it, translated content is
+    hidden even though the data is present in the DOM.
     """
     if not _find_learn_page_with_toggle(page, live_server_url):
         pytest.skip("No verb with translations found in Firestore — skipping toggle test")
 
-    table = page.locator(".examples-table")
+    root = page.locator("#learn-page")
     toggle = page.locator("#toggle-translations")
 
     # Before click: class must be absent
-    has_class_before = table.evaluate("el => el.classList.contains('translations-visible')")
+    has_class_before = root.evaluate("el => el.classList.contains('translations-visible')")
     assert not has_class_before, "translations-visible must be absent before any click"
 
     toggle.click()
     page.wait_for_timeout(100)
 
-    has_class_after = table.evaluate("el => el.classList.contains('translations-visible')")
+    has_class_after = root.evaluate("el => el.classList.contains('translations-visible')")
     assert has_class_after, "translations-visible must be present after first click"
 
 
@@ -75,16 +76,16 @@ def test_translation_toggle_removes_visible_class_on_second_click(page, live_ser
     if not _find_learn_page_with_toggle(page, live_server_url):
         pytest.skip("No verb with translations found in Firestore — skipping toggle test")
 
-    table = page.locator(".examples-table")
+    root = page.locator("#learn-page")
     toggle = page.locator("#toggle-translations")
 
     toggle.click()
     page.wait_for_timeout(100)
-    assert table.evaluate("el => el.classList.contains('translations-visible')")
+    assert root.evaluate("el => el.classList.contains('translations-visible')")
 
     toggle.click()
     page.wait_for_timeout(100)
-    assert not table.evaluate("el => el.classList.contains('translations-visible')"), (
+    assert not root.evaluate("el => el.classList.contains('translations-visible')"), (
         "translations-visible must be removed after second click"
     )
 
