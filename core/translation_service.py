@@ -100,6 +100,109 @@ def _call_claude(
     return json.loads(message.content[0].text.strip())
 
 
+def _lemma_prompt(verb_lang: str, lemma: str, target_langs: list[str]) -> str:
+    src_name = _LANG_NAMES.get(verb_lang, verb_lang)
+    targets = ", ".join(_LANG_NAMES.get(t, t) for t in target_langs)
+    return f"""\
+Translate the following {src_name} verb infinitive (dictionary form) into: {targets}.
+Verb: "{lemma}"
+
+Rules:
+- Return the dictionary/infinitive form in each target language, not a conjugated form.
+- Keep each translation to a single word or short phrase (e.g. English infinitives may include "to").
+
+Return ONLY a JSON object with language codes as keys, e.g. {{"en": "...", "ru": "..."}}.
+Do not wrap in markdown fences.
+"""
+
+
+def _call_gemini_lemma(
+    verb_lang: str,
+    lemma: str,
+    target_langs: list[str],
+    project: str,
+) -> dict[str, str]:
+    vertexai.init(project=project, location=_GCP_LOCATION)
+    model = GenerativeModel(GEMINI_MODEL)
+    prompt = _lemma_prompt(verb_lang, lemma, target_langs)
+    response = model.generate_content(
+        prompt,
+        generation_config=GenerationConfig(response_mime_type="application/json", temperature=0),
+    )
+    return json.loads(response.text)
+
+
+def _call_claude_lemma(
+    verb_lang: str,
+    lemma: str,
+    target_langs: list[str],
+    api_key: str,
+) -> dict[str, str]:
+    client = anthropic.Anthropic(api_key=api_key)
+    prompt = _lemma_prompt(verb_lang, lemma, target_langs)
+    message = client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=256,
+        temperature=0,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return json.loads(message.content[0].text.strip())
+
+
+def translate_lemma(
+    *,
+    verb_lang: str,
+    lemma: str,
+    existing_translations: dict[str, str] | None = None,
+    target_langs: list[str] | None = None,
+    project: str,
+    api_key: str,
+) -> dict[str, str]:
+    """
+    Translate a verb's infinitive/lemma into other UI languages.
+
+    Only fills missing target languages; returns the merged translations dict.
+    Non-fatal: on any error the existing translations are returned unchanged.
+    """
+    existing = dict(existing_translations or {})
+
+    if target_langs is None:
+        target_langs = [lang for lang in SUPPORTED_LANGUAGES if lang != verb_lang]
+
+    missing_targets = [t for t in target_langs if t not in existing]
+    if not missing_targets:
+        return existing
+
+    if verb_lang == HEBREW:
+        gemini_targets: list[str] = []
+        claude_targets: list[str] = missing_targets
+    else:
+        gemini_targets = [t for t in missing_targets if t != HEBREW]
+        claude_targets = [t for t in missing_targets if t == HEBREW]
+
+    result = dict(existing)
+
+    if gemini_targets:
+        try:
+            row = _call_gemini_lemma(verb_lang, lemma, gemini_targets, project)
+            result.update({k: v for k, v in row.items() if isinstance(v, str) and v.strip()})
+        except Exception:
+            logger.exception("Gemini lemma translation failed for %s/%s", verb_lang, lemma)
+
+    if claude_targets:
+        try:
+            row = _call_claude_lemma(verb_lang, lemma, claude_targets, api_key)
+            result.update({k: v for k, v in row.items() if isinstance(v, str) and v.strip()})
+        except anthropic.OverloadedError:
+            if verb_lang == HEBREW:
+                raise
+            logger.warning("Claude overloaded (529), skipping Hebrew lemma translation for %s/%s", verb_lang, lemma)
+        except Exception:
+            logger.exception("Claude lemma translation failed for %s/%s", verb_lang, lemma)
+
+    return result
+
+
 def translate_search_query(
     query: str,
     source_lang: str,

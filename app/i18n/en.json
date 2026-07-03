@@ -87,6 +87,8 @@
   "board.col_form": "Form",
   "board.col_audio": "Audio",
   "board.col_sentence": "Example",
+  "board.jump_to_example": "Jump to example",
+  "board.no_example_for_form": "No example yet for this form",
   "board.show_translations": "With translation",
   "board.hide_translations": "× Translation",
   "feedback.title": "VerbBoard feedback",

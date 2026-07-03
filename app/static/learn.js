@@ -147,19 +147,100 @@ document.addEventListener("DOMContentLoaded", function () {
     applyFilters();
   }
 
-  // ── translations toggle ────────────────────────────────────────────────────
+  // ── translations toggle (examples + verb infinitive) ───────────────────────
   const toggleBtn = document.getElementById("toggle-translations");
   if (toggleBtn) {
-    const table = document.querySelector(".examples-table");
     const labelShow = toggleBtn.dataset.labelShow;
     const labelHide = toggleBtn.dataset.labelHide;
     let visible = false;
 
     toggleBtn.addEventListener("click", function () {
       visible = !visible;
-      table.classList.toggle("translations-visible", visible);
+      pageRoot.classList.toggle("translations-visible", visible);
       toggleBtn.textContent = visible ? labelHide : labelShow;
     });
   }
+
+  // ── jump to example from a conjugation form ─────────────────────────────────
+  function vbNormalizeFormText(text) {
+    return (text || "")
+      .normalize("NFKD")
+      .replace(/\p{Mn}/gu, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
+  function vbFormMatchesText(needle, haystackText) {
+    const haystack = vbNormalizeFormText(haystackText);
+    if (!haystack || !needle) return false;
+    // Word-boundary match, not raw substring: a short form (e.g. a single
+    // pronoun-like token) must not false-positive match inside an unrelated
+    // longer word that merely shares those letters.
+    const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp("(^|[^\\p{L}\\p{N}])" + escaped + "($|[^\\p{L}\\p{N}])", "u");
+    return pattern.test(" " + haystack + " ");
+  }
+
+  function vbShowToast(message) {
+    if (!message) return;
+    let toast = document.getElementById("vb-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "vb-toast";
+      toast.className = "vb-toast";
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.remove("vb-toast--visible");
+    void toast.offsetWidth;
+    toast.classList.add("vb-toast--visible");
+    clearTimeout(toast._vbHideTimer);
+    toast._vbHideTimer = setTimeout(function () {
+      toast.classList.remove("vb-toast--visible");
+    }, 2200);
+  }
+
+  window.vbJumpToExample = function (btn) {
+    const tr = btn.closest("tr");
+    const formText = tr && tr.dataset.form;
+    if (!formText) return;
+
+    const needle = vbNormalizeFormText(formText);
+    if (!needle) return;
+
+    const exampleRows = document.querySelectorAll(".examples-table tr");
+    let matchRow = null;
+
+    for (const row of exampleRows) {
+      const srcEl = row.querySelector(".example-src");
+      if (!srcEl) continue;
+      if (vbFormMatchesText(needle, srcEl.textContent)) {
+        matchRow = row;
+        break;
+      }
+    }
+
+    if (matchRow) {
+      matchRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      matchRow.classList.remove("example-jump-highlight");
+      void matchRow.offsetWidth;
+      matchRow.classList.add("example-jump-highlight");
+      return;
+    }
+
+    const UI = window.UI || {};
+    vbShowToast(UI["board.no_example_for_form"] || "No example yet for this form");
+
+    fetch("/api/learn/form_signal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        language: language,
+        verb_id: verbId,
+        form_text: formText,
+      }),
+    }).catch(function () {});
+  };
 
 });

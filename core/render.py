@@ -49,6 +49,9 @@ def render_board_html(
     # so Hebrew-script pronouns render correctly in a LTR page context.
     label_dir = ' dir="rtl"' if board.language == "he" and ui_lang != "he" else ""
 
+    has_examples = bool(board.verb.examples)
+    jump_title = escape(ui.get("board.jump_to_example", "Jump to example"))
+
     sections_html = []
     for section_index, section in enumerate(board.sections, start=1):
         rows = []
@@ -58,6 +61,7 @@ def render_board_html(
             raw_text = str(row["text"] or "")
             text = escape(raw_text)
             href = str(row.get("href", ""))
+            is_conjugated_form = key not in NO_AUDIO_ROW_KEYS and bool(raw_text.strip())
 
             if href:
                 value_html = f"<a href='{escape(href)}'>{text}</a>"
@@ -78,6 +82,11 @@ def render_board_html(
                     f"onclick=\"const audio=document.getElementById('{audio_id}'); "
                     f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
                 )
+                if has_examples and is_conjugated_form:
+                    audio_html += (
+                        f"<button type='button' class='jump-example-btn' title='{jump_title}' "
+                        f'onclick="window.vbJumpToExample && vbJumpToExample(this)">🔎</button>'
+                    )
             else:
                 audio_html = ""
 
@@ -91,6 +100,8 @@ def render_board_html(
                 tr_attrs += f" data-gender='{escape(gender)}'"
             if number_val:
                 tr_attrs += f" data-number='{escape(number_val)}'"
+            if is_conjugated_form:
+                tr_attrs += f" data-form='{escape(raw_text)}'"
 
             rows.append(
                 f"<tr{tr_attrs}>"
@@ -119,7 +130,15 @@ def render_board_html(
         conj_sections_html = "".join(sections_html)
 
     translation_dir = "rtl" if ui_lang == "he" else "ltr"
-    has_any_translation = any(ui_lang in ex.translations and board.language != ui_lang for ex in board.verb.examples)
+    lemma_translation_text = ""
+    if board.language != ui_lang:
+        lemma_translation_text = board.verb.lemma_translations.get(ui_lang, "")
+    lemma_translation_html = (
+        f"<span class='lemma-translation' dir='{translation_dir}'>{escape(lemma_translation_text)}</span>"
+    )
+    has_any_translation = board.language != ui_lang and (
+        any(ui_lang in ex.translations for ex in board.verb.examples) or bool(lemma_translation_text)
+    )
 
     examples_rows = []
     for index, ex in enumerate(board.verb.examples, start=1):
@@ -246,6 +265,7 @@ def render_board_html(
             "practice.done": ui.get("practice.done", "Done"),
             "auth.login": ui.get("auth.login", "Login"),
             "auth.logout": ui.get("auth.logout", "Logout"),
+            "board.no_example_for_form": ui.get("board.no_example_for_form", "No example yet for this form"),
         },
         ensure_ascii=False,
     )
@@ -256,6 +276,7 @@ def render_board_html(
         html_lang=ui_lang,
         html_dir=html_dir,
         title=title,
+        lemma_translation=lemma_translation_html,
         candidate_banner_assets=candidate_banner_assets,
         board_ui_json=board_ui_json,
         firebase_web_config_json=firebase_web_config_json,

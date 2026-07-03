@@ -34,7 +34,7 @@ from core.storage.verb_document import (
     build_storage_verb_id,
 )
 from core.storage.verb_repository import find_verb_by_search_extract
-from core.translation_service import translate_examples
+from core.translation_service import translate_examples, translate_lemma
 from core.utils import json_safe
 
 _GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
@@ -345,22 +345,34 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
     else:
         ref.set(updated)
 
-    translated_examples = await asyncio.to_thread(
-        translate_examples,
-        verb_lang=language,
-        lemma=lemma,
-        examples=updated["examples"],
-        project=_GCP_PROJECT,
-        api_key=_load_anthropic_api_key(),
+    api_key = _load_anthropic_api_key()
+    translated_examples, lemma_translations = await asyncio.gather(
+        asyncio.to_thread(
+            translate_examples,
+            verb_lang=language,
+            lemma=lemma,
+            examples=updated["examples"],
+            project=_GCP_PROJECT,
+            api_key=api_key,
+        ),
+        asyncio.to_thread(
+            translate_lemma,
+            verb_lang=language,
+            lemma=lemma,
+            project=_GCP_PROJECT,
+            api_key=api_key,
+        ),
     )
+    translation_update: dict[str, Any] = {}
     if translated_examples is not updated["examples"]:
-        db.collection(CANDIDATES_COLLECTION).document(new_id).update(
-            {
-                "examples": translated_examples,
-                "updated_at": datetime.now(UTC).isoformat(),
-            }
-        )
+        translation_update["examples"] = translated_examples
         updated["examples"] = translated_examples
+    if lemma_translations:
+        translation_update["lemma_translations"] = lemma_translations
+        updated["lemma_translations"] = lemma_translations
+    if translation_update:
+        translation_update["updated_at"] = datetime.now(UTC).isoformat()
+        db.collection(CANDIDATES_COLLECTION).document(new_id).update(translation_update)
 
     asyncio.create_task(
         _warm_verb_audio(
@@ -502,22 +514,35 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
 
     doc_ref.set(payload)
 
-    translated_examples = await asyncio.to_thread(
-        translate_examples,
-        verb_lang=language,
-        lemma=lemma,
-        examples=payload["examples"],
-        project=_GCP_PROJECT,
-        api_key=_load_anthropic_api_key(),
+    api_key = _load_anthropic_api_key()
+    translated_examples, lemma_translations = await asyncio.gather(
+        asyncio.to_thread(
+            translate_examples,
+            verb_lang=language,
+            lemma=lemma,
+            examples=payload["examples"],
+            project=_GCP_PROJECT,
+            api_key=api_key,
+        ),
+        asyncio.to_thread(
+            translate_lemma,
+            verb_lang=language,
+            lemma=lemma,
+            existing_translations=existing.get("lemma_translations"),
+            project=_GCP_PROJECT,
+            api_key=api_key,
+        ),
     )
+    translation_update: dict[str, Any] = {}
     if translated_examples is not payload["examples"]:
-        doc_ref.update(
-            {
-                "examples": translated_examples,
-                "updated_at": datetime.now(UTC).isoformat(),
-            }
-        )
+        translation_update["examples"] = translated_examples
         payload["examples"] = translated_examples
+    if lemma_translations:
+        translation_update["lemma_translations"] = lemma_translations
+        payload["lemma_translations"] = lemma_translations
+    if translation_update:
+        translation_update["updated_at"] = datetime.now(UTC).isoformat()
+        doc_ref.update(translation_update)
 
     asyncio.create_task(
         _warm_verb_audio(

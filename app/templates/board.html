@@ -48,6 +48,7 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
     <div class="topbar-body">
       <div>
         <h1>{{ title }}</h1>
+        {{ lemma_translation | safe }}
         <div class="meta">
           {{ board_language_label }} <b>{{ language_display }}</b>
         </div>

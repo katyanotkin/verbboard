@@ -87,6 +87,8 @@
   "board.col_form": "Форма",
   "board.col_audio": "Аудио",
   "board.col_sentence": "Пример",
+  "board.jump_to_example": "Перейти к примеру",
+  "board.no_example_for_form": "Для этой формы пока нет примера",
   "board.show_translations": "С переводом",
   "board.hide_translations": "× Перевод",
   "feedback.title": "VerbBoard — Отзыв",

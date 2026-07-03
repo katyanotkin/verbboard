@@ -4,8 +4,10 @@ import asyncio
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel
 
+from core.admin_logging import log_missing_verb_search
 from core.audio_service import (
     build_hashed_audio_key,
     ensure_audio,
@@ -21,6 +23,27 @@ from core.verb_loader import load_entries_for_language, load_entry_by_id
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+class _FormSignalBody(BaseModel):
+    language: str
+    verb_id: str = ""
+    form_text: str
+
+
+@router.post("/api/learn/form_signal")
+async def log_form_signal(body: _FormSignalBody) -> JSONResponse:
+    """Log a demand signal when a user tries to jump to an example for a form
+    that has no matching example yet -- feeds the same pipeline as unknown
+    verb searches, so this form can gain an example in a future generation pass."""
+    log_missing_verb_search(
+        language=body.language,
+        query=body.form_text,
+        page="learn",
+        source="form_jump",
+        verb_id=body.verb_id,
+    )
+    return JSONResponse({"ok": True})
 
 
 async def _run_audio_background(tasks) -> None:

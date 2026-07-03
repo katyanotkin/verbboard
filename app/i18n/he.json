@@ -87,6 +87,8 @@
   "board.col_form": "צורה",
   "board.col_audio": "שמע",
   "board.col_sentence": "דוגמה",
+  "board.jump_to_example": "עבור לדוגמה",
+  "board.no_example_for_form": "אין עדיין דוגמה לצורה הזאת",
   "board.show_translations": "עם תרגום",
   "board.hide_translations": "× תרגום",
   "feedback.title": "VerbBoard — משוב",

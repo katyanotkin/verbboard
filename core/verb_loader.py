@@ -39,6 +39,11 @@ def _firestore_document_to_verb_entry(document: dict[str, Any]) -> VerbEntry:
         display_lemma=document.get("display_lemma"),
         display_forms=document.get("display_forms"),
         tts_forms=document.get("tts_forms"),
+        lemma_translations={
+            k: v
+            for k, v in (document.get("lemma_translations") or {}).items()
+            if isinstance(k, str) and isinstance(v, str)
+        },
         created_at=document.get("created_at", ""),
     )
 

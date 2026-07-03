@@ -23,6 +23,7 @@ class VerbEntry:
     display_lemma: Optional[str] = None
     display_forms: Optional[Dict[str, Any]] = None
     tts_forms: Optional[Dict[str, Any]] = None
+    lemma_translations: Dict[str, str] = field(default_factory=dict)
     created_at: str = ""
 
 
