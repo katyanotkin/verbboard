@@ -112,8 +112,11 @@ Rules:
 - Return the dictionary/infinitive form in each target language, not a conjugated form.
 - Keep each translation to a single word or short phrase (e.g. English infinitives may include "to").
 
-If the source word is ambiguous, silently pick the single most common meaning --
-do not explain the ambiguity or second-guess yourself.
+If the source word is ambiguous -- multiple meanings/senses, or multiple valid
+conjugation patterns in the source language (e.g. English "fit" as
+fit-fit-fit vs fit-fitted-fitted) -- silently pick the single most common
+meaning and translate that, ignoring which source-language conjugation
+pattern applies. Do not explain the ambiguity or second-guess yourself.
 
 Return ONLY a JSON object with language codes as keys, e.g. {{"en": "...", "ru": "..."}}.
 No commentary, no markdown fences, no text before or after the JSON object.

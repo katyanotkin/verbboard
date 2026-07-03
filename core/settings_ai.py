@@ -38,6 +38,14 @@ ENGLISH (en)
   lemma: infinitive (e.g. "went" → "go", "growing" → "grow")
   morph: {}
   forms: flat keys (no nesting) — base, past, past_participle, present_3sg, gerund
+
+  Variant past/past_participle forms: some verbs have more than one valid
+  past-tense form depending on dialect or sense (e.g. "fit" → past "fit" in US
+  English, "fitted" in UK English and always for the "installed/tailored"
+  sense; "dreamed"/"dreamt", "learned"/"learnt"). Silently pick the single most
+  common form and use it consistently for both past and past_participle —
+  do not hedge, mention the variant, or return alternatives.
+
   examples: exactly 5 sentences covering in order:
     simple present (1st person: I / we), simple present (3rd singular: she/he),
     simple present (3rd plural: they), simple past, present perfect"""

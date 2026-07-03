@@ -49,7 +49,7 @@ app/
                    # verbs_page.js    -- wires filters + practice loop + auth events
                    # learn.js         -- known button, audio tracking, practice bar
                    # pwa.js           -- install prompt (beforeinstallprompt), deferred
-                   # sw.js            -- service worker, cache version vb-v18
+                   # sw.js            -- service worker, cache version vb-v21
                    # manifest.json    -- PWA manifest (icons, display, scope)
                    # icons/           -- PNG icons for PWA (48/72/96/144/192/512px + maskable)
   templates/       # Jinja2 templates
@@ -119,7 +119,8 @@ Use the **Explore** agent for detailed file navigation.
 - Wrap-up modal on return to verbs page (`practice_wrapup:{lang}`)
 
 **PWA / Mobile:**
-- Manifest at `/manifest.json`, service worker at `/sw.js` (cache `vb-v18`), icons in `app/static/icons/`
+- Manifest at `/manifest.json`, service worker at `/sw.js` (cache `vb-v21`), icons in `app/static/icons/`
+- **Bump the SW cache version on every deploy that changes a precached static asset** (`PRECACHE` list in `sw.js`) -- the fetch handler is cache-first with no `clients.claim()`, so an unchanged cache name means returning visitors silently keep the old file forever (bit us once: a `learn.js` feature shipped but returning users saw no change and no error)
 - Install prompt: `pwa.js` listens for `beforeinstallprompt` (must not be deferred); shows install button; on mobile tap shows hint, second tap triggers prompt
 - 4-tab icon-only bottom nav (`_bottom_nav.html`): Back (chevron) / Verbs (list) / Search (magnifier+home) / Login (person); min-height 56px; uses `env(safe-area-inset-bottom)` padding; included on all pages; labels intentionally hardcoded English
 - Sign-in flow (`auth_pages.py` + `signin.html`): standalone PWA uses `window.open('/auth/signin', '_blank')`; mobile browser navigates to `/auth/signin?return_to=...`; desktop uses `signInWithPopup`
@@ -137,7 +138,9 @@ Use the **Explore** agent for detailed file navigation.
 - On translation success but verb absent: logs demand signal with translated word; `search_mode=native`
 - **GCP requirement:** Cloud Run service account needs `roles/aiplatform.user` to call Vertex AI
 
-**Inline translations:** `Example.translations` dict; Claude/Gemini routing per language; shown when UI language differs from verb language.
+**Inline translations:** `Example.translations` dict; Claude/Gemini routing per language; shown when UI language differs from verb language. Verb infinitives are translated the same way via `lemma_translations` dict on `VerbEntry`/Firestore docs and `translate_lemma()` (mirrors `translate_examples()`); both share one toggle button, which sets `translations-visible` on `#learn-page` (not `.examples-table` -- broadened so the lemma-translation span outside the examples table is also gated). `tools/backfill_lemma_translations.py` backfills existing verbs. Claude's JSON output for lemma translation is unreliable for ambiguous/tricky lemmas (rambling commentary, self-correction loops) -- `_call_claude_lemma` extracts the last `{...}` block defensively rather than parsing the raw response, and the prompt has an explicit rule to silently pick one sense/conjugation-pattern without hedging.
+
+**Jump to example (from a conjugation form):** each conjugated form row gets a `data-form` attribute and a 🔎 button (`core/render.py`, only for rows with real audio and only when the verb has examples). Click handling is entirely client-side (`app/static/learn.js`): word-boundary-aware substring match (diacritics/Hebrew nikud stripped both sides) against already-rendered `.example-src` text; match scrolls to and highlights the row; no match shows a toast and logs a demand signal via `POST /api/learn/form_signal` (reuses `log_missing_verb_search()`, `source="form_jump"`) so the gap can inform future example generation.
 
 **Localization:** UI in EN / RU / HE / ES. Language travels as a `?language=` URL query param on every nav link and redirect. `ui_language` travels as `?ui_language=`. Neither uses cookies -- Firebase Hosting (Fastly CDN) strips all cookies except `__session` before forwarding to Cloud Run. Hebrew RTL supported.
 
