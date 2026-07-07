@@ -1,44 +1,93 @@
 # Demand-Driven Language Learning
 
-When a user searches for a verb that doesn't exist, it's logged.
+One of the questions I kept asking while building VerbBoard was:
 
-Not as a failed search. As a demand signal: what was searched, in what language, how many times. Repeated searches for the same term add to the count. The queue accumulates evidence of what the database is missing.
+**How should a language-learning product decide what to teach next?**
 
-Not every signal turns into content. Garbage queries -- random characters, inputs that aren't words -- still get logged. What they don't get is generation: a plausibility check runs before a query ever reaches the model, filtering noise out of the pipeline rather than out of the queue.
+VerbBoard started with a curated set of high-frequency verbs.
+
+That was only the starting point.
+
+Rather than deciding myself what should be added next, I wanted the product to learn from its users.
+
+When someone searches for a verb that doesn't exist, VerbBoard doesn't simply return "No results."
+
+It records a **demand signal**.
+
+The system logs what was searched, in which language, and how often the same search occurs. Repeated searches strengthen the signal. Over time, those searches become evidence of what learners actually need rather than what I assume they need.
+
+That changes the content pipeline.
+
+`user search → match found → learn page`
+
+`user search → no match → demand signal → generation pipeline → published content`
+
+The content library grows from real usage.
+
+## Not Every Search Becomes Content
+
+Every search is recorded.
+
+Not every search is generated.
+
+People mistype. Paste random characters. Search for things that aren't verbs.
+
+Those searches still have value as telemetry, but they shouldn't consume AI resources.
+
+Before generation begins, VerbBoard performs a plausibility check to determine whether the query looks like a real verb. Only then does it enter the generation pipeline.
+
+The queue remains a record of demand.
+
+Generation remains selective.
+
+## Trust Changes the Workflow
+
+One interesting thing happened over time.
+
+I stopped reviewing every generated verb.
+
+English generation became reliable enough that I removed the manual review step. Spanish eventually followed.
+
+`user demand → validation → AI generation → live`
+
+Russian and Hebrew are different.
+
+Russian aspect pairs often require linguistic judgment. Hebrew verbs depend on correctly identifying the *binyan* and root. Those languages still benefit from human review before publication.
+
+`user demand → admin review → AI generation → candidate preview → promotion → live`
+
+What started as a safety measure gradually became a measure of confidence in the generation pipeline.
+
+## The Same Idea Scales Down
+
+Demand signals don't stop at the verb level.
+
+Every conjugated form on a VerbBoard links directly to an example sentence when one already exists.
+
+If a particular form has no matching example yet, that absence becomes another demand signal. The system already knows exactly which grammatical form is missing.
+
+Today, the learner simply sees that no example exists for that particular form.
+
+One possible next step is to let learners generate the missing example on demand, together with its translation, and save it so it becomes available to everyone who encounters the same gap.
+
+That would extend the same demand-driven philosophy from missing verbs to individual conjugated forms.
+
+## A Product That Learns
+
+Searches for verbs that don't exist don't disappear.
+
+They become input into the product itself.
+
+Every demand signal helps shape what gets generated, reviewed, and eventually published.
+
+The content library doesn't expand according to a fixed roadmap.
+
+It grows in response to what learners actually look for.
+
+As more people use VerbBoard, they don't just use the product.
+
+They help shape it.
 
 ---
 
-I used to review every generated verb manually before it went live. English and Spanish don't go through that anymore.
-
-When a search finds no match in those languages, a quick check confirms it looks like a real verb, then generation triggers automatically and goes straight to live. No manual step.
-
-This wasn't a design decision from day one. It's trust I built up with the output over time. English verb forms are regular. The generation quality turned out reliable enough that I stopped reviewing candidates before they went live. Spanish followed.
-
-Russian and Hebrew still go through manual review. Russian aspect pairing requires judgment -- every verb has a perfective and imperfective form, and the pairing isn't mechanical. Hebrew needs binyan and root derivation. Both are worth a pass before content reaches learners.
-
----
-
-Generated output follows the same structure regardless of path: full conjugation table, example sentences in the target language, morphological annotations (aspect pairs, binyan, root), normalized search index.
-
-For Russian and Hebrew, candidates preview on the live interface before promotion. The admin sees exactly what the learner would see -- board, examples, audio. Corrections happen at the candidate stage.
-
-```
-user search → match found → verb board
-            → no match in verbs store → demand signal → queue → content generation → preview → publication
-
-Content generation:
-EN / ES:  user demand → auto-validation (verb vs. garbage) → auto-generation → live
-RU / HE:  user demand → admin review → Claude generation → candidate → preview → promotion → live
-```
-
-The content library grows from evidence of actual demand. Users searching for verbs that don't exist aren't hitting a wall. They're defining what gets built next.
-
-That granularity already reaches below the verb level. Each conjugation form has a button that jumps to its matching example, when one is already on the page. No match, and the miss gets logged the same way a missing verb does -- one more signal in the same queue, just scoped to a single form instead of the whole word.
-
----
-
-There's a second way that kind of gap could get filled: not queued, but generated on the spot. A learner selects a form with no example yet, generation runs right there via Claude or Gemini, and the result is saved so it's never regenerated for the next learner who hits the same form. A natural candidate for a premium feature: instant generation instead of the queue.
-
----
-
-#LanguageLearning #EdTech #ProductDevelopment #DemandDriven #verbboard
+#ProductDevelopment #LanguageLearning #LearningDesign #EdTech #AI #FeedbackLoop #DemandDriven #verbboard
