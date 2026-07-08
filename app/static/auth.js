@@ -85,6 +85,7 @@
         k.startsWith('practice_badges:') ||
         k.startsWith('practice_session:') ||
         k.startsWith('practice_wrapup:') ||
+        k.startsWith('practice_streak:') ||
         k.startsWith('audio_plays:')
       )) {
         toRemove.push(k);

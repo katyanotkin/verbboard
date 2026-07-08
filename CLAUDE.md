@@ -44,12 +44,13 @@ app/
                    # auth.js          -- Firebase auth, hydrateProgress, vb:* events
                    # progress.js      -- VerbBoardProgress (localStorage known/seen)
                    # storage.js       -- VerbBoardStorage (readSet/writeSet/readJson/writeJson)
+                   # streak.js        -- VerbBoardStreak (localDay/isNextDay/bump/merge/displayLen)
                    # practice_loop.js -- practice session + badge sync
                    # verbs_filters.js -- verb list filter/sort/render
                    # verbs_page.js    -- wires filters + practice loop + auth events
                    # learn.js         -- known button, audio tracking, practice bar
                    # pwa.js           -- install prompt (beforeinstallprompt), deferred
-                   # sw.js            -- service worker, cache version vb-v21
+                   # sw.js            -- service worker, cache version vb-v22
                    # manifest.json    -- PWA manifest (icons, display, scope)
                    # icons/           -- PNG icons for PWA (48/72/96/144/192/512px + maskable)
   templates/       # Jinja2 templates
@@ -117,9 +118,10 @@ Use the **Explore** agent for detailed file navigation.
 - Completion earns a badge (session size appended to `badges` list)
 - `BADGE_COMPACT_THRESHOLD` (from `VB_BADGE_COMPACT_THRESHOLD`) switches to compact grouped badge display
 - Wrap-up modal on return to verbs page (`practice_wrapup:{lang}`)
+- Day streak: `localStorage` key `practice_streak:{lang}` -- `{last_day, len}` (client-local calendar day, absent = no streak); mirrored server-side on `user_practice/{uid}/languages/{lang}` as `streak_last_day`/`streak_len`; bumped in `_finishPractice()` on badge earn; identical `merge()` logic lives in `app/static/streak.js` (`VerbBoardStreak`) and `core/progress/streak.py` (`merge_streak`) -- same-day keeps max length, consecutive days extend, otherwise the later day wins; displayed only while the streak is still "alive" (last day = today or yesterday)
 
 **PWA / Mobile:**
-- Manifest at `/manifest.json`, service worker at `/sw.js` (cache `vb-v21`), icons in `app/static/icons/`
+- Manifest at `/manifest.json`, service worker at `/sw.js` (cache `vb-v22`), icons in `app/static/icons/`
 - **Bump the SW cache version on every deploy that changes a precached static asset** (`PRECACHE` list in `sw.js`) -- the fetch handler is cache-first with no `clients.claim()`, so an unchanged cache name means returning visitors silently keep the old file forever (bit us once: a `learn.js` feature shipped but returning users saw no change and no error)
 - Install prompt: `pwa.js` listens for `beforeinstallprompt` (must not be deferred); shows install button; on mobile tap shows hint, second tap triggers prompt
 - 4-tab icon-only bottom nav (`_bottom_nav.html`): Back (chevron) / Verbs (list) / Search (magnifier+home) / Login (person); min-height 56px; uses `env(safe-area-inset-bottom)` padding; included on all pages; labels intentionally hardcoded English

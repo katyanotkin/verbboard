@@ -10,6 +10,7 @@ from core.progress.progress_repository import (
     set_known,
     upsert_user_profile,
 )
+from core.progress.streak import StreakRecord
 
 
 def sync_user_profile(user: AuthUser) -> None:
@@ -79,11 +80,15 @@ def record_practice_progress(
     user: AuthUser,
     language: str,
     badges: list[int],
-) -> None:
+    streak_last_day: str | None = None,
+    streak_len: int | None = None,
+) -> StreakRecord | None:
     sync_user_profile(user)
 
-    save_practice_progress(
+    return save_practice_progress(
         user_id=user.uid,
         language=language,
         badges=badges,
+        streak_last_day=streak_last_day,
+        streak_len=streak_len,
     )

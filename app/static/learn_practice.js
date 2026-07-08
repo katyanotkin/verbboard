@@ -219,25 +219,58 @@ document.addEventListener("DOMContentLoaded", function () {
       badges.push(session.size || session.ids.length);
       localStorage.setItem(badgesKey, JSON.stringify(badges));
 
+      const streakKey = `practice_streak:${language}`;
+      let streak = null;
+      let streakDisplayLen = 0;
+      if (window.VerbBoardStreak && window.VerbBoardStorage) {
+        const streakLib = window.VerbBoardStreak;
+        const storage = window.VerbBoardStorage;
+        const existingStreak = storage.readJson(streakKey, null);
+        streak = streakLib.bump(existingStreak, streakLib.localDay());
+        storage.writeJson(streakKey, streak);
+        streakDisplayLen = streakLib.displayLen(streak);
+      }
+
+      const practicePostBody = { language: language, badges: badges };
+      if (streak) {
+        practicePostBody.streak_last_day = streak.last_day;
+        practicePostBody.streak_len = streak.len;
+      }
+
       if (window.VerbBoardAuth && window.VerbBoardAuth.getIdToken) {
         try {
           const token = await window.VerbBoardAuth.getIdToken();
           if (token) {
-            await fetch("/api/progress/practice", {
+            const resp = await fetch("/api/progress/practice", {
               method: "POST",
               headers: {
                 Authorization: "Bearer " + token,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ language: language, badges: badges }),
+              body: JSON.stringify(practicePostBody),
             });
+            // The server merges against other devices' streaks; adopt its
+            // answer so the wrap-up modal never under-counts.
+            if (resp.ok && window.VerbBoardStreak && window.VerbBoardStorage) {
+              const data = await resp.json().catch(function () { return {}; });
+              if (data.streak && data.streak.last_day && data.streak.len) {
+                const serverStreak = { last_day: data.streak.last_day, len: data.streak.len };
+                streak = window.VerbBoardStreak.merge(streak, serverStreak);
+                window.VerbBoardStorage.writeJson(streakKey, streak);
+                streakDisplayLen = window.VerbBoardStreak.displayLen(streak);
+              }
+            }
           }
         } catch (_) {}
       }
 
       localStorage.setItem(
         `practice_wrapup:${language}`,
-        JSON.stringify({ ids: session.ids, lemmas: session.lemmas || {} })
+        JSON.stringify({
+          ids: session.ids,
+          lemmas: session.lemmas || {},
+          streakLen: streakDisplayLen,
+        })
       );
     } else if (capsuleEl) {
       const UI = window.UI || {};

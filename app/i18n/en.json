@@ -116,5 +116,6 @@
   "board.number_pl": "Pl",
   "home.install_hint": "Tap ⋮ in your browser, then \"Add to Home Screen\"",
   "home.install_hint_dismiss": "Dismiss",
-  "practice.no_badge": "No badge"
+  "practice.no_badge": "No badge",
+  "practice.streak": "Day streak"
 }

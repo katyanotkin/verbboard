@@ -150,7 +150,7 @@ def test_save_practice_local_dev() -> None:
     )
 
     assert response.status_code == 200
-    assert response.json() == {"ok": True}
+    assert response.json() == {"ok": True, "streak": None}
 
 
 # ---------------------------------------------------------------------------
@@ -367,5 +367,237 @@ def test_get_practice_rejects_language_too_long() -> None:
     response = client.get(
         "/api/progress/practice?language=toolong",
         headers=AUTH,
+    )
+    assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Practice streak
+#
+# These tests hit a real Firestore doc (user_practice/local-dev-user/languages/*)
+# that persists across test runs, and streak merges are monotonic (never
+# shrink). To stay deterministic regardless of leftover state from previous
+# runs, tests that need a *known* stored value first seed it with a
+# far-future `last_day` -- guaranteed to be more recent than anything a prior
+# run could have written, so merge_streak always lets it win outright.
+# Each test also uses its own language code to avoid cross-test interference.
+# ---------------------------------------------------------------------------
+
+_FAR_FUTURE_DAY = "2099-01-01"
+_FAR_FUTURE_DAY_PLUS_ONE = "2099-01-02"
+
+
+def test_post_streak_persists_and_is_returned_by_get() -> None:
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "s1",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY,
+            "streak_len": 5,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 5}
+
+    payload = client.get("/api/progress/practice?language=s1", headers=AUTH).json()
+    assert payload["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 5}
+
+
+def test_post_streak_response_contains_server_merged_streak() -> None:
+    """The POST response streak must reflect the server-side merge, not the
+    raw value the client sent (e.g. an adjacent-day bump extends length)."""
+    client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "s2",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY,
+            "streak_len": 5,
+        },
+    )
+
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "s2",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY_PLUS_ONE,
+            "streak_len": 1,
+        },
+    )
+
+    # Adjacent day: merged length is max(later.len, earlier.len + 1) = max(1, 6) = 6.
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY_PLUS_ONE, "len": 6}
+
+
+def test_post_without_streak_leaves_existing_streak_untouched() -> None:
+    """A POST that omits both streak fields must not disturb a previously
+    stored streak, and must echo it back unchanged."""
+    client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "s3",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY,
+            "streak_len": 7,
+        },
+    )
+
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={"language": "s3", "badges": [3, 6]},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 7}
+
+    payload = client.get("/api/progress/practice?language=s3", headers=AUTH).json()
+    assert payload["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 7}
+
+
+def test_stale_post_does_not_shrink_stored_streak() -> None:
+    """An older/shorter incoming streak (e.g. a stale offline device syncing
+    late) must never shrink what's already stored."""
+    client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "s4",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY,
+            "streak_len": 50,
+        },
+    )
+
+    # Same day, much shorter length.
+    same_day_response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "s4",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY,
+            "streak_len": 1,
+        },
+    )
+    assert same_day_response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 50}
+
+    # Much older day with a short length (stale sync, big gap -> broken streak
+    # on the stale device, but must not overwrite the newer stored streak).
+    stale_response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "s4",
+            "badges": [3],
+            "streak_last_day": "2026-01-01",
+            "streak_len": 1,
+        },
+    )
+    assert stale_response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 50}
+
+    payload = client.get("/api/progress/practice?language=s4", headers=AUTH).json()
+    assert payload["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 50}
+
+
+def test_post_streak_rejects_malformed_calendar_date() -> None:
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "en",
+            "badges": [3],
+            "streak_last_day": "2026-13-40",
+            "streak_len": 1,
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_post_streak_rejects_wrong_date_format() -> None:
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "en",
+            "badges": [3],
+            "streak_last_day": "07/08/2026",
+            "streak_len": 1,
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_post_streak_rejects_zero_len() -> None:
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "en",
+            "badges": [3],
+            "streak_last_day": "2026-07-08",
+            "streak_len": 0,
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_post_streak_rejects_negative_len() -> None:
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "en",
+            "badges": [3],
+            "streak_last_day": "2026-07-08",
+            "streak_len": -1,
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_post_streak_rejects_len_over_max() -> None:
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "en",
+            "badges": [3],
+            "streak_last_day": "2026-07-08",
+            "streak_len": 36601,
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_post_streak_rejects_len_without_day() -> None:
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "en",
+            "badges": [3],
+            "streak_len": 5,
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_post_streak_rejects_day_without_len() -> None:
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "en",
+            "badges": [3],
+            "streak_last_day": "2026-07-08",
+        },
     )
     assert response.status_code == 422

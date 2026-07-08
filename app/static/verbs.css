@@ -438,6 +438,32 @@
   text-transform: none;
 }
 
+.practice-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 999px;
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.practice-streak-flame {
+  font-size: 13px;
+}
+
+.practice-streak-num {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--notice-text);
+}
+
+[dir="rtl"] .practice-streak {
+  padding: 2px 7px 2px 9px;
+}
+
 .practice-size-group {
   display: flex;
   gap: 4px;
@@ -680,4 +706,12 @@
   font-size: 16px;
   color: #f59e0b;
   line-height: 1;
+}
+
+.practice-wrapup-streak {
+  margin-top: -8px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--notice-text);
 }

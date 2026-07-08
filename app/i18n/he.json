@@ -116,5 +116,6 @@
   "board.number_pl": "רב׳",
   "home.install_hint": "הקישו ⋮ בדפדפן ובחרו «הוסף למסך הבית»",
   "home.install_hint_dismiss": "סגור",
-  "practice.no_badge": "ללא תג"
+  "practice.no_badge": "ללא תג",
+  "practice.streak": "ימים ברצף"
 }

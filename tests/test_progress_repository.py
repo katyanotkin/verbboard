@@ -357,3 +357,213 @@ def test_list_progress_uses_language_param_as_fallback() -> None:
         results = repo.list_progress_for_language(user_id="u1", language="en")
 
     assert results[0].language == "en"
+
+
+# ---------------------------------------------------------------------------
+# Practice streak: _read_streak, get_practice_progress, save_practice_progress
+# ---------------------------------------------------------------------------
+
+
+def test_read_streak_returns_none_when_absent() -> None:
+    assert repo._read_streak({}) is None
+
+
+def test_read_streak_returns_none_when_last_day_missing() -> None:
+    assert repo._read_streak({"streak_len": 5}) is None
+
+
+def test_read_streak_returns_none_when_len_below_one() -> None:
+    assert repo._read_streak({"streak_last_day": "2026-07-08", "streak_len": 0}) is None
+
+
+def test_read_streak_degrades_non_numeric_len_to_none_without_raising() -> None:
+    """Garbage streak_len (e.g. a stray string) must degrade to 'no streak'
+    rather than raise, so a corrupted doc doesn't break GET/POST /practice."""
+    payload = {"streak_last_day": "2026-07-08", "streak_len": "not-a-number"}
+
+    result = repo._read_streak(payload)
+
+    assert result is None
+
+
+def test_read_streak_valid_payload() -> None:
+    result = repo._read_streak({"streak_last_day": "2026-07-08", "streak_len": 5})
+
+    assert result == {"last_day": "2026-07-08", "len": 5}
+
+
+def test_get_practice_progress_legacy_doc_defaults_streak_fields() -> None:
+    """A doc written before the streak feature existed has no streak_* fields;
+    GET must degrade to None/0, not raise."""
+    db = _make_db()
+    _lang_ref(db).get().to_dict.return_value = {"badges": [3], "language": "en"}
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.get_practice_progress(user_id="u1", language="en")
+
+    assert result.streak_last_day is None
+    assert result.streak_len == 0
+
+
+def test_get_practice_progress_returns_stored_streak() -> None:
+    db = _make_db()
+    _lang_ref(db).get().to_dict.return_value = {
+        "badges": [3],
+        "language": "en",
+        "streak_last_day": "2026-07-08",
+        "streak_len": 4,
+    }
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.get_practice_progress(user_id="u1", language="en")
+
+    assert result.streak_last_day == "2026-07-08"
+    assert result.streak_len == 4
+
+
+def test_get_practice_progress_garbage_streak_len_does_not_raise() -> None:
+    db = _make_db()
+    _lang_ref(db).get().to_dict.return_value = {
+        "badges": [3],
+        "language": "en",
+        "streak_last_day": "2026-07-08",
+        "streak_len": {"unexpected": "shape"},
+    }
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.get_practice_progress(user_id="u1", language="en")
+
+    assert result.streak_last_day is None
+    assert result.streak_len == 0
+
+
+def test_save_practice_progress_writes_streak_fields_to_doc() -> None:
+    db = _make_db()
+    doc_ref = _lang_ref(db)
+
+    snapshot = MagicMock()
+    snapshot.exists = False
+    snapshot.to_dict.return_value = {}
+    doc_ref.get.return_value = snapshot
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.save_practice_progress(
+            user_id="u1",
+            language="en",
+            badges=[3],
+            streak_last_day="2026-07-08",
+            streak_len=5,
+        )
+
+    args, kwargs = doc_ref.set.call_args
+    payload = args[0]
+    assert payload["streak_last_day"] == "2026-07-08"
+    assert payload["streak_len"] == 5
+    assert kwargs.get("merge") is True
+
+
+def test_save_practice_progress_merges_against_existing_stored_streak() -> None:
+    """An adjacent-day incoming streak must be merged with what's already
+    stored (not simply overwritten with the incoming value)."""
+    db = _make_db()
+    doc_ref = _lang_ref(db)
+
+    snapshot = MagicMock()
+    snapshot.exists = True
+    snapshot.to_dict.return_value = {
+        "badges": [3],
+        "language": "en",
+        "streak_last_day": "2026-07-07",
+        "streak_len": 5,
+    }
+    doc_ref.get.return_value = snapshot
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.save_practice_progress(
+            user_id="u1",
+            language="en",
+            badges=[3],
+            streak_last_day="2026-07-08",
+            streak_len=1,
+        )
+
+    # Adjacent day: merged length is max(incoming.len, stored.len + 1) = max(1, 6) = 6.
+    assert result == {"last_day": "2026-07-08", "len": 6}
+
+    args, _ = doc_ref.set.call_args
+    payload = args[0]
+    assert payload["streak_last_day"] == "2026-07-08"
+    assert payload["streak_len"] == 6
+
+
+def test_save_practice_progress_stale_incoming_does_not_shrink_stored_streak() -> None:
+    db = _make_db()
+    doc_ref = _lang_ref(db)
+
+    snapshot = MagicMock()
+    snapshot.exists = True
+    snapshot.to_dict.return_value = {
+        "badges": [3],
+        "language": "en",
+        "streak_last_day": "2026-07-08",
+        "streak_len": 50,
+    }
+    doc_ref.get.return_value = snapshot
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.save_practice_progress(
+            user_id="u1",
+            language="en",
+            badges=[3],
+            streak_last_day="2026-01-01",
+            streak_len=1,
+        )
+
+    assert result == {"last_day": "2026-07-08", "len": 50}
+
+    args, _ = doc_ref.set.call_args
+    payload = args[0]
+    assert payload["streak_last_day"] == "2026-07-08"
+    assert payload["streak_len"] == 50
+
+
+def test_save_practice_progress_without_streak_args_returns_existing_streak_unchanged() -> None:
+    """Calling save_practice_progress with no streak_last_day/streak_len must
+    leave the stored streak untouched and return it as-is (badge-only save)."""
+    db = _make_db()
+    doc_ref = _lang_ref(db)
+
+    snapshot = MagicMock()
+    snapshot.exists = True
+    snapshot.to_dict.return_value = {
+        "badges": [3],
+        "language": "en",
+        "streak_last_day": "2026-07-08",
+        "streak_len": 7,
+    }
+    doc_ref.get.return_value = snapshot
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.save_practice_progress(user_id="u1", language="en", badges=[3, 6])
+
+    assert result == {"last_day": "2026-07-08", "len": 7}
+
+    args, _ = doc_ref.set.call_args
+    payload = args[0]
+    assert "streak_last_day" not in payload
+    assert "streak_len" not in payload
+
+
+def test_save_practice_progress_no_streak_args_and_no_existing_streak_returns_none() -> None:
+    db = _make_db()
+    doc_ref = _lang_ref(db)
+
+    snapshot = MagicMock()
+    snapshot.exists = True
+    snapshot.to_dict.return_value = {"badges": [3], "language": "en"}
+    doc_ref.get.return_value = snapshot
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.save_practice_progress(user_id="u1", language="en", badges=[3])
+
+    assert result is None
