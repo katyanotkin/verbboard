@@ -55,7 +55,7 @@ Russian aspect pairs often require linguistic judgment. Hebrew verbs depend on c
 
 What started as a safety measure gradually became a measure of confidence in the generation pipeline.
 
-## The Same Idea Scales Down
+## Extending the Demand Pipeline
 
 Demand signals don't stop at the verb level.
 
