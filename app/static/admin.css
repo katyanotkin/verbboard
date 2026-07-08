@@ -83,6 +83,7 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 14px;
   flex-wrap: wrap;
 }
+.toolbar.tight  { margin-bottom: 10px; }
 .toolbar-title { font-size: 15px; font-weight: 600; flex: 1; }
 
 select {
@@ -192,6 +193,15 @@ button.toggle-btn:not(.active):not(.view-toggle button) {
 .btn-del:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .loading   { color: var(--muted); font-style: italic; padding: 28px; text-align: center; }
+
+/* ── inline layout/meta utilities ── */
+.action-cell      { display: flex; align-items: center; gap: 6px; }
+.action-cell.wrap { flex-wrap: wrap; }
+.cell-meta        { color: var(--muted); font-size: 12px; }
+.cell-meta.nowrap { white-space: nowrap; }
+.text-muted       { color: var(--muted); }
+.regen-status     { font-size: 12px; margin-left: 2px; }
+.hidden           { display: none; }
 
 /* ── trash candidates ── */
 tr.trash-candidate td { background: #fffbf0; }

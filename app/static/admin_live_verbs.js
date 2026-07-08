@@ -46,8 +46,8 @@ function renderLiveVerbsTable(verbs) {
       <td>${esc(verb.language || '')}</td>
       <td>${esc(verb.rank ?? '—')}</td>
       <td>${exampleCount}</td>
-      <td>${hasPronounForms ? '✓' : '<span style="color:var(--muted)">—</span>'}</td>
-      <td style="font-size:12px;color:var(--muted)">${esc(updated)}</td>
+      <td>${hasPronounForms ? '✓' : '<span class="text-muted">—</span>'}</td>
+      <td class="cell-meta">${esc(updated)}</td>
       <td>
         <div class="btn-row">
           <a class="btn-preview" href="${previewHref}" target="_blank">👁 Preview</a>
@@ -55,7 +55,7 @@ function renderLiveVerbsTable(verbs) {
           <button class="btn-regen" onclick="regenLiveForms('${safeId}')">⟳ Forms</button>
           <button class="btn-needs-fix" onclick="regenLiveFull('${safeId}')">⟳ Full</button>
         </div>
-        <span id="regen-status-${safeId}" style="font-size:12px;margin-left:2px"></span>
+        <span id="regen-status-${safeId}" class="regen-status"></span>
       </td>
     </tr>`;
   }).join('');
@@ -107,7 +107,7 @@ async function refreshLiveVerbRow(verbId) {
     const updated = (verb.updated_at || '').replace('T', ' ').slice(0, 16);
 
     row.cells[4].textContent = exampleCount;
-    row.cells[5].innerHTML = hasPronounForms ? '✓' : '<span style="color:var(--muted)">—</span>';
+    row.cells[5].innerHTML = hasPronounForms ? '✓' : '<span class="text-muted">—</span>';
     row.cells[6].textContent = updated;
   } catch (_) {
     // best-effort refresh

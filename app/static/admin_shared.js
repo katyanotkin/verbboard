@@ -79,8 +79,8 @@ function showPanel(name) {
 
 function setSigView(viewName) {
   sigView = viewName;
-  document.getElementById('sig-aggr-view').style.display = viewName === 'aggr' ? '' : 'none';
-  document.getElementById('sig-raw-view').style.display = viewName === 'raw' ? '' : 'none';
+  document.getElementById('sig-aggr-view').classList.toggle('hidden', viewName !== 'aggr');
+  document.getElementById('sig-raw-view').classList.toggle('hidden', viewName !== 'raw');
   document.getElementById('btn-view-aggr').classList.toggle('active', viewName === 'aggr');
   document.getElementById('btn-view-raw').classList.toggle('active', viewName === 'raw');
   renderActiveSignalView();

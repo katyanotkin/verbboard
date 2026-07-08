@@ -287,7 +287,7 @@ function renderAggr() {
           : '';
 
       if (item.status === 'in_set') {
-        actionCell = `<span style="display:flex;align-items:center;gap:6px">
+        actionCell = `<span class="action-cell">
             ${statusPill(item.status)}
           </span>`;
       } else if (item.status === 'garbage') {
@@ -295,7 +295,7 @@ function renderAggr() {
           ? `<span class="trash-hint" title="${esc(item.trashReason)}">${esc(item.trashReason)}</span>`
           : '';
 
-        actionCell = `<span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        actionCell = `<span class="action-cell wrap">
             ${statusPill(item.status)}
             ${reasonHint}
             <button class="btn-del" title="Undo classification"
@@ -303,14 +303,14 @@ function renderAggr() {
             ${hideAction}
           </span>`;
       } else {
-        actionCell = `<span style="display:flex;align-items:center;gap:6px">
+        actionCell = `<span class="action-cell">
             ${statusPill(item.status)}
             <button class="btn-del" title="Undo classification"
               onclick="undoLabel('${esc(item.labelId)}',this)">↩</button>
           </span>`;
       }
     } else if (isTrash) {
-      actionCell = `<span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      actionCell = `<span class="action-cell wrap">
           <span class="trash-hint" title="${esc(item.trashReason)}">${esc(item.trashReason)}</span>
           <button class="btn-confirm-trash" onclick="quickTrash('${esc(item.query)}','${esc(item.language)}',this)">Mark garbage</button>
           <button class="btn-del" onclick="quickHideTrash('${esc(item.query)}','${esc(item.language)}',this)">Hide</button>
@@ -326,7 +326,7 @@ function renderAggr() {
       <td><span class="mono">${esc(item.query)}</span></td>
       <td>${item.language ? `<span class="pill pill-lang">${esc(item.language)}</span>` : ''}</td>
       <td><span class="cnt">${item.count}</span></td>
-      <td style="color:var(--muted);font-size:12px">${last}</td>
+      <td class="cell-meta">${last}</td>
       <td>${actionCell}</td>
     </tr>`;
   }).join('');
@@ -522,7 +522,7 @@ function renderRaw() {
     return `<tr id="sig-${item.id}">
       <td><span class="mono">${esc(item.query)}</span></td>
       <td>${item.language ? `<span class="pill pill-lang">${esc(item.language)}</span>` : ''}</td>
-      <td style="color:var(--muted);font-size:12px;white-space:nowrap">${timestamp}</td>
+      <td class="cell-meta nowrap">${timestamp}</td>
       <td>${statusPill(status)}</td>
     </tr>`;
   }).join('');

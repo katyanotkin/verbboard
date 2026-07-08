@@ -169,17 +169,17 @@ function renderCandidates() {
 
       const lemmaDisplay = item.lemma
         ? `<span class="cand-lemma">${esc(item.lemma)}</span>`
-        : '<em style="color:var(--muted)">—</em>';
+        : '<em class="text-muted">—</em>';
 
       const examplesCell = item.examples && item.examples.length
         ? `<button class="btn-examples" id="cand-ex-btn-${esc(item.verb_id)}" onclick="toggleExamples('${esc(item.verb_id)}')">📖 ${item.examples.length}</button>`
-        : '<span style="color:var(--muted);font-size:12px">—</span>';
+        : '<span class="cell-meta">—</span>';
 
       return `<tr id="cand-row-${esc(item.verb_id)}" class="${isPromoted ? 'row-promoted' : ''}">
       <td><span class="mono">${esc(item.query)}</span></td>
       <td>${lemmaDisplay}</td>
       <td><span class="pill pill-lang">${esc(item.language)}</span></td>
-      <td style="color:var(--muted);font-size:12px">${item.rank ?? '—'}</td>
+      <td class="cell-meta">${item.rank ?? '—'}</td>
       <td>${candStatusPill(item.status)}</td>
       <td>${examplesCell}</td>
       <td>
