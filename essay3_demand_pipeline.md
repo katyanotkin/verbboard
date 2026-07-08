@@ -1,6 +1,6 @@
-# Demand-Driven Language Learning
+# Demand-Driven Content
 
-One of the questions I kept asking while building VerbBoard was:
+One question kept coming up while I was building VerbBoard:
 
 **How should a language-learning product decide what to teach next?**
 
@@ -10,13 +10,11 @@ That was only the starting point.
 
 Rather than deciding myself what should be added next, I wanted the product to learn from its users.
 
-When someone searches for a verb that doesn't exist, VerbBoard doesn't simply return "No results."
-
-It records a **demand signal**.
+When someone searches for a verb that doesn't exist, VerbBoard predictably returns "No results."
+It also records a **demand signal**.
 
 The system logs what was searched, in which language, and how often the same search occurs. Repeated searches strengthen the signal. Over time, those searches become evidence of what learners actually need rather than what I assume they need.
 
-That changes the content pipeline.
 
 `user search → match found → learn page`
 
@@ -32,7 +30,7 @@ Not every search is generated.
 
 People mistype. Paste random characters. Search for things that aren't verbs.
 
-Those searches still have value as telemetry, but they shouldn't consume AI resources.
+Those searches still have value as usage data, but they shouldn't consume AI resources.
 
 Before generation begins, VerbBoard performs a plausibility check to determine whether the query looks like a real verb. Only then does it enter the generation pipeline.
 
@@ -45,8 +43,7 @@ Generation remains selective.
 One interesting thing happened over time.
 
 I stopped reviewing every generated verb.
-
-English generation became reliable enough that I removed the manual review step. Spanish eventually followed.
+As the generation pipeline matured, output quality for English and Spanish became reliable enough that I removed the manual review step.
 
 `user demand → validation → AI generation → live`
 
@@ -64,7 +61,7 @@ Demand signals don't stop at the verb level.
 
 Every conjugated form on a VerbBoard links directly to an example sentence when one already exists.
 
-If a particular form has no matching example yet, that absence becomes another demand signal. The system already knows exactly which grammatical form is missing.
+If a particular form has no matching example yet, that absence becomes another demand signal. The system already knows exactly which conjugated form is missing an example.
 
 Today, the learner simply sees that no example exists for that particular form.
 
@@ -82,11 +79,9 @@ Every demand signal helps shape what gets generated, reviewed, and eventually pu
 
 The content library doesn't expand according to a fixed roadmap.
 
-It grows in response to what learners actually look for.
+It grows in response to what learners actually look for. Every missing search helps identify what should be added next.
 
-As more people use VerbBoard, they don't just use the product.
-
-They help shape it.
+As more people use VerbBoard, they don't just use the product - they help grow it.
 
 ---
 
