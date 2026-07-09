@@ -73,6 +73,7 @@ Visual indicators:
 - Audio listening required before advancing to the next verb
 - Skip & mark as learned — for verbs you already know
 - Complete a session to earn a badge
+- Day streak: a 🔥 chip tracks consecutive practice days, shown on the verbs page and in the session wrap-up; carries across devices on sign-in without ever losing the longer streak
 - Learning badges and persistent progress tracking
 - Cross-device sync for authenticated users
 

@@ -82,7 +82,7 @@ Impact = expected value to retention/learning outcomes/revenue. Risk = implement
 
 | Item | Impact | Risk | Why |
 |---|---|---|---|
-| Streaks (from #5) | High | Low | Direct retention lever, explicitly requested; `user_practice` already has the session history this can be computed from |
+| ~~Streaks (from #5)~~ | High | Low | Shipped 2026-07-08, see 2026-07-09 update below |
 | Known-word counter (from #5) | Medium | Low | Motivational, data already tracked in progress collections; display-only work |
 | Label/icon fixes: "Abandon" wording, "выучила" clarity, snail icon (from #5) | Medium | Low | Cheap, removes real confusion this user hit; no data model changes |
 | #1 Translate verb infinitive | Medium | Low | Extends an existing, working pattern (`Example.translations`); backfill is a known quantity |
@@ -95,7 +95,7 @@ Impact = expected value to retention/learning outcomes/revenue. Risk = implement
 
 **Recommended sequencing:**
 
-1. **Do now (high/med impact, low risk, no blockers):** streaks, known-word counter, label/icon fixes; ~~#1 (translate infinitive), #2 (jump to example)~~ — both shipped and promoted to prod 2026-07-02, see status notes above
+1. **Do now (high/med impact, low risk, no blockers):** known-word counter, label/icon fixes; ~~#1 (translate infinitive), #2 (jump to example)~~ — both shipped and promoted to prod 2026-07-02; ~~streaks~~ — shipped 2026-07-08, see status notes below
 2. **Near-term, needs one small decision first:** verb illustration images — settle sourcing approach, then scope
 3. **Big bets — scope before committing:** #6 (premium mechanism) is the real fork in the road here, since it gates both #3 and #4. Worth a short scoping spike (separate deployment vs. entitlement flag, Play Billing vs. Stripe) before estimating either downstream item. Consider whether #4 (spaced repetition) could ship as a free feature first, independent of #6 — the user's request for it doesn't inherently require a paywall, that framing came from the product side, not the feedback itself.
 4. **Parked:** "redesign everything" — flag for a future scoped UX audit, not on this backlog as-is.
@@ -103,3 +103,14 @@ Impact = expected value to retention/learning outcomes/revenue. Risk = implement
 No premium/paywall mechanism currently exists in the codebase — #3 and #4 both assume one, which is why #6 sits ahead of them despite being newer.
 
 **Combined lowest-risk queue (including carried-over engineering items from #7):** admin inline-`style=` cleanup is the single lowest-risk item in the whole backlog — no behavior change, no tests, one file surface, admin-only. Right behind it: the form-row Examples button (#2), since its design is already fully specced. Both can run ahead of anything premium/#6-dependent with no sequencing conflicts.
+
+---
+
+## 2026-07-09 update
+
+### Item 5 (Streaks) -- SHIPPED 2026-07-08
+
+Practice day-streak, from the 2026-07-02 session's "New requests" list and the prioritization table's top "Do now" item.
+
+- **Shipped:** consecutive-day tracking on session completion, stored per-language in localStorage (`practice_streak:{lang}`) and mirrored server-side on `user_practice` (`streak_last_day`/`streak_len`). Merge logic (`core/progress/streak.py` + `app/static/streak.js`, kept in sync and covered by a Node/Python parity test) never shrinks a legitimate streak: same day keeps the max length, consecutive days extend, a gap of 2+ days lets the later day win. `POST /api/progress/practice` returns the server-merged streak so the wrap-up modal never under-counts on a lagging device. 🔥 chip renders in the verbs-page practice panel (LTR+RTL, hidden when the streak is dead); wrap-up modal shows the current streak. Localized label added to all four locales (`practice.streak`). 47 new tests. Manual QATP in `QATP_streak_manual.md`; core cases confirmed on stage incl. next-day increment.
+- **Follow-up fix (2026-07-09):** mobile practice-bar layout -- Skip and Abandon shared one crowded row on narrow screens; reordered via CSS `flex`/`order` so Skip sits full-width directly under the counter and Abandon sits below Skip (user feedback from stage testing).
