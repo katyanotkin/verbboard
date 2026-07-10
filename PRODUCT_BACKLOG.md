@@ -114,3 +114,20 @@ Practice day-streak, from the 2026-07-02 session's "New requests" list and the p
 
 - **Shipped:** consecutive-day tracking on session completion, stored per-language in localStorage (`practice_streak:{lang}`) and mirrored server-side on `user_practice` (`streak_last_day`/`streak_len`). Merge logic (`core/progress/streak.py` + `app/static/streak.js`, kept in sync and covered by a Node/Python parity test) never shrinks a legitimate streak: same day keeps the max length, consecutive days extend, a gap of 2+ days lets the later day win. `POST /api/progress/practice` returns the server-merged streak so the wrap-up modal never under-counts on a lagging device. 🔥 chip renders in the verbs-page practice panel (LTR+RTL, hidden when the streak is dead); wrap-up modal shows the current streak. Localized label added to all four locales (`practice.streak`). 47 new tests. Manual QATP in `QATP_streak_manual.md`; core cases confirmed on stage incl. next-day increment.
 - **Follow-up fix (2026-07-09):** mobile practice-bar layout -- Skip and Abandon shared one crowded row on narrow screens; reordered via CSS `flex`/`order` so Skip sits full-width directly under the counter and Abandon sits below Skip (user feedback from stage testing).
+
+### New item: in-app "help" affordance design -- NEEDS DISCUSSION
+
+Triggered by the streak chip: on touch devices its "Day streak" label is invisible (hover-tooltip only), so a mobile user tapping the chip gets nothing. A ui-ux review (2026-07-09) recommended against a "?" glyph (crowds the tightest header row in the app; no existing "?" idiom anywhere in the product) and instead proposed making the chip itself a link to the About page's streak paragraph (span -> anchor, `/about?ui_language=...#about-streaks`, enlarged tap target, focus ring, zero visual change). Full spec is preserved in that review; anchor ids on the About paragraphs are the only template change needed.
+
+Decision deliberately deferred: instead of a one-off fix for the chip, design help/discoverability as ONE consistent pattern across product spots that currently explain themselves poorly, e.g.:
+
+- Streak chip 🔥 (what does the number mean, how do I keep it)
+- The "learned/выучила" star button (already flagged as confusing in the 2026-07-02 user feedback, item 5)
+- Practice panel controls (session size pills, listens-per-verb stepper)
+- Jump-to-example 🔎 button on conjugation rows
+- Translation toggle button
+
+**To settle in discussion (PM + ui-ux):** which spots get an affordance at all; one idiom for all of them (tappable element itself vs. dedicated hint style vs. first-run hints); whether the target is the About page (deep-linked anchors) or inline micro-explanations; how it stays out of the way for returning users (stateless/frictionless principle).
+
+- **Size:** design discussion first (small); implementation per-spot is trivial-to-small once the idiom is chosen
+- **Blocks:** nothing; the streak chip stays as-is (title + screen-reader label) until decided
