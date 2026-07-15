@@ -261,9 +261,8 @@ Premium = **VerbBoard ver2**, a second version of the same app:
 Consolidated from the decisions above. Not started; execute in this order when the Plus build begins (after ver1 Play launch).
 
 1. **Env-driven edition config** (code, prerequisite for everything else)
-   - Extend `load_settings()` with edition-controlled fields: feature flags (on-demand example generation), study-language list, UI-language list, app/manifest name, assetlinks fingerprint
-   - Free edition config = today's behavior minus Hebrew UI (flip only at Plus launch, step 7)
-   - UI-language list change needs the full state-propagation audit (`ui_language` travels through every link)
+   - Extend `load_settings()` with edition-controlled fields: feature flags (on-demand example generation), study-language list, app/manifest name, assetlinks fingerprint
+   - UI-language list is NOT edition config -- identical EN/RU/HE/ES in both editions (2026-07-15 ruling); free edition config = exactly today's behavior
    - Tests: unit/TestClient coverage for both edition configs via env vars; no new stage
 2. **Italian + French language plugins** (`core/languages/it`, `core/languages/fr`)
    - Plugin + prompts in `settings_ai.py` + TTS voices in `tts.py` + translation routing; content generation + QA per language is the real effort
@@ -278,7 +277,7 @@ Consolidated from the decisions above. Not started; execute in this order when t
    - Own package name; PWABuilder against plus.verbboard.com; higher price (one-time recommended; subscription would reintroduce Play Billing)
    - Plus fingerprint served in assetlinks.json at the plus host (env-driven `well_known.py`)
 6. **Stage runs Plus config** from step 1 onward (superset; covers both editions' code paths)
-7. **At Plus launch:** remove Hebrew from the free edition's UI-language options (config flip, not code removal; locale file stays for Plus)
+7. ~~At Plus launch: remove Hebrew from the free edition's UI-language options~~ -- **dropped 2026-07-15**: Hebrew UI stays in the free edition (see addendum)
 
 Standing rules: one repo, one image; editions differ only in env config; new user-visible features default to Plus.
 
@@ -310,4 +309,21 @@ Consequences:
 - Earlier references to `plus.verbboard.com` in this session should be read as "the Plus hostname (from GSM)"; the literal subdomain is not fixed in this document or in code.
 - Checklist step 4 gains a hostname secret alongside the `-plus` Firebase web-config secret; authorized-domain, hosting/DNS, and assetlinks steps all consume the GSM value.
 - Honest scope, accepted: this prevents *accidental/casual* discovery. TLS certificate-transparency logs and the Plus Android package metadata can still reveal the hostname to a determined user -- consistent with the already-accepted soft-enforcement model.
+
+### 2026-07-15 addendum -- base app launches FREE (supersedes the $0.99-then-flip decision)
+
+Owner decision after further consideration: the base app (everything shipped as of today, Hebrew study included) launches on Google Play as **Free** from day one. This supersedes the 2026-07-12 "launch Paid $0.99, flip Free later" ruling.
+
+- Forfeited, knowingly: the paid-listing practice run (the merchant-account and paid-app motions now get exercised for the first time at Plus launch) and the "VerbBoard is now free" PR beat.
+- One-way door, now taken for real: a free listing can never become paid. Accepted; monetization lives entirely in Plus.
+- `GOOGLE_PLAY_CHECKLIST.md` step 5.2 updated to Free; the post-launch "price flip" item removed.
+- Plus pricing unchanged: $1.99 at launch, raise-later option open.
+
+**Same day, second ruling: Hebrew UI STAYS in the free edition.** Supersedes the 2026-07-12 "Hebrew UI moves to Plus at Plus launch" ruling ("doesn't really matter" -- differentiation value judged marginal). Consequences:
+- UI languages are identical in both editions: EN / RU / HE / ES.
+- Plus implementation checklist step 7 (free-edition Hebrew-UI removal at Plus launch) is **dropped**; step 1 gets simpler -- the UI-language list no longer needs to be edition-config, and the `ui_language` state-propagation audit for removal is no longer needed.
+
+**Same day, confirmation of the edition split:**
+- The free edition releases **exactly as it is today** -- nothing added, nothing removed (Hebrew study stays, Hebrew UI stays, all current features stay). Nothing currently shipped is ever taken away; the app is free.
+- Plus at launch = the free app + **Italian and French study languages + on-demand example generation** (launch scope unchanged from the 2026-07-12 definition).
 - P1/P2 quick wins from 2026-07-10 remain valid but should be re-read against the ver2 policy: anything user-visible and new belongs in ver2; ver1 keeps fixes and already-promised items (known-word counter and label fixes predate the policy; owner may choose to grandfather them into ver1 or move them).

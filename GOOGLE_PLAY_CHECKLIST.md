@@ -8,11 +8,10 @@ while keeping the existing FastAPI/PWA architecture.
 > here and removed. References elsewhere (e.g. `PRODUCT_BACKLOG.md`) to
 > "instructions.txt step 5.x" map to the same step numbers in this file.
 
-**Pricing (decided 2026-07-12, see `PRODUCT_BACKLOG.md`):** launch **Paid $0.99**,
-flip to **Free** later (paid-to-free is allowed; the reverse is not). Rationale:
-practice the full paid-listing/merchant motions that the Plus app ($1.99) will
-reuse, and keep the "VerbBoard is now free" announcement as a PR beat, suggested
-to coincide with the Plus launch.
+**Pricing (decided 2026-07-15, supersedes the 2026-07-12 $0.99-then-flip plan;
+see `PRODUCT_BACKLOG.md`):** the base app launches **Free** from day one.
+A free listing can never become paid -- accepted; monetization lives entirely
+in the future Plus app ($1.99).
 
 ---
 
@@ -52,7 +51,7 @@ play.google.com/console > Create app
 - App name: `VerbBoard`
 - Default language: English (United States)
 - App or game: App
-- Free or paid: **Paid / $0.99** (decided 2026-07-12: launch paid, flip to free later; a free listing can never become paid)
+- Free or paid: **Free** (decided 2026-07-15; a free listing can never become paid -- accepted, Plus carries monetization)
 - Accept policies > Create
 
 - [ ] App created
@@ -157,5 +156,4 @@ Install from Play Store on Android:
 ## TODO -- post-launch (ongoing)
 
 - [ ] **Maintenance loop** -- keep keystore backups current; regenerate the TWA wrapper when needed (manifest/icon changes); monitor crashes and user feedback in Play Console
-- [ ] **Price flip to Free** -- timing suggestion: pair with the Plus launch ("base now free, Plus available"); see `PRODUCT_BACKLOG.md` 2026-07-12 addendum
 - [ ] **Plus listing (future)** -- reuses this playbook with its own package name, its own keystore, assetlinks served at the Plus hostname (stored in GCP Secret Manager, never committed), and the `-plus` Firebase web-config secret; see `PRODUCT_BACKLOG.md` Plus implementation checklist
