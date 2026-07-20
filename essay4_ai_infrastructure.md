@@ -14,7 +14,7 @@ This is on the hot path. Flash-lite is fast enough to run inline with the HTTP r
 
 **Verb generation**
 
-Generation follows two paths. For English and Spanish, a search miss triggers automatic generation via Gemini (`gemini-2.5-flash`) -- conjugation table, example sentences, morphological annotations -- promoted to the live database without a manual step.
+Generation follows two paths. For English and Spanish, a search miss triggers automatic generation via Gemini (`gemini-2.5-flash`) -- conjugation table, example sentences -- promoted to the live database without a manual step.
 
 For Russian and Hebrew, generation is admin-triggered and goes to Anthropic Claude (`claude-sonnet-4-6`). Hebrew needs binyan and shoresh derivation. Russian needs correct aspect pairing. Output goes to a candidate for review before promotion.
 
@@ -22,7 +22,7 @@ Hebrew gets 4096 max tokens; every other language 2048.
 
 **Prompt caching**
 
-Every Claude call passes the system prompt with `cache_control: {"type": "ephemeral"}`. Anthropic caches it server-side for 5 minutes. Cache hit: system prompt tokens at ~10% of normal price, latency down roughly 50%.
+Every generation call to Claude passes the system prompt with `cache_control: {"type": "ephemeral"}`. Anthropic caches it server-side for 5 minutes. Cache hit: system prompt tokens at ~10% of normal price, latency down roughly 50%.
 
 Prompts are split by language -- each gets the shared intro plus a language-specific section. When translation was added, the first pass combined generation and translation in one prompt. Output quality degraded. Splitting them into separate tasks fixed it. Smaller prompt, higher cache hit probability, better output.
 
@@ -51,7 +51,7 @@ page request → language check → Claude or Gemini → Firestore cache → ren
 
 Three AI systems, four call sites, two cloud providers. Each choice made independently, from one concrete constraint.
 
-No AI strategy. Just the right tool at each site.
+Four tools, two providers. It looks like no single strategy. But there is one: pick the tool that fits the constraint at each site.
 
 The calls are not what the product does. They're what makes it feasible at this scale -- one engineer, no linguistics team, demand-driven content expansion across four languages.
 
