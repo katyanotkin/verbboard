@@ -1,59 +1,104 @@
-# AI Is Not the Product, It's the Infrastructure
+# AI Isn't the Product. It's the Infrastructure.
 
-VerbBoard makes AI calls in four places. Three systems, two cloud providers, one constraint driving each choice.
+VerbBoard makes AI calls in four different places.
 
----
+Three workflows. Two model providers. One principle driving every choice.
+
+**Use the model that best fits the constraint.**
+
+## Cross-Language Search
+
+A learner studying Russian types *"to run"* in English.
+
+Vertex AI Gemini (currently `gemini-2.5-flash-lite`) translates the query into a Russian lemma, which is then used to search Firestore.
+
+This sits directly on the search path, so latency matters more than model sophistication. A lightweight model is fast enough to run inline with the HTTP request without making search feel slow.
+
+One practical detail: Gemini occasionally returns extra punctuation or formatting. Rather than assuming the response is clean, VerbBoard uses a tiered lookup strategy: direct lookup, candidate-word lookup, and finally a fuzzy search over the cached verb index.
+
+## Verb Generation
+
+Generation follows two different workflows.
+
+For English and Spanish, a missing verb triggers automatic generation using Gemini (`gemini-2.5-flash`). Generation quality gradually became reliable enough that I removed the manual review step. After validation, generated verbs go directly into the live database.
+
+For Russian and Hebrew, generation is initiated by an administrator and handled by Anthropic Claude (`claude-sonnet-4-6`).
+
+Those languages still benefit from human review. Russian aspect pairing requires linguistic judgment. Hebrew requires correct *binyan* and *shoresh* derivation. Generated content is reviewed as a candidate before promotion to the live database.
+
+Regardless of language, the generated output follows the same structure: conjugation tables, example sentences, morphological annotations, and normalized search indexes.
+
+## Prompt Caching
+
+One interesting lesson came from adding translations.
+
+My first attempt expanded the generation prompt to include translation.
+
+Output quality became noticeably worse. Increasing the maximum token limit didn't solve the problem.
+
+Separating generation and translation into independent prompts did.
+
+Smaller prompts proved easier for the models to follow, improved output quality, and increased Anthropic prompt-cache efficiency.
+
+Every Claude generation call sends its system prompt using `cache_control: {"type": "ephemeral"}`. Anthropic caches the prompt for five minutes, reducing both latency and token cost on cache hits.
+
+The prompts are also split by language so each cache entry remains small and language-specific. Since Claude is currently used only for Russian and Hebrew generation, prompt caching primarily benefits those workflows.
+
+## Example Translation
+
+When the learner's interface language differs from the study language, VerbBoard can generate inline translations on demand.
+
+Hebrew example translations go through Claude. Example translations for the remaining languages use Gemini.
+
+Hebrew morphology, *nikud*, and right-to-left text consistently produce better results with Claude. For the remaining languages, Gemini provides an excellent balance between quality, speed, and cost.
+
+Translations are generated on demand, stored in Firestore, and reused rather than regenerated on subsequent page loads.
+
+## Putting It Together
 
 **Cross-language search**
 
-A user studying Russian types "to run" in English. Vertex AI Gemini (`gemini-2.5-flash-lite`) translates the query to a Russian lemma. That lemma goes to Firestore. The user gets a redirect.
+`English query → Gemini translation → Firestore lookup → verb board`
 
-This is on the hot path. Flash-lite is fast enough to run inline with the HTTP request. A heavier model adds latency without improving the output for a single-verb translation.
+`                                                        ↘ no match → demand signal`
 
-(Gemini occasionally returns "correr." with trailing punctuation. The code tries each token individually rather than cleaning the response.)
+**Generation**
 
-**Verb generation**
+**English / Spanish**
 
-Generation follows two paths. For English and Spanish, a search miss triggers automatic generation via Gemini (`gemini-2.5-flash`) -- conjugation table, example sentences -- promoted to the live database without a manual step.
+`Demand signal → validation → Gemini generation → live`
 
-For Russian and Hebrew, generation is admin-triggered and goes to Anthropic Claude (`claude-sonnet-4-6`). Hebrew needs binyan and shoresh derivation. Russian needs correct aspect pairing. Output goes to a candidate for review before promotion.
+**Russian / Hebrew**
 
-Hebrew gets 4096 max tokens; every other language 2048.
-
-**Prompt caching**
-
-Every generation call to Claude passes the system prompt with `cache_control: {"type": "ephemeral"}`. Anthropic caches it server-side for 5 minutes. Cache hit: system prompt tokens at ~10% of normal price, latency down roughly 50%.
-
-Prompts are split by language -- each gets the shared intro plus a language-specific section. When translation was added, the first pass combined generation and translation in one prompt. Output quality degraded. Splitting them into separate tasks fixed it. Smaller prompt, higher cache hit probability, better output.
-
-One wrinkle: Haiku requires 2048 tokens minimum to cache. The English prompt is 400-600 tokens, so English calls don't cache. Harmless -- Haiku's speed advantage covers the gap anyway.
+`Demand signal → Claude generation → candidate → review → live`
 
 **Example translation**
 
-When the learner's interface language differs from the study language, VerbBoard generates inline translations on request. Claude for Hebrew, Gemini for everything else.
+`Page request → language check → AI translation → Firestore cache → rendered page`
 
-Hebrew nikud, script direction, and morphology get better results from Claude. For other languages, Gemini is fast and sufficient.
+## One Strategy, Not One Model
 
-Translations are stored in Firestore once generated -- not re-fetched on page load.
+Looking at the architecture, it might seem like there isn't a single AI strategy.
 
----
+There is.
 
-```
-Cross-language search:
-English query → Gemini translation → Firestore lookup → match found → verb board
-                                                       → no match in verbs store → demand signal → queue
+Every AI call exists because the constraints are different.
 
-Example translation:
-page request → language check → Claude or Gemini → Firestore cache → rendered page
-```
+Search optimizes for latency.
 
----
+Generation optimizes for output quality.
 
-Three AI systems, four call sites, two cloud providers. Each choice made independently, from one concrete constraint.
+Translation balances language quality, speed, and cost.
 
-Four tools, two providers. It looks like no single strategy. But there is one: pick the tool that fits the constraint at each site.
+Prompt caching reduces latency and operating cost.
 
-The calls are not what the product does. They're what makes it feasible at this scale -- one engineer, no linguistics team, demand-driven content expansion across four languages.
+There is no single "best" language model.
+
+There are only models that best fit a particular problem.
+
+AI isn't the product.
+
+It's the infrastructure that makes a demand-driven language-learning product possible for one engineer, without a linguistics team, across four study languages.
 
 ---
 
