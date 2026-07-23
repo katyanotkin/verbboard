@@ -2,14 +2,42 @@
   "id": "/",
   "name": "VerbBoard",
   "short_name": "VerbBoard",
-  "description": "Verb conjugation, audio, and practice for language learners",
+  "description": "Verb conjugation tables, audio, and practice for Spanish, Russian, Hebrew, and English learners",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "theme_color": "#2d6a4f",
   "background_color": "#f8fafc",
   "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "reference", "language learning"],
+  "related_applications": [
+    { "platform": "play", "id": "com.verbboard.app" }
+  ],
+  "prefer_related_applications": false,
+  "launch_handler": { "client_mode": "navigate-existing" },
+  "shortcuts": [
+    {
+      "name": "Search a verb",
+      "short_name": "Search",
+      "url": "/",
+      "icons": [{ "src": "/static/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Browse verbs",
+      "short_name": "Verbs",
+      "url": "/verbs",
+      "icons": [{ "src": "/static/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Practice",
+      "short_name": "Practice",
+      "url": "/verbs#practice-panel",
+      "icons": [{ "src": "/static/icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ],
   "icons": [
     { "src": "/static/icons/icon-48x48.png",   "sizes": "48x48",   "type": "image/png" },
     { "src": "/static/icons/icon-72x72.png",   "sizes": "72x72",   "type": "image/png" },

@@ -327,3 +327,11 @@ Owner decision after further consideration: the base app (everything shipped as 
 - The free edition releases **exactly as it is today** -- nothing added, nothing removed (Hebrew study stays, Hebrew UI stays, all current features stay). Nothing currently shipped is ever taken away; the app is free.
 - Plus at launch = the free app + **Italian and French study languages + on-demand example generation** (launch scope unchanged from the 2026-07-12 definition).
 - P1/P2 quick wins from 2026-07-10 remain valid but should be re-read against the ver2 policy: anything user-visible and new belongs in ver2; ver1 keeps fixes and already-promised items (known-word counter and label fixes predate the policy; owner may choose to grandfather them into ver1 or move them).
+
+### 2026-07-23 addendum -- Web Push flagged as a future Plus feature candidate (not launch scope)
+
+Raised during Google Play submission prep (PWABuilder report-card review). Owner wants this kept in mind for Plus, not built now.
+
+- **Not in Plus launch scope** -- Plus at launch stays as defined above (Italian/French + on-demand examples). Push is a candidate for *after* Plus launch, not part of it.
+- Natural trigger would be streak-reminder nudges ("your streak is about to break"), which directly collides with the unreconciled "no gamification pressure" line in the free app's store listing copy (flagged 2026-07-10, still open) -- if push moves forward, that copy tension needs resolving first, and the free/Plus copy split may need to diverge (free stays low-pressure, Plus opts into push).
+- Real implementation cost when it's picked up: VAPID keys, a push-subscription store (Firestore, per-uid), a server-side trigger to decide when to send (streak-expiry check), and a permission-prompt UX -- not a manifest-only change.

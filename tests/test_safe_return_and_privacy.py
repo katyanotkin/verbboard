@@ -166,11 +166,32 @@ def test_auth_signin_return_to_empty_when_unsafe(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_sw_cache_version_is_v23() -> None:
+def test_sw_cache_version_is_v24() -> None:
     import pathlib
 
     sw = pathlib.Path("app/static/sw.js").read_text()
-    assert '"vb-v23"' in sw
+    assert '"vb-v24"' in sw
+
+
+def test_sw_precache_includes_offline_html() -> None:
+    import pathlib
+
+    sw = pathlib.Path("app/static/sw.js").read_text()
+    assert "/static/offline.html" in sw
+
+
+def test_sw_navigation_falls_back_to_offline_html() -> None:
+    import pathlib
+
+    sw = pathlib.Path("app/static/sw.js").read_text()
+    assert 'e.request.mode === "navigate"' in sw
+    assert 'caches.match("/static/offline.html")' in sw
+
+
+def test_offline_html_is_served(client: TestClient) -> None:
+    resp = client.get("/static/offline.html")
+    assert resp.status_code == 200
+    assert "You're offline" in resp.text
 
 
 def test_sw_precache_includes_pwa_js() -> None:

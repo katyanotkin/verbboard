@@ -1,5 +1,6 @@
-const CACHE = "vb-v23";
+const CACHE = "vb-v24";
 const PRECACHE = [
+  "/static/offline.html",
   "/static/common.css",
   "/static/home.css",
   "/static/learn.css",
@@ -39,6 +40,15 @@ self.addEventListener("activate", e =>
 );
 
 self.addEventListener("fetch", e => {
+  if (e.request.mode === "navigate") {
+    // network-first: pages are server-rendered/dynamic, so never cache-serve
+    // them -- only fall back to the offline page when the network is down
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match("/static/offline.html"))
+    );
+    return;
+  }
+
   const url = new URL(e.request.url);
 
   const isStaticAsset =
@@ -50,7 +60,7 @@ self.addEventListener("fetch", e => {
     url.pathname.endsWith(".png");
 
   if (!isStaticAsset) {
-    return; // bypass SW for API/auth/navigation
+    return; // bypass SW for API/auth
   }
 
   e.respondWith(
