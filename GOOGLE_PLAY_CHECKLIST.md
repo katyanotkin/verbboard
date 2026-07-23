@@ -27,8 +27,8 @@ in the future Plus app ($1.99).
 
 ## TODO -- prerequisites
 
-- [ ] **P1. Google Play developer account** -- confirm the account exists and is verified (one-time ~$25 registration fee if not). Everything below needs Play Console access.
-- [ ] **P2. Package name decision** -- permanent Android package name (e.g. `com.verbboard.app`). Set once at packaging time (step 5.1); cannot change after first upload. Note: the future Plus app will need its own, different package name.
+- [x] **P1. Google Play developer account** -- registered, $25 fee paid, identity verified (2026-07-23)
+- [x] **P2. Package name decision** -- `com.verbboard.app` (decided 2026-07-23). Set at packaging time (step 5.1); cannot change after first upload. Note: the future Plus app will need its own, different package name.
 
 ## TODO -- submission steps (execute in order)
 
