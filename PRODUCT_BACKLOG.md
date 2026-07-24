@@ -273,9 +273,16 @@ Consolidated from the decisions above. Not started; execute in this order when t
    - Secret `verbboard-firebase-web-config-plus` (authDomain `plus.verbboard.com`); add domain to Firebase authorized domains
    - Second prod Cloud Run service deploying the **same image digest** in the same push (extend cloudbuild); Hosting site or domain mapping + DNS CNAME
    - Same Firebase project/Firestore: progress carries over by uid (upgrade selling point)
-5. **Play listing for Plus**
-   - Own package name; PWABuilder against plus.verbboard.com; higher price (one-time recommended; subscription would reintroduce Play Billing)
+5. **Play listing for Plus** -- lessons from the base-app launch (2026-07-23/24), to go faster this time:
+   - Own package name; PWABuilder against the Plus host; higher price (one-time recommended; subscription would reintroduce Play Billing)
    - Plus fingerprint served in assetlinks.json at the plus host (env-driven `well_known.py`)
+   - **Likely one-time per developer account, not per app:** the 12-tester/14-day closed-testing gate for new personal accounts unlocks "production access" at the *account* level (Play Console's "Apply for production access" lives on the account Dashboard, not per-app). If so, Plus -- published from the same account that already cleared this gate -- should skip straight to a normal review timeline (hours-to-days) with no multi-week wait. **Confirm this against the Play Console UI when Plus launch starts** before assuming it's skippable.
+   - **PWABuilder's "Package ID" field silently defaults** to `com.<name>.twa`, not whatever you decided -- it does NOT read from the site's manifest `id` or anything else. Always explicitly overwrite that exact field before generating, and verify the real result by inspecting the compiled `AndroidManifest.xml` inside the generated AAB directly (`unzip -p file.aab base/manifest/AndroidManifest.xml | strings | grep <package>`) -- don't trust the bundled `assetlinks.json` or the form alone as proof.
+   - **Binary secrets in GCP Secret Manager must be read back with `gcloud secrets versions access ... --out-file=PATH`**, never a shell pipe/redirect -- stdout text-mode encoding silently corrupts non-UTF-8 bytes (keystore files). Verify with a SHA-256 comparison against the source before trusting any backup.
+   - Closed Testing requires the app "finished set up" (store listing + content declarations) first; Internal Testing has zero requirements and is the right first upload target (also what triggers Play App Signing / the real fingerprint).
+   - The manifest/PWA enrichment work (categories, shortcuts, `display_override`, `dir`, `related_applications`, `launch_handler`, offline fallback page) lives in the shared codebase, so Plus inherits all of it automatically -- nothing to redo there.
+   - `.gitignore` already blocks keystore/AAB/APK/`key.properties` from ever being committed -- inherited automatically, but generate Plus's keystore backup into GCP Secret Manager under its own secret names (don't reuse `verbboard-play-signing-*`).
+   - New for Plus, not yet encountered: **paid listing requires a Google Payments merchant account** -- set that up as its own step, not covered by anything done for the free base app.
 6. **Stage runs Plus config** from step 1 onward (superset; covers both editions' code paths)
 7. ~~At Plus launch: remove Hebrew from the free edition's UI-language options~~ -- **dropped 2026-07-15**: Hebrew UI stays in the free edition (see addendum)
 
