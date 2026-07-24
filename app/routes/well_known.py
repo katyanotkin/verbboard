@@ -5,8 +5,9 @@ from fastapi.responses import JSONResponse, Response
 
 router = APIRouter()
 
-# sha256_cert_fingerprints is filled in after the signing keystore is generated.
-# See docs/pwa-android.md for the keytool command.
+# sha256_cert_fingerprints is the real Play App Signing key certificate (not
+# the local upload-key keystore) -- copied from Play Console > Setup >
+# App integrity > App signing key certificate after the first AAB upload.
 _ASSETLINKS = [
     {
         "relation": ["delegate_permission/common.handle_all_urls"],
@@ -14,7 +15,7 @@ _ASSETLINKS = [
             "namespace": "android_app",
             "package_name": "com.verbboard.app",
             "sha256_cert_fingerprints": [
-                "2F:EF:38:E8:A1:E4:EA:8D:90:A9:1F:22:43:19:F6:06:68:C8:6D:09:45:D5:58:F1:A8:0D:83:67:44:4F:1C:85"
+                "3A:51:9F:C0:80:6A:91:31:16:71:4E:98:49:F8:B9:C2:F9:09:21:CE:06:E4:51:C7:2D:81:B5:40:42:85:F4:9C"
             ],
         },
     }
