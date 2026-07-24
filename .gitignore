@@ -35,3 +35,12 @@ admin_candidates.py.with-pealim-scraping
 
 # Firebase CLI cache
 .firebase/
+
+# TWA / Play Store signing material -- never commit, keystore loss = can't update the app
+*.keystore
+*.jks
+key.properties
+signing-key-info.txt
+*.aab
+*.apk
+verrbboard_pwa.zip

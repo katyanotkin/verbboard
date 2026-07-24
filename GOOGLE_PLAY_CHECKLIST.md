@@ -56,15 +56,25 @@ play.google.com/console > Create app
 
 - [ ] App created
 
-### Step 5.3: Upload AAB [YOU DO THIS]
+### Step 5.3: Upload AAB to Internal Testing [YOU DO THIS]
 
-Play Console > Production > Create new release
+**Not Production, and not Closed Testing yet either.** Google requires new
+personal developer accounts (created after 2023-11-13, which includes this
+one, created 2026-07-23) to complete a closed test before Production or
+Pre-registration unlock -- see step 5.6b for that gate. Closed Testing itself
+requires "finished setting up your app" (store listing + content
+declarations, i.e. steps 5.4 and 5.6) per Play Console's own track
+requirements table. Internal Testing has **no requirements**, so it's the
+right first upload target: it triggers Play App Signing immediately (needed
+for step 5.5's real fingerprint) without waiting on anything else.
+
+Play Console > Test and release > Testing > Internal testing > Create new release
 - Upload `.aab` from step 5.1
 - Release name: `1.0`
 - What's new: `Initial release`
-- Save (do not submit yet)
+- Save and roll out to internal testing (add yourself as a tester to sanity-check the install)
 
-- [ ] AAB uploaded (Play App Signing is enabled automatically on first upload; Google re-signs with its own key -- this is why step 5.5 matters)
+- [ ] AAB uploaded to internal testing (Play App Signing is enabled automatically on first upload; Google re-signs with its own key -- this is why step 5.5 matters)
 
 ### Step 5.4: Complete store listing [YOU DO THIS]
 
@@ -128,21 +138,42 @@ Play Console > Policy > App content:
 
 - [ ] Declarations complete
 
-### Step 5.6b (optional): Internal/closed testing track
+### Step 5.6b: Closed testing gate (REQUIRED, not optional) [YOU DO THIS]
 
-From the original planning checklist; the current plan goes straight to
-production. If wanted: upload the release to Internal Testing first, verify
-login, audio, progress sync, and navigation from the installed app, optionally
-expand to a small closed-testing group, then promote to Production. Adds days
-but de-risks the first public review.
+Policy reference: https://support.google.com/googleplay/android-developer/answer/14151465
 
-- [ ] Decide: test track first, or straight to production (default: straight to production)
+Confirmed live in Play Console 2026-07-23, Google's own wording: *"If you
+have a newly created personal developer account, you must run a closed test
+for your app with a minimum of 12 testers who have been opted-in for at
+least the last 14 days continuously. When you meet these criteria, you can
+apply for production access on the Dashboard."* Production and
+Pre-registration stay locked until this is satisfied. Now that store listing
+(5.4) and content declarations (5.6) are done, the app is "finished set up"
+and Closed Testing is unlocked.
 
-### Step 5.7: Submit for review [YOU DO THIS]
+Play Console > Test and release > Testing > Closed testing > Create a track
+> Create new release (can reuse the AAB already uploaded in 5.3, or upload
+fresh) > roll out to the closed track.
 
-Play Console > Publishing overview > Send changes for review.
-Review takes 3-7 days; email arrives on approval or change request.
+- [ ] Closed testing track created, AAB uploaded
+- [ ] Recruit >=12 testers (friends/family/community) willing to opt in and keep the app installed
+- [ ] Share the closed-testing opt-in link (Play Console > Testing > Closed testing > your track > "Testers" tab) with all 12+
+- [ ] Confirm all 12+ have opted in (Play Console shows opt-in count) -- the 14-day clock only counts while a tester is opted in, not from AAB upload
+- [ ] Along the way: verify login, audio, progress sync, and navigation from the installed app -- de-risks the eventual public review too
+- [ ] Wait 14 continuous days with >=12 testers opted in
+- [ ] Apply for production access: Play Console > Dashboard > "Apply for production access" (answers questions about the app, testing process, production readiness)
+- [ ] Production access granted (email/dashboard confirmation)
 
+### Step 5.7: Create production release and submit for review [YOU DO THIS]
+
+Only available once 5.6b's production access is granted.
+
+Play Console > Test and release > Production > Create new release (can reuse
+the AAB already uploaded, or upload fresh) > Publishing overview > Send
+changes for review. Review takes 3-7 days; email arrives on approval or
+change request.
+
+- [ ] Production release created
 - [ ] Submitted
 
 ### Step 5.8: Post-approval TWA check [YOU DO THIS]

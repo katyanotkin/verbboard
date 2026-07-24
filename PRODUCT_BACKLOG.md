@@ -144,7 +144,7 @@ Decision deliberately deferred: instead of a one-off fix for the chip, design he
 
 | Item | Origin | Status |
 |---|---|---|
-| Google Play submission, steps 5.1-5.8 | `instructions.txt` | The single biggest open product thread. All remaining steps are human-side Play Console work except 5.5 (assetlinks fingerprint update, done in-session once the SHA-256 is pasted). Everything code-side is done and verified. |
+| Google Play submission, steps 5.1-5.8 | `GOOGLE_PLAY_CHECKLIST.md` (supersedes `instructions.txt`) | The single biggest open product thread. **Timeline changed 2026-07-23**: Google now requires a closed test with >=12 opted-in testers for 14 continuous days before production access unlocks (new personal-account policy, confirmed live in Play Console; https://support.google.com/googleplay/android-developer/answer/14151465) -- this is a hard minimum-14-day wait baked into the middle of the sequence (checklist step 5.6b), not a same-week launch. Recruiting testers is the human-side long pole. All remaining steps are human-side Play Console work except 5.5 (assetlinks fingerprint update, done in-session once the SHA-256 is pasted). Everything code-side is done and verified. |
 | Known-word counter | 2026-07-02 #5 | Top of the "Do now" tier since 2026-07-02, still unbuilt. Data already tracked; display-only work. |
 | Label/icon fixes (Abandon wording, learned-star clarity, snail icon) | 2026-07-02 #5 | Unbuilt. Cheap; the learned-star confusion also feeds the help-affordance discussion below. |
 | In-app help affordance (one idiom across streak chip, learned star, practice controls, 🔎, translation toggle) | 2026-07-09 | Awaiting PM + ui-ux discussion. Design-first, implementation trivial per spot. |
@@ -174,7 +174,7 @@ Impact = retention/learning outcomes/revenue/reach. Risk = scope, unknowns, exte
 
 ### C. Recommended priority (combined queue)
 
-**P0, this week, mostly human-side:** finish Google Play submission (5.1-5.8). Everything else in this backlog compounds only after the app is discoverable. Reconcile the "no gamification pressure" listing copy at step 5.4. Code-side involvement: fingerprint swap at 5.5.
+**P0, mostly human-side, now spans >=2 weeks not "this week":** finish Google Play submission (5.1-5.8). The 14-day closed-testing gate (step 5.6b, new as of 2026-07-23) means the earliest possible production submission is ~2 weeks out even with testers recruited immediately -- recruiting >=12 opted-in testers is the critical-path task, start it as soon as internal testing (5.3) and store setup (5.4/5.6) are done. Everything else in this backlog compounds only after the app is discoverable. Reconcile the "no gamification pressure" listing copy at step 5.4. Code-side involvement: fingerprint swap at 5.5.
 
 **P1, quick wins, no blockers, do in any order alongside P0:**
 1. Known-word counter (oldest unshipped "Do now" item, trivially small)
