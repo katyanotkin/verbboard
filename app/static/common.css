@@ -293,6 +293,10 @@ body {
 
 /* ===== Shared page nav row ===== */
 
+/* If a page puts a variable-length <h1> (not a compact Back pill) on the left of
+   this row, it can overflow/crowd the right side at narrow widths -- see the
+   flex-wrap + gap + min-width:0 pattern in feedback.css's .card-nav rule before
+   reinventing this. */
 .topbar-nav {
   display: flex;
   align-items: center;
