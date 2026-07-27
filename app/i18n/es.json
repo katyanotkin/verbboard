@@ -96,7 +96,7 @@
   "feedback.poll_yes": "Sí",
   "feedback.poll_no": "No",
   "feedback.poll_no_pref": "Sin preferencia",
-  "feedback.comment_placeholder": "¿Qué fue confuso, incorrecto o faltante?",
+  "feedback.comment_placeholder": "¿Qué fue confuso, incorrecto o faltante, como un idioma que te gustaría añadir?",
   "feedback.submit_button": "Enviar",
   "feedback.success": "Gracias — comentario recibido.",
   "feedback.error_empty": "Por favor escribe un comentario o responde Sí/No.",

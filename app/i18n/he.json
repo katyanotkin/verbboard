@@ -96,7 +96,7 @@
   "feedback.poll_yes": "כן",
   "feedback.poll_no": "לא",
   "feedback.poll_no_pref": "אין העדפה",
-  "feedback.comment_placeholder": "מה היה מבלבל, שגוי, או חסר?",
+  "feedback.comment_placeholder": "מה היה מבלבל, שגוי, או חסר, כמו שפה שהיית רוצה שנוסיף?",
   "feedback.submit_button": "שלח",
   "feedback.success": "תודה — המשוב התקבל.",
   "feedback.error_empty": "אנא כתוב הערה או ענה כן/לא.",

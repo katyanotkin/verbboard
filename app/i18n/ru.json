@@ -96,7 +96,7 @@
   "feedback.poll_yes": "Да",
   "feedback.poll_no": "Нет",
   "feedback.poll_no_pref": "Без разницы",
-  "feedback.comment_placeholder": "Что было непонятно, неправильно или отсутствует?",
+  "feedback.comment_placeholder": "Что было непонятно, неправильно или отсутствует, например, какой язык вы бы хотели добавить?",
   "feedback.submit_button": "Отправить",
   "feedback.success": "Спасибо — отзыв получен.",
   "feedback.error_empty": "Пожалуйста, напишите комментарий или ответьте Да/Нет.",
