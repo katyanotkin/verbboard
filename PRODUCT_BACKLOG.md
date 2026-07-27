@@ -347,14 +347,17 @@ Raised during Google Play submission prep (PWABuilder report-card review). Owner
 
 ## 2026-07-27 session -- small UI fix + flagged issue
 
+### Correction: "Known-word counter" (2026-07-02 #5) was already shipped -- not a real backlog item
+
+Turns out this has existed since 2026-05-18 (commit touching `progress-star`), predating the 2026-07-02 session that (re-)requested it -- an oversight in that session, never caught until re-scoping it today. The verbs page already shows known-count / total via a live progress bar: `.progress-star ★` + `.progress-count` / `.progress-total` + `.progress-fill` in `app/templates/verbs.html` (`.vb-progress-static` block, ~line 148-160), kept live by `app/static/verbs_filters.js`'s `updateProgress` (wired from `app/static/verbs_page.js`). No work needed. Removed from the "P1 quick wins" queue; every prioritization table above that still lists it as open/unbuilt is stale on this one point.
+
 ### Feedback page poll question spacing -- SHIPPED 2026-07-27
 `.question-title` (the poll question, e.g. "What would you like to see next?") had zero CSS anywhere, so it sat flush against the answer pills below it. Fixed in `app/static/feedback.css`: `margin-bottom: 10px`, `font-weight: 600`, `font-size: 0.94rem`, `color: var(--text-body)` -- matches the label-above-pills spacing/weight convention used elsewhere (`.search-row-header` in `common.css`). Verified via Playwright screenshot at desktop + 375px mobile, LTR and Hebrew RTL.
 
-### Feedback page mobile header crowding -- FLAGGED, not fixed
-At 375px, the "Feedback" `<h1>` heading visually crowds the "Back" pill button in `.topbar-nav` on `/feedback` (they nearly touch). Pre-existing, unrelated to the poll-question fix above. Needs a ui-ux pass (likely a `.topbar-nav` gap/wrap adjustment, same family of fix as other topbar-crowding issues -- simulate at 375px across ES/RU/HE, not just EN, per the project's existing l10n-check convention).
+### Feedback page mobile header crowding -- SHIPPED 2026-07-27
+At 375px, the "Feedback" `<h1>` heading crowded the "Back" pill in `.topbar-nav` on `/feedback`. Root cause: feedback.html inverts the shared `.topbar-nav` pattern (heading on the left instead of a compact Back pill), and `.topbar-nav`'s `justify-content: space-between` had no `gap`/wrap to absorb overflow -- in ES this wasn't just crowding, it pushed the "Iniciar sesión" login pill off the right edge of the viewport entirely.
 
-- **Size:** small, visual-only
-- **Blocks:** nothing
+Fixed scoped to `app/static/feedback.css` (`.card-nav` rule, which only applies where `.topbar-nav` + `.card-nav` co-occur, i.e. feedback.html only): `flex-wrap: wrap` + `row-gap`/`column-gap` on `.card-nav`, `flex: 1 1 auto; min-width: 0` on the `h1` so it can shrink/wrap, `flex-shrink: 0` on `.topbar-nav-right` so Back/Login are never compressed off-screen again. `common.css` and `feedback.html` untouched -- `.topbar-nav` is shared by verbs/board/home and those pages' content is already compact on both sides, so the fix was deliberately scoped rather than changing the shared component. Verified via Playwright at 375px across EN/RU/ES/HE (RTL), plus regression-checked `/verbs`, `/`, `/learn` at 375px for pixel-identical output (no shared-component impact).
 
 ### New proposal: guaranteed repetition quota for seen-but-not-known verbs
 
@@ -367,3 +370,66 @@ Proposal: reserve ~25-30% of each session's slots for the seen-but-not-known sub
 - **Risk:** Low -- purely client-side session composition; existing pool/shuffle mechanism is reused, just partitioned before the shuffle
 - **Impact:** Medium-High -- a light-weight repetition lever for retention ahead of full spaced repetition (#4, which is scoped to Plus); directly answers the "seen it once, never came back to it" gap without new infra
 - **Open question before building:** exact quota (25% vs 30%, fixed vs range) and behavior when the seen-but-not-known pool is smaller than the quota (pad from elsewhere, same pattern `buildPool()` already uses for the known-verb padding case)
+
+#### Implementation scope (2026-07-27)
+
+Confirmed by re-reading `buildPool()`/`startPractice()`: `startPractice()` re-shuffles and slices whatever `buildPool()` returns down to `activePracticeSize` (`const shuffled = [...pool].sort(random); picked = shuffled.slice(0, size)`). That means a naive fix -- e.g. just concatenating a "reserved" quota into the pool array `buildPool()` returns today -- would NOT actually guarantee the quota survives: `startPractice()`'s own reshuffle+slice would still pick the final `size` items uniformly at random from the whole (typically much larger) pool, silently defeating the guarantee.
+
+**The actual fix has to make `buildPool()` selection-complete** -- i.e. when the quota path applies, it must return exactly `size` verbs already, not an oversized pool for `startPractice()` to sample from. Once `buildPool()` returns exactly `size` items, `startPractice()`'s existing reshuffle+slice(0, size) becomes a harmless no-op on the selection (still useful for randomizing display order) -- so `startPractice()` needs zero changes. All the work is inside `buildPool()`.
+
+```js
+// PracticeSessionSize is 3/6/9 only (core/progress/models.py PracticeSessionSize) --
+// a lookup table lands closer to the 25-30% target than a generic round(size * ratio)
+// (round() pushes all three sizes to ~33%; table below: 1/3=33%, 2/6=33%, 2/9=22%,
+// tune to taste -- open decision, not settled here).
+const REPEAT_QUOTA = { 3: 1, 6: 2, 9: 2 };
+
+function shuffle(arr) {
+  return [...arr].sort(function () { return Math.random() - 0.5; }); // matches startPractice's existing pattern
+}
+
+function buildPool(size) {
+  const knownSet = known();
+  const nonKnown = verbs.filter(v => !knownSet.has(v.id));
+
+  if (nonKnown.length < size) {
+    // Unchanged: not enough non-known verbs -- pad with known ones.
+    const knownVerbs = verbs.filter(v => knownSet.has(v.id));
+    return [...nonKnown, ...knownVerbs];
+  }
+
+  const seenSet = seen();
+  const seenNotKnown = nonKnown.filter(v => seenSet.has(v.id));
+  const quota = Math.min(seenNotKnown.length, REPEAT_QUOTA[size] || 0);
+
+  if (quota === 0) {
+    // Unchanged: no seen-not-known verbs to reserve, or size not in the table.
+    return nonKnown;
+  }
+
+  const reserved = shuffle(seenNotKnown).slice(0, quota);
+  const reservedIds = new Set(reserved.map(v => v.id));
+  const rest = shuffle(nonKnown.filter(v => !reservedIds.has(v.id))).slice(0, size - quota);
+
+  return [...reserved, ...rest]; // exactly `size` long -- startPractice's reshuffle+slice is now a no-op on selection
+}
+```
+
+- **Unaffected by this change:** the `nonKnown.length < size` pad-with-known branch, `needsMixIn()`'s "Start (includes known)" warning label, and every other size/quota=0 fallback -- all identical to current behavior, so no regression risk there.
+- **Test plan:** `buildPool()` is currently untested (no unit test file for `practice_loop.js` pool logic). Given the quota-selection logic is now a small pure function of `(verbs, knownSet, seenSet, size)`, consider extracting it so it can run through the same Node-harness pattern already used for `tests/test_streak_merge.py` (single subprocess, no browser) rather than requiring a full Playwright e2e test just to check a sampling ratio -- cases: quota fully satisfiable, quota larger than available seen-not-known pool (degrades to `Math.min`), quota=0 (empty seen-not-known pool), pad-with-known branch untouched.
+- **Still open before implementing:** confirm the `REPEAT_QUOTA` table values (1/2/2 above is a starting guess, not decided) and whether this ships free-tier or also gets swept into the Plus-only framing now applied to spaced repetition/streak-grace (see below) -- unlike streak-grace, this one has no existing free-tier behavior to protect, so there's no urgency forcing that call the way there was for streak-grace.
+
+### Streak grace/freeze (N2) -- rule DECIDED, scope moved to Plus, implementation HELD OFF
+
+Rule decided: **one free miss per streak** -- a single missed day never breaks the current streak (no matter how long it's been running); the grace resets (becomes available again) only when the streak itself resets to length 1. Simpler than a redeemable "freeze balance" (N2's original alternate framing); no separate resource to display or manage.
+
+**Scope: Plus-only, not free tier** (owner call, 2026-07-27) -- superseded the earlier framing of this as a plain P1 free-tier quick win.
+
+**Not implemented this session.** Blocked on a real prerequisite gap: no edition/feature-flag config exists anywhere in the codebase yet -- the "env-driven edition config" item in the Plus checklist (2026-07-12 session) is explicitly step 1, not started. Rather than invent a one-off flag shape for this single feature (which would likely mismatch whatever the real edition-config system ends up looking like), the owner chose to hold off entirely until Plus edition-config work actually starts.
+
+**Data-path audit already done (2026-07-27), preserved here so re-scoping is cheap when Plus work begins:**
+- `StreakRecord` needs a third field, `grace_used: bool`, alongside existing `last_day`/`len`
+- Server-side files touched: `core/progress/streak.py` (`merge_streak` gap-of-2 branch), `core/progress/progress_repository.py` (`_read_streak`, `save_practice_progress`), `core/progress/progress_service.py` (`record_practice_progress` param passthrough), `core/progress/models.py` (`PracticeProgress.streak_grace_used`), `app/routes/api_progress.py` (`PracticeProgressRequest` field, GET/POST streak dict shape)
+- Client-side files touched: `app/static/streak.js` (`bump`/`merge`/`displayLen`, plus a new `daysBetween` helper generalizing the existing `isNextDay`), `app/static/learn_practice.js` (POST body + serverStreak construction around line 222-260), `app/static/practice_loop.js` (`savePracticeBadgesToServer`/`syncPracticeBadgesFromServer` around line 108-193)
+- Test file: `tests/test_streak_merge.py` -- the JS/Python parity harness and its `_py_bump`/`_py_display_len` mirror functions need the grace branch added in lockstep with the real implementations, plus new dedicated grace-path cases (gap-of-2 with grace available vs. already used, reset behavior)
+- Decision NOT yet made: exact gating mechanism (single narrow settings flag vs. folding into whatever the real edition-config system becomes) -- revisit when Plus edition-config work starts
