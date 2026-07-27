@@ -342,3 +342,16 @@ Raised during Google Play submission prep (PWABuilder report-card review). Owner
 - **Not in Plus launch scope** -- Plus at launch stays as defined above (Italian/French + on-demand examples). Push is a candidate for *after* Plus launch, not part of it.
 - Natural trigger would be streak-reminder nudges ("your streak is about to break"), which directly collides with the unreconciled "no gamification pressure" line in the free app's store listing copy (flagged 2026-07-10, still open) -- if push moves forward, that copy tension needs resolving first, and the free/Plus copy split may need to diverge (free stays low-pressure, Plus opts into push).
 - Real implementation cost when it's picked up: VAPID keys, a push-subscription store (Firestore, per-uid), a server-side trigger to decide when to send (streak-expiry check), and a permission-prompt UX -- not a manifest-only change.
+
+---
+
+## 2026-07-27 session -- small UI fix + flagged issue
+
+### Feedback page poll question spacing -- SHIPPED 2026-07-27
+`.question-title` (the poll question, e.g. "What would you like to see next?") had zero CSS anywhere, so it sat flush against the answer pills below it. Fixed in `app/static/feedback.css`: `margin-bottom: 10px`, `font-weight: 600`, `font-size: 0.94rem`, `color: var(--text-body)` -- matches the label-above-pills spacing/weight convention used elsewhere (`.search-row-header` in `common.css`). Verified via Playwright screenshot at desktop + 375px mobile, LTR and Hebrew RTL.
+
+### Feedback page mobile header crowding -- FLAGGED, not fixed
+At 375px, the "Feedback" `<h1>` heading visually crowds the "Back" pill button in `.topbar-nav` on `/feedback` (they nearly touch). Pre-existing, unrelated to the poll-question fix above. Needs a ui-ux pass (likely a `.topbar-nav` gap/wrap adjustment, same family of fix as other topbar-crowding issues -- simulate at 375px across ES/RU/HE, not just EN, per the project's existing l10n-check convention).
+
+- **Size:** small, visual-only
+- **Blocks:** nothing

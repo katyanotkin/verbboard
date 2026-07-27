@@ -34,6 +34,13 @@ textarea {
   background: #f8fafc;
 }
 
+.question-title {
+  margin-bottom: 10px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--text-body);
+}
+
 .choice-row {
   display: flex;
   gap: 10px;
