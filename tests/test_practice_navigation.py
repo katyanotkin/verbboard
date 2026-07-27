@@ -1,7 +1,7 @@
 """Tests covering the recent UI changes.
 
 - Home page: dual CTAs (.browse-main-link and .browse-practice-btn)
-- Verbs page: .practice-nav-chip present/absent based on PRACTICE_LOOP_ENABLED
+- Verbs page: .practice-nav-chip present (practice loop is unconditionally enabled)
 - Verbs page: search submit button is NOT disabled on page load
 - Verbs page: placeholder uses home.search_placeholder, not verbs.search_placeholder
 - i18n: verbs.search_placeholder key is absent from all locale files

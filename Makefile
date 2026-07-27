@@ -22,7 +22,7 @@ GCP_RUNTIME_SERVICE_ACCOUNT?=$(shell gcloud projects describe $(GCP_PROJECT) --f
 IMAGE_TAG=$(shell git rev-parse --short HEAD)
 GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
-COMMON_ENV_VARS=GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),PRACTICE_LOOP_ENABLED=true
+COMMON_ENV_VARS=GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT)
 STAGE_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config-stage:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest,ANALYTICS_EXCLUDED_EMAILS=verbboard-analytics-excluded-emails:latest
 PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest,ANALYTICS_EXCLUDED_EMAILS=verbboard-analytics-excluded-emails:latest
 
@@ -214,7 +214,7 @@ gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branc
 		--platform=managed \
 		--allow-unauthenticated \
 		--project=$(GCP_PROJECT) \
-		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE) \
+		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE) \
 		--set-secrets=$(STAGE_SECRETS)
 	$(MAKE) firebase-deploy-hosting
 
@@ -232,7 +232,7 @@ gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-pro
 		--image $(STAGE_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
+		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,EDITION=free,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
                 --set-secrets $(PROD_SECRETS) \
 		--allow-unauthenticated
 	@echo "Waiting 10s for prod instance to activate (Cloud Run starts at 0 instances)..."

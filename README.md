@@ -119,6 +119,22 @@ Visual indicators:
 
 ---
 
+## Editions
+
+One Docker image, config-only difference between free and Plus -- no code fork, no second deployment stage. Stage runs `EDITION=plus` to exercise both code paths; prod runs `EDITION=free` explicitly.
+
+- `EDITION` -- `free` (default) or `plus`
+- `STUDY_LANGUAGES` -- CSV of language codes; defaults to today's four (`en,ru,he,es`) on free, adds Italian/French on Plus
+- `APP_NAME` / `APP_SHORT_NAME` -- default `VerbBoard`
+- `ANDROID_PACKAGE_NAME` / `ANDROID_CERT_FINGERPRINTS` -- drive `/.well-known/assetlinks.json`, so a future Plus Android listing can serve its own package + signing fingerprint from the same codebase
+- `ON_DEMAND_EXAMPLES_ENABLED` -- defaults to `edition == "plus"`, independently overridable as a cost kill switch
+
+`core/editions.py` filters the language-plugin registry (`core/registry.py`, unchanged, edition-agnostic) down to what the active edition allows via `active_study_plugins()` / `is_study_language()`. With zero env vars set, this is a no-op: free-edition behavior is unchanged.
+
+No Plus features are live yet -- this is infrastructure only. Italian/French study languages and on-demand example generation need separate follow-up work, including a per-user entitlement check that doesn't exist yet.
+
+---
+
 ## Demand-driven generation pipeline
 
 Two tracks depending on language.

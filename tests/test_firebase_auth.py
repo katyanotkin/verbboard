@@ -40,6 +40,13 @@ def _mock_settings(environment: str, allow_local_dev_auth: bool = True) -> Setti
         verbs_display_batch=20,
         gcp_region="us-east1",
         analytics_excluded_emails=(),
+        edition="free",
+        study_languages=("en", "ru", "he", "es"),
+        app_name="VerbBoard",
+        app_short_name="VerbBoard",
+        android_package_name="com.verbboard.app",
+        android_cert_fingerprints=("AA",),
+        on_demand_examples_enabled=False,
     )
 
 

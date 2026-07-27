@@ -44,3 +44,7 @@ signing-key-info.txt
 *.aab
 *.apk
 verrbboard_pwa.zip
+
+# Certificates -- never commit
+*.der
+certificates.zip

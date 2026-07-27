@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from datetime import datetime, timezone
 from urllib.parse import quote
 
@@ -10,8 +9,8 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
+from core.editions import active_study_plugins, resolve_study_language
 from core.i18n import get_strings, resolve_ui_language
-from core.registry import all_plugins
 from core.settings import load_settings
 from core.storage.firestore_db import get_db
 from core.storage.verb_repository import list_verbs_recent
@@ -20,15 +19,6 @@ from core.verb_loader import load_entries_for_language
 log = logging.getLogger(__name__)
 
 RECENT_VERBS_LIMIT = 8
-
-PRACTICE_LOOP_ENABLED = os.getenv(
-    "PRACTICE_LOOP_ENABLED",
-    "false",
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -48,12 +38,9 @@ def verb_browser(
 ) -> HTMLResponse:
     settings = load_settings()
 
-    plugins = all_plugins()
+    plugins = active_study_plugins(settings)
 
-    selected_language = language or "he"
-
-    if selected_language not in plugins:
-        selected_language = "he"
+    selected_language = resolve_study_language(language, plugins)
 
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
@@ -94,22 +81,21 @@ def verb_browser(
     if "verbs.count_few" in ui:
         ui_strings["verbs.count_few"] = ui["verbs.count_few"]
 
-    if PRACTICE_LOOP_ENABLED:
-        ui_strings.update(
-            {
-                "practice.label": ui["practice.label"],
-                "practice.start": ui["practice.start"],
-                "practice.start_mixed": ui["practice.start_mixed"],
-                "practice.in_progress": ui["practice.in_progress"],
-                "practice.continue": ui["practice.continue"],
-                "practice.abandon": ui["practice.abandon"],
-                "practice.wrap_up": ui["practice.wrap_up"],
-                "practice.learned_prompt": ui["practice.learned_prompt"],
-                "practice.done": ui["practice.done"],
-                "practice.size_unit": ui["practice.size_unit"],
-                "practice.listens_unit": ui["practice.listens_unit"],
-            }
-        )
+    ui_strings.update(
+        {
+            "practice.label": ui["practice.label"],
+            "practice.start": ui["practice.start"],
+            "practice.start_mixed": ui["practice.start_mixed"],
+            "practice.in_progress": ui["practice.in_progress"],
+            "practice.continue": ui["practice.continue"],
+            "practice.abandon": ui["practice.abandon"],
+            "practice.wrap_up": ui["practice.wrap_up"],
+            "practice.learned_prompt": ui["practice.learned_prompt"],
+            "practice.done": ui["practice.done"],
+            "practice.size_unit": ui["practice.size_unit"],
+            "practice.listens_unit": ui["practice.listens_unit"],
+        }
+    )
 
     raw_search = (search or "").strip()
     notice_text = raw_search if str(not_available) == "1" else None
@@ -138,7 +124,6 @@ def verb_browser(
             "garbage_query": garbage_query,
             "not_a_verb_query": not_a_verb_query,
             "search_mode": search_mode or "native",
-            "practice_loop_enabled": PRACTICE_LOOP_ENABLED,
             "badge_compact_threshold": settings.badge_compact_threshold,
             "total_verb_count": total_verb_count,
             "verbs_display_batch": settings.verbs_display_batch,

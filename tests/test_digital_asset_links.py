@@ -45,3 +45,20 @@ def test_assetlinks_target_has_fingerprints_list(client: TestClient) -> None:
     fps = data[0]["target"]["sha256_cert_fingerprints"]
     assert isinstance(fps, list)
     assert len(fps) >= 1
+
+
+# ── edition config overrides ──────────────────────────────────────────────────
+
+
+def test_assetlinks_reflects_android_package_and_fingerprint_overrides(client: TestClient, monkeypatch) -> None:
+    """A Plus-edition deployment overriding ANDROID_PACKAGE_NAME/ANDROID_CERT_FINGERPRINTS
+    must be reflected in the served assetlinks.json (settings are read per-request,
+    not cached at startup)."""
+    monkeypatch.setenv("ANDROID_PACKAGE_NAME", "com.example.plus")
+    monkeypatch.setenv("ANDROID_CERT_FINGERPRINTS", "AA:BB:CC,DD:EE:FF")
+
+    data = client.get("/.well-known/assetlinks.json").json()
+    target = data[0]["target"]
+
+    assert target["package_name"] == "com.example.plus"
+    assert target["sha256_cert_fingerprints"] == ["AA:BB:CC", "DD:EE:FF"]

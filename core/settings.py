@@ -8,11 +8,20 @@ from functools import lru_cache
 from dotenv import load_dotenv
 from google.cloud import secretmanager
 
+from core.languages.config import FREE_STUDY_LANGUAGES, default_study_languages
+
 load_dotenv(override=True)
 
 _ADMIN_SECRET_NAME = "verbboard-admin-secret"
 _ANTHROPIC_SECRET_NAME = "verbboard-anthropic-api-key"
 _ANALYTICS_EXCLUDED_EMAILS_SECRET_NAME = "verbboard-analytics-excluded-emails"
+
+# Real Play App Signing key certificate (not the local upload-key keystore) --
+# copied from Play Console > Setup > App integrity > App signing key certificate
+# after the first AAB upload. Free-edition default; Plus overrides via env.
+_DEFAULT_ANDROID_CERT_FINGERPRINT = (
+    "3A:51:9F:C0:80:6A:91:31:16:71:4E:98:49:F8:B9:C2:F9:09:21:CE:06:E4:51:C7:2D:81:B5:40:42:85:F4:9C"
+)
 
 
 @dataclass(frozen=True)
@@ -35,6 +44,13 @@ class Settings:
     verbs_display_batch: int
     gcp_region: str
     analytics_excluded_emails: tuple[str, ...]
+    edition: str
+    study_languages: tuple[str, ...]
+    app_name: str
+    app_short_name: str
+    android_package_name: str
+    android_cert_fingerprints: tuple[str, ...]
+    on_demand_examples_enabled: bool
 
 
 def _resolve_environment() -> str:
@@ -99,6 +115,17 @@ def _parse_excluded_emails(raw: str) -> tuple[str, ...]:
     return tuple(sorted({email.strip().lower() for email in raw.split(",") if email.strip()}))
 
 
+def _env_flag(name: str, default: bool) -> bool:
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:
+        return default
+    return raw in {"1", "true", "yes", "on"}
+
+
+def _parse_csv_tuple(raw: str) -> tuple[str, ...]:
+    return tuple(item.strip() for item in raw.split(",") if item.strip())
+
+
 @lru_cache(maxsize=1)
 def _load_analytics_excluded_emails() -> tuple[str, ...]:
     """Comma-separated allowlist of own/test emails to drop from analytics counts.
@@ -125,6 +152,9 @@ def _load_analytics_excluded_emails() -> tuple[str, ...]:
 
 def load_settings() -> Settings:
     environment = _resolve_environment()
+    edition = os.getenv("EDITION", "free").strip().lower() or "free"
+    study_languages_raw = os.getenv("STUDY_LANGUAGES", "").strip().lower()
+    android_fingerprints_raw = os.getenv("ANDROID_CERT_FINGERPRINTS", "").strip()
     settings = Settings(
         environment=environment,
         host=os.getenv("HOST", "0.0.0.0"),
@@ -147,6 +177,19 @@ def load_settings() -> Settings:
         verbs_display_batch=int(os.getenv("VERBS_DISPLAY_BATCH", "20")),
         gcp_region=os.getenv("GCP_REGION", "us-east1"),
         analytics_excluded_emails=_load_analytics_excluded_emails(),
+        edition=edition,
+        study_languages=(
+            _parse_csv_tuple(study_languages_raw) if study_languages_raw else default_study_languages(edition)
+        ),
+        app_name=os.getenv("APP_NAME", "VerbBoard"),
+        app_short_name=os.getenv("APP_SHORT_NAME", "VerbBoard"),
+        android_package_name=os.getenv("ANDROID_PACKAGE_NAME", "com.verbboard.app"),
+        android_cert_fingerprints=(
+            _parse_csv_tuple(android_fingerprints_raw)
+            if android_fingerprints_raw
+            else (_DEFAULT_ANDROID_CERT_FINGERPRINT,)
+        ),
+        on_demand_examples_enabled=_env_flag("ON_DEMAND_EXAMPLES_ENABLED", default=(edition == "plus")),
     )
     _validate(settings)
     return settings
@@ -182,3 +225,7 @@ def _validate(settings: Settings) -> None:
             f"VERBS_PAGE_LIMIT ({settings.verbs_page_limit}) must be greater than "
             f"VERBS_DISPLAY_BATCH ({settings.verbs_display_batch})"
         )
+    if settings.edition not in {"free", "plus"}:
+        raise ValueError(f"Unsupported EDITION={settings.edition}. Expected free|plus")
+    if settings.edition == "free" and not set(settings.study_languages) <= set(FREE_STUDY_LANGUAGES):
+        raise ValueError("Free edition must not enable Plus-only study languages")

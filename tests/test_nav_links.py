@@ -6,6 +6,7 @@ feedback POST redirect-back flow.
 
 from __future__ import annotations
 
+import re
 from urllib.parse import quote
 
 from fastapi.testclient import TestClient
@@ -29,6 +30,31 @@ def test_home_feedback_link_carries_page_and_language(client: TestClient) -> Non
     html = client.get("/?language=en").text
     assert "page=home" in html
     assert "language=en" in html
+
+
+# ── edition config: home language picker ────────────────────────────────────
+
+
+def _language_picker_options(html: str) -> list[str]:
+    start = html.index('id="language-select"')
+    end = html.index("</select>", start)
+    return re.findall(r'<option value="(\w+)"', html[start:end])
+
+
+def test_home_language_picker_free_edition_baseline(client: TestClient) -> None:
+    options = _language_picker_options(client.get("/?language=en").text)
+    assert options == ["en", "es", "he", "ru"]
+
+
+def test_home_language_picker_unaffected_by_edition_plus(client: TestClient, monkeypatch) -> None:
+    """EDITION=plus must be a visible no-op today: the it/fr plugins don't exist
+    yet, so the language picker must render the exact same options as free."""
+    baseline_options = _language_picker_options(client.get("/?language=en").text)
+
+    monkeypatch.setenv("EDITION", "plus")
+    plus_options = _language_picker_options(client.get("/?language=en").text)
+
+    assert plus_options == baseline_options
 
 
 # ── verbs ──────────────────────────────────────────────────────────────────

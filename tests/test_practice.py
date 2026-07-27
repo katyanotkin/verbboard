@@ -53,7 +53,6 @@ def _extract_window_ui(html: str) -> dict:
 
 
 def test_verbs_page_has_practice_panel_element(client: TestClient, monkeypatch) -> None:
-    monkeypatch.setattr("app.routes.verbs.PRACTICE_LOOP_ENABLED", True)
     monkeypatch.setattr(
         "app.routes.verbs.load_entries_for_language",
         lambda **kw: _stub_entries(),
@@ -63,7 +62,6 @@ def test_verbs_page_has_practice_panel_element(client: TestClient, monkeypatch) 
 
 
 def test_verbs_page_ui_includes_practice_strings(client: TestClient, monkeypatch) -> None:
-    monkeypatch.setattr("app.routes.verbs.PRACTICE_LOOP_ENABLED", True)
     monkeypatch.setattr(
         "app.routes.verbs.load_entries_for_language",
         lambda **kw: _stub_entries(),
@@ -97,7 +95,6 @@ def test_verbs_page_ui_includes_practice_strings(client: TestClient, monkeypatch
 @pytest.mark.parametrize("ui_lang", ["en", "ru", "he", "es"])
 def test_verbs_page_window_ui_includes_size_unit(client: TestClient, monkeypatch, ui_lang: str) -> None:
     """practice.size_unit must be present and non-empty in window.UI for every supported UI language."""
-    monkeypatch.setattr("app.routes.verbs.PRACTICE_LOOP_ENABLED", True)
     monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [])
 
     html = client.get(f"/verbs?language=en&ui_language={ui_lang}").text
@@ -113,7 +110,6 @@ def test_verbs_page_window_ui_includes_size_unit(client: TestClient, monkeypatch
 @pytest.mark.parametrize("ui_lang", ["en", "ru", "he", "es"])
 def test_verbs_page_window_ui_includes_listens_unit(client: TestClient, monkeypatch, ui_lang: str) -> None:
     """practice.listens_unit must be present and non-empty in window.UI for every supported UI language."""
-    monkeypatch.setattr("app.routes.verbs.PRACTICE_LOOP_ENABLED", True)
     monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [])
 
     html = client.get(f"/verbs?language=en&ui_language={ui_lang}").text
@@ -136,7 +132,6 @@ def test_verbs_page_unit_strings_match_locale_file(client: TestClient, monkeypat
     differ; for English the locale file value must still be served (not a JS
     default that happened to match).
     """
-    monkeypatch.setattr("app.routes.verbs.PRACTICE_LOOP_ENABLED", True)
     monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [])
 
     expected = get_strings(ui_lang)

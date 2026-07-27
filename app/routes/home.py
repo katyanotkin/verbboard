@@ -11,9 +11,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from core.admin_logging import log_missing_verb_search
+from core.editions import active_study_plugins, resolve_study_language
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
-from core.registry import all_plugins
 from core.safe_return import safe_return_to
 from core.search_utils import find_best_entry, tokenize_text
 from core.settings import load_settings
@@ -231,17 +231,15 @@ def home(
     garbage: int | None = Query(None),
     not_a_verb: int | None = Query(None),
 ) -> HTMLResponse:
-    plugins = all_plugins()
-
     settings = load_settings()
+
+    plugins = active_study_plugins(settings)
 
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
     html_dir = "rtl" if LANGUAGE.get(ui_lang, LANGUAGE["en"]).rtl else "ltr"
 
-    selected_language = language or "he"
-    if selected_language not in plugins:
-        selected_language = "he"
+    selected_language = resolve_study_language(language, plugins)
 
     raw_search_value = search or ""
     search_value = "" if str(not_available) == "1" else raw_search_value

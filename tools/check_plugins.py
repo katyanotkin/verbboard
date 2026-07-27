@@ -7,10 +7,10 @@ import core.languages.en.plugin  # noqa: F401
 import core.languages.es.plugin  # noqa: F401
 import core.languages.he.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
-from core.languages.config import LANGUAGE
+from core.languages.config import FREE_STUDY_LANGUAGES
 from core.registry import all_plugins
 
-EXPECTED_LANGUAGES = set(LANGUAGE.keys())
+EXPECTED_LANGUAGES = set(FREE_STUDY_LANGUAGES)
 
 
 def main() -> None:
