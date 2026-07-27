@@ -355,3 +355,15 @@ At 375px, the "Feedback" `<h1>` heading visually crowds the "Back" pill button i
 
 - **Size:** small, visual-only
 - **Blocks:** nothing
+
+### New proposal: guaranteed repetition quota for seen-but-not-known verbs
+
+Practice session pool selection (`buildPool()` in `app/static/practice_loop.js`) currently pulls all non-known verbs (seen and never-seen mixed together undifferentiated), shuffles, and slices to session size (`startPractice()`). There's no guarantee a session actually re-surfaces verbs the user has already been exposed to but hasn't marked known -- a session could easily be 100% brand-new verbs, or 100% previously-seen ones, purely by chance.
+
+Proposal: reserve ~25-30% of each session's slots for the seen-but-not-known subset (`seen()` minus `known()`, both already-existing localStorage sets -- see `progress.js`), filling the remainder from the rest of the non-known pool as today.
+
+- **Depends on:** nothing new -- `seen()`/`known()` sets already exist client-side (`storage.readSet`); this is a sampling-ratio change inside the existing pool-building logic, not a new data model
+- **Size:** small -- contained to `buildPool()`/`startPractice()` in one file; no server or storage-schema change
+- **Risk:** Low -- purely client-side session composition; existing pool/shuffle mechanism is reused, just partitioned before the shuffle
+- **Impact:** Medium-High -- a light-weight repetition lever for retention ahead of full spaced repetition (#4, which is scoped to Plus); directly answers the "seen it once, never came back to it" gap without new infra
+- **Open question before building:** exact quota (25% vs 30%, fixed vs range) and behavior when the seen-but-not-known pool is smaller than the quota (pad from elsewhere, same pattern `buildPool()` already uses for the known-verb padding case)
