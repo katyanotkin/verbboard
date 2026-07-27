@@ -9,7 +9,7 @@ order-preservation guarantee.
 
 from __future__ import annotations
 
-from core.editions import active_study_plugins, is_study_language, resolve_study_language
+from core.editions import active_study_plugins, resolve_study_language
 from core.languages.config import FREE_STUDY_LANGUAGES, PLUS_EXTRA_STUDY_LANGUAGES, default_study_languages
 from core.registry import all_plugins
 from core.settings import load_settings
@@ -39,16 +39,13 @@ def test_active_study_plugins_preserves_registry_order_not_study_languages_order
 
 
 # ── is_study_language ─────────────────────────────────────────────────────────
-
-
-def test_is_study_language_true_for_registered_free_language():
-    settings = load_settings()
-    assert is_study_language("en", settings) is True
-
-
-def test_is_study_language_false_for_unregistered_plus_language():
-    settings = load_settings()
-    assert is_study_language("it", settings) is False
+#
+# Deliberately not unit-tested here: is_study_language() is a one-line
+# delegation (`language in active_study_plugins(settings)`) with no branching
+# of its own, so its behavior is fully determined by the active_study_plugins
+# tests above. It's also exercised end-to-end via the real caller in
+# tests/test_preferences_api.py (test_post_preferences_rejects_invalid_learning_language,
+# test_post_preferences_accepts_all_valid_learning_languages).
 
 
 # ── resolve_study_language ────────────────────────────────────────────────────
