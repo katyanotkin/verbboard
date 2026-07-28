@@ -40,6 +40,29 @@ def test_learn_board_has_feedback_link(mock_verb: VerbEntry) -> None:
     assert "en_go" in html
 
 
+def test_jump_to_example_button_renders_by_default(mock_verb: VerbEntry) -> None:
+    """Default (no explicit flag passed) must match today's shipped behavior --
+    the kill switch defaults on, so this is a no-op guard, not a new gate."""
+    from core.render import render_board_html
+
+    html = render_board_html(_make_board(mock_verb), return_to="/?language=en")
+    assert "jump-example-btn" in html
+
+
+def test_jump_to_example_button_hidden_when_disabled(mock_verb: VerbEntry) -> None:
+    from core.render import render_board_html
+
+    html = render_board_html(
+        _make_board(mock_verb),
+        return_to="/?language=en",
+        jump_to_example_enabled=False,
+    )
+    assert "jump-example-btn" not in html
+    # Play button and everything else must be unaffected -- only the jump
+    # button itself is gated, not audio or the rest of the row.
+    assert "audio" in html.lower()
+
+
 def test_learn_board_feedback_link_url_encodes_learn_href(mock_verb: VerbEntry) -> None:
     """Feedback href must encode the learn page URL (not the back-button destination).
 

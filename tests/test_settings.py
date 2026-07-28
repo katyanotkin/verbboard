@@ -48,6 +48,7 @@ def test_zero_env_edition_baseline():
     assert len(settings.android_cert_fingerprints) == 1
     assert settings.on_demand_examples_enabled is False
     assert settings.streak_grace_enabled is False
+    assert settings.jump_to_example_enabled is True
     assert settings.app_name == "VerbBoard"
     assert settings.app_short_name == "VerbBoard"
 
@@ -79,6 +80,19 @@ def test_streak_grace_explicit_override_beats_edition_default(monkeypatch):
     monkeypatch.setenv("STREAK_GRACE_ENABLED", "false")
     settings = load_settings()
     assert settings.streak_grace_enabled is False
+
+
+def test_jump_to_example_stays_enabled_under_plus_edition(monkeypatch):
+    """Not edition-gated -- a kill switch, on by default in every edition."""
+    monkeypatch.setenv("EDITION", "plus")
+    settings = load_settings()
+    assert settings.jump_to_example_enabled is True
+
+
+def test_jump_to_example_explicit_override_disables(monkeypatch):
+    monkeypatch.setenv("JUMP_TO_EXAMPLE_ENABLED", "false")
+    settings = load_settings()
+    assert settings.jump_to_example_enabled is False
 
 
 def test_unsupported_edition_raises(monkeypatch):

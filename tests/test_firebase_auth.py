@@ -48,6 +48,7 @@ def _mock_settings(environment: str, allow_local_dev_auth: bool = True) -> Setti
         android_cert_fingerprints=("AA",),
         on_demand_examples_enabled=False,
         streak_grace_enabled=False,
+        jump_to_example_enabled=True,
     )
 
 

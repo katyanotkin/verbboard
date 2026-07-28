@@ -31,6 +31,7 @@ def render_board_html(
     translated_from: str | None = None,
     source_lang: str | None = None,
     streak_grace_enabled: bool = False,
+    jump_to_example_enabled: bool = True,
 ) -> str:
     ui = ui_strings or {}
     html_dir = "rtl" if ui_lang == "he" else "ltr"
@@ -83,7 +84,7 @@ def render_board_html(
                     f"onclick=\"const audio=document.getElementById('{audio_id}'); "
                     f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
                 )
-                if has_examples and is_conjugated_form:
+                if jump_to_example_enabled and has_examples and is_conjugated_form:
                     audio_html += (
                         f"<button type='button' class='jump-example-btn' title='{jump_title}' "
                         f'onclick="window.vbJumpToExample && vbJumpToExample(this)">🔎</button>'

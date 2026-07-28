@@ -52,6 +52,7 @@ class Settings:
     android_cert_fingerprints: tuple[str, ...]
     on_demand_examples_enabled: bool
     streak_grace_enabled: bool
+    jump_to_example_enabled: bool
 
 
 def _resolve_environment() -> str:
@@ -192,6 +193,12 @@ def load_settings() -> Settings:
         ),
         on_demand_examples_enabled=_env_flag("ON_DEMAND_EXAMPLES_ENABLED", default=(edition == "plus")),
         streak_grace_enabled=_env_flag("STREAK_GRACE_ENABLED", default=(edition == "plus")),
+        # Kill switch, not an edition gate -- defaults on (today's behavior).
+        # Matching correctness is under audit (superficial substring match,
+        # untested against multi-word compound forms like Italian's passato
+        # prossimo); this lets it be disabled without a code change/redeploy
+        # if the audit finds it materially broken for a shipped language.
+        jump_to_example_enabled=_env_flag("JUMP_TO_EXAMPLE_ENABLED", default=True),
     )
     _validate(settings)
     return settings

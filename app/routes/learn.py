@@ -188,6 +188,7 @@ async def learn(
         translated_from=translated_from,
         source_lang=source_lang,
         streak_grace_enabled=settings.streak_grace_enabled,
+        jump_to_example_enabled=settings.jump_to_example_enabled,
     )
 
     return HTMLResponse(html)
