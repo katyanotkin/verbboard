@@ -7,9 +7,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from core.admin_auth import (
-    ADMIN_SESSION_COOKIE,
-    ADMIN_SESSION_MAX_AGE_SECONDS,
-    create_admin_session_token,
+    update_session_claims,
     verify_admin_password,
 )
 from core.settings import load_settings
@@ -32,11 +30,10 @@ async def admin_login_page(request: Request, error: str = "") -> HTMLResponse:
 
 
 @router.post("/login")
-async def admin_login(password: str = Form(...)) -> HTMLResponse:
+async def admin_login(request: Request, password: str = Form(...)) -> HTMLResponse:
     if not verify_admin_password(password):
         return RedirectResponse(url=f"{ADMIN_PREFIX}/login?error=1", status_code=303)
 
-    token = create_admin_session_token()
     response = HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
@@ -46,15 +43,10 @@ async def admin_login(password: str = Form(...)) -> HTMLResponse:
         headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
         status_code=200,
     )
-    response.set_cookie(
-        key=ADMIN_SESSION_COOKIE,
-        value=token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=ADMIN_SESSION_MAX_AGE_SECONDS,
-        path="/",
-    )
+    # Merge, not clobber: if the browser already carries a "uid" claim (site
+    # owner signed in as a regular user, then logs into /admin), it must
+    # survive this write.
+    update_session_claims(request, response, role="admin")
     return response
 
 
@@ -72,7 +64,7 @@ async def admin_login_callback() -> HTMLResponse:
 
 
 @router.post("/logout")
-async def admin_logout() -> HTMLResponse:
+async def admin_logout(request: Request) -> HTMLResponse:
     response = HTMLResponse(
         content=(
             "<!doctype html><html><head></head><body><script>"
@@ -82,5 +74,8 @@ async def admin_logout() -> HTMLResponse:
         headers={"Cache-Control": "no-store"},
         status_code=200,
     )
-    response.delete_cookie(key=ADMIN_SESSION_COOKIE, path="/", secure=True, samesite="lax")
+    # Remove only the "role" claim -- a "uid" claim (regular user session),
+    # if present, must survive an admin logout. write_session_claims deletes
+    # the cookie outright only when the resulting claims dict is empty.
+    update_session_claims(request, response, role=None)
     return response

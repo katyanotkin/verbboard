@@ -9,7 +9,9 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
+from core.admin_auth import get_session_uid
 from core.editions import active_study_plugins, resolve_study_language
+from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.settings import load_settings
 from core.storage.firestore_db import get_db
@@ -35,6 +37,7 @@ def verb_browser(
     generating: int | None = Query(None),
     garbage: int | None = Query(None),
     not_a_verb: int | None = Query(None),
+    plus_required: int | None = Query(None),
 ) -> HTMLResponse:
     settings = load_settings()
 
@@ -47,24 +50,41 @@ def verb_browser(
 
     html_dir = "rtl" if ui_lang == "he" else "ltr"
 
-    sort_az_label = get_strings(selected_language).get(
-        "verbs.sort_az",
-        "A → Z",
-    )
+    # Entitlement gate: the language picker itself is NOT filtered by
+    # entitlement (Plus-only languages stay visible so there's something to
+    # upsell -- see core/editions.py's active_study_plugins, deliberately
+    # untouched here). But if the *selected* language requires Plus and this
+    # request isn't entitled, block loading/rendering its real verb list --
+    # same fate as bouncing back from /learn with plus_required=1, just
+    # without the extra redirect round trip since we're already on /verbs.
+    entitled = can_study(selected_language, get_session_uid(request))
 
-    all_entries = load_entries_for_language(language=selected_language)
-    total_verb_count = len(all_entries)
+    if entitled:
+        sort_az_label = get_strings(selected_language).get(
+            "verbs.sort_az",
+            "A → Z",
+        )
 
-    if settings.verbs_page_limit > 0:
-        entries = sorted(all_entries, key=lambda e: e.rank)[: settings.verbs_page_limit]
+        all_entries = load_entries_for_language(language=selected_language)
+        total_verb_count = len(all_entries)
+
+        if settings.verbs_page_limit > 0:
+            entries = sorted(all_entries, key=lambda e: e.rank)[: settings.verbs_page_limit]
+        else:
+            entries = all_entries
+
+        verbs_js = [_build_verb_item(e) for e in entries]
+
+        recent_docs = list_verbs_recent(language=selected_language, limit=RECENT_VERBS_LIMIT)
+        known_ids = {v["id"] for v in verbs_js}
+        recent_ids = [d["verb_id"] for d in recent_docs if d.get("verb_id") in known_ids]
     else:
-        entries = all_entries
-
-    verbs_js = [_build_verb_item(e) for e in entries]
-
-    recent_docs = list_verbs_recent(language=selected_language, limit=RECENT_VERBS_LIMIT)
-    known_ids = {v["id"] for v in verbs_js}
-    recent_ids = [d["verb_id"] for d in recent_docs if d.get("verb_id") in known_ids]
+        # ui (not the study language) is the only locale guaranteed to have
+        # a verbs.sort_az key for a not-yet-registered Plus language.
+        sort_az_label = ui.get("verbs.sort_az", "A → Z")
+        total_verb_count = 0
+        verbs_js = []
+        recent_ids = []
 
     ui_strings: dict[str, str] = {
         "verbs.count_one": ui["verbs.count_one"],
@@ -130,6 +150,7 @@ def verb_browser(
             "verbs_display_batch": settings.verbs_display_batch,
             "firebase_web_config_json": (settings.firebase_web_config_json),
             "verbs_return_to": quote(f"/verbs?language={selected_language}&ui_language={ui_lang}", safe="/"),
+            "plus_required": (plus_required == 1) or not entitled,
         },
     )
 
@@ -153,10 +174,16 @@ def _build_verb_item(entry: object) -> dict[str, object]:
 
 @router.get("/api/verbs", response_class=JSONResponse)
 def api_verbs(
+    request: Request,
     language: str = Query(...),
     offset: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ) -> JSONResponse:
+    if not can_study(language, get_session_uid(request)):
+        # The verbs.html client-side pager calls this endpoint directly --
+        # gating only the page render would be pointless if this stayed open.
+        return JSONResponse({"detail": "Forbidden"}, status_code=403)
+
     all_entries = load_entries_for_language(language=language)
     total = len(all_entries)
     sorted_entries = sorted(all_entries, key=lambda e: e.rank)

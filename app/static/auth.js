@@ -69,6 +69,15 @@
   }
 
   async function signOut() {
+    // Clear the uid claim from the __session cookie before Firebase signs the
+    // user out client-side, so a stale cookie doesn't keep the server treating
+    // this browser as the previous user (e.g. for entitlement checks on a
+    // plain page-load GET) after sign-out completes. Awaited -- unlike other
+    // non-critical fire-and-forget calls in this file -- because the user may
+    // navigate away immediately after clicking sign-out.
+    try {
+      await fetch('/api/analytics/session/clear', { method: 'POST' });
+    } catch (_) {}
     await firebase.auth().signOut();
   }
 

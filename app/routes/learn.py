@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from urllib.parse import quote
 
 from fastapi import APIRouter, BackgroundTasks, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
+from core.admin_auth import get_session_uid
 from core.admin_logging import log_missing_verb_search
 from core.audio_service import (
     build_hashed_audio_key,
     ensure_audio,
     prewarm_verb_audio_keys,
 )
+from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.registry import get as get_plugin
 from core.render import render_board_html
@@ -70,6 +73,21 @@ async def learn(
     translated_from: str | None = Query(None),
     source_lang: str | None = Query(None),
 ) -> HTMLResponse:
+    session_uid = get_session_uid(request)
+    if not can_study(language, session_uid):
+        if session_uid is None:
+            current_query = request.url.query
+            current_path = f"{request.url.path}?{current_query}" if current_query else request.url.path
+            return RedirectResponse(
+                url=f"/auth/signin?return_to={quote(current_path, safe='')}",
+                status_code=303,
+            )
+        # Signed in but not entitled: send back to the verb picker with a
+        # dedicated, non-search notice (not_available=1 means "search miss" --
+        # repurposing it here would render a misleading "no match: {language}"
+        # banner).
+        return RedirectResponse(url=f"/verbs?language={language}&plus_required=1", status_code=303)
+
     logger.debug("lookup source %s -> verb %s", source, verb_id)
     if source == "candidate":
         if not verb_id:

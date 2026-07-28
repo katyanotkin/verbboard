@@ -6,12 +6,14 @@ import logging
 from fastapi import APIRouter, Request
 from fastapi.responses import PlainTextResponse, Response
 
+from core.admin_auth import get_session_uid
 from core.audio_service import (
     build_audio_key,
     build_hashed_audio_key,
     ensure_audio,
     read_audio_bytes,
 )
+from core.entitlements import can_study
 from core.tts import VOICES
 
 logger = logging.getLogger(__name__)
@@ -91,6 +93,11 @@ async def get_audio(
     form_key: str,
 ):
     logger.debug("audio request: %s %s %s %s", language, verb_id, voice, form_key)
+
+    if not can_study(language, get_session_uid(request)):
+        # API-style endpoint serving raw audio bytes -- 403, not a redirect.
+        return PlainTextResponse("Forbidden", status_code=403)
+
     audio_backend = request.app.state.audio_backend
 
     audio_bytes = await asyncio.to_thread(

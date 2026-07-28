@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from core.auth.firebase_auth import get_optional_auth_user
 from core.editions import is_study_language
+from core.entitlements import can_study
 from core.languages.config import UI_LANGUAGES
 from core.progress.models import PracticeSessionSize
 from core.progress.progress_repository import (
@@ -46,6 +47,12 @@ def set_prefs(request: Request, payload: PreferencesPayload):
     if payload.ui_language is not None and payload.ui_language not in _VALID_UI_LANGUAGES:
         raise HTTPException(status_code=422, detail="Invalid ui_language")
     if payload.learning_language is not None and not is_study_language(payload.learning_language):
+        raise HTTPException(status_code=422, detail="Invalid learning_language")
+    # is_study_language is edition-level (is this language shipped at all);
+    # can_study is entitlement-level (is *this uid* allowed to study it). An
+    # unentitled user must not be able to persist a Plus-only preference that
+    # would silently steer future page loads toward gated content.
+    if payload.learning_language is not None and not can_study(payload.learning_language, user.uid):
         raise HTTPException(status_code=422, detail="Invalid learning_language")
     if payload.practice_session_size is not None and not any(
         payload.practice_session_size == s for s in PracticeSessionSize

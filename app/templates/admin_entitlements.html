@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Entitlements admin</title>
+  <link rel="stylesheet" href="/static/admin.css"/>
+</head>
+<body>
+  <main class="admin-page">
+    <div class="card card-toolbar">
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/feedback">
+        Feedback
+      </a>
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/#signals">
+        Verb demand
+      </a>
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/#candidates">
+        Candidates
+      </a>
+      <a class="nav-item active nav-item-tab" href="{{ admin_prefix }}/entitlements">
+        Entitlements
+      </a>
+      <a href="{{ admin_prefix }}" style="margin-left:auto;">Back to admin</a>
+    </div>
+
+    <h1>Plus entitlements</h1>
+    <p class="text-muted">
+      Phase 1: manual grant/revoke only. Look up a user by email or Firebase Auth uid,
+      then set their entitlement status. This does not verify any purchase.
+    </p>
+
+    {% if error %}
+    <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    <form method="get" action="{{ admin_prefix }}/entitlements" class="card card-form">
+      <div class="filters-grid">
+        <div>
+          <label for="q">Email or uid</label>
+          <input id="q" type="text" name="q" value="{{ q }}" placeholder="user@example.com or firebase-uid" autofocus>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Look up</button>
+      </div>
+    </form>
+
+    {% if uid %}
+    <div class="card card-body">
+      <p><strong>uid:</strong> <span class="mono">{{ uid }}</span></p>
+
+      {% if entitlement %}
+      <p>
+        <strong>Current status:</strong>
+        <span class="status-pill {{ 'in_set' if entitlement.status == 'active' else 'unset' }}">{{ entitlement.status }}</span>
+        &nbsp;<span class="cell-meta">plan={{ entitlement.plan }} source={{ entitlement.source }}</span>
+      </p>
+      {% if entitlement.note %}
+      <p class="cell-meta">Note: {{ entitlement.note }}</p>
+      {% endif %}
+      {% else %}
+      <p class="text-muted">No entitlement record yet -- treated as not entitled.</p>
+      {% endif %}
+
+      <form method="post" action="{{ admin_prefix }}/entitlements" class="card-form" style="padding:0; margin-top:14px;">
+        <input type="hidden" name="identifier" value="{{ uid }}">
+        <div class="filters-grid">
+          <div>
+            <label for="status">Set status</label>
+            <select id="status" name="status">
+              <option value="active" {% if entitlement and entitlement.status == 'active' %}selected{% endif %}>active</option>
+              <option value="revoked" {% if entitlement and entitlement.status == 'revoked' %}selected{% endif %}>revoked</option>
+              <option value="expired" {% if entitlement and entitlement.status == 'expired' %}selected{% endif %}>expired</option>
+              <option value="none" {% if entitlement and entitlement.status == 'none' %}selected{% endif %}>none</option>
+            </select>
+          </div>
+          <div>
+            <label for="note">Note (who / why)</label>
+            <input id="note" type="text" name="note" value="{{ entitlement.note if entitlement else '' }}" placeholder="e.g. manual comp, support ticket #123">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+  </main>
+</body>
+</html>

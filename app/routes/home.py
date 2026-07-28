@@ -10,8 +10,10 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from core.admin_auth import get_session_uid
 from core.admin_logging import log_missing_verb_search
 from core.editions import active_study_plugins, resolve_study_language
+from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
 from core.safe_return import safe_return_to
@@ -28,6 +30,29 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 _NON_LATIN_LANGUAGES = {"ru", "he"}
+
+
+def _entitlement_redirect(
+    request: Request,
+    language: str,
+    session_uid: str | None,
+    ui_language: str,
+    return_to: str | None,
+) -> RedirectResponse:
+    """Bounce a search request for a Plus-only language before any
+    translation/autogeneration LLM spend happens -- both search endpoints
+    otherwise end in a redirect to /learn, which is already gated, but not
+    before burning a Vertex Gemini call (and, for autogen-eligible
+    languages, a Claude generation + TTS prewarm) first."""
+    if session_uid is None:
+        current_query = request.url.query
+        current_path = f"{request.url.path}?{current_query}" if current_query else request.url.path
+        return RedirectResponse(url=f"/auth/signin?return_to={quote(current_path, safe='')}")
+
+    _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
+    base = safe_return_to(return_to or "", fallback="") or f"/verbs?language={language}{_ui_suffix}"
+    sep = "&" if "?" in base else "?"
+    return RedirectResponse(url=f"{base}{sep}plus_required=1")
 
 
 def _looks_english(query: str) -> bool:
@@ -79,6 +104,10 @@ async def search_verb_by_lang(
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
         return RedirectResponse(url=f"/?language={language}{_ui_suffix}")
+
+    session_uid = get_session_uid(request)
+    if not can_study(language, session_uid):
+        return _entitlement_redirect(request, language, session_uid, ui_language, return_to)
 
     translated = await asyncio.to_thread(
         translate_search_query,
@@ -174,6 +203,10 @@ async def search_verb(
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
         return RedirectResponse(url=f"/?language={language}{_ui_suffix}")
+
+    session_uid = get_session_uid(request)
+    if not can_study(language, session_uid):
+        return _entitlement_redirect(request, language, session_uid, ui_language, return_to)
 
     if language in _NON_LATIN_LANGUAGES and _looks_english(query):
         _rt = f"&return_to={quote(return_to, safe='')}" if return_to else ""

@@ -53,6 +53,7 @@
   "verbs.known_legend": "★ = выучен",
   "verbs.empty_state": "Нет совпадений",
   "verbs.load_more": "Показать ещё",
+  "verbs.plus_required": "Этот язык доступен в VerbBoard Plus.",
   "practice.label": "Тренировка",
   "practice.size_unit": "# глаголов",
   "practice.listens_unit": "# аудио / гл.",
