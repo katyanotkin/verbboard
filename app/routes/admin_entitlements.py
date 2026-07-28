@@ -28,9 +28,9 @@ def _resolve_uid(identifier: str) -> tuple[str | None, str | None]:
     if not identifier:
         return None, "Enter an email or uid."
     if "@" in identifier:
-        uid = lookup_uid_by_email(identifier)
+        uid, error = lookup_uid_by_email(identifier)
         if uid is None:
-            return None, f"No Firebase Auth account found for {identifier!r}."
+            return None, error or f"No Firebase Auth account found for {identifier!r}."
         return uid, None
     return identifier, None
 

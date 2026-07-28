@@ -33,15 +33,29 @@ def test_entitlements_lookup_by_uid_shows_no_record(client: TestClient) -> None:
 
 
 def test_entitlements_lookup_by_email_not_found_shows_error(client: TestClient) -> None:
-    with patch("app.routes.admin_entitlements.lookup_uid_by_email", return_value=None):
+    with patch("app.routes.admin_entitlements.lookup_uid_by_email", return_value=(None, None)):
         resp = client.get("/admin/entitlements?q=nobody@example.com", cookies=_admin_cookies())
     assert resp.status_code == 200
     assert "No Firebase Auth account found" in resp.text
 
 
+def test_entitlements_lookup_by_email_lookup_failure_shows_real_error(client: TestClient) -> None:
+    """A permissions/config failure must not be reported as 'account not
+    found' -- that's exactly the bug that made a missing IAM grant look like
+    every single email was nonexistent."""
+    with patch(
+        "app.routes.admin_entitlements.lookup_uid_by_email",
+        return_value=(None, "Firebase Auth lookup failed (PermissionDenied): ..."),
+    ):
+        resp = client.get("/admin/entitlements?q=someone@example.com", cookies=_admin_cookies())
+    assert resp.status_code == 200
+    assert "Firebase Auth lookup failed" in resp.text
+    assert "No Firebase Auth account found" not in resp.text
+
+
 def test_entitlements_lookup_by_email_resolves_uid(client: TestClient) -> None:
     with (
-        patch("app.routes.admin_entitlements.lookup_uid_by_email", return_value="uid-123"),
+        patch("app.routes.admin_entitlements.lookup_uid_by_email", return_value=("uid-123", None)),
         patch(
             "app.routes.admin_entitlements.get_entitlement",
             return_value={"status": "active", "plan": "plus", "source": "manual_admin"},
@@ -92,7 +106,7 @@ def test_entitlements_post_requires_admin(client: TestClient) -> None:
 
 def test_entitlements_post_email_not_found_does_not_call_set(client: TestClient) -> None:
     with (
-        patch("app.routes.admin_entitlements.lookup_uid_by_email", return_value=None),
+        patch("app.routes.admin_entitlements.lookup_uid_by_email", return_value=(None, None)),
         patch("app.routes.admin_entitlements.set_entitlement") as mock_set,
     ):
         resp = client.post(

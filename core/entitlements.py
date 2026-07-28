@@ -154,16 +154,25 @@ def set_entitlement(
     return merged
 
 
-def lookup_uid_by_email(email: str) -> str | None:
-    """Resolve a Firebase Auth uid from an email address for the admin grant
-    page. None if no account exists with that email or the lookup fails."""
+def lookup_uid_by_email(email: str) -> tuple[str | None, str | None]:
+    """Resolve a Firebase Auth uid from an email address for the admin grant page.
+
+    Returns (uid, error). A genuinely nonexistent account is (None, None) --
+    the caller renders its own "not found" message. Any other failure
+    (missing IAM permission, network error, misconfigured credentials) is
+    (None, <message>) so it's never mistaken for "no such user".
+    """
     from firebase_admin import auth as firebase_auth_admin
+    from firebase_admin.auth import UserNotFoundError
 
     from core.auth.firebase_auth import initialize_firebase_admin
 
     initialize_firebase_admin()
     try:
         user_record = firebase_auth_admin.get_user_by_email(email)
-    except Exception:
-        return None
-    return user_record.uid
+    except UserNotFoundError:
+        return None, None
+    except Exception as exc:
+        logger.warning("lookup_uid_by_email failed for %r: %s", email, exc)
+        return None, f"Firebase Auth lookup failed ({type(exc).__name__}): {exc}"
+    return user_record.uid, None

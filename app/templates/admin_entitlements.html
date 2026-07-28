@@ -69,10 +69,9 @@
           <div>
             <label for="status">Set status</label>
             <select id="status" name="status">
-              <option value="active" {% if entitlement and entitlement.status == 'active' %}selected{% endif %}>active</option>
-              <option value="revoked" {% if entitlement and entitlement.status == 'revoked' %}selected{% endif %}>revoked</option>
-              <option value="expired" {% if entitlement and entitlement.status == 'expired' %}selected{% endif %}>expired</option>
-              <option value="none" {% if entitlement and entitlement.status == 'none' %}selected{% endif %}>none</option>
+              <option value="none" {% if not entitlement or entitlement.status not in ('active', 'revoked') %}selected{% endif %}>None (no grant)</option>
+              <option value="active" {% if entitlement and entitlement.status == 'active' %}selected{% endif %}>Entitled</option>
+              <option value="revoked" {% if entitlement and entitlement.status == 'revoked' %}selected{% endif %}>Free (revoked)</option>
             </select>
           </div>
           <div>
