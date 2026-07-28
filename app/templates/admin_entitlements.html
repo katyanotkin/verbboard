@@ -37,6 +37,23 @@
     <div class="error-msg">{{ error }}</div>
     {% endif %}
 
+    {% if records %}
+    <div class="card card-form">
+      <label for="existing-records">Existing grants ({{ records|length }})</label>
+      <select
+        id="existing-records"
+        onchange="if (this.value) { window.location = '{{ admin_prefix }}/entitlements?q=' + encodeURIComponent(this.value); }"
+      >
+        <option value="">-- pick an existing record --</option>
+        {% for record in records %}
+        <option value="{{ record.email or record.uid }}" {% if uid == record.uid %}selected{% endif %}>
+          {{ record.email or record.uid }} -- {{ record.status }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
     <form method="get" action="{{ admin_prefix }}/entitlements" class="card card-form">
       <div class="filters-grid">
         <div>

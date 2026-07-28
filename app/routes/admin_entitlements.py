@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.routes.admin_utils import ADMIN_PREFIX, require_admin_page
-from core.entitlements import get_entitlement, lookup_uid_by_email, set_entitlement
+from core.entitlements import get_entitlement, list_entitlements, lookup_uid_by_email, set_entitlement
 
 logger = logging.getLogger(__name__)
 
@@ -18,21 +18,23 @@ templates = Jinja2Templates(directory="app/templates")
 _VALID_STATUSES = {"active", "expired", "revoked", "none"}
 
 
-def _resolve_uid(identifier: str) -> tuple[str | None, str | None]:
+def _resolve_uid(identifier: str) -> tuple[str | None, str | None, str | None]:
     """Resolve an admin-entered identifier to a Firebase Auth uid.
 
     Accepts either an email address (looked up via firebase_admin) or a raw
-    uid pasted directly. Returns (uid, error_message).
+    uid pasted directly. Returns (uid, email, error_message) -- email is the
+    identifier itself when it was an email, None for a raw-uid lookup (we
+    have no email to display-cache in that case).
     """
     identifier = identifier.strip()
     if not identifier:
-        return None, "Enter an email or uid."
+        return None, None, "Enter an email or uid."
     if "@" in identifier:
         uid, error = lookup_uid_by_email(identifier)
         if uid is None:
-            return None, error or f"No Firebase Auth account found for {identifier!r}."
-        return uid, None
-    return identifier, None
+            return None, None, error or f"No Firebase Auth account found for {identifier!r}."
+        return uid, identifier, None
+    return identifier, None, None
 
 
 def _render(
@@ -52,6 +54,7 @@ def _render(
             "uid": uid,
             "error": error,
             "entitlement": entitlement,
+            "records": list_entitlements(),
         },
     )
 
@@ -67,7 +70,7 @@ async def admin_entitlements_page(request: Request, q: str = "") -> HTMLResponse
     entitlement: dict | None = None
 
     if q:
-        uid, error = _resolve_uid(q)
+        uid, _email, error = _resolve_uid(q)
         if uid is not None:
             entitlement = get_entitlement(uid)
 
@@ -85,7 +88,7 @@ async def admin_entitlements_update(
     if redirect_response is not None:
         return redirect_response
 
-    uid, error = _resolve_uid(identifier)
+    uid, email, error = _resolve_uid(identifier)
     if uid is None:
         return _render(request, q=identifier, uid=None, error=error, entitlement=None)
 
@@ -98,7 +101,7 @@ async def admin_entitlements_update(
             entitlement=get_entitlement(uid),
         )
 
-    set_entitlement(uid=uid, status=status, note=note.strip())
+    set_entitlement(uid=uid, status=status, note=note.strip(), email=email)
     logger.info("admin_entitlements: uid=%s status=%s", uid, status)
 
     return RedirectResponse(

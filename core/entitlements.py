@@ -97,6 +97,23 @@ def invalidate_entitlement_cache(uid: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+def list_entitlements() -> list[dict[str, Any]]:
+    """All existing entitlement records, for the admin page's picker list.
+
+    Phase 1 scale only (manual admin process, no pagination) -- a full
+    collection scan is fine here and is explicitly not meant to survive into
+    Phase 2, which will have a real number of records.
+    """
+    docs = get_db().collection(ENTITLEMENTS_COLLECTION).stream()
+    records = []
+    for doc in docs:
+        data = doc.to_dict() or {}
+        data["uid"] = doc.id
+        records.append(data)
+    records.sort(key=lambda r: (r.get("email") or r["uid"]).lower())
+    return records
+
+
 def get_entitlement(uid: str) -> dict[str, Any] | None:
     doc = get_db().collection(ENTITLEMENTS_COLLECTION).document(uid).get()
     if not doc.exists:
@@ -113,6 +130,7 @@ def set_entitlement(
     note: str = "",
     plan: str = "plus",
     source: str = "manual_admin",
+    email: str | None = None,
 ) -> dict[str, Any]:
     """Manual admin grant/revoke. Phase 1 only writes the fields it uses
     (status/plan/source/granted_at/updated_at/note); the billing-only fields
@@ -120,6 +138,13 @@ def set_entitlement(
     first write so the full Phase-2 schema exists without a migration, and
     are left untouched on subsequent writes so a future billing-sourced value
     is never clobbered by a manual admin edit.
+
+    `email` is a display-only convenience (Firebase Auth, not this record,
+    remains the source of truth for identity) so the admin page can list
+    existing grants by email instead of raw uid. Only written when provided
+    (i.e. the admin looked the user up by email this time) -- omitted on a
+    raw-uid lookup so a previously-known email is never overwritten with
+    nothing.
     """
     if status not in {"active", "expired", "revoked", "none"}:
         raise ValueError(f"Unsupported entitlement status: {status!r}")
@@ -137,6 +162,8 @@ def set_entitlement(
         "updated_at": now,
         "last_verified_at": now,
     }
+    if email:
+        data["email"] = email
     if status == "active":
         data["granted_at"] = now
 

@@ -144,6 +144,25 @@ def test_verbs_entitled_selection_still_loads_real_content(client: TestClient, m
     assert "VerbBoard Plus" not in resp.text
 
 
+def test_verbs_entitled_selection_of_language_without_ui_locale_does_not_500(
+    client: TestClient, monkeypatch, mock_verb
+) -> None:
+    """Regression: an entitled request for a study language that has no
+    UI locale file (Italian is a real registered plugin but not a UI
+    language -- app/i18n/it.json does not exist) must not crash trying to
+    build the alphabet-specific sort_az_label via get_strings(language)."""
+    monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [mock_verb])
+
+    with (
+        patch("app.routes.verbs.can_study", return_value=True),
+        patch("app.routes.verbs.get_session_uid", return_value="user-1"),
+    ):
+        resp = client.get("/verbs?language=it&ui_language=ru")
+
+    assert resp.status_code == 200
+    assert "VerbBoard Plus" not in resp.text
+
+
 # ---------------------------------------------------------------------------
 # /api/verbs -- JSON pager endpoint verbs.html calls directly
 # ---------------------------------------------------------------------------

@@ -76,7 +76,23 @@ def test_entitlements_post_grants_active_status(client: TestClient) -> None:
             follow_redirects=False,
         )
     assert resp.status_code == 303
-    mock_set.assert_called_once_with(uid="uid-123", status="active", note="manual comp")
+    # Raw-uid identifier -> no email to display-cache.
+    mock_set.assert_called_once_with(uid="uid-123", status="active", note="manual comp", email=None)
+
+
+def test_entitlements_post_by_email_caches_email_on_grant(client: TestClient) -> None:
+    with (
+        patch("app.routes.admin_entitlements.lookup_uid_by_email", return_value=("uid-123", None)),
+        patch("app.routes.admin_entitlements.set_entitlement") as mock_set,
+    ):
+        resp = client.post(
+            "/admin/entitlements",
+            data={"identifier": "someone@example.com", "status": "active", "note": ""},
+            cookies=_admin_cookies(),
+            follow_redirects=False,
+        )
+    assert resp.status_code == 303
+    mock_set.assert_called_once_with(uid="uid-123", status="active", note="", email="someone@example.com")
 
 
 def test_entitlements_post_rejects_unknown_status(client: TestClient) -> None:

@@ -13,6 +13,7 @@ from core.admin_auth import get_session_uid
 from core.editions import active_study_plugins, resolve_study_language
 from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
+from core.languages.config import UI_LANGUAGES
 from core.settings import load_settings
 from core.storage.firestore_db import get_db
 from core.storage.verb_repository import list_verbs_recent
@@ -60,9 +61,15 @@ def verb_browser(
     entitled = can_study(selected_language, get_session_uid(request))
 
     if entitled:
-        sort_az_label = get_strings(selected_language).get(
-            "verbs.sort_az",
-            "A → Z",
+        # get_strings(selected_language) gives the sort-order label in the
+        # studied language's own alphabet (e.g. Hebrew "א ← ת", Russian
+        # "А → Я") -- but only en/ru/he/es actually have a locale file.
+        # A Plus-only study language (e.g. Italian) has none, so fall back
+        # to the UI language's label rather than crashing on a missing file.
+        sort_az_label = (
+            get_strings(selected_language).get("verbs.sort_az", "A → Z")
+            if selected_language in UI_LANGUAGES
+            else ui.get("verbs.sort_az", "A → Z")
         )
 
         all_entries = load_entries_for_language(language=selected_language)
