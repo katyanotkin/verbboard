@@ -51,6 +51,7 @@ class Settings:
     android_package_name: str
     android_cert_fingerprints: tuple[str, ...]
     on_demand_examples_enabled: bool
+    streak_grace_enabled: bool
 
 
 def _resolve_environment() -> str:
@@ -190,6 +191,7 @@ def load_settings() -> Settings:
             else (_DEFAULT_ANDROID_CERT_FINGERPRINT,)
         ),
         on_demand_examples_enabled=_env_flag("ON_DEMAND_EXAMPLES_ENABLED", default=(edition == "plus")),
+        streak_grace_enabled=_env_flag("STREAK_GRACE_ENABLED", default=(edition == "plus")),
     )
     _validate(settings)
     return settings

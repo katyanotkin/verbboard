@@ -400,10 +400,10 @@ def test_post_streak_persists_and_is_returned_by_get() -> None:
     )
 
     assert response.status_code == 200
-    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 5}
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 5, "grace_used": False}
 
     payload = client.get("/api/progress/practice?language=s1", headers=AUTH).json()
-    assert payload["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 5}
+    assert payload["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 5, "grace_used": False}
 
 
 def test_post_streak_response_contains_server_merged_streak() -> None:
@@ -432,7 +432,7 @@ def test_post_streak_response_contains_server_merged_streak() -> None:
     )
 
     # Adjacent day: merged length is max(later.len, earlier.len + 1) = max(1, 6) = 6.
-    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY_PLUS_ONE, "len": 6}
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY_PLUS_ONE, "len": 6, "grace_used": False}
 
 
 def test_post_without_streak_leaves_existing_streak_untouched() -> None:
@@ -456,10 +456,10 @@ def test_post_without_streak_leaves_existing_streak_untouched() -> None:
     )
 
     assert response.status_code == 200
-    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 7}
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 7, "grace_used": False}
 
     payload = client.get("/api/progress/practice?language=s3", headers=AUTH).json()
-    assert payload["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 7}
+    assert payload["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 7, "grace_used": False}
 
 
 def test_stale_post_does_not_shrink_stored_streak() -> None:
@@ -487,7 +487,7 @@ def test_stale_post_does_not_shrink_stored_streak() -> None:
             "streak_len": 1,
         },
     )
-    assert same_day_response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 50}
+    assert same_day_response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 50, "grace_used": False}
 
     # Much older day with a short length (stale sync, big gap -> broken streak
     # on the stale device, but must not overwrite the newer stored streak).
@@ -501,10 +501,137 @@ def test_stale_post_does_not_shrink_stored_streak() -> None:
             "streak_len": 1,
         },
     )
-    assert stale_response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 50}
+    assert stale_response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 50, "grace_used": False}
 
     payload = client.get("/api/progress/practice?language=s4", headers=AUTH).json()
-    assert payload["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 50}
+    assert payload["streak"] == {"last_day": _FAR_FUTURE_DAY, "len": 50, "grace_used": False}
+
+
+# ---------------------------------------------------------------------------
+# Streak grace/freeze (N2) -- gated by Settings.streak_grace_enabled
+# (STREAK_GRACE_ENABLED env / EDITION=plus default). load_settings() is not
+# cached, so monkeypatching the env var before the request is enough.
+# ---------------------------------------------------------------------------
+
+_FAR_FUTURE_DAY_PLUS_TWO = "2099-01-03"
+_FAR_FUTURE_DAY_PLUS_THREE = "2099-01-04"
+
+
+def test_gap_of_two_breaks_streak_when_grace_disabled() -> None:
+    """Zero env -> free edition -> grace disabled -> a gap of 2 days breaks
+    the streak exactly like the pre-grace implementation."""
+    client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={"language": "g4", "badges": [3], "streak_last_day": _FAR_FUTURE_DAY, "streak_len": 5},
+    )
+
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={"language": "g4", "badges": [3], "streak_last_day": _FAR_FUTURE_DAY_PLUS_TWO, "streak_len": 1},
+    )
+
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY_PLUS_TWO, "len": 1, "grace_used": False}
+
+
+def test_gap_of_two_preserves_streak_when_grace_available(monkeypatch) -> None:
+    """One free miss per streak: a gap of exactly 2 days extends the streak
+    (like a consecutive day) instead of breaking it, and consumes the grace."""
+    monkeypatch.setenv("STREAK_GRACE_ENABLED", "true")
+
+    client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "g1",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY,
+            "streak_len": 5,
+            "streak_grace_used": False,
+        },
+    )
+
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "g1",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY_PLUS_TWO,
+            "streak_len": 1,
+            "streak_grace_used": False,
+        },
+    )
+
+    # gap of 2, grace available -> extended like an adjacent day: max(1, 5+1) = 6.
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY_PLUS_TWO, "len": 6, "grace_used": True}
+
+
+def test_gap_of_two_breaks_streak_when_grace_already_used(monkeypatch) -> None:
+    """A second missed day before the grace resets breaks the streak normally."""
+    monkeypatch.setenv("STREAK_GRACE_ENABLED", "true")
+
+    # Seed a streak that has already consumed its one free miss.
+    client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "g2",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY,
+            "streak_len": 5,
+            "streak_grace_used": True,
+        },
+    )
+
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "g2",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY_PLUS_TWO,
+            "streak_len": 1,
+            "streak_grace_used": False,
+        },
+    )
+
+    # Grace already used -> gap of 2 breaks the streak; the fresh streak's
+    # grace_used resets to False (grace becomes available again).
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY_PLUS_TWO, "len": 1, "grace_used": False}
+
+
+def test_gap_of_three_breaks_streak_regardless_of_grace(monkeypatch) -> None:
+    """Only a single missed day is forgiven -- a gap of 3+ always breaks the
+    streak, even with grace available."""
+    monkeypatch.setenv("STREAK_GRACE_ENABLED", "true")
+
+    client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "g3",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY,
+            "streak_len": 5,
+            "streak_grace_used": False,
+        },
+    )
+
+    response = client.post(
+        "/api/progress/practice",
+        headers=AUTH,
+        json={
+            "language": "g3",
+            "badges": [3],
+            "streak_last_day": _FAR_FUTURE_DAY_PLUS_THREE,
+            "streak_len": 1,
+            "streak_grace_used": False,
+        },
+    )
+
+    assert response.json()["streak"] == {"last_day": _FAR_FUTURE_DAY_PLUS_THREE, "len": 1, "grace_used": False}
 
 
 def test_post_streak_rejects_malformed_calendar_date() -> None:

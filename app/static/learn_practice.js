@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const _uiLang = window.VB_UI_LANG || '';
   const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
+  const _graceEnabled = !!window.VB_STREAK_GRACE_ENABLED;
 
   const progress = window.VerbBoardProgress;
   if (!progress) return;
@@ -226,7 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const streakLib = window.VerbBoardStreak;
         const storage = window.VerbBoardStorage;
         const existingStreak = storage.readJson(streakKey, null);
-        streak = streakLib.bump(existingStreak, streakLib.localDay());
+        streak = streakLib.bump(existingStreak, streakLib.localDay(), _graceEnabled);
         storage.writeJson(streakKey, streak);
         streakDisplayLen = streakLib.displayLen(streak);
       }
@@ -235,6 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (streak) {
         practicePostBody.streak_last_day = streak.last_day;
         practicePostBody.streak_len = streak.len;
+        practicePostBody.streak_grace_used = !!streak.grace_used;
       }
 
       if (window.VerbBoardAuth && window.VerbBoardAuth.getIdToken) {
@@ -254,8 +256,12 @@ document.addEventListener("DOMContentLoaded", function () {
             if (resp.ok && window.VerbBoardStreak && window.VerbBoardStorage) {
               const data = await resp.json().catch(function () { return {}; });
               if (data.streak && data.streak.last_day && data.streak.len) {
-                const serverStreak = { last_day: data.streak.last_day, len: data.streak.len };
-                streak = window.VerbBoardStreak.merge(streak, serverStreak);
+                const serverStreak = {
+                  last_day: data.streak.last_day,
+                  len: data.streak.len,
+                  grace_used: !!data.streak.grace_used,
+                };
+                streak = window.VerbBoardStreak.merge(streak, serverStreak, _graceEnabled);
                 window.VerbBoardStorage.writeJson(streakKey, streak);
                 streakDisplayLen = window.VerbBoardStreak.displayLen(streak);
               }

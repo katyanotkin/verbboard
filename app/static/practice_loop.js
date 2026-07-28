@@ -12,6 +12,7 @@
     } = config;
 
     const storage = window.VerbBoardStorage;
+    const graceEnabled = !!window.VB_STREAK_GRACE_ENABLED;
 
     const _uiLang = window.VB_UI_LANG || '';
     const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
@@ -120,6 +121,7 @@
       if (streak) {
         body.streak_last_day = streak.last_day;
         body.streak_len = streak.len;
+        body.streak_grace_used = !!streak.grace_used;
       }
 
       await fetch('/api/progress/practice', {
@@ -175,8 +177,14 @@
       // Streak merge: never regress a legitimate streak on either device.
       const streakLib = window.VerbBoardStreak;
       const localStreak = readPracticeStreak();
-      const serverStreak = payload.streak || null;
-      const mergedStreak = streakLib ? streakLib.merge(localStreak, serverStreak) : (serverStreak || localStreak);
+      const serverStreak = payload.streak
+        ? {
+            last_day: payload.streak.last_day,
+            len: payload.streak.len,
+            grace_used: !!payload.streak.grace_used,
+          }
+        : null;
+      const mergedStreak = streakLib ? streakLib.merge(localStreak, serverStreak, graceEnabled) : (serverStreak || localStreak);
       if (mergedStreak) {
         storage.writeJson(practiceStreakKey, mergedStreak);
       }
@@ -186,7 +194,8 @@
       const streakDiffers = mergedStreak && (
         !serverStreak ||
         mergedStreak.last_day !== serverStreak.last_day ||
-        mergedStreak.len !== serverStreak.len
+        mergedStreak.len !== serverStreak.len ||
+        !!mergedStreak.grace_used !== !!serverStreak.grace_used
       );
       if (localBadges.length > payload.badges.length || streakDiffers) {
         savePracticeBadgesToServer(badgesToStore, mergedStreak);

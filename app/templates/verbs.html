@@ -14,6 +14,7 @@
 {% include '_persist_ui_lang.html' %}
   <script>
     window.VB_BADGE_COMPACT_THRESHOLD = {{ badge_compact_threshold }};
+    window.VB_STREAK_GRACE_ENABLED = {{ streak_grace_enabled | tojson }};
     window.VB_LANGUAGE = {{ lang_json | safe }};
     window.VB_UI_LANG = {{ ui_lang | tojson }};
     window.VB_VERBS = {{ verbs_json | safe }};

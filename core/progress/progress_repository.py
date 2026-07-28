@@ -222,7 +222,11 @@ def _read_streak(payload: dict[str, Any]) -> StreakRecord | None:
         return None
     if not last_day or length < 1:
         return None
-    return {"last_day": str(last_day), "len": length}
+    return {
+        "last_day": str(last_day),
+        "len": length,
+        "grace_used": bool(payload.get("streak_grace_used", False)),
+    }
 
 
 def get_practice_progress(
@@ -240,6 +244,7 @@ def get_practice_progress(
         badges=list(payload.get("badges", [])),
         streak_last_day=streak["last_day"] if streak else None,
         streak_len=streak["len"] if streak else 0,
+        streak_grace_used=streak["grace_used"] if streak else False,
     )
 
 
@@ -250,6 +255,8 @@ def save_practice_progress(
     badges: list[int],
     streak_last_day: str | None = None,
     streak_len: int | None = None,
+    streak_grace_used: bool = False,
+    grace_enabled: bool = False,
 ) -> StreakRecord | None:
     doc_ref = _practice_doc_ref(user_id, language)
 
@@ -270,12 +277,17 @@ def save_practice_progress(
     stored_streak = _read_streak(existing_payload)
 
     if streak_last_day is not None and streak_len is not None:
-        incoming: StreakRecord = {"last_day": streak_last_day, "len": streak_len}
+        incoming: StreakRecord = {
+            "last_day": streak_last_day,
+            "len": streak_len,
+            "grace_used": streak_grace_used,
+        }
 
-        merged = merge_streak(stored_streak, incoming)
+        merged = merge_streak(stored_streak, incoming, grace_enabled=grace_enabled)
         if merged is not None:
             data["streak_last_day"] = merged["last_day"]
             data["streak_len"] = merged["len"]
+            data["streak_grace_used"] = merged["grace_used"]
             stored_streak = merged
 
     doc_ref.set(data, merge=True)

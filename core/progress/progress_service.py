@@ -11,6 +11,7 @@ from core.progress.progress_repository import (
     upsert_user_profile,
 )
 from core.progress.streak import StreakRecord
+from core.settings import load_settings
 
 
 def sync_user_profile(user: AuthUser) -> None:
@@ -82,8 +83,13 @@ def record_practice_progress(
     badges: list[int],
     streak_last_day: str | None = None,
     streak_len: int | None = None,
+    streak_grace_used: bool = False,
 ) -> StreakRecord | None:
     sync_user_profile(user)
+
+    # Per-request settings read (not cached) -- matches the pattern already
+    # established in app/routes/home.py / verbs.py / well_known.py.
+    settings = load_settings()
 
     return save_practice_progress(
         user_id=user.uid,
@@ -91,4 +97,6 @@ def record_practice_progress(
         badges=badges,
         streak_last_day=streak_last_day,
         streak_len=streak_len,
+        streak_grace_used=streak_grace_used,
+        grace_enabled=settings.streak_grace_enabled,
     )

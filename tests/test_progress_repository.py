@@ -389,7 +389,13 @@ def test_read_streak_degrades_non_numeric_len_to_none_without_raising() -> None:
 def test_read_streak_valid_payload() -> None:
     result = repo._read_streak({"streak_last_day": "2026-07-08", "streak_len": 5})
 
-    assert result == {"last_day": "2026-07-08", "len": 5}
+    assert result == {"last_day": "2026-07-08", "len": 5, "grace_used": False}
+
+
+def test_read_streak_valid_payload_with_grace_used() -> None:
+    result = repo._read_streak({"streak_last_day": "2026-07-08", "streak_len": 5, "streak_grace_used": True})
+
+    assert result == {"last_day": "2026-07-08", "len": 5, "grace_used": True}
 
 
 def test_get_practice_progress_legacy_doc_defaults_streak_fields() -> None:
@@ -488,7 +494,7 @@ def test_save_practice_progress_merges_against_existing_stored_streak() -> None:
         )
 
     # Adjacent day: merged length is max(incoming.len, stored.len + 1) = max(1, 6) = 6.
-    assert result == {"last_day": "2026-07-08", "len": 6}
+    assert result == {"last_day": "2026-07-08", "len": 6, "grace_used": False}
 
     args, _ = doc_ref.set.call_args
     payload = args[0]
@@ -519,7 +525,7 @@ def test_save_practice_progress_stale_incoming_does_not_shrink_stored_streak() -
             streak_len=1,
         )
 
-    assert result == {"last_day": "2026-07-08", "len": 50}
+    assert result == {"last_day": "2026-07-08", "len": 50, "grace_used": False}
 
     args, _ = doc_ref.set.call_args
     payload = args[0]
@@ -546,7 +552,7 @@ def test_save_practice_progress_without_streak_args_returns_existing_streak_unch
     with patch.object(repo, "get_db", return_value=db):
         result = repo.save_practice_progress(user_id="u1", language="en", badges=[3, 6])
 
-    assert result == {"last_day": "2026-07-08", "len": 7}
+    assert result == {"last_day": "2026-07-08", "len": 7, "grace_used": False}
 
     args, _ = doc_ref.set.call_args
     payload = args[0]

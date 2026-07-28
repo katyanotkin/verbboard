@@ -169,6 +169,7 @@ async def learn(
         firebase_web_config_json=settings.firebase_web_config_json,
         translated_from=translated_from,
         source_lang=source_lang,
+        streak_grace_enabled=settings.streak_grace_enabled,
     )
 
     return HTMLResponse(html)

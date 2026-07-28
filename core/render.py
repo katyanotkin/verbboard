@@ -30,6 +30,7 @@ def render_board_html(
     firebase_web_config_json: str = "",
     translated_from: str | None = None,
     source_lang: str | None = None,
+    streak_grace_enabled: bool = False,
 ) -> str:
     ui = ui_strings or {}
     html_dir = "rtl" if ui_lang == "he" else "ltr"
@@ -280,6 +281,7 @@ def render_board_html(
         candidate_banner_assets=candidate_banner_assets,
         board_ui_json=board_ui_json,
         firebase_web_config_json=firebase_web_config_json,
+        streak_grace_enabled=streak_grace_enabled,
         candidate_banner=candidate_banner,
         language=board.language,
         verb_id=board.verb.id,

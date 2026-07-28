@@ -47,6 +47,7 @@ def test_zero_env_edition_baseline():
     assert settings.android_package_name == "com.verbboard.app"
     assert len(settings.android_cert_fingerprints) == 1
     assert settings.on_demand_examples_enabled is False
+    assert settings.streak_grace_enabled is False
     assert settings.app_name == "VerbBoard"
     assert settings.app_short_name == "VerbBoard"
 
@@ -65,6 +66,19 @@ def test_edition_plus_on_demand_examples_explicit_override_beats_default(monkeyp
     monkeypatch.setenv("ON_DEMAND_EXAMPLES_ENABLED", "false")
     settings = load_settings()
     assert settings.on_demand_examples_enabled is False
+
+
+def test_edition_plus_enables_streak_grace_by_default(monkeypatch):
+    monkeypatch.setenv("EDITION", "plus")
+    settings = load_settings()
+    assert settings.streak_grace_enabled is True
+
+
+def test_streak_grace_explicit_override_beats_edition_default(monkeypatch):
+    monkeypatch.setenv("EDITION", "plus")
+    monkeypatch.setenv("STREAK_GRACE_ENABLED", "false")
+    settings = load_settings()
+    assert settings.streak_grace_enabled is False
 
 
 def test_unsupported_edition_raises(monkeypatch):

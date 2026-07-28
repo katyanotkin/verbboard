@@ -37,6 +37,10 @@ class PracticeProgressRequest(BaseModel):
     badges: list[int]
     streak_last_day: str | None = Field(default=None, min_length=10, max_length=10)
     streak_len: int | None = Field(default=None, ge=1, le=36600)
+    # Client's local view of whether this streak has already used its one free
+    # miss (streak grace/freeze, N2). Ignored server-side unless
+    # Settings.streak_grace_enabled is on -- see core/progress/streak.py.
+    streak_grace_used: bool = False
 
     @field_validator("badges")
     @classmethod
@@ -111,7 +115,11 @@ def get_practice_progress_route(
     )
 
     streak = (
-        {"last_day": progress.streak_last_day, "len": progress.streak_len}
+        {
+            "last_day": progress.streak_last_day,
+            "len": progress.streak_len,
+            "grace_used": progress.streak_grace_used,
+        }
         if progress.streak_last_day and progress.streak_len
         else None
     )
@@ -168,8 +176,17 @@ def set_practice_progress(
         badges=payload.badges,
         streak_last_day=payload.streak_last_day,
         streak_len=payload.streak_len,
+        streak_grace_used=payload.streak_grace_used,
     )
 
-    streak = {"last_day": stored_streak["last_day"], "len": stored_streak["len"]} if stored_streak else None
+    streak = (
+        {
+            "last_day": stored_streak["last_day"],
+            "len": stored_streak["len"],
+            "grace_used": stored_streak.get("grace_used", False),
+        }
+        if stored_streak
+        else None
+    )
 
     return {"ok": True, "streak": streak}

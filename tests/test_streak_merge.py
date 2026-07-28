@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from core.progress.streak import StreakRecord, is_next_day, merge_streak
+from core.progress.streak import StreakRecord, days_between, is_next_day, merge_streak
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STREAK_JS = REPO_ROOT / "app" / "static" / "streak.js"
@@ -67,33 +67,48 @@ def test_merge_b_none_returns_a() -> None:
 def test_merge_same_day_keeps_larger_length() -> None:
     a: StreakRecord = {"last_day": "2026-07-01", "len": 2}
     b: StreakRecord = {"last_day": "2026-07-01", "len": 5}
-    assert merge_streak(a, b) == {"last_day": "2026-07-01", "len": 5}
+    assert merge_streak(a, b) == {"last_day": "2026-07-01", "len": 5, "grace_used": False}
 
 
 def test_merge_same_day_order_independent() -> None:
     a: StreakRecord = {"last_day": "2026-07-01", "len": 5}
     b: StreakRecord = {"last_day": "2026-07-01", "len": 2}
-    assert merge_streak(a, b) == merge_streak(b, a) == {"last_day": "2026-07-01", "len": 5}
+    assert merge_streak(a, b) == merge_streak(b, a) == {"last_day": "2026-07-01", "len": 5, "grace_used": False}
+
+
+def test_merge_same_day_grace_used_is_sticky() -> None:
+    """If either side already consumed the grace for this streak, the merged
+    record keeps grace_used True (never un-consumes it)."""
+    a: StreakRecord = {"last_day": "2026-07-01", "len": 5, "grace_used": True}
+    b: StreakRecord = {"last_day": "2026-07-01", "len": 2, "grace_used": False}
+    assert merge_streak(a, b) == {"last_day": "2026-07-01", "len": 5, "grace_used": True}
+    assert merge_streak(b, a) == {"last_day": "2026-07-01", "len": 5, "grace_used": True}
 
 
 def test_merge_adjacent_days_extends_when_earlier_plus_one_wins() -> None:
     earlier: StreakRecord = {"last_day": "2026-07-01", "len": 5}
     later: StreakRecord = {"last_day": "2026-07-02", "len": 1}
     # later.len=1 vs earlier.len+1=6 -> earlier+1 wins
-    assert merge_streak(earlier, later) == {"last_day": "2026-07-02", "len": 6}
+    assert merge_streak(earlier, later) == {"last_day": "2026-07-02", "len": 6, "grace_used": False}
 
 
 def test_merge_adjacent_days_extends_when_later_len_already_ahead() -> None:
     earlier: StreakRecord = {"last_day": "2026-07-01", "len": 1}
     later: StreakRecord = {"last_day": "2026-07-02", "len": 9}
     # later.len=9 vs earlier.len+1=2 -> later.len wins (no double count)
-    assert merge_streak(earlier, later) == {"last_day": "2026-07-02", "len": 9}
+    assert merge_streak(earlier, later) == {"last_day": "2026-07-02", "len": 9, "grace_used": False}
 
 
 def test_merge_adjacent_days_order_independent() -> None:
     a: StreakRecord = {"last_day": "2026-07-01", "len": 5}
     b: StreakRecord = {"last_day": "2026-07-02", "len": 1}
-    assert merge_streak(a, b) == merge_streak(b, a) == {"last_day": "2026-07-02", "len": 6}
+    assert merge_streak(a, b) == merge_streak(b, a) == {"last_day": "2026-07-02", "len": 6, "grace_used": False}
+
+
+def test_merge_adjacent_days_grace_used_carries_forward() -> None:
+    earlier: StreakRecord = {"last_day": "2026-07-01", "len": 5, "grace_used": True}
+    later: StreakRecord = {"last_day": "2026-07-02", "len": 1, "grace_used": False}
+    assert merge_streak(earlier, later) == {"last_day": "2026-07-02", "len": 6, "grace_used": True}
 
 
 def test_merge_gap_of_two_days_later_wins_outright() -> None:
@@ -112,13 +127,78 @@ def test_merge_gap_order_independent() -> None:
 def test_merge_month_boundary_is_treated_as_adjacent() -> None:
     earlier: StreakRecord = {"last_day": "2026-06-30", "len": 4}
     later: StreakRecord = {"last_day": "2026-07-01", "len": 1}
-    assert merge_streak(earlier, later) == {"last_day": "2026-07-01", "len": 5}
+    assert merge_streak(earlier, later) == {"last_day": "2026-07-01", "len": 5, "grace_used": False}
 
 
 def test_merge_year_boundary_is_treated_as_adjacent() -> None:
     earlier: StreakRecord = {"last_day": "2026-12-31", "len": 4}
     later: StreakRecord = {"last_day": "2027-01-01", "len": 1}
-    assert merge_streak(earlier, later) == {"last_day": "2027-01-01", "len": 5}
+    assert merge_streak(earlier, later) == {"last_day": "2027-01-01", "len": 5, "grace_used": False}
+
+
+# ---------------------------------------------------------------------------
+# Streak grace/freeze (N2) -- one free miss per streak.
+#
+# A gap of exactly 2 days (one full missed day) never breaks the streak when
+# grace_enabled is True and neither side has already used the grace this
+# streak. A gap of 2 always breaks it -- exactly today's pre-grace behavior
+# -- whenever grace_enabled is False (the free-edition no-op), or the grace
+# was already consumed, or the gap is 3+ days.
+# ---------------------------------------------------------------------------
+
+
+def test_gap_of_two_breaks_when_grace_disabled() -> None:
+    earlier: StreakRecord = {"last_day": "2026-07-01", "len": 30, "grace_used": False}
+    later: StreakRecord = {"last_day": "2026-07-03", "len": 1, "grace_used": False}
+    assert merge_streak(earlier, later, grace_enabled=False) == later
+
+
+def test_gap_of_two_preserves_streak_when_grace_available() -> None:
+    earlier: StreakRecord = {"last_day": "2026-07-01", "len": 30, "grace_used": False}
+    later: StreakRecord = {"last_day": "2026-07-03", "len": 1, "grace_used": False}
+    assert merge_streak(earlier, later, grace_enabled=True) == {
+        "last_day": "2026-07-03",
+        "len": 31,
+        "grace_used": True,
+    }
+
+
+def test_gap_of_two_order_independent_with_grace() -> None:
+    a: StreakRecord = {"last_day": "2026-07-01", "len": 30, "grace_used": False}
+    b: StreakRecord = {"last_day": "2026-07-03", "len": 1, "grace_used": False}
+    expected = {"last_day": "2026-07-03", "len": 31, "grace_used": True}
+    assert merge_streak(a, b, grace_enabled=True) == expected
+    assert merge_streak(b, a, grace_enabled=True) == expected
+
+
+def test_gap_of_two_breaks_when_grace_already_used_by_earlier() -> None:
+    earlier: StreakRecord = {"last_day": "2026-07-01", "len": 30, "grace_used": True}
+    later: StreakRecord = {"last_day": "2026-07-03", "len": 1, "grace_used": False}
+    assert merge_streak(earlier, later, grace_enabled=True) == later
+
+
+def test_gap_of_two_breaks_when_grace_already_used_by_later() -> None:
+    earlier: StreakRecord = {"last_day": "2026-07-01", "len": 30, "grace_used": False}
+    later: StreakRecord = {"last_day": "2026-07-03", "len": 1, "grace_used": True}
+    assert merge_streak(earlier, later, grace_enabled=True) == later
+
+
+def test_gap_of_three_breaks_even_with_grace_available() -> None:
+    earlier: StreakRecord = {"last_day": "2026-07-01", "len": 30, "grace_used": False}
+    later: StreakRecord = {"last_day": "2026-07-04", "len": 1, "grace_used": False}
+    assert merge_streak(earlier, later, grace_enabled=True) == later
+
+
+def test_grace_reset_on_break_then_becomes_available_again() -> None:
+    """After an actual break resets the streak to length 1 (grace_used
+    False), a subsequent gap of 2 can use the grace again."""
+    broken: StreakRecord = {"last_day": "2026-07-04", "len": 1, "grace_used": False}
+    later: StreakRecord = {"last_day": "2026-07-06", "len": 1, "grace_used": False}
+    assert merge_streak(broken, later, grace_enabled=True) == {
+        "last_day": "2026-07-06",
+        "len": 2,
+        "grace_used": True,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -129,28 +209,48 @@ def test_merge_year_boundary_is_treated_as_adjacent() -> None:
 # assertion in Node and one in Python (below), and both outputs are diffed
 # in test_streak_js_python_parity.
 _BUMP_CASES = [
-    # (rec, today) -> bump result
-    (None, "2026-07-08"),  # first-ever
-    ({"last_day": "2026-07-08", "len": 3}, "2026-07-08"),  # same day: no-op
-    ({"last_day": "2026-07-07", "len": 3}, "2026-07-08"),  # adjacent: increment
-    ({"last_day": "2026-07-01", "len": 30}, "2026-07-08"),  # gap: reset to 1
-    ({"last_day": "2026-06-30", "len": 3}, "2026-07-01"),  # month boundary bump
-    ({"last_day": "2026-12-31", "len": 3}, "2027-01-01"),  # year boundary bump
+    # (rec, today, graceEnabled) -> bump result
+    (None, "2026-07-08", False),  # first-ever
+    ({"last_day": "2026-07-08", "len": 3}, "2026-07-08", False),  # same day: no-op
+    ({"last_day": "2026-07-07", "len": 3}, "2026-07-08", False),  # adjacent: increment
+    ({"last_day": "2026-07-01", "len": 30}, "2026-07-08", False),  # gap: reset to 1
+    ({"last_day": "2026-06-30", "len": 3}, "2026-07-01", False),  # month boundary bump
+    ({"last_day": "2026-12-31", "len": 3}, "2027-01-01", False),  # year boundary bump
+    # gap of 2, grace disabled -> breaks exactly like the pre-grace behavior
+    ({"last_day": "2026-07-01", "len": 30}, "2026-07-03", False),
+    # gap of 2, grace enabled, not yet used -> preserved + grace consumed
+    ({"last_day": "2026-07-01", "len": 30, "grace_used": False}, "2026-07-03", True),
+    # gap of 2, grace enabled, already used -> breaks
+    ({"last_day": "2026-07-01", "len": 30, "grace_used": True}, "2026-07-03", True),
+    # gap of 3+, grace enabled -> breaks regardless
+    ({"last_day": "2026-07-01", "len": 30, "grace_used": False}, "2026-07-05", True),
 ]
 
-_MERGE_CASES: list[tuple[StreakRecord | None, StreakRecord | None]] = [
-    # (a, b) -> merge result
-    (None, None),
-    (None, {"last_day": "2026-07-01", "len": 4}),
-    ({"last_day": "2026-07-01", "len": 4}, None),
-    ({"last_day": "2026-07-01", "len": 2}, {"last_day": "2026-07-01", "len": 5}),
-    ({"last_day": "2026-07-01", "len": 5}, {"last_day": "2026-07-02", "len": 1}),
-    ({"last_day": "2026-07-01", "len": 1}, {"last_day": "2026-07-02", "len": 9}),
-    ({"last_day": "2026-07-01", "len": 30}, {"last_day": "2026-07-03", "len": 1}),
-    ({"last_day": "2026-06-30", "len": 4}, {"last_day": "2026-07-01", "len": 1}),
-    ({"last_day": "2026-12-31", "len": 4}, {"last_day": "2027-01-01", "len": 1}),
-    ({"last_day": "2028-02-28", "len": 4}, {"last_day": "2028-02-29", "len": 1}),
-    ({"last_day": "2028-02-29", "len": 4}, {"last_day": "2028-03-01", "len": 1}),
+_MERGE_CASES: list[tuple[StreakRecord | None, StreakRecord | None, bool]] = [
+    # (a, b, graceEnabled) -> merge result
+    (None, None, False),
+    (None, {"last_day": "2026-07-01", "len": 4}, False),
+    ({"last_day": "2026-07-01", "len": 4}, None, False),
+    ({"last_day": "2026-07-01", "len": 2}, {"last_day": "2026-07-01", "len": 5}, False),
+    ({"last_day": "2026-07-01", "len": 5}, {"last_day": "2026-07-02", "len": 1}, False),
+    ({"last_day": "2026-07-01", "len": 1}, {"last_day": "2026-07-02", "len": 9}, False),
+    ({"last_day": "2026-07-01", "len": 30}, {"last_day": "2026-07-03", "len": 1}, False),
+    ({"last_day": "2026-06-30", "len": 4}, {"last_day": "2026-07-01", "len": 1}, False),
+    ({"last_day": "2026-12-31", "len": 4}, {"last_day": "2027-01-01", "len": 1}, False),
+    ({"last_day": "2028-02-28", "len": 4}, {"last_day": "2028-02-29", "len": 1}, False),
+    ({"last_day": "2028-02-29", "len": 4}, {"last_day": "2028-03-01", "len": 1}, False),
+    # grace-specific cases
+    ({"last_day": "2026-07-01", "len": 30}, {"last_day": "2026-07-03", "len": 1}, True),
+    (
+        {"last_day": "2026-07-01", "len": 30, "grace_used": True},
+        {"last_day": "2026-07-03", "len": 1},
+        True,
+    ),
+    (
+        {"last_day": "2026-07-01", "len": 30},
+        {"last_day": "2026-07-04", "len": 1},
+        True,
+    ),
 ]
 
 _DISPLAY_CASES = [
@@ -174,17 +274,20 @@ _IS_NEXT_DAY_CASES = [
 ]
 
 
-def _py_bump(rec, today):
+def _py_bump(rec, today, grace_enabled=False):
     """Reimplement bump() in Python for parity checking (bump has no server-side
     equivalent -- the server never computes "today" -- so we mirror the JS spec
     directly against merge_streak's building blocks)."""
     if rec is None or not rec.get("last_day"):
-        return {"last_day": today, "len": 1}
+        return {"last_day": today, "len": 1, "grace_used": False}
     if rec["last_day"] == today:
         return rec
-    if is_next_day(rec["last_day"], today):
-        return {"last_day": today, "len": rec.get("len", 0) + 1}
-    return {"last_day": today, "len": 1}
+    gap = days_between(rec["last_day"], today)
+    if gap == 1:
+        return {"last_day": today, "len": rec.get("len", 0) + 1, "grace_used": bool(rec.get("grace_used", False))}
+    if gap == 2 and grace_enabled and not rec.get("grace_used", False):
+        return {"last_day": today, "len": rec.get("len", 0) + 1, "grace_used": True}
+    return {"last_day": today, "len": 1, "grace_used": False}
 
 
 def _py_display_len(rec, today):
@@ -199,8 +302,8 @@ def _py_display_len(rec, today):
 
 def _python_results() -> dict:
     return {
-        "bump": [_py_bump(rec, today) for rec, today in _BUMP_CASES],
-        "merge": [merge_streak(a, b) for a, b in _MERGE_CASES],
+        "bump": [_py_bump(rec, today, grace) for rec, today, grace in _BUMP_CASES],
+        "merge": [merge_streak(a, b, grace_enabled=grace) for a, b, grace in _MERGE_CASES],
         "display": [_py_display_len(rec, today) for rec, today in _DISPLAY_CASES],
         "is_next_day": [is_next_day(a, b) for a, b, _ in _IS_NEXT_DAY_CASES],
     }
@@ -212,8 +315,8 @@ require(process.argv[1]);
 const cases = JSON.parse(process.argv[2]);
 const S = window.VerbBoardStreak;
 const out = {
-  bump: cases.bump.map(([rec, today]) => S.bump(rec, today)),
-  merge: cases.merge.map(([a, b]) => S.merge(a, b)),
+  bump: cases.bump.map(([rec, today, grace]) => S.bump(rec, today, grace)),
+  merge: cases.merge.map(([a, b, grace]) => S.merge(a, b, grace)),
   display: cases.display.map(([rec, today]) => S.displayLen(rec, today)),
   is_next_day: cases.is_next_day.map(([a, b]) => S.isNextDay(a, b)),
 };
@@ -228,8 +331,8 @@ def _run_node_harness() -> dict:
     assert node is not None
 
     payload = {
-        "bump": [[rec, today] for rec, today in _BUMP_CASES],
-        "merge": [[a, b] for a, b in _MERGE_CASES],
+        "bump": [[rec, today, grace] for rec, today, grace in _BUMP_CASES],
+        "merge": [[a, b, grace] for a, b, grace in _MERGE_CASES],
         "display": [[rec, today] for rec, today in _DISPLAY_CASES],
         "is_next_day": [[a, b] for a, b, _ in _IS_NEXT_DAY_CASES],
     }

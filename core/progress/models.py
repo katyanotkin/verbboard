@@ -24,3 +24,4 @@ class PracticeProgress:
     badges: list[int]
     streak_last_day: str | None = None
     streak_len: int = 0
+    streak_grace_used: bool = False
