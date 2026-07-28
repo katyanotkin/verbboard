@@ -118,15 +118,38 @@ HEBREW (he)
   examples: 4 to 6 sentences in Hebrew script, each using a distinct grammatical form:
     at least one present, one past, one future, and others from different forms."""
 
+_PROMPT_IT = """\
+────────────────────────────────────────
+ITALIAN (it)
+  lemma: infinitive form
+  morph: {}
+  forms (all nested):
+    presente:         { io, tu, lui, noi, voi, loro }
+    passato_prossimo:  { io, tu, lui, noi, voi, loro }  ← full compound form per person,
+      e.g. "ho parlato", "hai parlato", "ha parlato", "abbiamo parlato", "avete parlato", "hanno parlato".
+      Use the correct auxiliary (avere vs essere) and agree the participle in gender/number
+      for essere-verbs — default to masculine singular agreement (e.g. "sono andato", not "andata")
+      unless the verb is reflexive, in which case still default masculine singular.
+    imperfetto:        { io, tu, lui, noi, voi, loro }
+    futuro:            { io, tu, lui, noi, voi, loro }
+    imperativo:        { tu, lei, noi, voi }  ← always include all four slots (no "io" imperative in Italian)
+    gerundio: "<gerundio>"                  (string)
+    participio: "<past participle>"         (string, masculine singular form)
+  examples: 4 to 6 sentences in Italian, each using a distinct grammatical form:
+    at least one presente, one passato prossimo, one imperfetto or futuro, one imperativo."""
+
 _LANG_PROMPTS: dict[str, str] = {
     "en": f"{_PROMPT_INTRO}\n\n{_PROMPT_EN}\n",
     "ru": f"{_PROMPT_INTRO}\n\n{_PROMPT_RU}\n",
     "es": f"{_PROMPT_INTRO}\n\n{_PROMPT_ES}\n",
     "he": f"{_PROMPT_INTRO}\n\n{_PROMPT_HE}\n",
+    "it": f"{_PROMPT_INTRO}\n\n{_PROMPT_IT}\n",
 }
 
 # Full prompt — all languages combined. Used by verb_service and as fallback.
-_GENERATION_SYSTEM_PROMPT = "\n\n".join([_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE]) + "\n"
+_GENERATION_SYSTEM_PROMPT = (
+    "\n\n".join([_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE, _PROMPT_IT]) + "\n"
+)
 
 # ---------------------------------------------------------------------------
 # Model and token settings

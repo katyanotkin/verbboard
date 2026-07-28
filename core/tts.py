@@ -32,6 +32,10 @@ VOICES = {
         "female": Voice("female", "Female", "es-ES-ElviraNeural"),
         "male": Voice("male", "Male", "es-ES-AlvaroNeural"),
     },
+    "it": {
+        "female": Voice("female", "Female", "it-IT-ElsaNeural"),
+        "male": Voice("male", "Male", "it-IT-DiegoNeural"),
+    },
 }
 
 RATE = "-10%"

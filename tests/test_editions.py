@@ -2,9 +2,12 @@
 
 No TestClient here -- app.main is already imported by tests/conftest.py before
 any test module is collected, which triggers the language plugin self-registration
-(core/main.py imports core.languages.{en,es,he,ru}.plugin). That registration
-order (en, es, he, ru) is exactly what these tests rely on for the
-order-preservation guarantee.
+(core/main.py imports core.languages.{en,es,he,it,ru}.plugin). That registration
+order (en, es, he, it, ru) is exactly what these tests rely on for the
+order-preservation guarantee. "it" is a real, registered Plus-only plugin (no
+"fr" plugin yet) -- free edition's study_languages excludes it, so it never
+appears in free-edition assertions below; only the order-preservation test
+needs to account for its presence in the full registry.
 """
 
 from __future__ import annotations
@@ -28,13 +31,17 @@ def test_active_study_plugins_preserves_registry_order_not_study_languages_order
     alphabetical order and NOT settings.study_languages tuple order.
 
     This is the property most likely to silently break the home-page language
-    picker if it regressed: registry order is (en, es, he, ru) while
-    study_languages order is (en, ru, he, es) -- they genuinely differ.
+    picker if it regressed: registry order is (en, es, he, it, ru) while
+    study_languages order is (en, ru, he, es) -- they genuinely differ. Free
+    edition also excludes "it" (Plus-only), so plugins is a strict subset of
+    the full registry, not an identical set -- assert it's an
+    order-preserving subset, not byte-identical to all_plugins().
     """
     settings = load_settings()
     plugins = active_study_plugins(settings)
 
-    assert list(plugins.keys()) == list(all_plugins().keys())
+    expected_order = [code for code in all_plugins().keys() if code in plugins]
+    assert list(plugins.keys()) == expected_order
     assert list(plugins.keys()) != list(settings.study_languages)
 
 

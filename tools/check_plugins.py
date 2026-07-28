@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import core.languages.en.plugin  # noqa: F401
 import core.languages.es.plugin  # noqa: F401
 import core.languages.he.plugin  # noqa: F401
+import core.languages.it.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
 from core.languages.config import FREE_STUDY_LANGUAGES
 from core.registry import all_plugins

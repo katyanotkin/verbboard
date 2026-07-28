@@ -12,6 +12,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 import core.languages.en.plugin  # noqa: F401
 import core.languages.es.plugin  # noqa: F401
 import core.languages.he.plugin  # noqa: F401
+import core.languages.it.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
 from app.routes.about import router as about_router
 from app.routes.admin import router as admin_router

@@ -46,15 +46,17 @@ def test_home_language_picker_free_edition_baseline(client: TestClient) -> None:
     assert options == ["en", "es", "he", "ru"]
 
 
-def test_home_language_picker_unaffected_by_edition_plus(client: TestClient, monkeypatch) -> None:
-    """EDITION=plus must be a visible no-op today: the it/fr plugins don't exist
-    yet, so the language picker must render the exact same options as free."""
+def test_home_language_picker_edition_plus_adds_only_italian(client: TestClient, monkeypatch) -> None:
+    """Italian now has a real registered plugin (Plus-only, no content yet).
+    Free edition must still exclude it; EDITION=plus must add exactly "it" and
+    nothing else (no "fr" -- that plugin doesn't exist yet)."""
     baseline_options = _language_picker_options(client.get("/?language=en").text)
+    assert "it" not in baseline_options
 
     monkeypatch.setenv("EDITION", "plus")
     plus_options = _language_picker_options(client.get("/?language=en").text)
 
-    assert plus_options == baseline_options
+    assert set(plus_options) - set(baseline_options) == {"it"}
 
 
 # ── verbs ──────────────────────────────────────────────────────────────────
