@@ -42,8 +42,8 @@ Inside the zip:
 - `signing.keystore` -- KEEP SAFE, needed for every future update
 - `key.properties` -- alias/passwords
 
-- [ ] Package generated
-- [ ] **Keystore backed up** -- encrypted local backup + copy in GCP Secret Manager (alias + passwords too). Losing this means losing the ability to update the app.
+- [x] Package generated -- `VerbBoard.aab` built Jul 23, package name confirmed `com.verbboard.app` via compiled manifest inspection (2026-07-29)
+- [x] **Keystore backed up** -- `verbboard-play-signing-keystore` + `verbboard-play-signing-key-info` present in GCP Secret Manager (verified 2026-07-29)
 
 ### Step 5.2: Create app in Play Console [YOU DO THIS]
 
@@ -54,7 +54,7 @@ play.google.com/console > Create app
 - Free or paid: **Free** (decided 2026-07-15; a free listing can never become paid -- accepted, Plus carries monetization)
 - Accept policies > Create
 
-- [ ] App created
+- [x] App created -- "VerbBoard" registered in Play Console with package `com.verbboard.app` (confirmed by owner 2026-07-29)
 
 ### Step 5.3: Upload AAB to Internal Testing [YOU DO THIS]
 
@@ -74,7 +74,7 @@ Play Console > Test and release > Testing > Internal testing > Create new releas
 - What's new: `Initial release`
 - Save and roll out to internal testing (add yourself as a tester to sanity-check the install)
 
-- [ ] AAB uploaded to internal testing (Play App Signing is enabled automatically on first upload; Google re-signs with its own key -- this is why step 5.5 matters)
+- [x] AAB uploaded to internal testing -- release 1 (1.0.0.0), full rollout, Jul 24 2026 (confirmed via Play Console 2026-07-29; Play App Signing should now be enabled -- proceed to step 5.5 to get the real fingerprint)
 
 ### Step 5.4: Complete store listing [YOU DO THIS]
 
@@ -159,7 +159,8 @@ Play Console > Test and release > Testing > Closed testing > Create a track
 > Create new release (can reuse the AAB already uploaded in 5.3, or upload
 fresh) > roll out to the closed track.
 
-- [ ] Closed testing track created, AAB uploaded
+- [x] Closed testing track created -- using `closed-testing-1.0.0` (owner decision 2026-07-29; a second auto-created "Alpha" track exists and is being left inactive/unused, not filled in)
+- [ ] AAB uploaded to `closed-testing-1.0.0` specifically (separate release from the Internal testing one)
 - [ ] Recruit >=12 testers (friends/family/community) willing to opt in and keep the app installed
 - [ ] Share the closed-testing opt-in link (Play Console > Testing > Closed testing > your track > "Testers" tab) with all 12+
 - [ ] Confirm all 12+ have opted in (Play Console shows opt-in count) -- the 14-day clock only counts while a tester is opted in, not from AAB upload
