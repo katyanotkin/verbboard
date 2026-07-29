@@ -117,7 +117,7 @@
             </div>
 
             {% if plus_required %}
-            <div class="notice" id="vb-notice">{{ ui['verbs.plus_required'] }}</div>
+            <div class="notice" id="vb-notice">{{ plus_required_message }}</div>
             {% elif generating_verb %}
             <div class="notice" id="vb-notice">⏳ &ldquo;{{ generating_verb }}&rdquo; {{ ui['home.generating'] }} <a id="vb-notice-retry" href="/search_verb?language={{ selected_language | urlencode }}&amp;q={{ generating_verb | urlencode }}&amp;ui_language={{ ui_lang | urlencode }}&amp;return_to={{ verbs_return_to }}">{{ ui['home.try_again'] }} <span id="vb-notice-countdown">20</span>s</a></div>
             <script>

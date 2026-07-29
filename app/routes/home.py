@@ -12,7 +12,7 @@ from fastapi.templating import Jinja2Templates
 
 from core.admin_auth import get_session_uid
 from core.admin_logging import log_missing_verb_search
-from core.editions import active_study_plugins, resolve_study_language
+from core.editions import active_study_plugins, resolve_study_language, study_language_label
 from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
@@ -277,12 +277,9 @@ def home(
     raw_search_value = search or ""
     search_value = "" if str(not_available) == "1" else raw_search_value
 
-    def _lang_label(key: str) -> str:
-        if key not in LANGUAGE:
-            return plugins[key].display_name
-        return ui.get(f"lang.{key}", LANGUAGE[key].display)
-
-    lang_options = [(key, _lang_label(key), key == selected_language) for key, plugin in plugins.items()]
+    lang_options = [
+        (key, study_language_label(key, plugins, ui), key == selected_language) for key, plugin in plugins.items()
+    ]
 
     notice_text = raw_search_value.strip() if str(not_available) == "1" else None
     generating_verb = notice_text if (notice_text and generating == 1) else None
