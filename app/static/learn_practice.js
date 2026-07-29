@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const abandonBtn = document.createElement("button");
     abandonBtn.className = "practice-abandon-btn";
-    abandonBtn.textContent = UI["practice.abandon"] || "Abandon practice";
+    abandonBtn.textContent = UI["practice.abandon"] || "Discard practice";
 
     const warnEl = document.createElement("span");
     warnEl.className = "practice-listen-warn";

@@ -67,8 +67,7 @@ body {
 
 [dir="rtl"] .topbar-nav,
 [dir="rtl"] .topbar-nav-right,
-[dir="rtl"] .topbar-body,
-[dir="rtl"] .func-panel {
+[dir="rtl"] .topbar-body {
   flex-direction: row-reverse;
 }
 

@@ -93,14 +93,16 @@ usage examples. Practice sessions drill the verbs you have seen and mark
 them as known when you are ready. Works offline after first load.
 
 Supports Spanish, Russian, Hebrew, and English.
-Clean interface, no ads, no gamification pressure.
+Clean interface, no ads, no pressure to log in daily.
 ```
 
-> **Copy check before submitting:** "no gamification pressure" vs shipped
-> badges -- reconcile the wording or make it a deliberate stance (flagged in
-> `PRODUCT_BACKLOG.md`, 2026-07-10 session). The day-streak feature that was
-> also part of this tension was removed entirely 2026-07-29 (owner call),
-> narrowing but not eliminating the tension -- badges alone remain.
+> **Copy tension resolved 2026-07-29:** "no gamification pressure" was
+> flagged (`PRODUCT_BACKLOG.md`, 2026-07-10 session) as inconsistent with
+> shipped badges. Reworded to "no pressure to log in daily" -- a precise
+> claim the app can actually back up (no daily-login mechanic, no lapse
+> penalty) rather than a blanket "no gamification" claim that badges alone
+> would still contradict. The day-streak feature this tension originally
+> also covered was removed entirely the same day (owner call).
 
 Assets:
 - App icon: 512x512 PNG -- use `app/static/icons/icon-512.png`

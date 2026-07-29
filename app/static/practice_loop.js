@@ -245,7 +245,7 @@
               </a>
 
               <button class="practice-abandon-btn" id="practice-abandon">
-                ${ui['practice.abandon'] || 'Abandon'}
+                ${ui['practice.abandon'] || 'Discard practice'}
               </button>
             </div>
           </div>
