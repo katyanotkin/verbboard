@@ -5,6 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import core.languages.en.plugin  # noqa: F401
 import core.languages.es.plugin  # noqa: F401
+import core.languages.fr.plugin  # noqa: F401
 import core.languages.he.plugin  # noqa: F401
 import core.languages.it.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401

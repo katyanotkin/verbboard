@@ -214,7 +214,7 @@ gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branc
 		--platform=managed \
 		--allow-unauthenticated \
 		--project=$(GCP_PROJECT) \
-		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE) \
+		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE),JUMP_TO_EXAMPLE_ENABLED=false \
 		--set-secrets=$(STAGE_SECRETS)
 	$(MAKE) firebase-deploy-hosting
 
@@ -232,7 +232,7 @@ gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-pro
 		--image $(STAGE_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,EDITION=free,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD)\
+		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,EDITION=free,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD),JUMP_TO_EXAMPLE_ENABLED=false\
                 --set-secrets $(PROD_SECRETS) \
 		--allow-unauthenticated
 	@echo "Waiting 10s for prod instance to activate (Cloud Run starts at 0 instances)..."

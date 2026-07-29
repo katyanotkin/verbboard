@@ -32,7 +32,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
         {"title": "board.tense_present", "rows": _tense_rows("pres", presente)},
-        {"title": "board.tense_preterite", "rows": _tense_rows("pp", passato_prossimo)},
+        {"title": "board.tense_perfect", "rows": _tense_rows("pp", passato_prossimo)},
     ]
 
     if imperfetto:

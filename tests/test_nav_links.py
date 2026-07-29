@@ -46,17 +46,18 @@ def test_home_language_picker_free_edition_baseline(client: TestClient) -> None:
     assert options == ["en", "es", "he", "ru"]
 
 
-def test_home_language_picker_edition_plus_adds_only_italian(client: TestClient, monkeypatch) -> None:
-    """Italian now has a real registered plugin (Plus-only, no content yet).
-    Free edition must still exclude it; EDITION=plus must add exactly "it" and
-    nothing else (no "fr" -- that plugin doesn't exist yet)."""
+def test_home_language_picker_edition_plus_adds_italian_and_french(client: TestClient, monkeypatch) -> None:
+    """Italian and French both have real registered plugins (Plus-only).
+    Free edition must still exclude both; EDITION=plus must add exactly
+    "it" and "fr" and nothing else."""
     baseline_options = _language_picker_options(client.get("/?language=en").text)
     assert "it" not in baseline_options
+    assert "fr" not in baseline_options
 
     monkeypatch.setenv("EDITION", "plus")
     plus_options = _language_picker_options(client.get("/?language=en").text)
 
-    assert set(plus_options) - set(baseline_options) == {"it"}
+    assert set(plus_options) - set(baseline_options) == {"it", "fr"}
 
 
 # ── verbs ──────────────────────────────────────────────────────────────────

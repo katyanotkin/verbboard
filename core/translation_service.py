@@ -28,7 +28,7 @@ HEBREW = "he"
 GEMINI_MODEL = "gemini-2.5-flash-lite"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 
-_LANG_NAMES = {"en": "English", "ru": "Russian", "he": "Hebrew", "es": "Spanish", "it": "Italian"}
+_LANG_NAMES = {"en": "English", "ru": "Russian", "he": "Hebrew", "es": "Spanish", "it": "Italian", "fr": "French"}
 
 
 def _translation_prompt(

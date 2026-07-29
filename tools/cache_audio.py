@@ -2,15 +2,24 @@
 Pre-cache verb audio to GCS for a given language.
 
 Pass --bucket once for a single target or multiple times to write to several
-buckets with a single TTS call per file (stage + prod in one run).
+buckets with a single TTS call per file (stage + prod in one run), or pass
+--both-buckets as shorthand for --bucket verbboard-audio-stage --bucket
+verbboard-audio-prod.
+
+--language accepts every registered plugin, including the Plus-only study
+languages (it, fr) -- 'all' expands to all of them, free and Plus alike.
 
 Run from project root (needs GCP auth):
 
     python -m tools.cache_audio --language he \\
         --bucket verbboard-audio-stage --bucket verbboard-audio-prod
 
+    python -m tools.cache_audio --language fr --both-buckets
+
     GOOGLE_CLOUD_PROJECT=knotmem26 AUDIO_BUCKET=verbboard-audio-prod \\
         python -m tools.cache_audio --language all
+
+    python -m tools.cache_audio --language it --both-buckets --dry-run
 
     python -m tools.cache_audio --language ru --voice female --dry-run
 """
@@ -32,19 +41,31 @@ _ENV_BUCKET = os.getenv("AUDIO_BUCKET", "")
 # Register all language plugins before registry lookups.
 import core.languages.en.plugin  # noqa: E402, F401
 import core.languages.es.plugin  # noqa: E402, F401
+import core.languages.fr.plugin  # noqa: E402, F401
 import core.languages.he.plugin  # noqa: E402, F401
+import core.languages.it.plugin  # noqa: E402, F401
 import core.languages.ru.plugin  # noqa: E402, F401
 from core.audio_backend.gcs import GCSAudioBackend  # noqa: E402
 from core.audio_service import build_audio_key, build_hashed_audio_key  # noqa: E402
+from core.languages.config import PLUS_EXTRA_STUDY_LANGUAGES  # noqa: E402
 from core.registry import get as get_plugin  # noqa: E402
-from core.supported_languages import (  # noqa: E402
-    supported_languages_list,
-    supported_languages_with_all,
-)
+from core.supported_languages import supported_languages_list  # noqa: E402
 from core.tts import VOICES, tts_to_mp3  # noqa: E402
 from core.verb_loader import load_entries_for_language  # noqa: E402
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
+
+# tools/cache_audio.py caches audio for every registered plugin, not just the
+# free/UI-language set core.supported_languages exposes -- Plus-only study
+# languages (Italian/French) need their audio cached too, same as any other
+# language. Deliberately not extending core.supported_languages.SUPPORTED_LANGUAGES
+# itself, since that list also gates things like demand-signal validation
+# (core/demand/gcs_events.py) where Plus-only codes aren't necessarily wanted yet.
+_ALL_CACHEABLE_LANGUAGES: list[str] = supported_languages_list() + list(PLUS_EXTRA_STUDY_LANGUAGES)
+
+# Canonical bucket names, mirrored from the Makefile's AUDIO_BUCKET_STAGE/AUDIO_BUCKET_PROD.
+_STAGE_BUCKET = "verbboard-audio-stage"
+_PROD_BUCKET = "verbboard-audio-prod"
 
 
 def _iter_form_items(verb, language: str, voice_key: str):
@@ -203,8 +224,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--language",
         required=True,
-        choices=supported_languages_with_all(),
-        help="Language code or 'all'",
+        choices=_ALL_CACHEABLE_LANGUAGES + ["all"],
+        help="Language code or 'all' (includes Plus-only study languages: it, fr)",
     )
     parser.add_argument(
         "--voice",
@@ -217,12 +238,18 @@ def _parse_args() -> argparse.Namespace:
         default=_ENV_PROJECT,
         help="GCP project ID (or set GOOGLE_CLOUD_PROJECT)",
     )
-    parser.add_argument(
+    bucket_group = parser.add_mutually_exclusive_group()
+    bucket_group.add_argument(
         "--bucket",
         action="append",
         dest="buckets",
         metavar="BUCKET",
         help=("GCS bucket name; repeat for multiple buckets (default: AUDIO_BUCKET env var)"),
+    )
+    bucket_group.add_argument(
+        "--both-buckets",
+        action="store_true",
+        help=f"Shorthand for --bucket {_STAGE_BUCKET} --bucket {_PROD_BUCKET}",
     )
     parser.add_argument(
         "--dry-run",
@@ -238,7 +265,10 @@ def main() -> None:
     if not args.project:
         sys.exit("ERROR: --project or GOOGLE_CLOUD_PROJECT is required")
 
-    buckets = args.buckets or ([_ENV_BUCKET] if _ENV_BUCKET else [])
+    if args.both_buckets:
+        buckets = [_STAGE_BUCKET, _PROD_BUCKET]
+    else:
+        buckets = args.buckets or ([_ENV_BUCKET] if _ENV_BUCKET else [])
     if not buckets:
         sys.exit("ERROR: --bucket or AUDIO_BUCKET is required")
 

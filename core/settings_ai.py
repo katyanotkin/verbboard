@@ -132,11 +132,41 @@ ITALIAN (it)
       unless the verb is reflexive, in which case still default masculine singular.
     imperfetto:        { io, tu, lui, noi, voi, loro }
     futuro:            { io, tu, lui, noi, voi, loro }
-    imperativo:        { tu, lei, noi, voi }  ← always include all four slots (no "io" imperative in Italian)
+    imperativo:        { tu, lei, noi, voi }  ← always include all four slots (no "io" imperative in Italian).
+      "lei" MUST be derived from the congiuntivo presente 3rd singular, never copied from the presente
+      indicativo — this is a common error specifically for modal verbs: e.g. dovere → "debba" (not
+      "deve"), potere → "possa" (not "può"), volere → "voglia" (not "vuole").
     gerundio: "<gerundio>"                  (string)
     participio: "<past participle>"         (string, masculine singular form)
   examples: 4 to 6 sentences in Italian, each using a distinct grammatical form:
     at least one presente, one passato prossimo, one imperfetto or futuro, one imperativo."""
+
+_PROMPT_FR = """\
+────────────────────────────────────────
+FRENCH (fr)
+  lemma: infinitive form
+  morph: {}
+  forms (all nested):
+    present:        { je, tu, il, nous, vous, ils }
+    passe_compose:  { je, tu, il, nous, vous, ils }  ← full compound form per person,
+      e.g. "j'ai parlé", "tu as parlé", "il a parlé", "nous avons parlé", "vous avez parlé", "ils ont parlé".
+      Use the correct auxiliary (avoir vs être) and agree the participle in gender/number
+      for être-verbs — default to masculine singular agreement (e.g. "il est allé", not "allée")
+      unless the verb is reflexive, in which case still default masculine singular.
+    imparfait:      { je, tu, il, nous, vous, ils }
+    futur:          { je, tu, il, nous, vous, ils }
+    imperatif:      { tu, nous, vous }  ← include all three slots for verbs that have an imperative.
+      A small number of verbs (e.g. pouvoir) are grammatically defective in the imperative mood in
+      standard French — no genuine command form exists. For these, return imperatif as an empty
+      object {} rather than fabricating forms by copying the présent (e.g. do NOT return
+      pouvoir.imperatif = {tu: "peux", nous: "pouvons", vous: "pouvez"} — that is not real French).
+      When in doubt whether a verb has a natural imperative, prefer omitting it over inventing one.
+    gerondif: "<gérondif, e.g. 'en parlant'>"  (string)
+    participe_passe: "<past participle>"       (string, masculine singular form)
+  Elision: use standard French elision (je → j') before a vowel sound, e.g. "j'ai parlé", "j'aime".
+  examples: 4 to 6 sentences in French, each using a distinct grammatical form:
+    at least one present, one passé composé, one imparfait or futur, and one impératif —
+    unless the verb has no natural imperative (see above), in which case cover another form instead."""
 
 _LANG_PROMPTS: dict[str, str] = {
     "en": f"{_PROMPT_INTRO}\n\n{_PROMPT_EN}\n",
@@ -144,11 +174,12 @@ _LANG_PROMPTS: dict[str, str] = {
     "es": f"{_PROMPT_INTRO}\n\n{_PROMPT_ES}\n",
     "he": f"{_PROMPT_INTRO}\n\n{_PROMPT_HE}\n",
     "it": f"{_PROMPT_INTRO}\n\n{_PROMPT_IT}\n",
+    "fr": f"{_PROMPT_INTRO}\n\n{_PROMPT_FR}\n",
 }
 
 # Full prompt — all languages combined. Used by verb_service and as fallback.
 _GENERATION_SYSTEM_PROMPT = (
-    "\n\n".join([_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE, _PROMPT_IT]) + "\n"
+    "\n\n".join([_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE, _PROMPT_IT, _PROMPT_FR]) + "\n"
 )
 
 # ---------------------------------------------------------------------------

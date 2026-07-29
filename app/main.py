@@ -11,6 +11,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 # Import plugins so they self-register on module import.
 import core.languages.en.plugin  # noqa: F401
 import core.languages.es.plugin  # noqa: F401
+import core.languages.fr.plugin  # noqa: F401
 import core.languages.he.plugin  # noqa: F401
 import core.languages.it.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
