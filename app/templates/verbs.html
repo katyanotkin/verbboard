@@ -14,7 +14,6 @@
 {% include '_persist_ui_lang.html' %}
   <script>
     window.VB_BADGE_COMPACT_THRESHOLD = {{ badge_compact_threshold }};
-    window.VB_STREAK_GRACE_ENABLED = {{ streak_grace_enabled | tojson }};
     window.VB_LANGUAGE = {{ lang_json | safe }};
     window.VB_UI_LANG = {{ ui_lang | tojson }};
     window.VB_VERBS = {{ verbs_json | safe }};
@@ -174,7 +173,6 @@
   {% set bnav_lang = selected_language %}{% set bnav_ui_lang = ui_lang %}{% set bnav_active = 'browse' %}{% set bnav_back_href = '/?language=' ~ selected_language ~ '&ui_language=' ~ ui_lang %}{% include '_bottom_nav.html' %}
 
   <script src="/static/storage.js"></script>
-  <script src="/static/streak.js"></script>
   <script src="/static/verbs_filters.js"></script>
   <script src="/static/practice_loop.js"></script>
   <script src="/static/verbs_page.js"></script>

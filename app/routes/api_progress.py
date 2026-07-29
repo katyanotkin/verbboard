@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import re
-from datetime import date
-
 from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 
 from core.auth.firebase_auth import get_optional_auth_user
 from core.progress.progress_service import (
@@ -18,7 +15,6 @@ from core.progress.progress_service import (
 router = APIRouter(prefix="/api/progress")
 
 _VALID_BADGE_SIZES = {3, 6, 9}
-_ISO_DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 class SeenRequest(BaseModel):
@@ -35,12 +31,6 @@ class KnownRequest(BaseModel):
 class PracticeProgressRequest(BaseModel):
     language: str = Field(min_length=2, max_length=3)
     badges: list[int]
-    streak_last_day: str | None = Field(default=None, min_length=10, max_length=10)
-    streak_len: int | None = Field(default=None, ge=1, le=36600)
-    # Client's local view of whether this streak has already used its one free
-    # miss (streak grace/freeze, N2). Ignored server-side unless
-    # Settings.streak_grace_enabled is on -- see core/progress/streak.py.
-    streak_grace_used: bool = False
 
     @field_validator("badges")
     @classmethod
@@ -49,25 +39,6 @@ class PracticeProgressRequest(BaseModel):
         if invalid:
             raise ValueError(f"badges contains invalid sizes {invalid}; allowed: {sorted(_VALID_BADGE_SIZES)}")
         return v
-
-    @field_validator("streak_last_day")
-    @classmethod
-    def streak_last_day_must_be_valid_iso_date(cls, v: str | None) -> str | None:
-        if v is None:
-            return v
-        if not _ISO_DAY_RE.match(v):
-            raise ValueError("streak_last_day must match YYYY-MM-DD")
-        try:
-            date.fromisoformat(v)
-        except ValueError as exc:
-            raise ValueError("streak_last_day must be a valid calendar date") from exc
-        return v
-
-    @model_validator(mode="after")
-    def streak_fields_both_or_neither(self) -> "PracticeProgressRequest":
-        if (self.streak_last_day is None) != (self.streak_len is None):
-            raise ValueError("streak_last_day and streak_len must both be provided or both omitted")
-        return self
 
 
 def _require_user(request: Request):
@@ -114,19 +85,8 @@ def get_practice_progress_route(
         language=language,
     )
 
-    streak = (
-        {
-            "last_day": progress.streak_last_day,
-            "len": progress.streak_len,
-            "grace_used": progress.streak_grace_used,
-        }
-        if progress.streak_last_day and progress.streak_len
-        else None
-    )
-
     return {
         "badges": progress.badges,
-        "streak": streak,
     }
 
 
@@ -170,23 +130,10 @@ def set_practice_progress(
 ):
     user = _require_user(request)
 
-    stored_streak = record_practice_progress(
+    record_practice_progress(
         user=user,
         language=payload.language,
         badges=payload.badges,
-        streak_last_day=payload.streak_last_day,
-        streak_len=payload.streak_len,
-        streak_grace_used=payload.streak_grace_used,
     )
 
-    streak = (
-        {
-            "last_day": stored_streak["last_day"],
-            "len": stored_streak["len"],
-            "grace_used": stored_streak.get("grace_used", False),
-        }
-        if stored_streak
-        else None
-    )
-
-    return {"ok": True, "streak": streak}
+    return {"ok": True}

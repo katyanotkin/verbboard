@@ -44,13 +44,12 @@ app/
                    # auth.js          -- Firebase auth, hydrateProgress, vb:* events
                    # progress.js      -- VerbBoardProgress (localStorage known/seen)
                    # storage.js       -- VerbBoardStorage (readSet/writeSet/readJson/writeJson)
-                   # streak.js        -- VerbBoardStreak (localDay/isNextDay/bump/merge/displayLen)
                    # practice_loop.js -- practice session + badge sync
                    # verbs_filters.js -- verb list filter/sort/render
                    # verbs_page.js    -- wires filters + practice loop + auth events
                    # learn.js         -- known button, audio tracking, practice bar
                    # pwa.js           -- install prompt (beforeinstallprompt), deferred
-                   # sw.js            -- service worker, cache version vb-v24; navigation requests fall back to /static/offline.html when offline
+                   # sw.js            -- service worker, cache version vb-v25; navigation requests fall back to /static/offline.html when offline
                    # manifest.json    -- PWA manifest (icons, display, scope)
                    # icons/           -- PNG icons for PWA (48/72/96/144/192/512px + maskable)
   templates/       # Jinja2 templates
@@ -118,10 +117,10 @@ Use the **Explore** agent for detailed file navigation.
 - Completion earns a badge (session size appended to `badges` list)
 - `BADGE_COMPACT_THRESHOLD` (from `VB_BADGE_COMPACT_THRESHOLD`) switches to compact grouped badge display
 - Wrap-up modal on return to verbs page (`practice_wrapup:{lang}`)
-- Day streak: `localStorage` key `practice_streak:{lang}` -- `{last_day, len}` (client-local calendar day, absent = no streak); mirrored server-side on `user_practice/{uid}/languages/{lang}` as `streak_last_day`/`streak_len`; bumped in `_finishPractice()` on badge earn; identical `merge()` logic lives in `app/static/streak.js` (`VerbBoardStreak`) and `core/progress/streak.py` (`merge_streak`) -- same-day keeps max length, consecutive days extend, otherwise the later day wins; displayed only while the streak is still "alive" (last day = today or yesterday)
+- Day streak feature removed entirely (2026-07-29, owner call -- "not my game"); see `PRODUCT_BACKLOG.md` for the removal record if the mechanism needs to be understood historically
 
 **PWA / Mobile:**
-- Manifest at `/manifest.json`, service worker at `/sw.js` (cache `vb-v24`), icons in `app/static/icons/`
+- Manifest at `/manifest.json`, service worker at `/sw.js` (cache `vb-v25`), icons in `app/static/icons/`
 - **Bump the SW cache version on every deploy that changes a precached static asset** (`PRECACHE` list in `sw.js`) -- the fetch handler is cache-first with no `clients.claim()`, so an unchanged cache name means returning visitors silently keep the old file forever (bit us once: a `learn.js` feature shipped but returning users saw no change and no error)
 - Navigation requests (`e.request.mode === "navigate"`) are network-first with a fallback to the precached `/static/offline.html` on fetch failure -- pages are server-rendered/dynamic (Firestore-backed), so they are never cache-served; only static assets (CSS/JS/icons/svg) use the cache-first path
 - Install prompt: `pwa.js` listens for `beforeinstallprompt` (must not be deferred); shows install button; on mobile tap shows hint, second tap triggers prompt

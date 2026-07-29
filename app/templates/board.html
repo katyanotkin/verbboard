@@ -12,13 +12,11 @@
 {{ candidate_banner_assets | safe }}
 {% include '_persist_ui_lang.html' %}
 <script>window.UI = {{ board_ui_json | safe }};
-window.VB_UI_LANG = {{ html_lang | tojson }};
-window.VB_STREAK_GRACE_ENABLED = {{ streak_grace_enabled | tojson }};</script>
+window.VB_UI_LANG = {{ html_lang | tojson }};</script>
 
 {% include '_firebase_auth.html' %}
 
 <script defer src="/static/storage.js"></script>
-<script defer src="/static/streak.js"></script>
 <script defer src="/static/progress.js"></script>
 <script defer src="/static/learn.js"></script>
 <script defer src="/static/learn_practice.js"></script>

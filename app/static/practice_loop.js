@@ -12,7 +12,6 @@
     } = config;
 
     const storage = window.VerbBoardStorage;
-    const graceEnabled = !!window.VB_STREAK_GRACE_ENABLED;
 
     const _uiLang = window.VB_UI_LANG || '';
     const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
@@ -21,7 +20,6 @@
     const practiceSizeKey = `practice_size:${lang}`;
     const practiceBadgesKey = `practice_badges:${lang}`;
     const practiceWrapupKey = `practice_wrapup:${lang}`;
-    const practiceStreakKey = `practice_streak:${lang}`;
     const practiceMinPlaysKey = 'practice_min_plays';
     const LISTENS_MIN = 1;
     const LISTENS_MAX = 12;
@@ -64,26 +62,6 @@
       return storage.readJson(practiceBadgesKey, []);
     }
 
-    function readPracticeStreak() {
-      return storage.readJson(practiceStreakKey, null);
-    }
-
-    function streakChipHtml() {
-      const streakLib = window.VerbBoardStreak;
-      if (!streakLib) return '';
-      const rec = readPracticeStreak();
-      const len = streakLib.displayLen(rec);
-      if (!len) return '';
-      const label = ui['practice.streak'] || 'Day streak';
-      return (
-        `<span class="practice-streak" title="${label}">` +
-        `<span class="practice-streak-flame" aria-hidden="true">\u{1F525}</span>` +
-        `<span class="practice-streak-num" aria-hidden="true">${len}</span>` +
-        `<span class="vb-sr-only">${label}: ${len}</span>` +
-        `</span>`
-      );
-    }
-
     async function saveKnownVerbToServer(verbId, isKnown) {
       if (!window.VerbBoardAuth || !window.VerbBoardAuth.getIdToken) {
         return;
@@ -106,7 +84,7 @@
       });
     }
 
-    async function savePracticeBadgesToServer(badges, streak) {
+    async function savePracticeBadgesToServer(badges) {
       if (!window.VerbBoardAuth || !window.VerbBoardAuth.getIdToken) {
         return;
       }
@@ -118,11 +96,6 @@
       }
 
       const body = { language: lang, badges };
-      if (streak) {
-        body.streak_last_day = streak.last_day;
-        body.streak_len = streak.len;
-        body.streak_grace_used = !!streak.grace_used;
-      }
 
       await fetch('/api/progress/practice', {
         method: 'POST',
@@ -174,31 +147,8 @@
         ? payload.badges
         : localBadges;
 
-      // Streak merge: never regress a legitimate streak on either device.
-      const streakLib = window.VerbBoardStreak;
-      const localStreak = readPracticeStreak();
-      const serverStreak = payload.streak
-        ? {
-            last_day: payload.streak.last_day,
-            len: payload.streak.len,
-            grace_used: !!payload.streak.grace_used,
-          }
-        : null;
-      const mergedStreak = streakLib ? streakLib.merge(localStreak, serverStreak, graceEnabled) : (serverStreak || localStreak);
-      if (mergedStreak) {
-        storage.writeJson(practiceStreakKey, mergedStreak);
-      }
-
-      // Upload when local badges are ahead OR the merged streak advances the
-      // server's -- the two mechanisms sync independently.
-      const streakDiffers = mergedStreak && (
-        !serverStreak ||
-        mergedStreak.last_day !== serverStreak.last_day ||
-        mergedStreak.len !== serverStreak.len ||
-        !!mergedStreak.grace_used !== !!serverStreak.grace_used
-      );
-      if (localBadges.length > payload.badges.length || streakDiffers) {
-        savePracticeBadgesToServer(badgesToStore, mergedStreak);
+      if (localBadges.length > payload.badges.length) {
+        savePracticeBadgesToServer(badgesToStore);
       }
       storage.writeJson(practiceBadgesKey, badgesToStore);
 
@@ -282,7 +232,6 @@
           <div class="practice-panel-card">
             <div class="practice-card-header">
               <span class="practice-label">${ui['practice.label'] || 'Practice'}</span>
-              ${streakChipHtml()}
               ${badgesHtml}
             </div>
             <div class="practice-inprogress">
@@ -343,7 +292,6 @@
         <div class="practice-panel-card">
           <div class="practice-card-header">
             <span class="practice-label">${ui['practice.label'] || 'Practice'}</span>
-            ${streakChipHtml()}
             ${badgesHtml}
           </div>
           <div class="practice-picker">
@@ -485,13 +433,6 @@
       prompt.textContent = ui['practice.learned_prompt'] || 'Which verbs did you learn?';
 
       card.appendChild(prompt);
-
-      if (wrapupData.streakLen > 0) {
-        const streakLine = document.createElement('p');
-        streakLine.className = 'practice-wrapup-streak';
-        streakLine.textContent = (ui['practice.streak'] || 'Day streak') + ': \u{1F525} ' + wrapupData.streakLen;
-        card.appendChild(streakLine);
-      }
 
       const list = document.createElement('div');
       list.className = 'practice-wrapup-list';

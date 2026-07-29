@@ -96,9 +96,11 @@ Supports Spanish, Russian, Hebrew, and English.
 Clean interface, no ads, no gamification pressure.
 ```
 
-> **Copy check before submitting:** "no gamification pressure" vs the shipped
-> streaks/badges -- reconcile the wording or make it a deliberate stance
-> (flagged in `PRODUCT_BACKLOG.md`, 2026-07-10 session).
+> **Copy check before submitting:** "no gamification pressure" vs shipped
+> badges -- reconcile the wording or make it a deliberate stance (flagged in
+> `PRODUCT_BACKLOG.md`, 2026-07-10 session). The day-streak feature that was
+> also part of this tension was removed entirely 2026-07-29 (owner call),
+> narrowing but not eliminating the tension -- badges alone remain.
 
 Assets:
 - App icon: 512x512 PNG -- use `app/static/icons/icon-512.png`

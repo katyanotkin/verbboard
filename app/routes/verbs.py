@@ -152,7 +152,6 @@ def verb_browser(
             "not_a_verb_query": not_a_verb_query,
             "search_mode": search_mode or "native",
             "badge_compact_threshold": settings.badge_compact_threshold,
-            "streak_grace_enabled": settings.streak_grace_enabled,
             "total_verb_count": total_verb_count,
             "verbs_display_batch": settings.verbs_display_batch,
             "firebase_web_config_json": (settings.firebase_web_config_json),

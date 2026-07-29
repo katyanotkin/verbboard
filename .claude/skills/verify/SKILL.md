@@ -22,7 +22,7 @@ curl -s http://localhost:8001/health   # 200 when up (~8s)
 
 ## Browser surface
 
-Playwright (sync API) from the venv works headless. Effective pattern for progress/practice features: `goto` the page once, seed localStorage via `page.evaluate` (keys like `practice_streak:{lang}`, `practice_wrapup:{lang}`, `known:{lang}`), then `goto` again and assert on rendered DOM / screenshot. Use viewport 375x700 for the mobile check (project memory requires it), and `?language=he&ui_language=he` for the RTL pass.
+Playwright (sync API) from the venv works headless. Effective pattern for progress/practice features: `goto` the page once, seed localStorage via `page.evaluate` (keys like `practice_wrapup:{lang}`, `known:{lang}`), then `goto` again and assert on rendered DOM / screenshot. Use viewport 375x700 for the mobile check (project memory requires it), and `?language=he&ui_language=he` for the RTL pass.
 
 Real Firestore is hit locally (no emulator) — use throwaway language codes or far-future dates for seeded server state to stay deterministic.
 

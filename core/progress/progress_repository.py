@@ -5,7 +5,6 @@ from typing import Any
 from google.cloud import firestore
 
 from core.progress.models import PracticeProgress, PracticeSessionSize, VerbProgress
-from core.progress.streak import StreakRecord, merge_streak
 from core.storage.firestore_db import get_db
 
 USERS_COLLECTION = "users"
@@ -213,22 +212,6 @@ def list_progress_for_language(
 # ---------------------------------------------------------------------------
 
 
-def _read_streak(payload: dict[str, Any]) -> StreakRecord | None:
-    """Extract a streak record from a Firestore payload; malformed data reads as no streak."""
-    last_day = payload.get("streak_last_day")
-    try:
-        length = int(payload.get("streak_len") or 0)
-    except (TypeError, ValueError):
-        return None
-    if not last_day or length < 1:
-        return None
-    return {
-        "last_day": str(last_day),
-        "len": length,
-        "grace_used": bool(payload.get("streak_grace_used", False)),
-    }
-
-
 def get_practice_progress(
     *,
     user_id: str,
@@ -237,14 +220,10 @@ def get_practice_progress(
     doc = _practice_doc_ref(user_id, language).get()
 
     payload: dict[str, Any] = doc.to_dict() or {}
-    streak = _read_streak(payload)
 
     return PracticeProgress(
         language=language,
         badges=list(payload.get("badges", [])),
-        streak_last_day=streak["last_day"] if streak else None,
-        streak_len=streak["len"] if streak else 0,
-        streak_grace_used=streak["grace_used"] if streak else False,
     )
 
 
@@ -253,11 +232,7 @@ def save_practice_progress(
     user_id: str,
     language: str,
     badges: list[int],
-    streak_last_day: str | None = None,
-    streak_len: int | None = None,
-    streak_grace_used: bool = False,
-    grace_enabled: bool = False,
-) -> StreakRecord | None:
+) -> None:
     doc_ref = _practice_doc_ref(user_id, language)
 
     data: dict[str, Any] = {
@@ -266,29 +241,10 @@ def save_practice_progress(
         "updated_at": firestore.SERVER_TIMESTAMP,
     }
 
-    # Doc is already read here for the started_at check -- reuse it for the
-    # streak merge too, no extra read.
     existing = doc_ref.get()
     existing_payload: dict[str, Any] = existing.to_dict() or {}
 
     if not existing.exists or not existing_payload.get("started_at"):
         data["started_at"] = firestore.SERVER_TIMESTAMP
 
-    stored_streak = _read_streak(existing_payload)
-
-    if streak_last_day is not None and streak_len is not None:
-        incoming: StreakRecord = {
-            "last_day": streak_last_day,
-            "len": streak_len,
-            "grace_used": streak_grace_used,
-        }
-
-        merged = merge_streak(stored_streak, incoming, grace_enabled=grace_enabled)
-        if merged is not None:
-            data["streak_last_day"] = merged["last_day"]
-            data["streak_len"] = merged["len"]
-            data["streak_grace_used"] = merged["grace_used"]
-            stored_streak = merged
-
     doc_ref.set(data, merge=True)
-    return stored_streak

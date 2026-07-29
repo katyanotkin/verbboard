@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const _uiLang = window.VB_UI_LANG || '';
   const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
-  const _graceEnabled = !!window.VB_STREAK_GRACE_ENABLED;
 
   const progress = window.VerbBoardProgress;
   if (!progress) return;
@@ -220,30 +219,13 @@ document.addEventListener("DOMContentLoaded", function () {
       badges.push(session.size || session.ids.length);
       localStorage.setItem(badgesKey, JSON.stringify(badges));
 
-      const streakKey = `practice_streak:${language}`;
-      let streak = null;
-      let streakDisplayLen = 0;
-      if (window.VerbBoardStreak && window.VerbBoardStorage) {
-        const streakLib = window.VerbBoardStreak;
-        const storage = window.VerbBoardStorage;
-        const existingStreak = storage.readJson(streakKey, null);
-        streak = streakLib.bump(existingStreak, streakLib.localDay(), _graceEnabled);
-        storage.writeJson(streakKey, streak);
-        streakDisplayLen = streakLib.displayLen(streak);
-      }
-
       const practicePostBody = { language: language, badges: badges };
-      if (streak) {
-        practicePostBody.streak_last_day = streak.last_day;
-        practicePostBody.streak_len = streak.len;
-        practicePostBody.streak_grace_used = !!streak.grace_used;
-      }
 
       if (window.VerbBoardAuth && window.VerbBoardAuth.getIdToken) {
         try {
           const token = await window.VerbBoardAuth.getIdToken();
           if (token) {
-            const resp = await fetch("/api/progress/practice", {
+            await fetch("/api/progress/practice", {
               method: "POST",
               headers: {
                 Authorization: "Bearer " + token,
@@ -251,21 +233,6 @@ document.addEventListener("DOMContentLoaded", function () {
               },
               body: JSON.stringify(practicePostBody),
             });
-            // The server merges against other devices' streaks; adopt its
-            // answer so the wrap-up modal never under-counts.
-            if (resp.ok && window.VerbBoardStreak && window.VerbBoardStorage) {
-              const data = await resp.json().catch(function () { return {}; });
-              if (data.streak && data.streak.last_day && data.streak.len) {
-                const serverStreak = {
-                  last_day: data.streak.last_day,
-                  len: data.streak.len,
-                  grace_used: !!data.streak.grace_used,
-                };
-                streak = window.VerbBoardStreak.merge(streak, serverStreak, _graceEnabled);
-                window.VerbBoardStorage.writeJson(streakKey, streak);
-                streakDisplayLen = window.VerbBoardStreak.displayLen(streak);
-              }
-            }
           }
         } catch (_) {}
       }
@@ -275,7 +242,6 @@ document.addEventListener("DOMContentLoaded", function () {
         JSON.stringify({
           ids: session.ids,
           lemmas: session.lemmas || {},
-          streakLen: streakDisplayLen,
         })
       );
     } else if (capsuleEl) {

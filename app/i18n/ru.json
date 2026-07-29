@@ -120,6 +120,5 @@
   "board.number_pl": "Мн",
   "home.install_hint": "Нажмите ⋮ в браузере, затем «Добавить на гл. экран»",
   "home.install_hint_dismiss": "Закрыть",
-  "practice.no_badge": "Без медали",
-  "practice.streak": "Дней подряд"
+  "practice.no_badge": "Без медали"
 }

@@ -114,6 +114,7 @@ Practice day-streak, from the 2026-07-02 session's "New requests" list and the p
 
 - **Shipped:** consecutive-day tracking on session completion, stored per-language in localStorage (`practice_streak:{lang}`) and mirrored server-side on `user_practice` (`streak_last_day`/`streak_len`). Merge logic (`core/progress/streak.py` + `app/static/streak.js`, kept in sync and covered by a Node/Python parity test) never shrinks a legitimate streak: same day keeps the max length, consecutive days extend, a gap of 2+ days lets the later day win. `POST /api/progress/practice` returns the server-merged streak so the wrap-up modal never under-counts on a lagging device. 🔥 chip renders in the verbs-page practice panel (LTR+RTL, hidden when the streak is dead); wrap-up modal shows the current streak. Localized label added to all four locales (`practice.streak`). 47 new tests. Manual QATP in `QATP_streak_manual.md`; core cases confirmed on stage incl. next-day increment.
 - **Follow-up fix (2026-07-09):** mobile practice-bar layout -- Skip and Abandon shared one crowded row on narrow screens; reordered via CSS `flex`/`order` so Skip sits full-width directly under the counter and Abandon sits below Skip (user feedback from stage testing).
+- **REMOVED ENTIRELY 2026-07-29** (owner call, "not my game" -- not a gamification mechanic the product wants, in either edition). See "Day streak feature -- removed entirely" session entry below for the full removal record. Streak grace/freeze (below) is removed along with it, since it was a sub-feature of streak.
 
 ### New item: in-app "help" affordance design -- NEEDS DISCUSSION
 
@@ -419,7 +420,9 @@ function buildPool(size) {
 - **Test plan:** `buildPool()` is currently untested (no unit test file for `practice_loop.js` pool logic). Given the quota-selection logic is now a small pure function of `(verbs, knownSet, seenSet, size)`, consider extracting it so it can run through the same Node-harness pattern already used for `tests/test_streak_merge.py` (single subprocess, no browser) rather than requiring a full Playwright e2e test just to check a sampling ratio -- cases: quota fully satisfiable, quota larger than available seen-not-known pool (degrades to `Math.min`), quota=0 (empty seen-not-known pool), pad-with-known branch untouched.
 - **Still open before implementing:** confirm the `REPEAT_QUOTA` table values (1/2/2 above is a starting guess, not decided) and whether this ships free-tier or also gets swept into the Plus-only framing now applied to spaced repetition/streak-grace (see below) -- unlike streak-grace, this one has no existing free-tier behavior to protect, so there's no urgency forcing that call the way there was for streak-grace.
 
-### Streak grace/freeze (N2) -- rule DECIDED, scope moved to Plus, ✅ SHIPPED 2026-07-27
+### Streak grace/freeze (N2) -- rule DECIDED, scope moved to Plus, ✅ SHIPPED 2026-07-27, ❌ REMOVED 2026-07-29
+
+**Removed along with the base streak feature it extended** (owner call, "not my game") -- see "Day streak feature -- removed entirely" session entry near the end of this doc. The rest of this entry is preserved as history.
 
 Rule decided: **one free miss per streak** -- a single missed day never breaks the current streak (no matter how long it's been running); the grace resets (becomes available again) only when the streak itself resets to length 1. Simpler than a redeemable "freeze balance" (N2's original alternate framing); no separate resource to display or manage.
 
@@ -554,3 +557,30 @@ Same treatment as the Italian audit above, run against all 30 live French verbs,
 **Coverage gaps, shared with Italian's audit, still undocumented decisions:** no conditionnel (French's "je voudrais" is arguably more load-bearing for a beginner than futur, same undocumented-gap pattern as Italian's missing congiuntivo/condizionale); no regular 2nd-group -ir/-iss- verb (e.g. finir: je finis, nous finissons) tested against real generated data, mirroring Italian's untested -isc- infix class.
 
 **Not actioned:** the two milder example-completeness gaps and the coverage-gap product decisions, same as Italian's equivalent open items.
+
+## 2026-07-29 session
+
+### Day streak feature -- removed entirely
+
+Owner call: "not my game" -- the day-streak mechanic (🔥 chip, consecutive-day tracking, wrap-up modal display, streak grace/freeze) is not a gamification pattern this product wants, in either edition. Initially scoped as "move to Plus-only" (mirroring how Italian/French are edition-gated), then the owner clarified mid-implementation: remove it completely, not gate it. Badges (session-completion medals) are unaffected and remain in both editions -- only the day-streak mechanic is gone.
+
+**Removed entirely:**
+- `core/progress/streak.py` (pure merge functions) and `app/static/streak.js` (`VerbBoardStreak`, client mirror) -- both deleted outright.
+- `PracticeProgress.streak_last_day`/`streak_len`/`streak_grace_used` fields (`core/progress/models.py`).
+- Streak read/merge/write logic in `core/progress/progress_repository.py` (`_read_streak`, streak branch of `save_practice_progress`) and `core/progress/progress_service.py` (`record_practice_progress`'s streak params).
+- `Settings.streak_grace_enabled` (`core/settings.py`, `STREAK_GRACE_ENABLED` env var) and the `streak_grace_enabled` passthrough in `core/render.py`, `app/routes/learn.py`, `app/routes/verbs.py`.
+- Streak fields on `PracticeProgressRequest` and the `"streak"` key on both `GET`/`POST /api/progress/practice` responses (`app/routes/api_progress.py`) -- these endpoints are badges-only now.
+- `window.VB_STREAK_GRACE_ENABLED` and the `<script src="/static/streak.js">` tag from `board.html`/`verbs.html`; the streak sentence from all 4 language branches of `about.html`.
+- Streak bump/read/write/POST logic in `app/static/learn_practice.js`'s `_finishPractice()`, and the streak chip/merge/wrap-up-line logic in `app/static/practice_loop.js` (`streakChipHtml()`, the streak-merge branch of `syncPracticeBadgesFromServer()`, the wrap-up modal's streak line).
+- `practice_streak:` from `auth.js`'s sign-out localStorage cleanup list (dead key, nothing ever writes it anymore).
+- `.practice-streak`/`.practice-streak-flame`/`.practice-streak-num`/`.practice-wrapup-streak` CSS rules (`app/static/verbs.css`).
+- `STREAK_GRACE_ENABLED` documentation line from `.env.sample`.
+- `tests/test_streak_merge.py` (JS/Python parity test) and `QATP_streak_manual.md` (manual QA script) deleted outright. Streak-specific test blocks removed from `tests/test_settings.py`, `tests/test_firebase_auth.py` (fixture kwarg), `tests/test_progress_api.py` (~360 lines, the entire "Practice streak" + "Streak grace/freeze" sections), `tests/test_progress_repository.py` (~215 lines, the entire "Practice streak" section).
+- `sw.js` precache list dropped `/static/streak.js`; cache version bumped `vb-v24` -> `vb-v25` per the standing SW-bump convention (a precached asset changed).
+- Doc references cleaned up: `CLAUDE.md` (file-tree comment, Practice-loop bullet, cache-version mentions), `README.md` (feature bullet), `GOOGLE_PLAY_CHECKLIST.md` (narrowed the "no gamification pressure vs shipped streaks/badges" copy-tension note -- streak's gone, badges alone remain, so the tension is reduced but not eliminated), `.claude/skills/verify/SKILL.md` (dropped `practice_streak:{lang}` from the example localStorage-seeding key list).
+
+**Data retention:** existing `user_practice/{uid}/languages/{lang}` Firestore docs may still carry old `streak_last_day`/`streak_len`/`streak_grace_used` fields from before this removal -- they are simply never read or written again (the repository layer no longer references them). Not actively purged; harmless dead data, cheap to leave.
+
+**Why:** direct owner instruction, no further rationale requested or needed -- streak/gamification-pressure mechanics were already a live tension against the "no gamification pressure" free-listing copy (see `GOOGLE_PLAY_CHECKLIST.md` note above and the 2026-07-10 session), and the owner decided to resolve it by removing the mechanic rather than reconciling the copy.
+
+**How to apply:** if a future streak-like feature is ever requested again, treat it as a new feature from scratch -- do not attempt to revive the deleted `core/progress/streak.py`/`app/static/streak.js` merge logic by un-deleting it; re-derive requirements fresh, since the removal was a deliberate product stance, not a refactor.
