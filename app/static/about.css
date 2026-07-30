@@ -67,3 +67,16 @@ h1 {
   text-align: center;
   font-size: 0.85rem;
 }
+
+.about-page-link {
+  font-size: 0.875rem;
+  color: var(--color-navy);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.1s, opacity 0.1s;
+}
+
+.about-page-link:hover {
+  opacity: 0.75;
+}
