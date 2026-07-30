@@ -431,6 +431,34 @@
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: baseline;
+  padding: 8px 6px;
+  margin: -8px -6px;
+  border-radius: 6px;
+}
+
+.practice-label:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--button-primary-bg);
+}
+
+.practice-label-help {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: normal;
+  vertical-align: super;
+  margin-inline-start: 3px;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+.practice-label:hover .practice-label-help,
+.practice-label:focus-visible .practice-label-help {
+  color: var(--button-primary-bg);
 }
 
 [dir="rtl"] .practice-label {
@@ -473,23 +501,6 @@
   white-space: nowrap;
   font-weight: 600;
   flex-shrink: 0;
-  text-decoration: underline dotted;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-
-.practice-size-hint:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-@media (pointer: coarse) {
-  .practice-size-hint {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-  }
 }
 
 [dir="rtl"] .practice-size-hint {
