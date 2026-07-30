@@ -584,3 +584,13 @@ Owner call: "not my game" -- the day-streak mechanic (🔥 chip, consecutive-day
 **Why:** direct owner instruction, no further rationale requested or needed -- streak/gamification-pressure mechanics were already a live tension against the "no gamification pressure" free-listing copy (see `GOOGLE_PLAY_CHECKLIST.md` note above and the 2026-07-10 session), and the owner decided to resolve it by removing the mechanic rather than reconciling the copy.
 
 **How to apply:** if a future streak-like feature is ever requested again, treat it as a new feature from scratch -- do not attempt to revive the deleted `core/progress/streak.py`/`app/static/streak.js` merge logic by un-deleting it; re-derive requirements fresh, since the removal was a deliberate product stance, not a refactor.
+
+## 2026-07-30 session
+
+### Home -> Verbs nav -- audit request, found already shipped
+
+Owner ask: "add nav from home to verbs to todo list free edition." Checked `app/templates/home.html` before scoping anything: the `.browse-row` (lines 124-133) already has two links -- `#browse-btn` ("🧩 Browse verbs", plain `/verbs?language=...&ui_language=...`) and `.browse-practice-btn` ("▶ Practice", same URL with `#practice-panel` appended so it jumps straight to the practice panel on load). This is not a gap. No feature work needed.
+
+**What's actually open:** the labels and the nav itself have never had a discoverability/i18n-consistency pass recorded anywhere in this log. Checked all 4 locale files (`app/i18n/{en,ru,he,es}.json`): `home.browse_link` and `practice.label` are both present and translated in all four (no missing-key risk). One nuance worth a human look, not a bug: EN/ES/HE all render `home.browse_link` as some form of "browse/scroll through verbs" (dgdud verbs / Explorar verbos / דפדוף בפעלים), while RU renders it as "Выбрать глагол" ("Choose a verb") -- same intent, different verb-of-navigation. Not flagged as wrong, just not verified as a deliberate translation choice.
+
+**Added to roadmap:** Free TODO item for a small audit/polish pass (labeling consistency across locales + whether the two-link row is discoverable enough as the only home->verbs entry point, especially on first-run/mobile) rather than a build item, since the underlying nav already exists and works. See `PRODUCT_ROADMAP.md` Free TODO.

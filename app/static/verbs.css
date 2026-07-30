@@ -445,13 +445,12 @@
 }
 
 .practice-label-help {
-  font-size: 9px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: none;
   letter-spacing: normal;
-  vertical-align: super;
-  margin-inline-start: 3px;
+  margin-inline-start: 4px;
   text-decoration: underline dotted;
   text-underline-offset: 2px;
 }
