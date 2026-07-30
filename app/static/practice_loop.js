@@ -297,13 +297,13 @@
           <div class="practice-picker">
             <div class="practice-picker-rows">
               <div class="practice-picker-row">
-                <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
+                <a class="practice-size-hint" href="/about${_uiLang ? '?ui_language=' + encodeURIComponent(_uiLang) : ''}#about-practice">${ui['practice.size_unit'] || '# of verbs'}</a>
                 <div class="practice-size-group">
                   ${sizeButtons}
                 </div>
               </div>
               <div class="practice-picker-row">
-                <span class="practice-size-hint">${ui['practice.listens_unit'] || '# audios / verb'}</span>
+                <a class="practice-size-hint" href="/about${_uiLang ? '?ui_language=' + encodeURIComponent(_uiLang) : ''}#about-practice">${ui['practice.listens_unit'] || '# audios / verb'}</a>
                 ${listenStepper}
               </div>
             </div>

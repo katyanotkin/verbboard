@@ -473,6 +473,23 @@
   white-space: nowrap;
   font-weight: 600;
   flex-shrink: 0;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.practice-size-hint:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (pointer: coarse) {
+  .practice-size-hint {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }
 
 [dir="rtl"] .practice-size-hint {
