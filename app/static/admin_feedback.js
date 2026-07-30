@@ -268,6 +268,12 @@
              </div>`
           : "";
 
+        const contactEmail = row.contact_email
+          ? `<div style="margin-top:6px;font-size:12px;color:#374151;">
+               <b>Reply to:</b> <a href="mailto:${escapeHtml(row.contact_email)}">${escapeHtml(row.contact_email)}</a>
+             </div>`
+          : "";
+
         return `
 	  <div class="card" style="padding:14px;margin-bottom:12px;">
 	    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px;">
@@ -290,6 +296,7 @@
 	      ${escapeHtml(row.comment || "")}
 	    </div>
 
+	    ${contactEmail}
 	    ${pollRaw}
 	  </div>
 	`;

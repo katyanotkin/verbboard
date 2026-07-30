@@ -23,6 +23,7 @@ def _normalize_feedback_doc(doc: Any) -> dict[str, Any]:
         "page": str(data.get("page") or ""),
         "source": str(data.get("source") or ""),
         "verb_id": str(data.get("verb_id") or ""),
+        "contact_email": str(data.get("contact_email") or ""),
         "hidden": bool(data.get("hidden", False)),
         "created_at": created_at.isoformat() if created_at else "",
     }

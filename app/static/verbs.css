@@ -378,7 +378,7 @@
 .practice-card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 18px;
   padding: 8px 14px;
   border-bottom: 1px solid #bfdbfe;
   flex-wrap: wrap;

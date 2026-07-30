@@ -99,6 +99,7 @@
   "feedback.poll_no": "No",
   "feedback.poll_no_pref": "No preference",
   "feedback.comment_placeholder": "What felt confusing, wrong, or missing, like a language you'd like us to add?",
+  "feedback.contact_email_placeholder": "Your email (optional, so we can reply)",
   "feedback.submit_button": "Send feedback",
   "feedback.success": "Thanks — feedback received.",
   "feedback.error_empty": "Please write a comment or answer Yes/No.",

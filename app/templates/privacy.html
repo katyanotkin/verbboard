@@ -58,7 +58,8 @@
     </ul>
 
     <h2 id="data-deletion">Data deletion</h2>
-    <p>Sign in, then use the button below to permanently delete your account and all associated data immediately.</p>
+    <p>If you've signed in with Google, use the button below to permanently delete your account and all associated data (server and local) immediately.</p>
+    <p>If you haven't signed in, VerbBoard has no account tied to you. Your progress is stored only in your browser. Clearing your browser data or uninstalling the app removes it.</p>
     <button id="delete-account-btn" class="btn-secondary hidden">{{ delete_account_button }}</button>
 
     <h2>Children</h2>
@@ -68,12 +69,16 @@
     <p>If we make material changes to this policy, we will update the effective date above.</p>
 
     <h2>Contact</h2>
-    <p><a href="mailto:assistantderecherche@gmail.com">assistantderecherche@gmail.com</a></p>
+    <p><a href="/feedback?page=privacy&amp;return_to={{ contact_return_to | urlencode }}&amp;ui_language={{ lang | urlencode }}">Contact us</a></p>
   </div>
 
   <div class="back">
     <a href="/?ui_language={{ lang | urlencode }}" class="feedback-link">Home</a>
   </div>
+
+  <p class="legal-cross-link">
+    <a href="/terms?ui_language={{ lang | urlencode }}" class="legal-page-link">{{ terms_label }}</a>
+  </p>
 </div>
 
 {% set bnav_lang = '' %}{% set bnav_active = '' %}{% set bnav_back_href = '/?ui_language=' ~ (lang | urlencode) %}{% include '_bottom_nav.html' %}

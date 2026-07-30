@@ -107,9 +107,11 @@ def test_privacy_mentions_data_collected(client: TestClient) -> None:
     assert "email" in html.lower()
 
 
-def test_privacy_has_contact_address(client: TestClient) -> None:
+def test_privacy_has_contact_link(client: TestClient) -> None:
+    """Contact goes through /feedback (with a reply-to email field), not a scrapeable mailto:."""
     html = client.get("/privacy").text
-    assert "assistantderecherche@gmail.com" in html
+    assert "mailto:" not in html
+    assert "/feedback?page=privacy" in html
 
 
 def test_privacy_has_bottom_nav(client: TestClient) -> None:

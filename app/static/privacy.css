@@ -66,3 +66,22 @@ h1 {
 .hidden {
   display: none;
 }
+
+.legal-cross-link {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.legal-page-link {
+  font-size: 0.875rem;
+  color: var(--color-navy);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.1s, opacity 0.1s;
+}
+
+.legal-page-link:hover {
+  opacity: 0.75;
+}

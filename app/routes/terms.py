@@ -26,5 +26,7 @@ def terms_page(request: Request) -> HTMLResponse:
             "firebase_web_config_json": settings.firebase_web_config_json,
             "auth_login": ui.get("auth.login", "Login"),
             "auth_logout": ui.get("auth.logout", "Logout"),
+            "privacy_label": ui.get("about.privacy", "Privacy Policy"),
+            "contact_return_to": f"/terms?ui_language={lang}",
         },
     )

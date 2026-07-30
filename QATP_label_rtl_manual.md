@@ -35,3 +35,29 @@ This was broken before this fix: `.func-panel`'s RTL rule fought its own column 
 ---
 
 Not testable in-app: the Play-listing copy change ("no gamification pressure" -> "no pressure to log in daily") is docs-only (`GOOGLE_PLAY_CHECKLIST.md`), nothing in the running app to check.
+
+---
+
+# QATP addendum: self-serve account deletion + practice-panel help link (manual)
+
+Commits: `fe506c8`..`c45ea41`. Covers self-serve account deletion (a real, irreversible action -- test with a throwaway/test account, not your main one, unless you're intentionally deleting it) and the new "PRACTICE ?" help affordance.
+
+Automated coverage already in place (do not re-test manually): route auth/success/failure paths, deletion-order pinning, per-module repository/entitlement/session unit tests (`tests/test_account_api.py`, `tests/test_account_deletion.py`, plus additions to `test_progress_repository.py`/`test_entitlements.py`/`test_session_tracker.py`).
+
+## E. Self-serve account deletion
+
+**TC-5:** Sign in with a real Google account you're OK deleting data for. Use the app a bit (mark a verb known, do a practice session) so there's real data to delete. Go to `/privacy`, confirm the "Delete my account and data" button is visible (only when signed in -- sign out and reload to confirm it disappears, sign back in to confirm it reappears).
+
+**TC-6:** Click the delete button. Expected: a confirm() dialog with unambiguous "permanent, cannot be undone" wording in your current UI language. Cancel it -- nothing should happen. Click it again and confirm -- expected: success alert, then signed out automatically. Sign back in with the same account: progress/known-verbs/badges should all be gone (fresh account state).
+
+**TC-7 (regression):** On `/privacy`, confirm there's no leftover mention of emailing for deletion -- the button is now the only path described.
+
+## F. Practice-panel "PRACTICE ?" help link
+
+**TC-8:** On `/verbs`, in the practice panel, the "PRACTICE" title should now read "PRACTICE ?" with a small de-emphasized question mark (not a circular badge, shouldn't look like a 3rd medal next to the streak-badge row). Click anywhere on "PRACTICE" (the whole label, not just the "?") -- expected: navigates to `/about` and jumps straight to the Practice section (heading "Тренировка" in Russian, matching the body text -- not "Практика"), not just the top of the page.
+
+**TC-9:** Start a practice session so the panel is in the "in progress" state (shows X/Y visited count instead of the size/listens pickers). Confirm "PRACTICE ?" is still there and still links correctly in this state too (this was inconsistent before the fix -- only the picker state had it).
+
+**TC-10:** Check at 375px and in Hebrew (RTL) -- confirm no layout shift/overflow, and the "?" sits naturally next to the label in both directions.
+
+Not testable in-app: package/Play Console submission status (steps 5.4-5.8) has no in-app surface to check.

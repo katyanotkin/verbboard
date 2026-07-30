@@ -38,5 +38,7 @@ def privacy_page(request: Request) -> HTMLResponse:
             "delete_account_error": ui.get(
                 "privacy.delete_account_error", "Something went wrong. Please try again, or email us."
             ),
+            "terms_label": ui.get("about.terms", "Terms of Use"),
+            "contact_return_to": f"/privacy?ui_language={lang}",
         },
     )

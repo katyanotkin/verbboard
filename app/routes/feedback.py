@@ -48,6 +48,9 @@ def feedback_form(
             "heading": ui["feedback.heading"],
             "back_label": ui["feedback.back"],
             "comment_placeholder": ui["feedback.comment_placeholder"],
+            "contact_email_placeholder": ui.get(
+                "feedback.contact_email_placeholder", "Your email (optional, so we can reply)"
+            ),
             "submit_label": ui["feedback.submit_button"],
             "auth_login": ui.get("auth.login", "Login"),
             "auth_logout": ui.get("auth.logout", "Logout"),
@@ -75,9 +78,11 @@ def submit_feedback(
     verb_id: str = Form(""),
     return_to: str = Form("/"),
     ui_language: str = Form(""),
+    contact_email: str = Form(""),
 ):
     return_to = safe_return_to(return_to, fallback="/")
     clean_comment = comment.strip()
+    clean_contact_email = contact_email.strip()
 
     if poll_answer not in get_poll_valid_answers(ACTIVE_POLL_ID or ""):
         poll_answer = ""
@@ -100,6 +105,7 @@ def submit_feedback(
             user_agent=user_agent,
             device_type=device_type,
             source="preview",
+            contact_email=clean_contact_email or None,
         )
     except ValueError:
         params = urlencode(
