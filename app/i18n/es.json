@@ -120,5 +120,9 @@
   "board.number_pl": "Pl",
   "home.install_hint": "Toca ⋮ en el navegador y elige «Agregar a inicio»",
   "home.install_hint_dismiss": "Cerrar",
-  "practice.no_badge": "Sin medalla"
+  "practice.no_badge": "Sin medalla",
+  "privacy.delete_account_button": "Eliminar mi cuenta y mis datos",
+  "privacy.delete_account_confirm": "Esto eliminará permanentemente tu cuenta y todos los datos (progreso, historial de práctica). Esta acción no se puede deshacer. ¿Continuar?",
+  "privacy.delete_account_success": "Tu cuenta y tus datos se han eliminado.",
+  "privacy.delete_account_error": "Algo salió mal. Inténtalo de nuevo o escríbenos."
 }

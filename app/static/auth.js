@@ -428,6 +428,20 @@
     });
   }
 
+  async function deleteAccount() {
+    if (!currentUser) return;
+    const token = await getIdToken();
+    const resp = await fetch('/api/account', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token },
+    });
+    if (!resp.ok) {
+      throw new Error('Account deletion failed: ' + resp.status);
+    }
+    clearProgressLocalStorage();
+    await firebase.auth().signOut();
+  }
+
   // Called directly from the bottom-nav Profile tab so the user's tap is the
   // trusted gesture -- programmatic .click() on the auth button loses isTrusted,
   // which causes window.open() to be blocked by popup blockers in standalone mode.
@@ -453,6 +467,7 @@
     signIn: signIn,
     signOut: signOut,
     tapProfile: tapProfile,
+    deleteAccount: deleteAccount,
 
     getIdToken: getIdToken,
 

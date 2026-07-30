@@ -120,5 +120,9 @@
   "board.number_pl": "Pl",
   "home.install_hint": "Tap ⋮ in your browser, then \"Add to Home Screen\"",
   "home.install_hint_dismiss": "Dismiss",
-  "practice.no_badge": "No badge"
+  "practice.no_badge": "No badge",
+  "privacy.delete_account_button": "Delete my account and data",
+  "privacy.delete_account_confirm": "This will permanently delete your account and all data (progress, practice history). This cannot be undone. Continue?",
+  "privacy.delete_account_success": "Your account and data have been deleted.",
+  "privacy.delete_account_error": "Something went wrong. Please try again, or email us."
 }

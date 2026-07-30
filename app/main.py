@@ -17,6 +17,7 @@ import core.languages.it.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
 from app.routes.about import router as about_router
 from app.routes.admin import router as admin_router
+from app.routes.api_account import router as api_account_router
 from app.routes.api_analytics import router as api_analytics_router
 from app.routes.api_preferences import router as api_preferences_router
 from app.routes.api_progress import router as api_progress_router
@@ -100,6 +101,7 @@ app.include_router(privacy_router)
 app.include_router(terms_router)
 app.include_router(well_known_router)
 app.include_router(admin_router)
+app.include_router(api_account_router)
 app.include_router(api_analytics_router)
 app.include_router(audio_router)
 app.include_router(feedback_router)

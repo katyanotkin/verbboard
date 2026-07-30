@@ -3,12 +3,16 @@
 Covers:
 - get_fingerprint_sid: deterministic SHA256(ip|ua|date)[:32]; stable across
   calls, varies by IP / UA / date; uses X-Forwarded-For when present
+- delete_sessions_for_uid: query-and-delete-by-uid, used by account deletion
 """
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 from starlette.requests import Request
 
+from core.analytics import session_tracker
 from core.analytics.session_tracker import get_fingerprint_sid
 
 # ── request helper ─────────────────────────────────────────────────────────────
@@ -94,3 +98,33 @@ def test_fingerprint_falls_back_to_client_host() -> None:
     req = _build_request(forwarded_for="", user_agent="UA", client_host="192.168.1.1")
     sid = get_fingerprint_sid(req, "2026-06-10")
     assert len(sid) == 32
+
+
+# ── delete_sessions_for_uid ─────────────────────────────────────────────────────
+#
+# Sessions are keyed by (ip, ua, date) fingerprint, not uid, so this is a
+# query -- unlike every other uid-keyed deletion in this codebase (part of
+# account_deletion.delete_account()).
+
+
+def test_delete_sessions_for_uid_queries_by_uid_and_deletes_matches() -> None:
+    doc1 = MagicMock()
+    doc2 = MagicMock()
+    db = MagicMock()
+    db.collection.return_value.where.return_value.stream.return_value = iter([doc1, doc2])
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker.delete_sessions_for_uid("u1")
+
+    db.collection.assert_called_with(session_tracker.COLLECTION)
+    db.collection.return_value.where.assert_called_with("uid", "==", "u1")
+    doc1.reference.delete.assert_called_once()
+    doc2.reference.delete.assert_called_once()
+
+
+def test_delete_sessions_for_uid_no_matches_is_a_noop() -> None:
+    db = MagicMock()
+    db.collection.return_value.where.return_value.stream.return_value = iter([])
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker.delete_sessions_for_uid("u1")  # must not raise

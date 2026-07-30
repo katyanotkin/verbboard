@@ -10,7 +10,13 @@
   <link rel="stylesheet" href="/static/common.css"/>
   <link rel="stylesheet" href="/static/privacy.css"/>
 {% include '_persist_ui_lang.html' %}
-<script>window.UI = { "auth.login": {{ auth_login | tojson }}, "auth.logout": {{ auth_logout | tojson }} };</script>
+<script>window.UI = {
+  "auth.login": {{ auth_login | tojson }},
+  "auth.logout": {{ auth_logout | tojson }},
+  "privacy.delete_account_confirm": {{ delete_account_confirm | tojson }},
+  "privacy.delete_account_success": {{ delete_account_success | tojson }},
+  "privacy.delete_account_error": {{ delete_account_error | tojson }}
+};</script>
 {% include '_firebase_auth.html' %}
 </head>
 <body>
@@ -52,7 +58,8 @@
     </ul>
 
     <h2 id="data-deletion">Data deletion</h2>
-    <p>To delete your account data, email <a href="mailto:assistantderecherche@gmail.com">assistantderecherche@gmail.com</a>. We will remove all data linked to your account within 30 days.</p>
+    <p>If you are signed in, you can delete your account and all associated data immediately using the button below. Otherwise, email <a href="mailto:assistantderecherche@gmail.com">assistantderecherche@gmail.com</a> and we will remove all data linked to your account within 30 days.</p>
+    <button id="delete-account-btn" class="btn-secondary hidden">{{ delete_account_button }}</button>
 
     <h2>Children</h2>
     <p>VerbBoard is not directed at children under 13. We do not knowingly collect data from children.</p>
@@ -72,5 +79,6 @@
 {% set bnav_lang = '' %}{% set bnav_active = '' %}{% set bnav_back_href = '/?ui_language=' ~ (lang | urlencode) %}{% include '_bottom_nav.html' %}
 
 <script defer src="/static/pwa.js"></script>
+<script defer src="/static/privacy.js"></script>
 </body>
 </html>

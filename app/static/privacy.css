@@ -62,3 +62,7 @@ h1 {
     display: none !important;
   }
 }
+
+.hidden {
+  display: none;
+}

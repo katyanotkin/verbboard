@@ -357,3 +357,93 @@ def test_list_progress_uses_language_param_as_fallback() -> None:
         results = repo.list_progress_for_language(user_id="u1", language="en")
 
     assert results[0].language == "en"
+
+
+# ---------------------------------------------------------------------------
+# delete_all_progress_data
+#   user_progress/{uid}/languages/{lang}/verbs/{vid} (+ parents)
+#   user_practice/{uid}/languages/{lang} (+ parent, no verbs subcollection)
+#   users/{uid}
+# ---------------------------------------------------------------------------
+
+
+def _make_deletion_db() -> MagicMock:
+    """A db double whose .collection(name) is stable per collection name
+    (unlike the bare-MagicMock helpers above, this test needs distinct
+    mocks for "user_progress" vs "user_practice" vs "users" at once)."""
+    db = MagicMock()
+    cache: dict[str, MagicMock] = {}
+
+    def _collection(name):
+        return cache.setdefault(name, MagicMock())
+
+    db.collection.side_effect = _collection
+    return db
+
+
+def test_delete_all_progress_data_deletes_verbs_before_language_before_parent() -> None:
+    db = _make_deletion_db()
+    order: list[str] = []
+
+    progress_doc_ref = db.collection("user_progress").document.return_value
+
+    verb_go = MagicMock()
+    verb_go.reference.delete.side_effect = lambda: order.append("verb:en_go")
+    verb_run = MagicMock()
+    verb_run.reference.delete.side_effect = lambda: order.append("verb:en_run")
+
+    lang_en = MagicMock()
+    lang_en.reference.delete.side_effect = lambda: order.append("language:en")
+    lang_en.reference.collection.return_value.stream.return_value = iter([verb_go, verb_run])
+
+    progress_doc_ref.collection.return_value.stream.return_value = iter([lang_en])
+    progress_doc_ref.delete.side_effect = lambda: order.append("parent:user_progress")
+
+    practice_doc_ref = db.collection("user_practice").document.return_value
+    practice_lang_en = MagicMock()
+    practice_lang_en.reference.delete.side_effect = lambda: order.append("practice_language:en")
+    practice_doc_ref.collection.return_value.stream.return_value = iter([practice_lang_en])
+    practice_doc_ref.delete.side_effect = lambda: order.append("parent:user_practice")
+
+    users_doc_ref = db.collection("users").document.return_value
+    users_doc_ref.delete.side_effect = lambda: order.append("users_doc")
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.delete_all_progress_data("u1")
+
+    # Verb docs deleted before their parent language doc.
+    assert order.index("verb:en_go") < order.index("language:en")
+    assert order.index("verb:en_run") < order.index("language:en")
+    # Language docs deleted before the parent user_progress/{uid} doc.
+    assert order.index("language:en") < order.index("parent:user_progress")
+    # user_practice's language doc is also cleaned up (no verbs subcollection there).
+    assert order.index("practice_language:en") < order.index("parent:user_practice")
+    # users/{uid} is removed too.
+    assert "users_doc" in order
+
+    db.collection.assert_any_call("user_progress")
+    db.collection.assert_any_call("user_practice")
+    db.collection.assert_any_call("users")
+    db.collection("user_progress").document.assert_any_call("u1")
+    db.collection("user_practice").document.assert_any_call("u1")
+    db.collection("users").document.assert_any_call("u1")
+
+
+def test_delete_all_progress_data_handles_account_with_no_data() -> None:
+    """A user with no progress/practice history yet must not crash the
+    deletion pipeline -- empty streams, parent docs still get delete() calls
+    (a Firestore delete() on a nonexistent doc is a no-op, not an error)."""
+    db = _make_deletion_db()
+
+    progress_doc_ref = db.collection("user_progress").document.return_value
+    progress_doc_ref.collection.return_value.stream.return_value = iter([])
+
+    practice_doc_ref = db.collection("user_practice").document.return_value
+    practice_doc_ref.collection.return_value.stream.return_value = iter([])
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.delete_all_progress_data("u1")  # must not raise
+
+    progress_doc_ref.delete.assert_called_once()
+    practice_doc_ref.delete.assert_called_once()
+    db.collection("users").document.return_value.delete.assert_called_once()

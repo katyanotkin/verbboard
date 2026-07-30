@@ -125,3 +125,19 @@ async def attach_uid(fingerprint: str, date: str, uid: str) -> None:
     task = asyncio.create_task(asyncio.to_thread(_attach_uid, fingerprint, date, uid))
     _pending.add(task)
     task.add_done_callback(_pending.discard)
+
+
+def delete_sessions_for_uid(uid: str) -> None:
+    """Delete every analytics_sessions doc attached to this uid.
+
+    Sessions are keyed by (ip, ua, date) fingerprint, not uid, so there's no
+    direct doc-ID path -- this is a query, unlike every other uid-keyed
+    deletion in this codebase. Synchronous (account deletion is a one-off,
+    not a hot request path), unlike the fire-and-forget writer functions
+    above.
+    """
+    from core.storage.firestore_db import get_db
+
+    docs = get_db().collection(COLLECTION).where("uid", "==", uid).stream()
+    for doc in docs:
+        doc.reference.delete()

@@ -248,3 +248,35 @@ def save_practice_progress(
         data["started_at"] = firestore.SERVER_TIMESTAMP
 
     doc_ref.set(data, merge=True)
+
+
+# ---------------------------------------------------------------------------
+# Full account deletion
+# ---------------------------------------------------------------------------
+
+
+def delete_all_progress_data(user_id: str) -> None:
+    """Delete every uid-keyed doc this module owns: users/{uid},
+    user_progress/{uid}/languages/{lang}/verbs/{verb_id} (+ parents), and
+    user_practice/{uid}/languages/{lang} (+ parent).
+
+    Enumerates the actual `languages` subcollections rather than iterating
+    over the currently-configured language list -- that list only describes
+    languages supported *today*, not every language a long-lived account may
+    have data under.
+    """
+    db = get_db()
+
+    progress_ref = db.collection(USER_PROGRESS_COLLECTION).document(user_id)
+    for language_doc in progress_ref.collection(LANGUAGES_SUBCOLLECTION).stream():
+        for verb_doc in language_doc.reference.collection(VERBS_SUBCOLLECTION).stream():
+            verb_doc.reference.delete()
+        language_doc.reference.delete()
+    progress_ref.delete()
+
+    practice_ref = db.collection(USER_PRACTICE_COLLECTION).document(user_id)
+    for language_doc in practice_ref.collection(LANGUAGES_SUBCOLLECTION).stream():
+        language_doc.reference.delete()
+    practice_ref.delete()
+
+    db.collection(USERS_COLLECTION).document(user_id).delete()

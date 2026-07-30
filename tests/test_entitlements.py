@@ -158,6 +158,35 @@ def test_can_study_true_for_plus_language_entitled_user() -> None:
 
 
 # ---------------------------------------------------------------------------
+# delete_entitlement -- part of account deletion (core/account_deletion.py)
+# ---------------------------------------------------------------------------
+
+
+def test_delete_entitlement_deletes_the_doc() -> None:
+    db = _mock_db_with_doc(exists=True, data={"status": "active"})
+    with patch.object(entitlements, "get_db", return_value=db):
+        entitlements.delete_entitlement("u1")
+
+    db.collection.assert_called_with(entitlements.ENTITLEMENTS_COLLECTION)
+    db.collection.return_value.document.assert_called_with("u1")
+    db.collection.return_value.document.return_value.delete.assert_called_once()
+
+
+def test_delete_entitlement_invalidates_the_cache() -> None:
+    db = _mock_db_with_doc(exists=True, data={"status": "active"})
+    with patch.object(entitlements, "get_db", return_value=db):
+        assert entitlements.has_plus_entitlement("u1") is True  # populate the cache
+
+        entitlements.delete_entitlement("u1")
+
+        assert "u1" not in entitlements._entitlement_cache
+        # A fresh read after deletion sees no doc -- confirms the cache was
+        # actually cleared rather than serving the stale "True" value.
+        db.collection.return_value.document.return_value.get.return_value.exists = False
+        assert entitlements.has_plus_entitlement("u1") is False
+
+
+# ---------------------------------------------------------------------------
 # Admin grant/revoke helpers
 # ---------------------------------------------------------------------------
 

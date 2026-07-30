@@ -92,6 +92,11 @@ def invalidate_entitlement_cache(uid: str) -> None:
     _entitlement_cache.pop(uid, None)
 
 
+def delete_entitlement(uid: str) -> None:
+    get_db().collection(ENTITLEMENTS_COLLECTION).document(uid).delete()
+    invalidate_entitlement_cache(uid)
+
+
 # ---------------------------------------------------------------------------
 # Admin grant/revoke (Part E)
 # ---------------------------------------------------------------------------

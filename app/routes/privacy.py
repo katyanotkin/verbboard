@@ -26,5 +26,17 @@ def privacy_page(request: Request) -> HTMLResponse:
             "firebase_web_config_json": settings.firebase_web_config_json,
             "auth_login": ui.get("auth.login", "Login"),
             "auth_logout": ui.get("auth.logout", "Logout"),
+            "delete_account_button": ui.get("privacy.delete_account_button", "Delete my account and data"),
+            "delete_account_confirm": ui.get(
+                "privacy.delete_account_confirm",
+                "This will permanently delete your account and all data (progress, practice history). "
+                "This cannot be undone. Continue?",
+            ),
+            "delete_account_success": ui.get(
+                "privacy.delete_account_success", "Your account and data have been deleted."
+            ),
+            "delete_account_error": ui.get(
+                "privacy.delete_account_error", "Something went wrong. Please try again, or email us."
+            ),
         },
     )

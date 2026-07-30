@@ -120,5 +120,9 @@
   "board.number_pl": "Мн",
   "home.install_hint": "Нажмите ⋮ в браузере, затем «Добавить на гл. экран»",
   "home.install_hint_dismiss": "Закрыть",
-  "practice.no_badge": "Без медали"
+  "practice.no_badge": "Без медали",
+  "privacy.delete_account_button": "Удалить мой аккаунт и данные",
+  "privacy.delete_account_confirm": "Это навсегда удалит ваш аккаунт и все данные (прогресс, история тренировок). Это действие нельзя отменить. Продолжить?",
+  "privacy.delete_account_success": "Ваш аккаунт и данные удалены.",
+  "privacy.delete_account_error": "Что-то пошло не так. Попробуйте снова или напишите нам."
 }
