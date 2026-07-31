@@ -99,7 +99,10 @@
   "feedback.poll_no": "לא",
   "feedback.poll_no_pref": "אין העדפה",
   "feedback.comment_placeholder": "מה היה מבלבל, שגוי, או חסר, כמו שפה שהיית רוצה שנוסיף?",
-  "feedback.contact_email_placeholder": "האימייל שלך (אופציונלי, כדי שנוכל להשיב)",
+  "feedback.contact_email_label": "אימייל לחזרה (אופציונלי):",
+  "feedback.contact_email_label_required": "אימייל לחזרה:",
+  "feedback.error_email_required": "נדרש אימייל כדי שנוכל להשיב.",
+  "feedback.contact_email_placeholder": "you@example.com",
   "feedback.submit_button": "שלח",
   "feedback.success": "תודה — המשוב התקבל.",
   "feedback.error_empty": "אנא כתוב הערה או ענה כן/לא.",
@@ -125,5 +128,6 @@
   "privacy.delete_account_button": "מחק את החשבון והנתונים שלי",
   "privacy.delete_account_confirm": "פעולה זו תמחק לצמיתות את החשבון שלך ואת כל הנתונים (התקדמות, היסטוריית תרגול). לא ניתן לבטל פעולה זו. להמשיך?",
   "privacy.delete_account_success": "החשבון והנתונים שלך נמחקו.",
-  "privacy.delete_account_error": "משהו השתבש. נסה שוב או שלח לנו מייל."
+  "privacy.delete_account_error": "משהו השתבש. נסה שוב או שלח לנו מייל.",
+  "privacy.delete_account_disabled_title": "יש להתחבר עם Google כדי למחוק את החשבון"
 }

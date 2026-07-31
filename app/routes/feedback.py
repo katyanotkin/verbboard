@@ -37,6 +37,12 @@ def feedback_form(
     ui = get_strings(ui_lang)
     settings = load_settings()
 
+    # Visitors arriving via the "Contact us" link on /privacy or /terms are
+    # here specifically to reach the owner -- an unreachable submission
+    # defeats the purpose, so the email is required on that path only.
+    # General feedback (from every other page's 💬 link) stays anonymous-first.
+    contact_email_required = page in {"privacy", "terms"}
+
     return templates.TemplateResponse(
         request,
         "feedback.html",
@@ -48,9 +54,12 @@ def feedback_form(
             "heading": ui["feedback.heading"],
             "back_label": ui["feedback.back"],
             "comment_placeholder": ui["feedback.comment_placeholder"],
-            "contact_email_placeholder": ui.get(
-                "feedback.contact_email_placeholder", "Your email (optional, so we can reply)"
+            "contact_email_required": contact_email_required,
+            "contact_email_label": ui.get(
+                "feedback.contact_email_label_required" if contact_email_required else "feedback.contact_email_label",
+                "Reply to:" if contact_email_required else "Reply to (optional):",
             ),
+            "contact_email_placeholder": ui.get("feedback.contact_email_placeholder", "you@example.com"),
             "submit_label": ui["feedback.submit_button"],
             "auth_login": ui.get("auth.login", "Login"),
             "auth_logout": ui.get("auth.logout", "Logout"),
@@ -62,6 +71,10 @@ def feedback_form(
             "success_msg": ui["feedback.success"],
             "error_empty": error == "empty",
             "error_empty_msg": ui["feedback.error_empty"],
+            "error_email_required": error == "email_required",
+            "error_email_required_msg": ui.get(
+                "feedback.error_email_required", "Please provide an email so we can reply."
+            ),
             "poll_question": get_poll_question(ACTIVE_POLL_ID, ui_lang) if ACTIVE_POLL_ID else "",
             "poll_options": get_poll_options(ACTIVE_POLL_ID, ui_lang) if ACTIVE_POLL_ID else [],
         },
@@ -83,6 +96,19 @@ def submit_feedback(
     return_to = safe_return_to(return_to, fallback="/")
     clean_comment = comment.strip()
     clean_contact_email = contact_email.strip()
+
+    if page in {"privacy", "terms"} and not clean_contact_email:
+        params = urlencode(
+            {
+                "page": page,
+                "language": language,
+                "verb_id": verb_id,
+                "return_to": return_to,
+                "error": "email_required",
+                "ui_language": ui_language,
+            }
+        )
+        return RedirectResponse(url=f"/feedback?{params}", status_code=303)
 
     if poll_answer not in get_poll_valid_answers(ACTIVE_POLL_ID or ""):
         poll_answer = ""

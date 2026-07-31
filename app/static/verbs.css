@@ -433,7 +433,7 @@
   letter-spacing: 0.04em;
   text-decoration: none;
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   padding: 8px 6px;
   margin: -8px -6px;
   border-radius: 6px;
@@ -445,19 +445,26 @@
 }
 
 .practice-label-help {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-muted);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  margin-inline-start: 6px;
+  border-radius: 50%;
+  background: var(--button-primary-bg);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
   text-transform: none;
   letter-spacing: normal;
-  margin-inline-start: 4px;
-  text-decoration: underline dotted;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
 .practice-label:hover .practice-label-help,
 .practice-label:focus-visible .practice-label-help {
-  color: var(--button-primary-bg);
+  background: var(--color-navy);
 }
 
 [dir="rtl"] .practice-label {

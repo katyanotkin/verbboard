@@ -31,6 +31,10 @@
     <div class="alert alert-error">{{ error_empty_msg }}</div>
     {% endif %}
 
+    {% if error_email_required %}
+    <div class="alert alert-error">{{ error_email_required_msg }}</div>
+    {% endif %}
+
     <form method="post" action="/feedback">
       <input type="hidden" name="page" value="{{ page }}">
       <input type="hidden" name="language" value="{{ language }}">
@@ -53,7 +57,8 @@
 
       <textarea name="comment" placeholder="{{ comment_placeholder }}"></textarea>
 
-      <input type="email" name="contact_email" class="contact-email-input" placeholder="{{ contact_email_placeholder }}">
+      <label for="contact_email" class="contact-email-label">{{ contact_email_label }}</label>
+      <input type="email" id="contact_email" name="contact_email" class="contact-email-input" placeholder="{{ contact_email_placeholder }}"{% if contact_email_required %} required{% endif %}>
 
       <div class="actions">
         <button type="submit" class="feedback-link">💬 {{ submit_label }}</button>

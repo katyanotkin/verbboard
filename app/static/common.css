@@ -111,8 +111,14 @@ body {
   transition: filter 0.1s ease;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   filter: brightness(0.95);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
 }
 
 .auth-btn {

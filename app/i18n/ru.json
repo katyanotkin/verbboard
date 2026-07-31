@@ -99,7 +99,10 @@
   "feedback.poll_no": "Нет",
   "feedback.poll_no_pref": "Без разницы",
   "feedback.comment_placeholder": "Что было непонятно, неправильно или отсутствует, например, какой язык вы бы хотели добавить?",
-  "feedback.contact_email_placeholder": "Ваш email (необязательно, чтобы мы могли ответить)",
+  "feedback.contact_email_label": "Куда ответить (необязательно):",
+  "feedback.contact_email_label_required": "Куда ответить:",
+  "feedback.error_email_required": "Пожалуйста, укажите email, чтобы мы могли ответить.",
+  "feedback.contact_email_placeholder": "you@example.com",
   "feedback.submit_button": "Отправить",
   "feedback.success": "Спасибо — отзыв получен.",
   "feedback.error_empty": "Пожалуйста, напишите комментарий или ответьте Да/Нет.",
@@ -125,5 +128,6 @@
   "privacy.delete_account_button": "Удалить мой аккаунт и данные",
   "privacy.delete_account_confirm": "Это навсегда удалит ваш аккаунт и все данные (прогресс, история тренировок). Это действие нельзя отменить. Продолжить?",
   "privacy.delete_account_success": "Ваш аккаунт и данные удалены.",
-  "privacy.delete_account_error": "Что-то пошло не так. Попробуйте снова или напишите нам."
+  "privacy.delete_account_error": "Что-то пошло не так. Попробуйте снова или напишите нам.",
+  "privacy.delete_account_disabled_title": "Войдите через Google, чтобы удалить свой аккаунт"
 }

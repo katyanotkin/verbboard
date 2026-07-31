@@ -15,7 +15,8 @@
   "auth.logout": {{ auth_logout | tojson }},
   "privacy.delete_account_confirm": {{ delete_account_confirm | tojson }},
   "privacy.delete_account_success": {{ delete_account_success | tojson }},
-  "privacy.delete_account_error": {{ delete_account_error | tojson }}
+  "privacy.delete_account_error": {{ delete_account_error | tojson }},
+  "privacy.delete_account_disabled_title": {{ delete_account_disabled_title | tojson }}
 };</script>
 {% include '_firebase_auth.html' %}
 </head>
@@ -60,7 +61,7 @@
     <h2 id="data-deletion">Data deletion</h2>
     <p>If you've signed in with Google, use the button below to permanently delete your account and all associated data (server and local) immediately.</p>
     <p>If you haven't signed in, VerbBoard has no account tied to you. Your progress is stored only in your browser. Clearing your browser data or uninstalling the app removes it.</p>
-    <button id="delete-account-btn" class="btn-secondary hidden">{{ delete_account_button }}</button>
+    <button id="delete-account-btn" class="btn-secondary" disabled title="{{ delete_account_disabled_title }}">{{ delete_account_button }}</button>
 
     <h2>Children</h2>
     <p>VerbBoard is not directed at children under 13. We do not knowingly collect data from children.</p>

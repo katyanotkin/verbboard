@@ -99,7 +99,10 @@
   "feedback.poll_no": "No",
   "feedback.poll_no_pref": "Sin preferencia",
   "feedback.comment_placeholder": "¿Qué fue confuso, incorrecto o faltante, como un idioma que te gustaría añadir?",
-  "feedback.contact_email_placeholder": "Tu email (opcional, para poder responderte)",
+  "feedback.contact_email_label": "Responder a (opcional):",
+  "feedback.contact_email_label_required": "Responder a:",
+  "feedback.error_email_required": "Por favor, indica un email para que podamos responderte.",
+  "feedback.contact_email_placeholder": "you@example.com",
   "feedback.submit_button": "Enviar",
   "feedback.success": "Gracias — comentario recibido.",
   "feedback.error_empty": "Por favor escribe un comentario o responde Sí/No.",
@@ -125,5 +128,6 @@
   "privacy.delete_account_button": "Eliminar mi cuenta y mis datos",
   "privacy.delete_account_confirm": "Esto eliminará permanentemente tu cuenta y todos los datos (progreso, historial de práctica). Esta acción no se puede deshacer. ¿Continuar?",
   "privacy.delete_account_success": "Tu cuenta y tus datos se han eliminado.",
-  "privacy.delete_account_error": "Algo salió mal. Inténtalo de nuevo o escríbenos."
+  "privacy.delete_account_error": "Algo salió mal. Inténtalo de nuevo o escríbenos.",
+  "privacy.delete_account_disabled_title": "Inicia sesión con Google para eliminar tu cuenta"
 }

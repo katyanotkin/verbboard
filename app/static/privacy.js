@@ -4,16 +4,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var UI = window.UI || {};
 
-  function refreshVisibility() {
+  var disabledTitle = UI["privacy.delete_account_disabled_title"] ||
+    "Sign in with Google to delete your account";
+
+  function refreshEnabled() {
     var signedIn = !!(window.VerbBoardAuth && window.VerbBoardAuth.currentUser());
-    btn.classList.toggle("hidden", !signedIn);
+    btn.disabled = !signedIn;
+    if (signedIn) {
+      btn.removeAttribute("title");
+    } else {
+      btn.title = disabledTitle;
+    }
   }
 
   if (window.VerbBoardAuth) {
-    window.VerbBoardAuth.ready().then(refreshVisibility);
+    window.VerbBoardAuth.ready().then(refreshEnabled);
   }
-  window.addEventListener("vb:progress-hydrated", refreshVisibility);
-  window.addEventListener("vb:auth-signed-out", refreshVisibility);
+  window.addEventListener("vb:progress-hydrated", refreshEnabled);
+  window.addEventListener("vb:auth-signed-out", refreshEnabled);
 
   btn.addEventListener("click", async function () {
     var confirmMsg = UI["privacy.delete_account_confirm"] ||

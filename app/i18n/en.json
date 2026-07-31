@@ -99,7 +99,10 @@
   "feedback.poll_no": "No",
   "feedback.poll_no_pref": "No preference",
   "feedback.comment_placeholder": "What felt confusing, wrong, or missing, like a language you'd like us to add?",
-  "feedback.contact_email_placeholder": "Your email (optional, so we can reply)",
+  "feedback.contact_email_label": "Reply to (optional):",
+  "feedback.contact_email_label_required": "Reply to:",
+  "feedback.error_email_required": "Please provide an email so we can reply.",
+  "feedback.contact_email_placeholder": "you@example.com",
   "feedback.submit_button": "Send feedback",
   "feedback.success": "Thanks — feedback received.",
   "feedback.error_empty": "Please write a comment or answer Yes/No.",
@@ -125,5 +128,6 @@
   "privacy.delete_account_button": "Delete my account and data",
   "privacy.delete_account_confirm": "This will permanently delete your account and all data (progress, practice history). This cannot be undone. Continue?",
   "privacy.delete_account_success": "Your account and data have been deleted.",
-  "privacy.delete_account_error": "Something went wrong. Please try again, or email us."
+  "privacy.delete_account_error": "Something went wrong. Please try again, or email us.",
+  "privacy.delete_account_disabled_title": "Sign in with Google to delete your account"
 }
