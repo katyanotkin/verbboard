@@ -594,3 +594,25 @@ Owner ask: "add nav from home to verbs to todo list free edition." Checked `app/
 **What's actually open:** the labels and the nav itself have never had a discoverability/i18n-consistency pass recorded anywhere in this log. Checked all 4 locale files (`app/i18n/{en,ru,he,es}.json`): `home.browse_link` and `practice.label` are both present and translated in all four (no missing-key risk). One nuance worth a human look, not a bug: EN/ES/HE all render `home.browse_link` as some form of "browse/scroll through verbs" (dgdud verbs / Explorar verbos / דפדוף בפעלים), while RU renders it as "Выбрать глагол" ("Choose a verb") -- same intent, different verb-of-navigation. Not flagged as wrong, just not verified as a deliberate translation choice.
 
 **Added to roadmap:** Free TODO item for a small audit/polish pass (labeling consistency across locales + whether the two-link row is discoverable enough as the only home->verbs entry point, especially on first-run/mobile) rather than a build item, since the underlying nav already exists and works. See `PRODUCT_ROADMAP.md` Free TODO.
+
+## 2026-08-08 session
+
+### New proposal: VerbBoard MCP server -- NOT DECIDED
+
+Raised in a Claude Code session as an open question, not a scoped commitment: would an MCP server make further VerbBoard development smoother?
+
+Two distinct use cases surfaced, worth keeping separate if this is ever picked up:
+- **Smoothing Claude Code sessions on this repo** -- low value. Bash already gives direct access to Firestore, the local dev server, and the codebase, so wrapping that in MCP tools would mostly be indirection without new capability.
+- **Letting MCP clients outside a coding session (Claude Desktop, etc.) interact with live VerbBoard data/admin actions** -- more plausible, given the admin candidate-review pipeline (`admin_candidates.py`) is already AI-driven. A read-only server (verb lookup, demand-signal browsing) would be the natural minimal scope before considering any write/admin actions, since writes would mean exposing Firestore mutation and possibly the admin auth surface to a new client type.
+
+- **Size:** small for a read-only prototype (verb lookup, demand signals); admin/write actions would need their own auth/security scoping pass before being considered
+- **Not scoped, not prioritized** -- no decision to build this yet; parked here as an idea to revisit, not a queued item.
+
+### New proposal: distribution/integration partnerships (Preply, Grammarly) -- IDEA-PARKED
+
+Raised in the same session, same status as the MCP idea above: an unscoped "what if" to revisit later, not a queued item. Duolingo was considered and dropped from this idea (direct competitor on the same surface -- gamified verb drills -- with no evident reason to integrate a small third-party app's catalog).
+
+- **Preply** (tutor marketplace) -- more plausible of the two. VerbBoard would sit as a between-lessons practice layer; tutors deep-link students to a specific verb/board (`/learn?verb=...`) as homework. No new infra implied beyond what exists today (language/lemma-keyed URLs already support this); the open work would be a shareable-link/embed surface and a business conversation with Preply, not a technical build.
+- **Grammarly** (writing-correction tool) -- also complementary rather than competing: Grammarly flags conjugation/grammar mistakes in real writing but doesn't teach the underlying pattern. A flagged-verb-error -> VerbBoard-drill deep link would be the natural shape, similar to the Preply link surface. Same caveat -- this is a business-conversation/API-partnership question, not something VerbBoard's own architecture blocks or enables on its own.
+
+- **Not scoped, not prioritized** -- idea-parked at the owner's request; no decision to pursue either.
