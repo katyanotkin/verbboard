@@ -18,6 +18,7 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
 
 <script defer src="/static/storage.js"></script>
 <script defer src="/static/progress.js"></script>
+<script defer src="/static/help_hint.js"></script>
 <script defer src="/static/learn.js"></script>
 <script defer src="/static/learn_practice.js"></script>
 <script defer src="/static/audio_loading.js"></script>
@@ -75,6 +76,10 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
         </form>
         <div class="known-wrap">
           <span class="known-caption">{{ board_mark_known }}</span>
+          <span class="help-hint">
+            <button type="button" class="help-hint-trigger" aria-expanded="false" aria-label="{{ board_help_hint_label }}">?</button>
+            <span class="help-hint-panel" role="note" hidden>{{ board_help_known }}</span>
+          </span>
           <button class="known-btn" id="known-btn" title="{{ board_mark_known }}" aria-pressed="false">
             <svg class="known-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>

@@ -53,6 +53,18 @@ def render_board_html(
     has_examples = bool(board.verb.examples)
     jump_title = escape(ui.get("board.jump_to_example", "Jump to example"))
 
+    # ── help hints (tap-to-reveal micro explanations) ───────────────────────
+    # Reusable pattern: markup contract lives in help_hint.js. Any new spot
+    # only needs this same trigger+panel snippet plus one "help.<spot>" key.
+    # Raw (unescaped) values feed Jinja `{{ }}` context vars -- Jinja escapes
+    # those itself. Escaped copies feed the raw-HTML f-strings below (they
+    # bypass Jinja autoescaping via `| safe`), matching the rest of this file.
+    help_hint_label_raw = ui.get("help.hint_label", "More info")
+    help_known_raw = ui.get("help.known", "Marks this verb as known. Tap again to undo.")
+    help_translations_raw = ui.get("help.translations", "Shows a translation under each example sentence.")
+    help_hint_label = escape(help_hint_label_raw)
+    help_translations_text = escape(help_translations_raw)
+
     sections_html = []
     for section_index, section in enumerate(board.sections, start=1):
         rows = []
@@ -242,10 +254,17 @@ def render_board_html(
         toggle_label_show = escape(ui.get("board.show_translations", "Show translations"))
         toggle_label_hide = escape(ui.get("board.hide_translations", "Hide translations"))
         examples_toggle = (
+            f"<span class='examples-toggle-wrap'>"
             f"<button id='toggle-translations' class='btn-secondary toggle-translations-btn' "
             f"data-label-show='{toggle_label_show}' "
             f"data-label-hide='{toggle_label_hide}'>"
             f"{toggle_label_show}</button>"
+            f"<span class='help-hint'>"
+            f"<button type='button' class='help-hint-trigger' aria-expanded='false' "
+            f"aria-label='{help_hint_label}'>?</button>"
+            f"<span class='help-hint-panel' role='note' hidden>{help_translations_text}</span>"
+            f"</span>"
+            f"</span>"
         )
     else:
         examples_toggle = ""
@@ -295,6 +314,8 @@ def render_board_html(
         board_voice_female=ui.get("board.voice_female", "Female"),
         board_voice_male=ui.get("board.voice_male", "Male"),
         board_mark_known=ui.get("board.mark_known", "Mark as learned"),
+        board_help_hint_label=help_hint_label_raw,
+        board_help_known=help_known_raw,
         board_send_feedback=ui.get("board.send_feedback", "Send feedback"),
         language_urlencode=quote(board.language, safe=""),
         verb_id_urlencode=quote(board.verb.id, safe=""),
