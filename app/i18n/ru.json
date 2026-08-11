@@ -94,7 +94,7 @@
   "board.show_translations": "С переводом",
   "board.hide_translations": "× Перевод",
   "help.hint_label": "Подробнее",
-  "help.known": "Отмечает глагол как известный. Нажмите ещё раз, чтобы отменить.",
+  "help.known": "Отмечает глагол как выученный. Нажмите ещё раз, чтобы отменить.",
   "help.translations": "Показывает перевод под каждым примером.",
   "feedback.title": "VerbBoard — Отзыв",
   "feedback.heading": "Отзыв",

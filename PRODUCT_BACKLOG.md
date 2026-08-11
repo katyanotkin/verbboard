@@ -616,3 +616,23 @@ Raised in the same session, same status as the MCP idea above: an unscoped "what
 - **Grammarly** (writing-correction tool) -- also complementary rather than competing: Grammarly flags conjugation/grammar mistakes in real writing but doesn't teach the underlying pattern. A flagged-verb-error -> VerbBoard-drill deep link would be the natural shape, similar to the Preply link surface. Same caveat -- this is a business-conversation/API-partnership question, not something VerbBoard's own architecture blocks or enables on its own.
 
 - **Not scoped, not prioritized** -- idea-parked at the owner's request; no decision to pursue either.
+
+## 2026-08-10 session -- free-edition batch: label fit, nav wording, help-hint affordance
+
+Picked three low-risk items off the Free TODO list to close out in one pass.
+
+### Label/icon fixes (#2) -- mobile-fit check CLOSED, no defect found
+The one open thread on this item was verifying the English "Already know this" learned-star caption doesn't wrap/overflow at 375px (RU/ES/HE strings are all shorter, checked too). Verified live via Playwright at 375x700 across en/ru/es/he: all four render single-line (`scrollWidth === clientWidth`, `offsetHeight` = one line), well within the viewport. No code change needed. This item is now fully closed (snail icon and `/verbs` filter chip wording remain explicitly out of scope per the 2026-07-29 owner decision).
+
+### Home -> Verbs nav locale audit (#6) -- RU wording confirmed intentional, not drift
+The open question was whether RU's `home.browse_link` ("Выбрать глагол" / "Choose a verb") was a deliberate translation choice or drift from EN/ES/HE's "browse/scroll through" framing. Owner confirmed intentional when a browse-framed alternative ("Просмотреть глаголы") was proposed -- "Посмотреть" is not the same as "Browse". No change made. This closes the wording half of item #6; the separate "is the two-link row discoverable enough" question is untouched and still open.
+
+### In-app help/discoverability affordance (#3) -- first slice SHIPPED
+Built the reusable tap-to-reveal pattern the 2026-07-29 idiom decision called for, with one refinement settled this session: since both target controls (learned-star, translation toggle) already have a real primary tap action, the idiom is a **small separate hint glyph** next to the control (not repurposing the control's own tap) -- owner's call after the conflict was raised, over the alternatives of long-press-for-help or first-tap-explains/second-tap-acts.
+
+- **Shipped:** `app/static/help_hint.js` (new, page-agnostic, delegated click/Escape handling -- no page-specific wiring) + `.help-hint`/`.help-hint-trigger`/`.help-hint-panel` CSS in `learn.css`. Wired onto the learned-star button (`app/templates/board.html`) and the translation-toggle button (built server-side in `core/render.py`'s `examples_toggle`). New i18n keys `help.hint_label` (shared generic aria-label) + `help.known`/`help.translations` (one-sentence explanations), added in lockstep across en/ru/es/he. SW cache bumped `v29 -> v30` for the new precached asset. Full suite green (811 passed) after.
+- **Bug caught during RTL verification, fixed before shipping:** the panel was anchored with logical `inset-inline-end`, which clipped off the viewport edge in Hebrew mobile because this app's topbar/func-panel layout doesn't mirror that cluster's physical position in RTL. Fixed by switching to physical `left:50%; transform:translateX(-50%)` centering.
+- **Pattern is reusable by design:** any future spot (practice-panel controls, jump-to-example once its kill switch is lifted) needs only the markup snippet + one `help.<spot>` i18n key -- no new CSS or JS. See `CLAUDE.md`'s "Help hints" bullet for the markup contract.
+- **Not done:** the other two flagged spots (practice-panel controls, jump-to-example) -- narrowed to this session's two controls deliberately, not a scope miss.
+
+Committed `d9bac37`, pushed to `main`, stage deploy triggered.
