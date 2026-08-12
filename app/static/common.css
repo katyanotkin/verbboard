@@ -600,3 +600,85 @@ body {
   cursor: default;
   pointer-events: none;
 }
+
+/* ===== Help hints (shared: learn + verbs) ─────────────────────────────
+   Tap-to-reveal micro explanations. Pairs a small "?" trigger with an
+   inline-collapsible .help-hint-panel. JS behavior lives in help_hint.js;
+   any new spot only needs this markup + one "help.<spot>" i18n key, no
+   new CSS or JS. */
+.help-hint {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.help-hint-trigger {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--button-secondary-bg);
+  color: var(--text-subtle);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  .help-hint-trigger {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+.help-hint-trigger:hover,
+.help-hint-trigger[aria-expanded="true"] {
+  background: var(--color-navy);
+  color: white;
+}
+
+.help-hint-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: max-content;
+  max-width: min(220px, calc(100vw - 32px));
+  padding: 8px 12px;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 10px;
+  color: var(--color-navy);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
+}
+
+/* Anchored via physical left/transform (not logical) -- this centers the
+   panel under its trigger regardless of text direction, which sidesteps
+   viewport-edge clipping when a trigger sits near the end of a mirrored
+   RTL row (inset-inline-end alone clipped off-screen in that case). */
+.help-hint-panel::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: #eff6ff;
+  border-top: 1px solid #93c5fd;
+  border-left: 1px solid #93c5fd;
+  transform: translateX(-50%) rotate(45deg);
+}

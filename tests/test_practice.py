@@ -42,11 +42,16 @@ def _board(verb: VerbEntry) -> Board:
 
 
 def _extract_window_ui(html: str) -> dict:
-    """Parse the window.UI JSON object embedded in a rendered HTML page."""
+    """Parse the window.UI JSON object embedded in a rendered HTML page.
+
+    Uses raw_decode (balanced-brace scan) rather than slicing up to the first
+    ";" -- UI string values (e.g. help.* hint text) can legitimately contain
+    a semicolon, which would truncate the JSON mid-string under naive slicing.
+    """
     marker = "window.UI = "
     start = html.index(marker) + len(marker)
-    end = html.index(";", start)
-    return json.loads(html[start:end])
+    obj, _end = json.JSONDecoder().raw_decode(html[start:])
+    return obj
 
 
 # ── verbs page ────────────────────────────────────────────────────────────────
@@ -149,6 +154,51 @@ def test_verbs_page_unit_strings_match_locale_file(client: TestClient, monkeypat
         f"[{ui_lang}] practice.listens_unit: got {ui.get('practice.listens_unit')!r}, "
         f"expected {expected_listens_unit!r} from locale file"
     )
+
+
+# ── help.* verbs-page hint keys regression ────────────────────────────────────
+#
+# Regression guard: help.practice / help.session_size / help.listens (and
+# help.hint_label, first threaded into this route's allowlist alongside them)
+# were initially left out of the ui_strings subset passed to window.UI in
+# verbs.py during implementation of the practice-panel help hints, which left
+# practice_loop.js's helpHint() rendering blank popovers for every UI locale.
+# Same failure shape as the practice.size_unit/listens_unit regression above.
+
+_HELP_HINT_KEYS = ["help.hint_label", "help.practice", "help.session_size", "help.listens"]
+
+
+@pytest.mark.parametrize("ui_lang", ["en", "ru", "he", "es"])
+@pytest.mark.parametrize("key", _HELP_HINT_KEYS)
+def test_verbs_page_window_ui_includes_help_hint_keys(client: TestClient, monkeypatch, ui_lang: str, key: str) -> None:
+    """Each practice-panel help.* key must be present and non-empty in window.UI
+    for every supported UI language -- otherwise helpHint() in practice_loop.js
+    silently renders an empty popover for that locale."""
+    monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [])
+
+    html = client.get(f"/verbs?language=en&ui_language={ui_lang}").text
+    ui = _extract_window_ui(html)
+
+    assert key in ui, (
+        f"[{ui_lang}] {key} missing from window.UI -- was it omitted from the ui_strings subset in verbs.py?"
+    )
+    assert ui[key], f"[{ui_lang}] {key} is empty in window.UI"
+
+
+@pytest.mark.parametrize("ui_lang", ["en", "ru", "he", "es"])
+def test_verbs_page_help_hint_strings_match_locale_file(client: TestClient, monkeypatch, ui_lang: str) -> None:
+    """window.UI values for the practice-panel help.* keys must match the
+    locale JSON files (not a hardcoded/empty JS fallback)."""
+    monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [])
+
+    expected = get_strings(ui_lang)
+    html = client.get(f"/verbs?language=en&ui_language={ui_lang}").text
+    ui = _extract_window_ui(html)
+
+    for key in _HELP_HINT_KEYS:
+        assert ui.get(key) == expected[key], (
+            f"[{ui_lang}] {key}: got {ui.get(key)!r}, expected {expected[key]!r} from locale file"
+        )
 
 
 # ── learn board (render) ──────────────────────────────────────────────────────

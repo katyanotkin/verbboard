@@ -15,7 +15,22 @@
 
     const _uiLang = window.VB_UI_LANG || '';
     const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
-    const aboutPracticeHref = `/about${_uiLang ? '?ui_language=' + encodeURIComponent(_uiLang) : ''}#about-practice`;
+
+    const helpHintLabel = ui['help.hint_label'] || 'More info';
+    function helpHint(spot) {
+      return `
+        <span class="help-hint">
+          <button type="button" class="help-hint-trigger" aria-expanded="false" aria-label="${helpHintLabel}">?</button>
+          <span class="help-hint-panel" role="note" hidden>${ui['help.' + spot] || ''}</span>
+        </span>
+      `;
+    }
+    const practiceTitleHtml = `
+      <span class="practice-label">
+        ${ui['practice.label'] || 'Practice'}
+        ${helpHint('practice')}
+      </span>
+    `;
 
     const practiceSessionKey = `practice_session:${lang}`;
     const practiceSizeKey = `practice_size:${lang}`;
@@ -232,7 +247,7 @@
         practiceEl.innerHTML = `
           <div class="practice-panel-card">
             <div class="practice-card-header">
-              <a class="practice-label" href="${aboutPracticeHref}">${ui['practice.label'] || 'Practice'} <span class="practice-label-help">?</span></a>
+              ${practiceTitleHtml}
               ${badgesHtml}
             </div>
             <div class="practice-inprogress">
@@ -292,19 +307,21 @@
       practiceEl.innerHTML = `
         <div class="practice-panel-card">
           <div class="practice-card-header">
-            <a class="practice-label" href="${aboutPracticeHref}">${ui['practice.label'] || 'Practice'} <span class="practice-label-help">?</span></a>
+            ${practiceTitleHtml}
             ${badgesHtml}
           </div>
           <div class="practice-picker">
             <div class="practice-picker-rows">
               <div class="practice-picker-row">
                 <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
+                ${helpHint('session_size')}
                 <div class="practice-size-group">
                   ${sizeButtons}
                 </div>
               </div>
               <div class="practice-picker-row">
                 <span class="practice-size-hint">${ui['practice.listens_unit'] || '# audios / verb'}</span>
+                ${helpHint('listens')}
                 ${listenStepper}
               </div>
             </div>

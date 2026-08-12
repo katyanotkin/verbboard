@@ -121,6 +121,10 @@ def verb_browser(
             "practice.done": ui["practice.done"],
             "practice.size_unit": ui["practice.size_unit"],
             "practice.listens_unit": ui["practice.listens_unit"],
+            "help.hint_label": ui["help.hint_label"],
+            "help.practice": ui["help.practice"],
+            "help.session_size": ui["help.session_size"],
+            "help.listens": ui["help.listens"],
         }
     )
 

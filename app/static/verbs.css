@@ -370,9 +370,15 @@
   border: 1px solid #93c5fd;
   border-top: 3px solid var(--button-primary-bg);
   border-radius: 12px;
-  overflow: hidden;
   background: #eff6ff;
   box-shadow: 0 2px 12px rgba(37, 99, 235, 0.08);
+}
+
+/* Bottom row (.practice-inprogress has its own --notice-bg) needs its own
+   corner radius now that the card no longer clips overflow -- clipping was
+   removed because it also cut off .help-hint-panel popovers. */
+.practice-panel-card > *:last-child {
+  border-radius: 0 0 11px 11px;
 }
 
 .practice-card-header {
@@ -431,40 +437,9 @@
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  text-decoration: none;
   display: inline-flex;
   align-items: center;
-  padding: 8px 6px;
-  margin: -8px -6px;
-  border-radius: 6px;
-}
-
-.practice-label:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--button-primary-bg);
-}
-
-.practice-label-help {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 19px;
-  height: 19px;
-  margin-inline-start: 6px;
-  border-radius: 50%;
-  background: var(--button-primary-bg);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: none;
-  letter-spacing: normal;
-  text-decoration: none;
-}
-
-.practice-label:hover .practice-label-help,
-.practice-label:focus-visible .practice-label-help {
-  background: var(--color-navy);
+  gap: 6px;
 }
 
 [dir="rtl"] .practice-label {
