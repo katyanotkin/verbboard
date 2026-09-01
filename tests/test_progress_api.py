@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -7,6 +9,22 @@ from app.main import app
 client = TestClient(app)
 
 AUTH = {"Authorization": "Bearer local-dev"}
+
+
+def _unique_verb_id(prefix: str) -> str:
+    """Generate a verb_id unique to this test run.
+
+    Needed for any non-idempotent state (SRS box progression): this suite
+    hits a real, persistent Firestore backend (see other tests in this file
+    using fixed ids -- that's safe there because seen/known/badges writes
+    are idempotent and always converge to the same final value regardless
+    of prior runs). record_review() is NOT idempotent -- the resulting box
+    depends on whatever box a previous run already left behind -- so a
+    fixed id would make assertions like "box == 1" flaky/order-dependent
+    across repeated suite runs.
+    """
+    return f"{prefix}_{uuid.uuid4().hex[:10]}"
+
 
 # ---------------------------------------------------------------------------
 # GET /api/progress
@@ -100,6 +118,193 @@ def test_unmark_known_local_dev() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# POST /api/progress/review
+# ---------------------------------------------------------------------------
+
+
+def test_record_review_requires_auth() -> None:
+    response = client.post(
+        "/api/progress/review",
+        json={"language": "en", "verb_id": "en_go", "recalled": True},
+    )
+
+    assert response.status_code == 401
+
+
+def test_record_review_local_dev() -> None:
+    verb_id = _unique_verb_id("en_review_target")
+
+    response = client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "recalled": True},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["box"] == 1  # never reviewed before -> lands on box 1 either way
+    assert payload["due_at"]
+
+
+def test_record_review_not_recalled_local_dev() -> None:
+    verb_id = _unique_verb_id("en_review_target_forgot")
+
+    response = client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "recalled": False},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["box"] == 1
+
+
+def test_record_review_promotes_box_on_repeat_recall() -> None:
+    """Reviewing the same verb twice with recalled=True must promote the box
+    from 1 to 2 -- exercises the real repository/service path end to end,
+    not just leitner_next_box in isolation."""
+    verb_id = _unique_verb_id("en_review_promote")
+
+    first = client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "recalled": True},
+    ).json()
+    assert first["box"] == 1
+
+    second = client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "recalled": True},
+    ).json()
+    assert second["box"] == 2
+
+
+def test_record_review_not_recalled_resets_to_box_one() -> None:
+    """After promoting a verb to box 2+, a recalled=False review must reset
+    it back to box 1 (never box 0)."""
+    verb_id = _unique_verb_id("en_review_demote")
+
+    client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "recalled": True},
+    )
+    client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "recalled": True},
+    )
+
+    demoted = client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "recalled": False},
+    ).json()
+
+    assert demoted["box"] == 1
+
+
+def test_record_review_rejects_language_too_long() -> None:
+    response = client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "toolong", "verb_id": "en_go", "recalled": True},
+    )
+    assert response.status_code == 422
+
+
+def test_record_review_rejects_verb_id_too_long() -> None:
+    response = client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": "x" * 121, "recalled": True},
+    )
+    assert response.status_code == 422
+
+
+def test_record_review_rejects_missing_recalled() -> None:
+    response = client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": "en_go"},
+    )
+    assert response.status_code == 422
+
+
+def test_record_review_rejects_empty_language() -> None:
+    response = client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "", "verb_id": "en_go", "recalled": True},
+    )
+    assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# GET /api/progress -- srs_* fields included only when srs_box > 0
+# ---------------------------------------------------------------------------
+
+
+def test_get_progress_omits_srs_fields_when_never_reviewed() -> None:
+    """A verb only ever marked 'seen' (never known/reviewed) must not carry
+    any srs_* keys in the GET response -- list_progress_for_language only
+    includes them when srs_box > 0."""
+    verb_id = "en_srs_absent"
+
+    client.post(
+        "/api/progress/seen",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id},
+    )
+
+    payload = client.get("/api/progress?language=en", headers=AUTH).json()
+
+    assert verb_id in payload["verbs"]
+    row = payload["verbs"][verb_id]
+    assert "srs_box" not in row
+    assert "srs_due_at" not in row
+    assert "srs_reviewed_at" not in row
+
+
+def test_get_progress_includes_srs_fields_after_known() -> None:
+    """Marking a verb known=True enters the ladder (srs_box=1); GET must
+    then surface srs_box/srs_due_at/srs_reviewed_at. Fixed id is safe here
+    (unlike the record_review tests above) because set_known's SRS-init
+    branch only fires once ever per verb and never advances the box past 1
+    on repeat calls, so this assertion is stable across repeated suite runs."""
+    verb_id = "en_srs_present_known"
+
+    client.post(
+        "/api/progress/known",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "known": True},
+    )
+
+    row = client.get("/api/progress?language=en", headers=AUTH).json()["verbs"][verb_id]
+
+    assert row["srs_box"] == 1
+    assert row["srs_due_at"] is not None
+    assert row["srs_reviewed_at"] is not None
+
+
+def test_get_progress_includes_srs_fields_after_review() -> None:
+    verb_id = _unique_verb_id("en_srs_present_review")
+
+    client.post(
+        "/api/progress/review",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "recalled": True},
+    )
+
+    row = client.get("/api/progress?language=en", headers=AUTH).json()["verbs"][verb_id]
+
+    assert row["srs_box"] == 1
+    assert row["srs_due_at"] is not None
+    assert row["srs_reviewed_at"] is not None
 
 
 # ---------------------------------------------------------------------------

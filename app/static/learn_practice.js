@@ -52,6 +52,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const total = session.ids.length;
     const isLast = idx === total - 1;
     const isRTL = document.documentElement.dir === 'rtl';
+    // Absent 'modes' map (sessions started before spaced repetition shipped)
+    // must fall back to ordinary practice -- see practice_loop.js.
+    const mode = (session.modes && session.modes[verbId]) || 'new';
+    const isReview = mode === 'review';
 
     const bar = document.createElement("div");
     bar.className = "practice-bar";
@@ -75,15 +79,6 @@ document.addEventListener("DOMContentLoaded", function () {
     progressWrapper.appendChild(progressEl);
     progressWrapper.appendChild(audioCounterEl);
 
-    const nextBtn = document.createElement("button");
-    nextBtn.className = "practice-nav-btn practice-nav-btn--primary";
-    nextBtn.textContent = isRTL ? '<' : '>';
-    nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
-
-    const skipBtn = document.createElement("button");
-    skipBtn.className = "practice-skip-btn";
-    skipBtn.textContent = UI["practice.skip"] || "Skip & learn";
-
     const abandonBtn = document.createElement("button");
     abandonBtn.className = "practice-abandon-btn";
     abandonBtn.textContent = UI["practice.abandon"] || "Discard practice";
@@ -92,11 +87,43 @@ document.addEventListener("DOMContentLoaded", function () {
     warnEl.className = "practice-listen-warn";
     warnEl.hidden = true;
 
+    // Review verbs: the recall self-report IS the advance action (mirrors
+    // skipBtn's existing tap-to-advance pattern, keeps taps to one). This
+    // replaces nextBtn/skipBtn entirely rather than adding two more controls
+    // on top of an already-dense 5-element bar -- skipBtn's "mark as
+    // learned" framing is also a poor fit for a verb already in the SRS
+    // ladder, so dropping it here isn't just a density fix.
+    let nextBtn, skipBtn, recallYesBtn, recallNoBtn, recallGroup;
+
+    if (isReview) {
+      recallYesBtn = document.createElement("button");
+      recallYesBtn.className = "practice-recall-btn practice-recall-btn--yes";
+      recallYesBtn.textContent = UI["practice.recall_yes"] || "Knew it";
+
+      recallNoBtn = document.createElement("button");
+      recallNoBtn.className = "practice-recall-btn practice-recall-btn--no";
+      recallNoBtn.textContent = UI["practice.recall_no"] || "Show me again";
+
+      recallGroup = document.createElement("div");
+      recallGroup.className = "practice-recall-group";
+      recallGroup.appendChild(recallYesBtn);
+      recallGroup.appendChild(recallNoBtn);
+    } else {
+      nextBtn = document.createElement("button");
+      nextBtn.className = "practice-nav-btn practice-nav-btn--primary";
+      nextBtn.textContent = isRTL ? '<' : '>';
+      nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
+
+      skipBtn = document.createElement("button");
+      skipBtn.className = "practice-skip-btn";
+      skipBtn.textContent = UI["practice.skip"] || "Skip & learn";
+    }
+
     bar.appendChild(prevBtn);
-    bar.appendChild(skipBtn);
+    if (skipBtn) bar.appendChild(skipBtn);
     bar.appendChild(progressWrapper);
     bar.appendChild(abandonBtn);
-    bar.appendChild(nextBtn);
+    bar.appendChild(isReview ? recallGroup : nextBtn);
     bar.appendChild(warnEl);
 
     const topbar = pageRoot.querySelector(".topbar");
@@ -125,10 +152,15 @@ document.addEventListener("DOMContentLoaded", function () {
       progressEl.textContent = `${n}/${n}!`;
       progressEl.classList.add('practice-progress--done');
       progressEl.classList.add('practice-progress--done-pulse');
-      nextBtn.disabled = true;
       prevBtn.disabled = true;
-      skipBtn.disabled = true;
       abandonBtn.disabled = true;
+      if (isReview) {
+        recallYesBtn.disabled = true;
+        recallNoBtn.disabled = true;
+      } else {
+        nextBtn.disabled = true;
+        skipBtn.disabled = true;
+      }
       const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1200;
       setTimeout(function () { _finishPractice(completionSession, progressEl); }, delay);
     }
@@ -149,50 +181,86 @@ document.addEventListener("DOMContentLoaded", function () {
       if (idx > 0) navTo(session.ids[idx - 1]);
     });
 
-    nextBtn.addEventListener("click", async function () {
-      if (!hasListened()) {
-        showWarn();
-        return;
-      }
-      if (isLast) {
-        _showCompletionAndRedirect(session);
-        return;
-      } else {
-        navTo(session.ids[idx + 1]);
-      }
-    });
-
-    skipBtn.addEventListener("click", async function () {
-      await progress.setKnown(language, verbId, true);
-
-      const updatedIds = session.ids.filter(function (id) { return id !== verbId; });
-
-      if (updatedIds.length === 0) {
-        localStorage.removeItem(sessionKey);
-        window.location.href = verbsUrl;
-        return;
+    if (isReview) {
+      // Recall self-report gated behind the same hasListened() check as the
+      // ordinary Next button, for both "Knew it" and "Show me again" -- one
+      // code path, one mental model ("listen before you advance/self-report"),
+      // rather than a special exemption for the "no" answer.
+      async function _advanceAfterRecall(recalled) {
+        if (!hasListened()) {
+          showWarn();
+          return;
+        }
+        if (window.VerbBoardSRS) {
+          await window.VerbBoardSRS.applyReview(language, verbId, recalled);
+        }
+        if (isLast) {
+          _showCompletionAndRedirect(session);
+        } else {
+          navTo(session.ids[idx + 1]);
+        }
       }
 
-      const updatedLemmas = Object.assign({}, session.lemmas || {});
-      delete updatedLemmas[verbId];
+      recallYesBtn.addEventListener("click", function () { _advanceAfterRecall(true); });
+      // "Show me again" (recalled=false) only demotes the verb's SRS box
+      // (applyReview already schedules it due tomorrow) -- it advances the
+      // session exactly like "Knew it" rather than re-inserting the verb
+      // later in this same session; re-showing mid-session is a bigger
+      // behavior change and explicitly out of scope here.
+      recallNoBtn.addEventListener("click", function () { _advanceAfterRecall(false); });
+    } else {
+      nextBtn.addEventListener("click", async function () {
+        if (!hasListened()) {
+          showWarn();
+          return;
+        }
+        if (isLast) {
+          _showCompletionAndRedirect(session);
+          return;
+        } else {
+          navTo(session.ids[idx + 1]);
+        }
+      });
 
-      const updatedSession = {
-        ids: updatedIds,
-        lemmas: updatedLemmas,
-        size: session.size,
-      };
-      localStorage.setItem(sessionKey, JSON.stringify(updatedSession));
+      skipBtn.addEventListener("click", async function () {
+        await progress.setKnown(language, verbId, true);
 
-      const navTarget = Math.min(idx, updatedIds.length - 1);
-      // If clamping moved us backwards, every remaining verb was already visited.
-      // Finish the session rather than landing on a verb the user already completed.
-      if (navTarget < idx) {
-        _showCompletionAndRedirect(updatedSession);
-        return;
-      } else {
-        navTo(updatedIds[navTarget]);
-      }
-    });
+        const updatedIds = session.ids.filter(function (id) { return id !== verbId; });
+
+        if (updatedIds.length === 0) {
+          localStorage.removeItem(sessionKey);
+          window.location.href = verbsUrl;
+          return;
+        }
+
+        const updatedLemmas = Object.assign({}, session.lemmas || {});
+        delete updatedLemmas[verbId];
+
+        // Carry `modes` forward -- dropping it here would silently downgrade
+        // every still-pending review-mode verb to 'new' mode on the next
+        // mount (absent key = 'new', see top of this function).
+        const updatedModes = Object.assign({}, session.modes || {});
+        delete updatedModes[verbId];
+
+        const updatedSession = {
+          ids: updatedIds,
+          lemmas: updatedLemmas,
+          modes: updatedModes,
+          size: session.size,
+        };
+        localStorage.setItem(sessionKey, JSON.stringify(updatedSession));
+
+        const navTarget = Math.min(idx, updatedIds.length - 1);
+        // If clamping moved us backwards, every remaining verb was already visited.
+        // Finish the session rather than landing on a verb the user already completed.
+        if (navTarget < idx) {
+          _showCompletionAndRedirect(updatedSession);
+          return;
+        } else {
+          navTo(updatedIds[navTarget]);
+        }
+      });
+    }
 
     abandonBtn.addEventListener("click", function () {
       localStorage.removeItem(sessionKey);

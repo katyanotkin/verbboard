@@ -259,6 +259,12 @@
       // are not on the server yet -- union wins here.
     }
 
+    if (window.VerbBoardSRS) {
+      // Unlike seen/known above, SRS state mutates in both directions, so
+      // it needs a last-write-wins merge, not a union -- see srs.js.
+      window.VerbBoardSRS.mergeFromServer(language, verbs);
+    }
+
     localStorage.setItem(
       seenKey,
       JSON.stringify(Array.from(seen))

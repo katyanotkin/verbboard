@@ -280,6 +280,8 @@ def render_board_html(
             "practice.skip": ui.get("practice.skip", "Skip"),
             "practice.abandon": ui.get("practice.abandon", "Abandon"),
             "practice.listen_first": ui.get("practice.listen_first", "Listen to the audio first"),
+            "practice.recall_yes": ui.get("practice.recall_yes", "Knew it"),
+            "practice.recall_no": ui.get("practice.recall_no", "Show me again"),
             "practice.wrap_up": ui.get("practice.wrap_up", "Practice complete"),
             "practice.learned_prompt": ui.get("practice.learned_prompt", "Which verbs did you learn?"),
             "practice.done": ui.get("practice.done", "Done"),

@@ -6,6 +6,7 @@ from core.progress.progress_repository import (
     get_practice_progress,
     list_progress_for_language,
     mark_seen,
+    record_review,
     save_practice_progress,
     set_known,
     upsert_user_profile,
@@ -45,6 +46,23 @@ def record_known(
         language=language,
         verb_id=verb_id,
         known=known,
+    )
+
+
+def record_review_result(
+    *,
+    user: AuthUser,
+    language: str,
+    verb_id: str,
+    recalled: bool,
+) -> dict:
+    sync_user_profile(user)
+
+    return record_review(
+        user_id=user.uid,
+        language=language,
+        verb_id=verb_id,
+        recalled=recalled,
     )
 
 

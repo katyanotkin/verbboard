@@ -9,10 +9,11 @@ Structure under test:
 
 from __future__ import annotations
 
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from core.progress import progress_repository as repo
-from core.progress.models import PracticeProgress, VerbProgress
+from core.progress.models import LEITNER_MAX_BOX, PracticeProgress, VerbProgress
 
 
 def _make_db():
@@ -126,6 +127,173 @@ def test_set_known_verb_payload_reflects_value() -> None:
 
     args, _ = verb_doc.set.call_args
     assert args[0]["known"] is False
+
+
+# ---------------------------------------------------------------------------
+# set_known -- SRS ladder entry point (srs_box init on first known=True)
+# ---------------------------------------------------------------------------
+
+
+def test_set_known_true_initializes_srs_box_when_absent() -> None:
+    """Marking known=True on a verb with no prior srs_box starts the ladder
+    at box 1 with a due date and a reviewed_at timestamp."""
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+    verb_doc.get.return_value.to_dict.return_value = {}
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.set_known(user_id="u1", language="en", verb_id="en_go", known=True)
+
+    args, _ = verb_doc.set.call_args
+    payload = args[0]
+    assert payload["srs_box"] == 1
+    assert isinstance(payload["srs_due_at"], datetime)
+    assert isinstance(payload["srs_reviewed_at"], datetime)
+
+
+def test_set_known_true_treats_missing_srs_box_field_as_absent() -> None:
+    """A verb doc that exists but has no srs_box field at all (pre-SRS-feature
+    data) must also be initialized, not skipped."""
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+    verb_doc.get.return_value.to_dict.return_value = {"known": False, "seen": True}
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.set_known(user_id="u1", language="en", verb_id="en_go", known=True)
+
+    args, _ = verb_doc.set.call_args
+    assert args[0]["srs_box"] == 1
+
+
+def test_set_known_true_does_not_reset_existing_srs_box() -> None:
+    """Re-toggling known=True on a verb already in the ladder must not reset
+    its box/due date -- explicit design decision (see repo docstring)."""
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+    verb_doc.get.return_value.to_dict.return_value = {
+        "srs_box": 3,
+        "srs_due_at": "existing-due",
+        "srs_reviewed_at": "existing-reviewed",
+    }
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.set_known(user_id="u1", language="en", verb_id="en_go", known=True)
+
+    args, _ = verb_doc.set.call_args
+    payload = args[0]
+    assert "srs_box" not in payload
+    assert "srs_due_at" not in payload
+    assert "srs_reviewed_at" not in payload
+
+
+def test_set_known_false_does_not_touch_srs_fields() -> None:
+    """known=False must not read or write any srs_* field, and must not
+    even query existing state (the SRS-init branch is known-only)."""
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.set_known(user_id="u1", language="en", verb_id="en_go", known=False)
+
+    args, _ = verb_doc.set.call_args
+    payload = args[0]
+    assert "srs_box" not in payload
+    assert "srs_due_at" not in payload
+    assert "srs_reviewed_at" not in payload
+    verb_doc.get.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# record_review  ->  user_progress/{uid}/languages/{lang}/verbs/{verb_id}
+#                     also upserts the language container doc
+# ---------------------------------------------------------------------------
+
+
+def test_record_review_targets_correct_path() -> None:
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+    verb_doc.get.return_value.to_dict.return_value = {}
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.record_review(user_id="u1", language="en", verb_id="en_go", recalled=True)
+
+    db.collection.assert_called_with("user_progress")
+    db.collection().document().collection().document().collection.assert_called_with("verbs")
+    db.collection().document().collection().document().collection().document.assert_called_with("en_go")
+
+
+def test_record_review_writes_language_container_doc() -> None:
+    db = _make_db()
+    lang_doc = _lang_ref(db)
+    verb_doc = _verb_ref(db)
+    verb_doc.get.return_value.to_dict.return_value = {}
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.record_review(user_id="u1", language="en", verb_id="en_go", recalled=True)
+
+    args, kwargs = lang_doc.set.call_args
+    assert args[0]["language"] == "en"
+    assert kwargs.get("merge") is True
+
+
+def test_record_review_promotes_from_existing_box() -> None:
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+    verb_doc.get.return_value.to_dict.return_value = {"srs_box": 2}
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.record_review(user_id="u1", language="en", verb_id="en_go", recalled=True)
+
+    args, kwargs = verb_doc.set.call_args
+    payload = args[0]
+    assert payload["srs_box"] == 3
+    assert payload["known"] is True
+    assert isinstance(payload["srs_due_at"], datetime)
+    assert isinstance(payload["srs_reviewed_at"], datetime)
+    assert kwargs.get("merge") is True
+    assert result["box"] == 3
+    assert isinstance(result["due_at"], datetime)
+
+
+def test_record_review_not_recalled_demotes_to_box_one() -> None:
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+    verb_doc.get.return_value.to_dict.return_value = {"srs_box": 4}
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.record_review(user_id="u1", language="en", verb_id="en_go", recalled=False)
+
+    args, _ = verb_doc.set.call_args
+    assert args[0]["srs_box"] == 1
+    assert result["box"] == 1
+
+
+def test_record_review_promotion_caps_at_max_box() -> None:
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+    verb_doc.get.return_value.to_dict.return_value = {"srs_box": LEITNER_MAX_BOX}
+
+    with patch.object(repo, "get_db", return_value=db):
+        result = repo.record_review(user_id="u1", language="en", verb_id="en_go", recalled=True)
+
+    assert result["box"] == LEITNER_MAX_BOX
+
+
+def test_record_review_no_prior_box_lands_on_box_one_regardless_of_recalled() -> None:
+    """A verb with srs_box 0 (e.g. reviewed via the practice loop before ever
+    being marked known through the normal set_known path) lands on box 1
+    whether or not the review was recalled -- per leitner_next_box's box-0
+    rule. Confirmed here against the actual repository function, not just
+    asserted from reading the code."""
+    for recalled in (True, False):
+        db = _make_db()
+        verb_doc = _verb_ref(db)
+        verb_doc.get.return_value.to_dict.return_value = {}
+
+        with patch.object(repo, "get_db", return_value=db):
+            result = repo.record_review(user_id="u1", language="en", verb_id="en_go", recalled=recalled)
+
+        assert result["box"] == 1, f"recalled={recalled} should still land on box 1"
 
 
 # ---------------------------------------------------------------------------
@@ -357,6 +525,51 @@ def test_list_progress_uses_language_param_as_fallback() -> None:
         results = repo.list_progress_for_language(user_id="u1", language="en")
 
     assert results[0].language == "en"
+
+
+def test_list_progress_includes_srs_fields_when_box_positive() -> None:
+    db = _make_db()
+    now = datetime(2026, 8, 1, 12, 0, 0)
+    due = datetime(2026, 8, 8, 12, 0, 0)
+    doc = MagicMock()
+    doc.to_dict.return_value = {
+        "language": "en",
+        "verb_id": "en_go",
+        "seen": True,
+        "known": True,
+        "srs_box": 2,
+        "srs_due_at": due,
+        "srs_reviewed_at": now,
+    }
+    _verbs_col(db).stream.return_value = iter([doc])
+
+    with patch.object(repo, "get_db", return_value=db):
+        results = repo.list_progress_for_language(user_id="u1", language="en")
+
+    vp = results[0]
+    assert vp.srs_box == 2
+    assert vp.srs_due_at == due
+    assert vp.srs_reviewed_at == now
+
+
+def test_list_progress_srs_box_defaults_to_zero_when_absent() -> None:
+    db = _make_db()
+    doc = MagicMock()
+    doc.to_dict.return_value = {
+        "language": "en",
+        "verb_id": "en_go",
+        "seen": True,
+        "known": False,
+    }
+    _verbs_col(db).stream.return_value = iter([doc])
+
+    with patch.object(repo, "get_db", return_value=db):
+        results = repo.list_progress_for_language(user_id="u1", language="en")
+
+    vp = results[0]
+    assert vp.srs_box == 0
+    assert vp.srs_due_at is None
+    assert vp.srs_reviewed_at is None
 
 
 # ---------------------------------------------------------------------------

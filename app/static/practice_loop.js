@@ -184,6 +184,26 @@
       return [...nonKnown, ...knownVerbs];
     }
 
+    // Verbs due for spaced-repetition review right now, capped at ~1/3 of
+    // the session so review never crowds out new material. Kept separate
+    // from buildPool() (which stays the "new verb" pool, unchanged, since
+    // needsMixIn() also depends on it) -- selection into the actual session
+    // happens in startPractice() below.
+    function dueReviewCandidates(size) {
+      if (!window.VerbBoardSRS) return [];
+      const dueIds = window.VerbBoardSRS.getDueVerbIds(lang);
+      if (dueIds.length === 0) return [];
+      const dueSet = new Set(dueIds);
+      const dueVerbs = verbs.filter(v => dueSet.has(v.id));
+      const cap = Math.max(1, Math.floor(size / 3));
+      const shuffled = [...dueVerbs].sort(function () { return Math.random() - 0.5; });
+      return shuffled.slice(0, cap);
+    }
+
+    function countDueToday() {
+      return window.VerbBoardSRS ? window.VerbBoardSRS.getDueVerbIds(lang).length : 0;
+    }
+
     function needsMixIn(size) {
       const nonKnownCount = verbs.filter(v => !known().has(v.id)).length;
       // Warn when non-known pool is smaller than the minimum or the session size.
@@ -283,6 +303,11 @@
         ? (ui['practice.start_mixed'] || 'Start (includes known)')
         : (ui['practice.start'] || 'Start');
 
+      const dueCount = countDueToday();
+      const dueHtml = dueCount > 0
+        ? `<div class="practice-due-today">${dueCount} ${ui['practice.due_today'] || 'due for review today'}</div>`
+        : '';
+
       const sizeButtons = PRACTICE_SIZES
         .map(function (size) {
           return `
@@ -311,6 +336,7 @@
             ${badgesHtml}
           </div>
           <div class="practice-picker">
+            ${dueHtml}
             <div class="practice-picker-rows">
               <div class="practice-picker-row">
                 <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
@@ -383,10 +409,13 @@
     }
 
     function startPractice() {
-      const pool = buildPool(activePracticeSize);
+      const reviewPicked = dueReviewCandidates(activePracticeSize);
+      const reviewIds = new Set(reviewPicked.map(v => v.id));
 
-      // Guard: nothing to practice (all verbs missing or pool empty).
-      if (pool.length === 0) {
+      const pool = buildPool(activePracticeSize).filter(v => !reviewIds.has(v.id));
+
+      // Guard: nothing to practice (no new verbs and no due reviews).
+      if (pool.length === 0 && reviewPicked.length === 0) {
         return;
       }
 
@@ -394,18 +423,31 @@
         return Math.random() - 0.5;
       });
 
-      const picked = shuffled.slice(0, activePracticeSize);
+      const remainingSlots = Math.max(0, activePracticeSize - reviewPicked.length);
+      const newPicked = shuffled.slice(0, remainingSlots);
+
+      const picked = [...reviewPicked, ...newPicked].sort(function () {
+        return Math.random() - 0.5;
+      });
 
       const ids = picked.map(v => v.id);
       const lemmas = {};
+      const modes = {};
 
       picked.forEach(function (verb) {
         lemmas[verb.id] = verb.lemma;
+        // Absent/'new' means the ordinary practice bar (Next/Skip); 'review'
+        // means the recall buttons -- see learn_practice.js. Kept as an
+        // explicit per-id map (not inferred from srs.js at render time) so
+        // a verb's mode is fixed for the whole session even if its due
+        // state changes mid-session (e.g. reviewed on another tab).
+        modes[verb.id] = reviewIds.has(verb.id) ? 'review' : 'new';
       });
 
       storage.writeJson(practiceSessionKey, {
         ids,
         lemmas,
+        modes,
         size: activePracticeSize,
       });
 

@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from google.cloud import firestore
 
-from core.progress.models import PracticeProgress, PracticeSessionSize, VerbProgress
+from core.progress.models import (
+    LEITNER_INTERVAL_DAYS,
+    PracticeProgress,
+    PracticeSessionSize,
+    VerbProgress,
+    leitner_next_box,
+)
 from core.storage.firestore_db import get_db
 
 USERS_COLLECTION = "users"
@@ -113,6 +120,14 @@ def set_preferences(*, user_id: str, prefs: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
+def _leitner_due_at(box: int, *, from_time: datetime | None = None) -> datetime:
+    if not 1 <= box <= len(LEITNER_INTERVAL_DAYS):
+        raise ValueError(f"box must be between 1 and {len(LEITNER_INTERVAL_DAYS)}, got {box}")
+    base = from_time or datetime.now(timezone.utc)
+    days = LEITNER_INTERVAL_DAYS[box - 1]
+    return base + timedelta(days=days)
+
+
 def _upsert_language_doc(user_id: str, language: str) -> None:
     """Ensure the language container doc exists with a language field."""
     _progress_language_ref(user_id, language).set(
@@ -160,16 +175,74 @@ def set_known(
 ) -> None:
     _upsert_language_doc(user_id, language)
 
-    _progress_verb_ref(user_id, language, verb_id).set(
+    doc_ref = _progress_verb_ref(user_id, language, verb_id)
+
+    payload: dict[str, Any] = {
+        "language": language,
+        "verb_id": verb_id,
+        "known": known,
+        "known_updated_at": firestore.SERVER_TIMESTAMP,
+        "updated_at": firestore.SERVER_TIMESTAMP,
+    }
+
+    # "known" is the entry point into the spaced-repetition review ladder --
+    # a verb the user marks known starts its review clock. Unmarking known
+    # does not remove it from the ladder (rare edge case, not worth the extra
+    # write-path complexity); only marking known (re-)enters it, and only if
+    # it isn't already in the ladder, so re-toggling known doesn't reset a
+    # verb's box/due date.
+    if known:
+        existing_payload: dict[str, Any] = doc_ref.get().to_dict() or {}
+        if not existing_payload.get("srs_box"):
+            now = datetime.now(timezone.utc)
+            payload["srs_box"] = 1
+            payload["srs_due_at"] = _leitner_due_at(1, from_time=now)
+            payload["srs_reviewed_at"] = now
+
+    doc_ref.set(payload, merge=True)
+
+
+def record_review(
+    *,
+    user_id: str,
+    language: str,
+    verb_id: str,
+    recalled: bool,
+) -> dict[str, Any]:
+    """Advance a verb's Leitner box after a practice-loop review.
+
+    Recalled -> promote one box (capped at LEITNER_MAX_BOX). Not recalled ->
+    demote to box 1 (not box 0 -- the verb stays in the ladder, it just
+    resurfaces sooner). A verb with no prior box (srs_box 0, e.g. reviewed
+    before ever being marked known through the normal path) starts at box 1
+    either way, since a review action is itself evidence the verb is being
+    actively studied.
+    """
+    _upsert_language_doc(user_id, language)
+
+    doc_ref = _progress_verb_ref(user_id, language, verb_id)
+    existing_payload: dict[str, Any] = doc_ref.get().to_dict() or {}
+    current_box = int(existing_payload.get("srs_box") or 0)
+
+    next_box = leitner_next_box(current_box, recalled)
+
+    now = datetime.now(timezone.utc)
+    due_at = _leitner_due_at(next_box, from_time=now)
+
+    doc_ref.set(
         {
             "language": language,
             "verb_id": verb_id,
-            "known": known,
-            "known_updated_at": firestore.SERVER_TIMESTAMP,
+            "known": True,
+            "srs_box": next_box,
+            "srs_due_at": due_at,
+            "srs_reviewed_at": now,
             "updated_at": firestore.SERVER_TIMESTAMP,
         },
         merge=True,
     )
+
+    return {"box": next_box, "due_at": due_at}
 
 
 def list_progress_for_language(
@@ -195,12 +268,17 @@ def list_progress_for_language(
         verb_id = str(payload.get("verb_id") or "")
         if not verb_id:
             continue
+        srs_due_at = payload.get("srs_due_at")
+        srs_reviewed_at = payload.get("srs_reviewed_at")
         progress_rows.append(
             VerbProgress(
                 language=str(payload.get("language") or language),
                 verb_id=verb_id,
                 seen=bool(payload.get("seen", False)),
                 known=bool(payload.get("known", False)),
+                srs_box=int(payload.get("srs_box") or 0),
+                srs_due_at=srs_due_at if isinstance(srs_due_at, datetime) else None,
+                srs_reviewed_at=srs_reviewed_at if isinstance(srs_reviewed_at, datetime) else None,
             )
         )
 

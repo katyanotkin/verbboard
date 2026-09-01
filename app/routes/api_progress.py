@@ -9,6 +9,7 @@ from core.progress.progress_service import (
     load_practice_progress,
     record_known,
     record_practice_progress,
+    record_review_result,
     record_seen,
 )
 
@@ -26,6 +27,12 @@ class KnownRequest(BaseModel):
     language: str = Field(min_length=2, max_length=3)
     verb_id: str = Field(min_length=1, max_length=80)
     known: bool
+
+
+class ReviewRequest(BaseModel):
+    language: str = Field(min_length=2, max_length=3)
+    verb_id: str = Field(min_length=1, max_length=80)
+    recalled: bool
 
 
 class PracticeProgressRequest(BaseModel):
@@ -67,6 +74,15 @@ def get_progress(
             row.verb_id: {
                 "seen": row.seen,
                 "known": row.known,
+                **(
+                    {
+                        "srs_box": row.srs_box,
+                        "srs_due_at": row.srs_due_at.isoformat() if row.srs_due_at else None,
+                        "srs_reviewed_at": row.srs_reviewed_at.isoformat() if row.srs_reviewed_at else None,
+                    }
+                    if row.srs_box
+                    else {}
+                ),
             }
             for row in rows
         }
@@ -121,6 +137,26 @@ def set_progress_known(
     )
 
     return {"ok": True}
+
+
+@router.post("/review")
+def record_progress_review(
+    request: Request,
+    payload: ReviewRequest,
+):
+    user = _require_user(request)
+
+    result = record_review_result(
+        user=user,
+        language=payload.language,
+        verb_id=payload.verb_id,
+        recalled=payload.recalled,
+    )
+
+    return {
+        "box": result["box"],
+        "due_at": result["due_at"].isoformat(),
+    }
 
 
 @router.post("/practice")
