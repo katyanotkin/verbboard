@@ -47,7 +47,7 @@ Design baseline: senior-architect review from earlier this session (memory: `pro
 
 ## Status
 
-**COMPLETE.** Implemented, code-reviewed, tested (42 new tests, 870 passed / 15 skipped, 0 failures), and pushed to `main` (commit hash filled in below once pushed). GitHub issue #10 closed with a summary comment linking here.
+**COMPLETE.** Implemented, code-reviewed, tested (42 new tests, 870 passed / 15 skipped, 0 failures), committed as `67a3340`, and pushed to `main` (stage deploy triggered). [GitHub issue #10](https://github.com/katyanotkin/verbboard/issues/10) closed with a summary comment linking here.
 
 **Files touched:** `core/progress/{models,progress_repository,progress_service}.py`, `app/routes/{api_progress,verbs}.py`, `core/render.py`, `app/static/{srs.js (new),auth.js,practice_loop.js,learn_practice.js,learn.css,sw.js}`, `app/templates/{board,verbs}.html`, `app/i18n/{en,ru,es,he}.json`, `tests/{test_srs_merge.py (new),test_progress_repository.py,test_progress_api.py,test_safe_return_and_privacy.py}`, `CLAUDE.md`.
 
