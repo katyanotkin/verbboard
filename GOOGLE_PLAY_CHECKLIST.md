@@ -138,7 +138,7 @@ Play Console > Policy > App content:
 - Ads: No ads
 - Content rating: Education questionnaire (no violence/adult content)
 - Target audience: 13+ or All ages
-- Data safety: Firebase UID tracked for progress sync
+- Data safety: see `PLAY_DATA_SAFETY.md` for the full category-by-category worksheet (selections, purposes, and descriptions to paste in)
 
 - [ ] Declarations complete
 

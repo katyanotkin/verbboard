@@ -1,5 +1,7 @@
 # Product Backlog — User Feedback Triage
 
+**FROZEN 2026-09-01.** Open work items migrated to [GitHub Issues](https://github.com/katyanotkin/verbboard/issues) (labeled `free`/`plus`/`engineering`/`needs-scoping`). This file is kept as the historical record of decisions and rationale -- do not add new items here; file a GitHub issue instead. `PRODUCT_ROADMAP.md` is frozen for the same reason.
+
 Living log of feature requests and UI feedback collected from users, triaged into actionable items. Append new sessions below rather than editing old ones.
 
 ---
@@ -636,3 +638,15 @@ Built the reusable tap-to-reveal pattern the 2026-07-29 idiom decision called fo
 - **Not done:** the other two flagged spots (practice-panel controls, jump-to-example) -- narrowed to this session's two controls deliberately, not a scope miss.
 
 Committed `d9bac37`, pushed to `main`, stage deploy triggered.
+
+## 2026-09-01 session
+
+### Spaced repetition (#4) -- ruling reversed: back to FREE tier, not Plus
+
+Owner call: item #4 moves to the free edition, reversing the 2026-07-15 "new features go to ver2" ruling as applied to this item specifically (see the "2026-07-15 addendum" section above, which had overruled the earlier 2026-07-10 P3.1 recommendation to ship it free). The general "new features -> ver2" policy is unchanged for other items -- #4 is now an explicit exception, not a policy reversal.
+
+**Consequence:** unlike being gated behind Plus (where "owning the Plus app is the entitlement," per the 2026-07-12 ruling), a free-tier feature needs no entitlement check at all -- #4 is no longer blocked by anything in the Plus/edition-config work and can be scoped and built independently of the Plus timeline.
+
+**Not yet done:** the actual scheduling design (per-verb due-date data model, background/query mechanism to surface due verbs, practice-loop integration) is still unscoped -- this session only settles the tier. Size estimate from the original entry ("large") stands until a design pass happens.
+
+**How to apply:** treat #4 as a free-tier item in sequencing/prioritization from now on; the "Highest-value ask... gated behind #6" framing in the old prioritization table (2026-07-02 session) and the "scoped to Plus" references elsewhere in this doc are superseded by this ruling, per the doc's own append-only convention -- don't edit those old entries, read this one as current.
