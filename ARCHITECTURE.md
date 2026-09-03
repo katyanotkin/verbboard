@@ -26,10 +26,14 @@ Cloud Run  (Docker container, app.main:app)
     templates/      Jinja2 .html files
     static/         vanilla JS + CSS (no framework)
   |
-  +-- Firestore       verb data, user progress, demand signals
+  +-- entitlement gate  core/entitlements.py -- can_study() checked on
+  |                     /learn, /verbs, /audio, both search endpoints,
+  |                     /api/preferences before any of the below runs
+  |
+  +-- Firestore       verb data, user progress, entitlements, demand signals
   +-- GCS             audio files (mp3)
   +-- Secret Manager  env secrets (prod/stage)
-  +-- Vertex AI       cross-language search translation (Gemini)
+  +-- Vertex AI       cross-language search translation + EN/ES autogen (Gemini)
   +-- Anthropic API   verb generation + Hebrew translation (Claude)
 ```
 
@@ -40,11 +44,14 @@ Cloud Run  (Docker container, app.main:app)
 | Language | Python 3.12 | |
 | Web framework | FastAPI | async, type-annotated handlers |
 | Templates | Jinja2 (via `fastapi.templating`) | all HTML responses use `TemplateResponse` |
-| Config | `core/settings.py` `load_settings()` | frozen dataclass; reads from Secret Manager or `.env` |
+| Config | `core/settings.py` `load_settings()` | frozen dataclass; reads from Secret Manager or `.env`; carries `edition` and `study_languages` |
+| Editions | `core/editions.py` | filters the plugin registry to the active edition's allowed study languages; no-op with zero env vars set |
+| Entitlements | `core/entitlements.py` | `can_study(language, uid)` gates Plus-only study languages; `user_entitlements/{uid}` in Firestore; 60s TTL cache, fails open on Firestore error |
 | Database | Firestore | single source of truth; no second DB |
 | Audio storage | GCS | `core/audio_backend/gcs.py`; factory enforces GCS-only |
 | AI generation | Anthropic Claude | Haiku (`claude-haiku-4-5-20251001`) for EN, Sonnet (`claude-sonnet-4-6`) for others |
 | Translation | Vertex AI Gemini | `gemini-2.5-flash-lite` via `core/translation_service.py` |
+| EN/ES autogen | Vertex AI Gemini | `gemini-2.5-flash` via `core/verb_autogen.py`; inline generation on search miss, no admin review |
 | Auth (users) | Firebase Auth | ID token validated on `/api/progress/*` |
 | Auth (admin) | HMAC session token | `__session` cookie; only cookie CDN forwards to Cloud Run |
 
@@ -56,19 +63,49 @@ Cloud Run  (Docker container, app.main:app)
 | CSS | Per-page files + `common.css`; custom properties for theming; no inline `<style>` blocks |
 | Auth | `auth.js` -- Firebase JS SDK (deferred); `authReadyPromise` resolves once per page load |
 | Progress | `progress.js` -- `VerbBoardProgress`; localStorage + server sync on login |
-| Practice | `practice_loop.js` -- session state in localStorage; badge sync on `vb:progress-hydrated` |
-| PWA | `sw.js` (cache `vb-v18`), `manifest.json`, `pwa.js` install prompt |
-| i18n | 4 locales (EN/RU/HE/ES); all 4 locale files must be updated together |
+| Practice | `practice_loop.js` -- session state in localStorage; badge sync on `vb:progress-hydrated`; mixes due spaced-repetition verbs into the session |
+| Spaced repetition | `srs.js` -- `nextBox()` (Leitner box-transition rule, mirrors `leitner_next_box()` in `core/progress/models.py`), `getDueVerbIds()`, `mergeFromServer()` (last-write-wins, not union-merge) |
+| PWA | `sw.js` (cache version -- check the `CACHE` constant at the top of the file directly; it changes on every deploy that touches a precached asset, so a number recorded here would just go stale), `manifest.json`, `pwa.js` install prompt |
+| i18n | 4 locales (EN/RU/HE/ES); all 4 locale files must be updated together; Italian/French are study-only and have no UI locale of their own |
 
 ### Language plugins
 
-Each language (`en`, `ru`, `he`, `es`) lives in `core/languages/{lang}/plugin.py` and self-registers on import. All plugins implement the same interface:
+Each language lives in `core/languages/{lang}/plugin.py` and self-registers on import. All plugins implement the same interface:
 
 ```python
 build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board
 ```
 
-Plugins are imported in `app/main.py` at startup. The registry is in `core/registry.py`.
+Six plugins exist today: `en`, `es`, `fr`, `he`, `it`, `ru` -- all six are imported unconditionally in `app/main.py` at startup, so the registry (`core/registry.py`) always contains all six regardless of edition. What varies by edition is not which plugins *register*, but which ones are *reachable*:
+
+- `core/editions.py`'s `active_study_plugins()` filters the registry down to `Settings.study_languages` for language-picker purposes
+- `core/entitlements.py`'s `can_study()` is the actual enforcement layer, checked per-request on `/learn`, `/verbs`, `/audio`, both search endpoints, and `/api/preferences`
+
+`en`/`ru`/`he`/`es` are free-tier (`FREE_STUDY_LANGUAGES` in `core/languages/config.py`, also the fixed 4-language UI locale set). `it`/`fr` (`PLUS_EXTRA_STUDY_LANGUAGES`) are Plus-only and study-only -- no UI translation exists for them, they only ever appear as the *studied* language, never the *UI* language.
+
+### Editions
+
+`core/editions.py` + `Settings.edition` (`EDITION` env var, `free` default). One Docker image, one deployment shape -- edition is config, not a fork or a second Cloud Run service. Stage runs `EDITION=plus` to exercise both code paths in one environment; prod runs `EDITION=free` explicitly.
+
+`Settings.study_languages` defaults per edition via `default_study_languages(edition)` (`core/languages/config.py`): free gets exactly `FREE_STUDY_LANGUAGES`, Plus gets that plus `PLUS_EXTRA_STUDY_LANGUAGES`. Can be overridden directly via the `STUDY_LANGUAGES` CSV env var. `Settings._validate()` refuses to boot a free-edition instance that has a Plus-only language in its study list.
+
+Other edition-scoped config: `APP_NAME`/`APP_SHORT_NAME`, `ANDROID_PACKAGE_NAME`/`ANDROID_CERT_FINGERPRINTS` (so a future Plus Android listing can carry its own package/signing identity from the same image), `ON_DEMAND_EXAMPLES_ENABLED` (defaults to `edition == "plus"`, independently overridable as a cost kill switch; on-demand example generation itself is not yet built).
+
+### Entitlements
+
+`core/entitlements.py`. `requires_entitlement(language)` is true for any language outside `FREE_STUDY_LANGUAGES` (today: `it`, `fr`). `has_plus_entitlement(uid)` reads `user_entitlements/{uid}` in Firestore, true iff `status == "active"` and not expired; 60-second TTL cache (plain dict, not `lru_cache`, because TTL eviction matters -- a revoked grant must not stay cached indefinitely). Fails open on a Firestore read error (a few minutes of free content during a GCP incident is cheaper than locking out a paying user); fails closed only on a definitive negative (no doc, or inactive status). `can_study(language, uid)` is the single call site every route uses: `not requires_entitlement(language) or (uid is not None and has_plus_entitlement(uid))`.
+
+No billing integration exists yet -- grants are manual via `/admin/entitlements` (`app/routes/admin_entitlements.py`, `set_entitlement()`/`get_entitlement()`/`list_entitlements()`/`lookup_uid_by_email()`). The record schema reserves billing-only fields (`product_id`, `purchase_token`, `order_id`, `expires_at`) seeded to `None` on first write so a future billing-sourced value has somewhere to land without a migration.
+
+### Spaced repetition
+
+`core/progress/models.py` (`LEITNER_INTERVAL_DAYS = (1, 3, 7, 16, 35)`, `LEITNER_MAX_BOX`, `leitner_next_box()`) + `app/static/srs.js` (`nextBox()`, kept in lockstep with the Python version -- `tests/test_srs_merge.py` runs both through a Node-subprocess parity harness).
+
+A verb enters the box ladder the moment it's marked `known` (star toggle or "Skip & mark as learned") -- `known` doubles as "entered the review ladder"; there's no separate opt-in. The only recall signal is binary ("Knew it" / "Show me again") on resurfaced verbs inside a normal practice session -- no SM-2/ease-factor math, no separate review screen. State (`srs_box`, `srs_due_at`, `srs_reviewed_at`) lives on the existing `user_progress/{uid}/languages/{lang}/verbs/{verb_id}` document, no new collection. `POST /api/progress/review` advances the box server-side; `GET /api/progress` includes the fields when `srs_box > 0`.
+
+Due-ness is computed client-side (`srs.js`'s `getDueVerbIds()`) from data `hydrateProgress()` already fetched -- no server-side due query, no Cloud Scheduler, no background job. `practice_loop.js`'s `startPractice()` mixes due-and-known verbs into a session (capped around 1/3 of session size) via `dueReviewCandidates()`, tagging each verb's mode (`'review'` vs `'new'`) in the session's `modes` map; `learn_practice.js`'s practice bar shows the recall buttons only for `mode === 'review'` verbs.
+
+Sync model deliberately differs from seen/known: SRS state can move in either direction across devices (a box can go up or down), so `srs.js`'s `mergeFromServer()` is last-write-wins by `srs_reviewed_at`, not the union-merge-never-delete rule the rest of progress sync uses. Do not fold SRS fields into the existing union-merge loop.
 
 ### Cookie constraint
 
@@ -119,15 +156,19 @@ Middleware: `_PageViewMiddleware` in `app/main.py` intercepts GET requests to tr
 
 ### Key data flows
 
-**Verb page load:** `GET /learn?verb={id}&language={lang}` -> `verb_loader.py` (Firestore, 60s TTL cache) -> language plugin `build_board()` -> `core/render.py` builds HTML -> `TemplateResponse("board.html")`
+**Verb page load:** `GET /learn?verb={id}&language={lang}` -> `can_study(language, uid)` entitlement gate (`core/entitlements.py`) -> `verb_loader.py` (Firestore, 60s TTL cache) -> language plugin `build_board()` -> `core/render.py` builds HTML -> `TemplateResponse("board.html")`
 
-**Audio on demand:** `GET /audio/{language}/{verb_id}/{voice}/{form_key}.mp3` -> `audio_service.ensure_audio()` -> GCS fetch or TTS generate + GCS store
+**Audio on demand:** `GET /audio/{language}/{verb_id}/{voice}/{form_key}.mp3` -> `can_study(language, uid)` entitlement gate -> `audio_service.ensure_audio()` -> GCS fetch or TTS generate + GCS store
 
-**Cross-language search:** `GET /search_verb_by_lang?q={query}&source_lang=en&language={lang}` -> `translate_search_query()` (Vertex AI) -> Firestore lookup -> redirect to `/learn` or log demand signal
+**Cross-language search:** `GET /search_verb_by_lang?q={query}&source_lang=en&language={lang}` -> entitlement gate -> `translate_search_query()` (Vertex AI) -> Firestore lookup -> redirect to `/learn` or log demand signal
 
-**Demand pipeline:** Admin reviews signals -> triggers Claude generation (`admin_candidates.py`) -> candidate stored in Firestore -> preview on `/learn` -> promote to `verbs` collection
+**EN/ES autogen (search miss, free-tier languages only):** search miss on `en`/`es` -> `is_plausible_verb_query()` gate (`core/verb_autogen.py`) -> fire-and-forget asyncio task -> Gemini (`gemini-2.5-flash`) generates structured verb data -> pydantic validation -> dual-write to `verb_candidates` (as already-promoted) and live `verbs` -> cache bust -> audio pre-warm. No Anthropic call, no admin review, live within ~30 seconds.
+
+**Demand pipeline (HE/RU/IT/FR, human-reviewed):** Admin reviews signals -> triggers Claude generation (`admin_candidates.py`) -> candidate stored in Firestore -> preview on `/learn` -> promote to `verbs` collection
 
 **User progress:** Firebase ID token -> `POST /api/progress/sync` -> `progress_service.py` -> `user_progress/{uid}/languages/{lang}/verbs/{verb_id}`
+
+**Spaced repetition review:** practice session surfaces a due verb (`srs.js` `getDueVerbIds()`, client-computed) -> user self-reports recall -> `POST /api/progress/review` -> `leitner_next_box()` advances `srs_box`/`srs_due_at` server-side on the same progress document
 
 ### Testing
 
@@ -138,6 +179,8 @@ Pre-commit hook runs the full test suite (unit + e2e) on every commit (`pytest t
 ---
 
 Generated from lead-architect audit (2026-06-10). Tracks divergences from intended architecture.
+
+**Note (2026-09-03):** the checklist below predates editions, entitlements, and spaced repetition, and has not been re-audited against them. Treat it as a historical record of the pre-Plus codebase rather than a current-state check; a fresh audit covering those three systems is separate, larger work.
 
 ---
 
@@ -205,7 +248,7 @@ Generated from lead-architect audit (2026-06-10). Tracks divergences from intend
 
 ## Passing (no action needed)
 
-- Language plugins (`en/ru/he/es`): all implement `build_board`, all self-register -- consistent
+- Language plugins (`en/es/fr/he/it/ru`): all implement `build_board`, all self-register -- consistent
 - Audio backend: GCS-only enforced via factory -- no local backend exposed at runtime
 - AI model routing: Haiku for EN, Sonnet for others -- correctly applied in `settings_ai.py` and `admin_candidates.py`
 - Firestore-only at runtime: no JSON lexicon reads in production paths
