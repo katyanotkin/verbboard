@@ -159,6 +159,130 @@ def test_unmark_known_read_back(
 
 
 # ---------------------------------------------------------------------------
+# spaced repetition: srs_box/srs_due_at/srs_reviewed_at round-trip
+# ---------------------------------------------------------------------------
+
+
+def test_post_review_rejects_unauthenticated(live_base_url: str) -> None:
+    r = requests.post(
+        f"{live_base_url}/api/progress/review",
+        json={"language": "en", "verb_id": "en_go", "recalled": True},
+    )
+    assert r.status_code == 401
+
+
+def test_marking_known_initializes_ladder(
+    live_base_url: str,
+    live_auth_headers: dict[str, str],
+    live_verb_id: str,
+) -> None:
+    requests.post(
+        f"{live_base_url}/api/progress/known",
+        headers=live_auth_headers,
+        json={"language": "en", "verb_id": live_verb_id, "known": True},
+    )
+
+    r = requests.get(
+        f"{live_base_url}/api/progress?language=en",
+        headers=live_auth_headers,
+    )
+    verb = r.json()["verbs"][live_verb_id]
+    assert verb["srs_box"] == 1
+    assert verb["srs_due_at"] is not None
+    assert verb["srs_reviewed_at"] is not None
+
+
+def test_get_progress_omits_srs_fields_when_never_known(
+    live_base_url: str,
+    live_auth_headers: dict[str, str],
+    live_verb_id: str,
+) -> None:
+    """seen-only (never marked known) must not carry srs fields at all --
+    this is exactly the shape the client-side backfill logic depends on to
+    tell "genuinely never in the ladder" apart from "in the ladder"."""
+    requests.post(
+        f"{live_base_url}/api/progress/seen",
+        headers=live_auth_headers,
+        json={"language": "en", "verb_id": live_verb_id},
+    )
+
+    r = requests.get(
+        f"{live_base_url}/api/progress?language=en",
+        headers=live_auth_headers,
+    )
+    verb = r.json()["verbs"][live_verb_id]
+    assert "srs_box" not in verb
+
+
+def test_review_recalled_true_promotes_box(
+    live_base_url: str,
+    live_auth_headers: dict[str, str],
+    live_verb_id: str,
+) -> None:
+    requests.post(
+        f"{live_base_url}/api/progress/known",
+        headers=live_auth_headers,
+        json={"language": "en", "verb_id": live_verb_id, "known": True},
+    )
+
+    r = requests.post(
+        f"{live_base_url}/api/progress/review",
+        headers=live_auth_headers,
+        json={"language": "en", "verb_id": live_verb_id, "recalled": True},
+    )
+    assert r.status_code == 200
+    assert r.json()["box"] == 2
+
+    r2 = requests.get(
+        f"{live_base_url}/api/progress?language=en",
+        headers=live_auth_headers,
+    )
+    assert r2.json()["verbs"][live_verb_id]["srs_box"] == 2
+
+
+def test_review_recalled_false_resets_to_box_one(
+    live_base_url: str,
+    live_auth_headers: dict[str, str],
+    live_verb_id: str,
+) -> None:
+    requests.post(
+        f"{live_base_url}/api/progress/known",
+        headers=live_auth_headers,
+        json={"language": "en", "verb_id": live_verb_id, "known": True},
+    )
+    requests.post(
+        f"{live_base_url}/api/progress/review",
+        headers=live_auth_headers,
+        json={"language": "en", "verb_id": live_verb_id, "recalled": True},
+    )
+
+    r = requests.post(
+        f"{live_base_url}/api/progress/review",
+        headers=live_auth_headers,
+        json={"language": "en", "verb_id": live_verb_id, "recalled": False},
+    )
+    assert r.status_code == 200
+    assert r.json()["box"] == 1
+
+
+def test_review_on_never_known_verb_lands_box_one_regardless_of_recall(
+    live_base_url: str,
+    live_auth_headers: dict[str, str],
+    live_verb_id: str,
+) -> None:
+    """A verb reviewed before it was ever marked known (e.g. the pre-existing-
+    known-verb backfill path, which surfaces a verb for review without ever
+    calling POST /known) must land on box 1 whether or not recall succeeds --
+    a review action is itself evidence of active study."""
+    r = requests.post(
+        f"{live_base_url}/api/progress/review",
+        headers=live_auth_headers,
+        json={"language": "en", "verb_id": live_verb_id, "recalled": False},
+    )
+    assert r.json()["box"] == 1
+
+
+# ---------------------------------------------------------------------------
 # user_practice: badges round-trip
 # ---------------------------------------------------------------------------
 
