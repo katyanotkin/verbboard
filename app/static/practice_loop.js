@@ -189,11 +189,28 @@
     // from buildPool() (which stays the "new verb" pool, unchanged, since
     // needsMixIn() also depends on it) -- selection into the actual session
     // happens in startPractice() below.
+    function allDueVerbIds() {
+      if (!window.VerbBoardSRS) return new Set();
+      const dueSet = new Set(window.VerbBoardSRS.getDueVerbIds(lang));
+
+      // Verbs marked known before this feature shipped (or before their
+      // first review under it) never got an srs entry at all -- treat them
+      // as immediately due too, so that backlog gets swept into review
+      // instead of sitting inert forever. Nothing is written here; a
+      // missing/box-0 entry already lands on box 1 on first real review
+      // regardless of recall (see leitner_next_box/nextBox), so this is
+      // purely a due-ness read, not new persisted state.
+      const srsMap = window.VerbBoardSRS.readSrs(lang);
+      known().forEach(function (id) {
+        if (!srsMap[id]) dueSet.add(id);
+      });
+
+      return dueSet;
+    }
+
     function dueReviewCandidates(size) {
-      if (!window.VerbBoardSRS) return [];
-      const dueIds = window.VerbBoardSRS.getDueVerbIds(lang);
-      if (dueIds.length === 0) return [];
-      const dueSet = new Set(dueIds);
+      const dueSet = allDueVerbIds();
+      if (dueSet.size === 0) return [];
       const dueVerbs = verbs.filter(v => dueSet.has(v.id));
       const cap = Math.max(1, Math.floor(size / 3));
       const shuffled = [...dueVerbs].sort(function () { return Math.random() - 0.5; });
@@ -201,7 +218,7 @@
     }
 
     function countDueToday() {
-      return window.VerbBoardSRS ? window.VerbBoardSRS.getDueVerbIds(lang).length : 0;
+      return allDueVerbIds().size;
     }
 
     function needsMixIn(size) {

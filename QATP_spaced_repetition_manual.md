@@ -16,6 +16,10 @@ Automated coverage already in place (do not re-test manually): Leitner box-trans
 
 **TC-3 (no double-init):** Toggle the same verb's star off then on again. Confirm `box`/`due_at`/`reviewed_at` in localStorage are **unchanged** from before the toggle -- re-marking known must not reset ladder progress.
 
+## A2. Backlog of pre-existing known verbs gets picked up
+
+**TC-1b:** On a verb you marked known *before* this feature shipped (i.e. it's in `known:{lang}` in localStorage but has no entry in `srs:{lang}` -- confirm this precondition first via the console snippets in TC-1), reload `/verbs`. The due-count line should already count it, with no action needed to "activate" it. Start a practice session -- it should appear with the recall buttons (mode `'review'`) even though it's never been through an explicit review before. Tap "Knew it": confirm it now gets a real `srs:{lang}` entry (`box: 1`, not some inherited value) -- this is its first real review, so box 1 is correct regardless of which button you tap.
+
 ## B. Due-verb resurfacing in a practice session
 
 Real due dates are 1+ days out, so force it: in DevTools console, pick a verb you've marked known (from TC-1) and backdate it so it's already due --
