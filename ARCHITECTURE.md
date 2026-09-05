@@ -150,13 +150,11 @@ Middleware: `_PageViewMiddleware` in `app/main.py` intercepts GET requests to tr
 - One Firestore doc per `(IP, UA, day)` in `analytics_sessions`; `create()` is a no-op for returning visitors
 - UID attached to session doc on user login via `POST /api/analytics/session` (auth.js fires this after Firebase sign-in; server derives fingerprint from the same request headers)
 
-**Page view counting** (`core/analytics/daily_counters.py`):
-- Increments a counter doc in `analytics_daily` keyed by `{date}_{page}_{device}_{lang}_{ui_lang}`
-- Counts every page load (no per-session deduplication for now -- future upgrade: JS-side sessionStorage analytics)
+**Page view counting:** `analytics_daily` was dropped 2026-06-14 -- nothing writes to it anymore. `core/analytics/daily_counters.py` now holds only `_clean_lang()`, a language-code sanitizer reused by `session_tracker.py` and `api_analytics.py`. Usage stats are derived entirely from `analytics_sessions` via `get_device_mix()` in `core/admin_feedback_service.py`.
 
 ### Key data flows
 
-**Verb page load:** `GET /learn?verb={id}&language={lang}` -> `can_study(language, uid)` entitlement gate (`core/entitlements.py`) -> `verb_loader.py` (Firestore, 60s TTL cache) -> language plugin `build_board()` -> `core/render.py` builds HTML -> `TemplateResponse("board.html")`
+**Verb page load:** `GET /learn?verb={id}&language={lang}` -> `can_study(language, uid)` entitlement gate (`core/entitlements.py`) -> `verb_loader.py` (Firestore, 5-minute TTL cache) -> language plugin `build_board()` -> `core/render.py` builds HTML -> `TemplateResponse("board.html")`
 
 **Audio on demand:** `GET /audio/{language}/{verb_id}/{voice}/{form_key}.mp3` -> `can_study(language, uid)` entitlement gate -> `audio_service.ensure_audio()` -> GCS fetch or TTS generate + GCS store
 

@@ -195,3 +195,16 @@ For pre-commit, parallelization is not used — the hook runs `pytest` directly 
 - **Admin entitlement grant/revoke page** — `tests/test_admin_entitlements.py`:
   unit tests on `/admin/entitlements` covering uid/email lookup, grant, status
   validation, and admin-auth requirement.
+
+- **Verb of the day** — `tests/test_verb_loader.py`: unit tests on
+  `pick_verb_of_the_day()` covering empty/single-entry lists, determinism for
+  identical inputs, stability across rank reordering (picks by id-sorted order,
+  not the caller's rank order), and variation across dates/languages.
+  `tests/test_nav_links.py::test_home_verb_of_the_day_links_to_learn` covers the
+  home-page chip end-to-end (TestClient) through to a working `/learn` link.
+
+- **Anki/CSV export of known verbs** — `tests/test_verbs_export.py`: unit tests
+  on `/api/verbs`'s opt-in `include_translations` query param (omitted by
+  default, present and populated when requested) and on `/verbs`'s export
+  button/script markup, including that the page's embedded `VB_VERBS` blob
+  does not carry the extra field for ordinary (non-exporting) visitors.
