@@ -18,6 +18,7 @@ from app.routes.admin_utils import (
     logger,
     require_admin_api,
 )
+from core.admin_logging import resolve_signal_label
 from core.search_utils import normalize_text
 from core.settings import _load_anthropic_api_key
 from core.settings_ai import (
@@ -438,6 +439,7 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
 
     db.collection(VERBS_COLLECTION).document(verb_id).set(verb_doc)
     candidate_ref.update({"status": "promoted", "updated_at": now})
+    resolve_signal_label(language=data.get("language", ""), query=data.get("query", ""))
 
     return JSONResponse({"verb_id": verb_id, "promoted": True, "rank": data.get("rank")})
 

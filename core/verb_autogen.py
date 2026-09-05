@@ -169,6 +169,10 @@ def _write_promoted_verb(
     db.collection(_CANDIDATES_COLLECTION).document(verb_id).set(candidate_doc)
     db.collection(_VERBS_COLLECTION).document(verb_id).set(live_doc)
 
+    from core.admin_logging import resolve_signal_label
+
+    resolve_signal_label(language=language, query=query)
+
 
 async def autogenerate_missing_verb(*, language: str, query: str, audio_backend: Any) -> None:
     """Fire-and-forget: generate a missing verb via Gemini and promote it directly to live verbs."""
