@@ -171,7 +171,7 @@ def verb_browser(
     return response
 
 
-def _build_verb_item(entry: object) -> dict[str, object]:
+def _build_verb_item(entry: object, ui_lang: str = "") -> dict[str, object]:
     lemma = getattr(entry, "display_lemma", None) or getattr(entry, "lemma", "")
     if isinstance(lemma, dict):
         lemma = lemma.get("imperfective") or lemma.get("perfective") or ""
@@ -183,6 +183,9 @@ def _build_verb_item(entry: object) -> dict[str, object]:
     }
     if morph.get("root"):
         item["root"] = str(morph["root"])
+    if ui_lang:
+        translations = getattr(entry, "lemma_translations", None) or {}
+        item["translation"] = translations.get(ui_lang, "")
     return item
 
 
@@ -192,17 +195,21 @@ def api_verbs(
     language: str = Query(...),
     offset: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
+    include_translations: bool = Query(False),
 ) -> JSONResponse:
     if not can_study(language, get_session_uid(request)):
         # The verbs.html client-side pager calls this endpoint directly --
         # gating only the page render would be pointless if this stayed open.
         return JSONResponse({"detail": "Forbidden"}, status_code=403)
 
+    # Opt-in: only the CSV export flow (verbs_export.js) needs the translation
+    # field -- keep it off the regular show-more/back-nav pagination payload.
+    ui_lang = resolve_ui_language(request) if include_translations else ""
     all_entries = load_entries_for_language(language=language)
     total = len(all_entries)
     sorted_entries = sorted(all_entries, key=lambda e: e.rank)
     page = sorted_entries[offset : offset + limit]
-    verbs = [_build_verb_item(e) for e in page]
+    verbs = [_build_verb_item(e, ui_lang) for e in page]
 
     try:
         get_db().collection("verb_paging_events").add(

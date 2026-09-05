@@ -55,6 +55,7 @@
   "verbs.known_legend": "★ = aprendido",
   "verbs.empty_state": "Sin coincidencias",
   "verbs.load_more": "Mostrar más",
+  "verbs.export_known": "Exportar conocidos (CSV)",
   "verbs.plus_required": "{language} está disponible en VerbBoard Plus.",
   "practice.label": "Práctica",
   "practice.size_unit": "# verbos",

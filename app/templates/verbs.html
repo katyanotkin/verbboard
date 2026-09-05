@@ -157,6 +157,7 @@
             <span class="progress-total"> / {{ total_verb_count }}</span>
           </div>
         </div>
+        <button type="button" id="vb-export-btn" class="vb-load-more-btn vb-export-btn" hidden>{{ ui['verbs.export_known'] }}</button>
       </div>
 
       <div id="vb-list" class="vb-list"></div>
@@ -178,6 +179,7 @@
   <script src="/static/verbs_filters.js"></script>
   <script src="/static/practice_loop.js"></script>
   <script src="/static/verbs_page.js"></script>
+  <script src="/static/verbs_export.js"></script>
   <script defer src="/static/pwa.js"></script>
 </body>
 </html>
