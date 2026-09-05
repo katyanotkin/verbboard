@@ -58,14 +58,14 @@ def test_active_study_plugins_preserves_registry_order_not_study_languages_order
 # ── resolve_study_language ────────────────────────────────────────────────────
 
 
-def test_resolve_study_language_none_falls_back_to_hebrew():
+def test_resolve_study_language_none_falls_back_to_spanish():
     plugins = active_study_plugins(load_settings())
-    assert resolve_study_language(None, plugins) == "he"
+    assert resolve_study_language(None, plugins) == "es"
 
 
-def test_resolve_study_language_unrecognized_code_falls_back_to_hebrew():
+def test_resolve_study_language_unrecognized_code_falls_back_to_spanish():
     plugins = active_study_plugins(load_settings())
-    assert resolve_study_language("xx", plugins) == "he"
+    assert resolve_study_language("xx", plugins) == "es"
 
 
 def test_resolve_study_language_exact_match_wins():

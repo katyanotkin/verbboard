@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import time
 from typing import Any
 
@@ -64,6 +65,23 @@ def load_entries_for_language(*, language: str) -> list[VerbEntry]:
 
 def invalidate_entries_cache(language: str) -> None:
     _ENTRIES_CACHE.pop(language, None)
+
+
+def pick_verb_of_the_day(entries: list[VerbEntry], *, language: str, date_str: str) -> VerbEntry | None:
+    """Deterministically pick one verb per (language, date) from an already-loaded
+    entries list -- no new storage, no extra Firestore read. Same date-hash idiom
+    as session fingerprinting (core/analytics/session_tracker.py).
+
+    Indexes into entries sorted by id, not the caller's rank order: ranks can
+    change (an admin edit, a promotion) between cache refreshes, which would
+    otherwise shift every entry's list position and flip the pick mid-day.
+    """
+    if not entries:
+        return None
+    stable_entries = sorted(entries, key=lambda entry: entry.id)
+    digest = hashlib.sha256(f"{language}|{date_str}".encode()).hexdigest()
+    index = int(digest, 16) % len(stable_entries)
+    return stable_entries[index]
 
 
 def load_entry_by_id(

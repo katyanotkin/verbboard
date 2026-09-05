@@ -22,10 +22,10 @@ def is_study_language(language: str, settings: Settings | None = None) -> bool:
 
 
 def resolve_study_language(language: str | None, plugins: dict[str, LanguagePlugin]) -> str:
-    """Pick the active study language for a request, falling back to Hebrew."""
-    selected = language or "he"
+    """Pick the active study language for a request, falling back to Spanish."""
+    selected = language or "es"
     if selected not in plugins:
-        selected = "he" if "he" in plugins else next(iter(plugins))
+        selected = "es" if "es" in plugins else next(iter(plugins))
     return selected
 
 

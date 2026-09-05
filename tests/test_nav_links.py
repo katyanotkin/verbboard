@@ -26,6 +26,16 @@ def test_home_has_verbs_browse_link(client: TestClient) -> None:
     assert "/verbs" in client.get("/?language=en").text
 
 
+def test_home_verb_of_the_day_links_to_learn(client: TestClient) -> None:
+    html = client.get("/?language=es&ui_language=en").text
+    assert 'class="votd-chip"' in html
+    match = re.search(r'href="(/learn\?language=es&verb_id=es_[^"&]+&ui_language=en)"', html)
+    assert match, html
+
+    learn_response = client.get(match.group(1))
+    assert learn_response.status_code == 200
+
+
 def test_home_feedback_link_carries_page_and_language(client: TestClient) -> None:
     html = client.get("/?language=en").text
     assert "page=home" in html

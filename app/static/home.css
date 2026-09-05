@@ -120,6 +120,37 @@ input[type="text"]:focus {
   box-shadow: 0 0 0 2px #2563eb;
 }
 
+/* ===== Verb of the day ===== */
+
+.votd-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--page-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  text-decoration: none;
+}
+
+.votd-chip:hover {
+  border-color: var(--input-focus);
+}
+
+.votd-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.votd-verb {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--button-primary-bg);
+}
+
 /* ===== Browse ===== */
 
 .browse-row {

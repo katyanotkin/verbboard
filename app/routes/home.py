@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
 
@@ -22,7 +23,7 @@ from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 from core.translation_service import translate_search_query
 from core.verb_autogen import AUTOGEN_LANGUAGES, autogenerate_missing_verb, check_verb_rejected, is_plausible_verb_query
-from core.verb_loader import load_entries_for_language
+from core.verb_loader import load_entries_for_language, pick_verb_of_the_day
 
 logger = logging.getLogger(__name__)
 
@@ -286,6 +287,19 @@ def home(
     garbage_query = notice_text if (notice_text and garbage == 1 and not generating_verb) else None
     not_a_verb_query = notice_text if (notice_text and not_a_verb == 1 and not generating_verb) else None
 
+    votd: dict[str, str] | None = None
+    try:
+        date_str = datetime.now(UTC).strftime("%Y-%m-%d")
+        votd_entry = pick_verb_of_the_day(
+            load_entries_for_language(language=selected_language),
+            language=selected_language,
+            date_str=date_str,
+        )
+        if votd_entry is not None:
+            votd = {"id": votd_entry.id, "label": votd_entry.display_lemma or votd_entry.lemma}
+    except Exception:
+        logger.exception("Failed to compute verb of the day for %s", selected_language)
+
     response = templates.TemplateResponse(
         request,
         "home.html",
@@ -307,6 +321,7 @@ def home(
             "garbage_query": garbage_query,
             "not_a_verb_query": not_a_verb_query,
             "firebase_web_config_json": settings.firebase_web_config_json,
+            "votd": votd,
         },
     )
     return response
