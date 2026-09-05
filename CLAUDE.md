@@ -1,6 +1,7 @@
 # CLAUDE.md — VerbBoard Project Context
 
 @AGENTS.md
+@workflow.md
 
 VerbBoard is a verb-focused language learning app: conjugation tables, real usage examples, audio, and practice loops. Unknown searches become demand signals that drive future verb coverage. FastAPI + server-rendered UI, GCP backend.
 

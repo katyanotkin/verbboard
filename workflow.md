@@ -77,10 +77,23 @@ Do not use `/verify` for purely cosmetic or non-functional UI changes unless nee
 
 If verification fails, return to implementation and repeat the review/test/verify cycle as appropriate.
 
+## Phase 7 -- Docs (before considering the task done)
+
+Trigger: the change adds/removes a user-facing feature, a new endpoint or data model, a new test file or test layer, a new language/edition, or otherwise makes something already described in `README.md`, `ARCHITECTURE.md`, `TESTING.md`, or `CLAUDE.md` factually wrong or incomplete.
+
+Action:
+- Small, isolated staleness (a line, a version number, a moved file path): fix it directly, no agent needed.
+- Feature-sized doc updates (new section, multi-file rewrite): dispatch `writer` with the specific facts already verified against the code, same as Phase 3's routing for writing/copy. `writer` has no Write/Edit tools -- it returns full replacement text for you to apply, explicitly instructed not to summarize or truncate.
+
+Skip when: the change is a pure internal refactor, test-only, or copy-only edit that makes no doc claim stale.
+
+This phase exists so doc staleness doesn't require the user to notice and ask -- treat it as a standing part of shipping a feature, not an optional cleanup pass.
+
 ## Trivial Changes
 
 For trivial one-liners, such as a typo fix or single-constant change:
 
 - Phase 2 (Design) may be skipped.
 - Phase 5 (Tests) may be skipped.
+- Phase 7 (Docs) may be skipped, unless the one-liner itself makes a doc claim wrong (e.g. renaming something a doc references by name).
 - Phase 4 (Review) still applies to code changes.
