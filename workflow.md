@@ -81,9 +81,11 @@ If verification fails, return to implementation and repeat the review/test/verif
 
 Trigger: the change adds/removes a user-facing feature, a new endpoint or data model, a new test file or test layer, a new language/edition, or otherwise makes something already described in `README.md`, `ARCHITECTURE.md`, `TESTING.md`, or `CLAUDE.md` factually wrong or incomplete.
 
+**A new user-facing feature always means both `CLAUDE.md` (architecture-pattern entry, dense technical bullet) AND `README.md` (the relevant `### <Page> page` feature bullet under "Current behavior") -- check README's feature list for completeness even when nothing in it is factually wrong.** Missing a feature from README's list is exactly the "incomplete" half of this phase's trigger, not a lesser case than a wrong claim. (Learned the hard way 2026-09-05: shipped Verb of the Day + Anki export, updated CLAUDE.md, initially skipped README's Home page / Verbs page bullets entirely -- caught only because the user asked.)
+
 Action:
 - Small, isolated staleness (a line, a version number, a moved file path): fix it directly, no agent needed.
-- Feature-sized doc updates (new section, multi-file rewrite): dispatch `writer` with the specific facts already verified against the code, same as Phase 3's routing for writing/copy. `writer` has no Write/Edit tools -- it returns full replacement text for you to apply, explicitly instructed not to summarize or truncate.
+- Feature-sized doc updates (new section, multi-file rewrite): dispatch `writer` with the specific facts already verified against the code, same as Phase 3's routing for writing/copy. `writer` has no Write/Edit tools -- it returns full replacement text for you to apply, explicitly instructed not to summarize or truncate. For a new feature, this includes drafting both the CLAUDE.md entry and the README bullet in the same pass -- don't split them across separate asks.
 
 Skip when: the change is a pure internal refactor, test-only, or copy-only edit that makes no doc claim stale.
 
