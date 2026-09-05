@@ -38,6 +38,7 @@ The product focuses on:
 
 ### Home page
 - Select language (`en`, `ru`, `he`, `es` free; `it`, `fr` on Plus)
+- Verb of the day: one featured verb per language, deep-linked to the learn page — same pick all day, changes daily
 - Search verbs: studied language selected by default; select English to cross-search in your studied language (translated via Gemini)
 - Voice selection (`female`, `male`)
 - Install button on Android to add to home screen
@@ -55,6 +56,7 @@ Visual indicators:
 ### Verbs page
 - Browse with filters: new / seen / known / recent
 - Practice session entry point
+- Export known verbs as a CSV (Anki-importable) — appears once you've learned at least one verb in that language
 
 ---
 
