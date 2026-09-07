@@ -28,7 +28,7 @@ from core.translation_service import translate_examples
 
 logger = logging.getLogger(__name__)
 
-AUTOGEN_LANGUAGES: frozenset[str] = frozenset({"en", "es"})
+AUTOGEN_LANGUAGES: frozenset[str] = frozenset({"en", "es", "it", "fr"})
 
 _GEMINI_VERB_MODEL = "gemini-2.5-flash"
 _GCP_LOCATION = os.getenv("GCP_REGION", "us-east1")
@@ -45,6 +45,18 @@ _GENERATING: set[str] = set()
 _TRANSLATION_TARGETS: dict[str, list[str]] = {
     "en": ["ru", "es"],
     "es": ["en", "ru"],
+    "it": ["en", "es"],
+    "fr": ["en", "es"],
+}
+
+# Accented Latin letters beyond ASCII that a language's own verb forms
+# legitimately use (e.g. French "être", "préférer"; Italian "però", "città";
+# Spanish "reñir", "soñar"). EN needs no entry -- English verb forms are
+# always plain ASCII.
+_EXTRA_LATIN_CHARS: dict[str, str] = {
+    "es": "ñ",
+    "fr": "àâäéèêëïîôöùûüÿçœæ",
+    "it": "àèéìíîòóùú",
 }
 
 
@@ -64,8 +76,11 @@ def is_plausible_verb_query(query: str, language: str) -> bool:
     stripped = query.strip()
     if not stripped or len(stripped) < 2 or len(stripped) > 30:
         return False
-    # EN and ES are Latin-script; reject Cyrillic, Hebrew, digits, symbols
-    if not all(c.isascii() and (c.isalpha() or c in " '-") for c in stripped):
+    # Latin-script languages; reject Cyrillic, Hebrew, digits, symbols. Each
+    # language's own accented letters (see _EXTRA_LATIN_CHARS) are admitted
+    # alongside plain ASCII so real queries like "être"/"però" aren't rejected.
+    extra_chars = _EXTRA_LATIN_CHARS.get(language, "")
+    if not all((c.isascii() or c.lower() in extra_chars) and (c.isalpha() or c in " '-") for c in stripped):
         return False
     # Reflexive forms like "se ir" are 2 tokens max; anything longer is a phrase
     if len(stripped.split()) > 2:

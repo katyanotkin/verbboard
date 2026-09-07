@@ -9,6 +9,8 @@ Covers:
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
 
 from core.verb_autogen import is_plausible_verb_query
@@ -76,6 +78,55 @@ class TestIsPlausibleVerbQuery:
     def test_length_boundary_max(self):
         assert is_plausible_verb_query("a" * 30, "en") is True
 
+    # -- Newly-supported languages (it, fr) + accented-char bug fix (issue #30) --
+
+    def test_valid_italian_word(self):
+        assert is_plausible_verb_query("parlare", "it") is True
+
+    def test_valid_french_word(self):
+        assert is_plausible_verb_query("parler", "fr") is True
+
+    def test_accepts_french_accented(self):
+        assert is_plausible_verb_query("être", "fr") is True
+
+    def test_accepts_french_accented_multi_diacritic(self):
+        assert is_plausible_verb_query("préférer", "fr") is True
+
+    def test_accepts_italian_accented(self):
+        assert is_plausible_verb_query("però", "it") is True
+
+    def test_accepts_italian_accented_double_letter(self):
+        assert is_plausible_verb_query("città", "it") is True
+
+    def test_accepts_spanish_accented_n_tilde(self):
+        """Regression: reñir was incorrectly rejected before the accented-char fix."""
+        assert is_plausible_verb_query("reñir", "es") is True
+
+    def test_accepts_spanish_accented_n_tilde_second_word(self):
+        assert is_plausible_verb_query("soñar", "es") is True
+
+    def test_rejects_cyrillic_for_french(self):
+        assert is_plausible_verb_query("бежать", "fr") is False
+
+    def test_rejects_cyrillic_for_italian(self):
+        assert is_plausible_verb_query("бежать", "it") is False
+
+    def test_rejects_hebrew_for_french(self):
+        assert is_plausible_verb_query("ללכת", "fr") is False
+
+    def test_rejects_hebrew_for_italian(self):
+        assert is_plausible_verb_query("ללכת", "it") is False
+
+    def test_translation_targets_for_italian(self):
+        from core.verb_autogen import _TRANSLATION_TARGETS
+
+        assert _TRANSLATION_TARGETS["it"] == ["en", "es"]
+
+    def test_translation_targets_for_french(self):
+        from core.verb_autogen import _TRANSLATION_TARGETS
+
+        assert _TRANSLATION_TARGETS["fr"] == ["en", "es"]
+
 
 # ---------------------------------------------------------------------------
 # Integration tests for /search_verb autogen trigger
@@ -120,6 +171,45 @@ def test_autogen_fires_for_es_miss(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routes.home.autogenerate_missing_verb", _noop)
 
     response = client.get("/search_verb?language=es&q=correr", follow_redirects=False)
+
+    location = response.headers["location"]
+    assert "generating=1" in location
+
+
+def test_autogen_fires_for_it_miss(client: TestClient, monkeypatch) -> None:
+    """IT search miss with a plausible query redirects with generating=1."""
+    _patch_search_miss(monkeypatch)
+
+    async def _noop(**kw):
+        pass
+
+    monkeypatch.setattr("app.routes.home.autogenerate_missing_verb", _noop)
+
+    response = client.get("/search_verb?language=it&q=parlare", follow_redirects=False)
+
+    location = response.headers["location"]
+    assert "generating=1" in location
+
+
+def test_autogen_fires_for_fr_miss(client: TestClient, monkeypatch) -> None:
+    """FR search miss with a plausible query redirects with generating=1.
+
+    French is the sole Plus-only study language (core/entitlements.py); the
+    entitlement gate is forced open here (mirroring test_entitlement_gate.py's
+    pattern) so this test isolates the autogen trigger from Plus-gating.
+    """
+    _patch_search_miss(monkeypatch)
+
+    async def _noop(**kw):
+        pass
+
+    monkeypatch.setattr("app.routes.home.autogenerate_missing_verb", _noop)
+
+    with (
+        patch("app.routes.home.can_study", return_value=True),
+        patch("app.routes.home.get_session_uid", return_value="user-1"),
+    ):
+        response = client.get("/search_verb?language=fr&q=parler", follow_redirects=False)
 
     location = response.headers["location"]
     assert "generating=1" in location

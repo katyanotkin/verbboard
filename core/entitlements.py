@@ -25,8 +25,8 @@ _ACTIVE_STATUSES = {"active"}
 def requires_entitlement(language: str, settings: Settings | None = None) -> bool:
     """True if `language` is Plus-only under the current edition config.
 
-    Today FREE_STUDY_LANGUAGES == every registered language (en/ru/he/es), so
-    this is always False in production -- infrastructure ahead of content.
+    FREE_STUDY_LANGUAGES covers en/ru/he/es/it; French ("fr") is the sole
+    Plus-only study language (as of 2026-09-07, when Italian moved to free).
     `settings` is accepted (unused today) so a future edition-scoped allowlist
     can be threaded through without changing the call signature.
     """
