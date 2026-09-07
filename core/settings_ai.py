@@ -172,7 +172,14 @@ FRENCH (fr)
   Elision: use standard French elision (je → j') before a vowel sound, e.g. "j'ai parlé", "j'aime".
   examples: 4 to 6 sentences in French, each using a distinct grammatical form:
     at least one present, one passé composé, one imparfait or futur, and one impératif —
-    unless the verb has no natural imperative (see above), in which case cover another form instead."""
+    unless the verb has no natural imperative (see above), in which case cover another form instead.
+    Some verbs (e.g. devoir) DO have real, grammatically valid imperative forms, but those
+    forms are pragmatically near-unusable as genuine commands in natural French (ordering
+    someone to "obligate themselves" is semantically redundant as a speech act — native
+    speakers use the imperative of the main verb, or the indicative "Vous devez...", instead).
+    For such verbs, do not force an example sentence into the imperative slot just to cover
+    it — a contrived, unnatural-sounding "command" teaches the wrong register more actively
+    than simply covering a different distinct form there instead."""
 
 _LANG_PROMPTS: dict[str, str] = {
     "en": f"{_PROMPT_INTRO}\n\n{_PROMPT_EN}\n",
