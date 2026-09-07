@@ -14,6 +14,27 @@
   // so it correctly tracks per-tab auth state.
   var SESSION_UID_KEY = 'vb:uid';
 
+  // The __session cookie's uid claim carries a fixed 12h max-age (see
+  // ADMIN_SESSION_MAX_AGE_SECONDS in core/admin_auth.py) that is only
+  // refreshed by a POST to /api/analytics/session. That POST used to fire
+  // only once per tab (see the vb:session_uid_sent guard below), so a tab
+  // left open past 12h without a reload would go stale: Firebase Auth stays
+  // signed in client-side but the server starts treating requests as
+  // signed-out (fails closed -- denies Plus content, not a security issue).
+  // Re-send well under the cookie's max-age so a long-lived tab keeps it alive.
+  var SESSION_COOKIE_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+  function refreshSessionCookie() {
+    if (!currentUser) return;
+    getIdToken().then(function (token) {
+      if (!token) return;
+      fetch('/api/analytics/session', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+      }).catch(function () {});
+    });
+  }
+
   function config() {
     return window.FIREBASE_WEB_CONFIG || null;
   }
@@ -378,6 +399,8 @@
 
     firebase.initializeApp(config());
 
+    setInterval(refreshSessionCookie, SESSION_COOKIE_REFRESH_INTERVAL_MS);
+
     firebase.auth().onAuthStateChanged(async function (user) {
       currentUser = user;
 
@@ -390,13 +413,7 @@
         // Attach UID to the analytics session once per browser-session per login.
         if (!sessionStorage.getItem('vb:session_uid_sent')) {
           sessionStorage.setItem('vb:session_uid_sent', '1');
-          getIdToken().then(function (token) {
-            if (!token) return;
-            fetch('/api/analytics/session', {
-              method: 'POST',
-              headers: { Authorization: 'Bearer ' + token },
-            }).catch(function () {});
-          });
+          refreshSessionCookie();
           // Enrich session with the language the user is actually seeing.
           const language = new URLSearchParams(location.search).get('language') || '';
           const uiLang = new URLSearchParams(location.search).get('ui_language') || document.documentElement.lang || '';
