@@ -14,6 +14,11 @@ from core.safe_return import safe_return_to as _safe_return_to
 
 NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}
 
+# Bare dictionary-form (lemma/infinitive) row, one per language plugin. Key name
+# varies: "lemma" (it/fr/es/ru), "base" (en), "infinitive" (he). This row never
+# has a matching example sentence, so jump-to-example must skip it too (issue #11).
+LEMMA_ROW_KEYS = {"lemma", "base", "infinitive"}
+
 _jinja_env = Environment(
     loader=FileSystemLoader(str(TEMPLATES_DIR)),
     autoescape=select_autoescape(["html"]),
@@ -95,7 +100,7 @@ def render_board_html(
                     f"onclick=\"const audio=document.getElementById('{audio_id}'); "
                     f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
                 )
-                if jump_to_example_enabled and has_examples and is_conjugated_form:
+                if jump_to_example_enabled and has_examples and is_conjugated_form and key not in LEMMA_ROW_KEYS:
                     audio_html += (
                         f"<button type='button' class='jump-example-btn' title='{jump_title}' "
                         f'onclick="window.vbJumpToExample && vbJumpToExample(this)">🔎</button>'

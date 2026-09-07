@@ -9,7 +9,7 @@ from __future__ import annotations
 from core.models import Board, VerbEntry
 
 
-def _make_board(verb: VerbEntry) -> Board:
+def _make_board(verb: VerbEntry, *, row_key: str = "present_3sg") -> Board:
     return Board(
         language="en",
         verb=verb,
@@ -20,9 +20,9 @@ def _make_board(verb: VerbEntry) -> Board:
                 "title": "Present",
                 "rows": [
                     {
-                        "key": "base",
+                        "key": row_key,
                         "label": "Base",
-                        "text": verb.forms.get("base", ""),
+                        "text": verb.forms.get(row_key, ""),
                         "href": "",
                     },
                 ],
@@ -60,6 +60,18 @@ def test_jump_to_example_button_hidden_when_disabled(mock_verb: VerbEntry) -> No
     assert "jump-example-btn" not in html
     # Play button and everything else must be unaffected -- only the jump
     # button itself is gated, not audio or the rest of the row.
+    assert "audio" in html.lower()
+
+
+def test_jump_to_example_button_hidden_for_lemma_row(mock_verb: VerbEntry) -> None:
+    """The bare dictionary-form row (key "lemma"/"base"/"infinitive" depending on
+    language plugin) never has a matching example sentence, so it must never get
+    a jump-to-example button even though the verb has examples (issue #11)."""
+    from core.render import render_board_html
+
+    html = render_board_html(_make_board(mock_verb, row_key="base"), return_to="/?language=en")
+    assert "jump-example-btn" not in html
+    # The row's audio button must be unaffected -- only the magnifier is suppressed.
     assert "audio" in html.lower()
 
 
