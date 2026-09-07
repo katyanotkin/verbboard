@@ -138,6 +138,12 @@ ITALIAN (it)
       "deve"), potere → "possa" (not "può"), volere → "voglia" (not "vuole").
     gerundio: "<gerundio>"                  (string)
     participio: "<past participle>"         (string, masculine singular form)
+  Reflexive verbs (e.g. chiamarsi, alzarsi, svegliarsi): include the clitic pronoun
+    attached to each finite form per the normal person (mi/ti/si/ci/vi/si), e.g.
+    presente.io = "mi chiamo", presente.tu = "ti chiami"; imperativo drops "si" for
+    "lei" only in formal register the same as any other imperativo slot (e.g.
+    "si chiami" for lei, "chiamati" for tu with clitic postposed and attached).
+    gerundio/participio keep the clitic postposed and attached: "chiamandosi", "chiamatosi".
   examples: 4 to 6 sentences in Italian, each using a distinct grammatical form:
     at least one presente, one passato prossimo, one imperfetto or futuro, one imperativo."""
 
