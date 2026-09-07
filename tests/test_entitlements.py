@@ -1,10 +1,11 @@
 """Unit tests for core/entitlements.py -- the Plus entitlement gate.
 
 Phase 1 uses a manually-set admin flag (user_entitlements/{uid}.status) as
-the entitlement source. FREE_STUDY_LANGUAGES currently covers every
-registered language (en/ru/he/es), so requires_entitlement() is False for
-all of them today -- this file also pins that "zero behavioral effect in
-production right now" invariant.
+the entitlement source. FREE_STUDY_LANGUAGES currently covers en/ru/he/es/it,
+so requires_entitlement() is False for all of them today -- this file also
+pins that "zero behavioral effect in production right now" invariant. "fr"
+remains the sole Plus-only study language and is used below as the probe for
+the gated branches.
 """
 
 from __future__ import annotations
@@ -47,15 +48,20 @@ def _mock_db_with_doc(exists: bool, data: dict | None = None) -> MagicMock:
 
 
 def test_requires_entitlement_false_for_all_current_free_languages() -> None:
-    """Pins today's zero-behavioral-effect invariant: every registered
-    language (en/ru/he/es) is in FREE_STUDY_LANGUAGES."""
-    assert set(FREE_STUDY_LANGUAGES) == {"en", "ru", "he", "es"}
+    """Pins today's zero-behavioral-effect invariant: every free-tier
+    language (en/ru/he/es/it) is in FREE_STUDY_LANGUAGES."""
+    assert set(FREE_STUDY_LANGUAGES) == {"en", "ru", "he", "es", "it"}
     for lang in FREE_STUDY_LANGUAGES:
         assert entitlements.requires_entitlement(lang) is False
 
 
-def test_requires_entitlement_true_for_unregistered_plus_language() -> None:
-    assert entitlements.requires_entitlement("it") is True
+def test_requires_entitlement_false_for_italian_now_that_it_is_free() -> None:
+    """Italian moved from Plus-only to free-tier 2026-09-07; it must no
+    longer be gated."""
+    assert entitlements.requires_entitlement("it") is False
+
+
+def test_requires_entitlement_true_for_plus_only_language() -> None:
     assert entitlements.requires_entitlement("fr") is True
 
 
@@ -142,19 +148,19 @@ def test_can_study_true_for_free_language_regardless_of_uid() -> None:
 
 
 def test_can_study_false_for_plus_language_anonymous() -> None:
-    assert entitlements.can_study("it", None) is False
+    assert entitlements.can_study("fr", None) is False
 
 
 def test_can_study_false_for_plus_language_unentitled_user() -> None:
     db = _mock_db_with_doc(exists=False)
     with patch.object(entitlements, "get_db", return_value=db):
-        assert entitlements.can_study("it", "u1") is False
+        assert entitlements.can_study("fr", "u1") is False
 
 
 def test_can_study_true_for_plus_language_entitled_user() -> None:
     db = _mock_db_with_doc(exists=True, data={"status": "active"})
     with patch.object(entitlements, "get_db", return_value=db):
-        assert entitlements.can_study("it", "u1") is True
+        assert entitlements.can_study("fr", "u1") is True
 
 
 # ---------------------------------------------------------------------------

@@ -26,10 +26,11 @@ LANGUAGE: dict[str, LanguageConfig] = {
 # UI-language list (EN/RU/HE/ES) is identical across editions -- not edition config.
 UI_LANGUAGES: tuple[str, ...] = tuple(LANGUAGE.keys())
 
-# Study-language allowlists per edition. Free ships exactly today's four languages;
-# Plus adds Italian/French on top once those plugins exist.
-FREE_STUDY_LANGUAGES: tuple[str, ...] = tuple(LANGUAGE.keys())
-PLUS_EXTRA_STUDY_LANGUAGES: tuple[str, ...] = ("it", "fr")
+# Study-language allowlists per edition. Free ships today's five languages
+# (the original four plus Italian, moved to free 2026-09-07 -- an owner
+# product call, not a content-readiness change); Plus adds French on top.
+FREE_STUDY_LANGUAGES: tuple[str, ...] = tuple(LANGUAGE.keys()) + ("it",)
+PLUS_EXTRA_STUDY_LANGUAGES: tuple[str, ...] = ("fr",)
 
 
 def default_study_languages(edition: str) -> tuple[str, ...]:

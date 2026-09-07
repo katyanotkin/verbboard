@@ -52,22 +52,26 @@ def _language_picker_options(html: str) -> list[str]:
 
 
 def test_home_language_picker_free_edition_baseline(client: TestClient) -> None:
+    """Order is registry (registration) order filtered to the free set, not
+    alphabetical: core.languages.{en,es,fr,he,it,ru}.plugin registration
+    order is (en, es, fr, he, it, ru); free edition excludes "fr" (the sole
+    Plus-only language), leaving (en, es, he, it, ru)."""
     options = _language_picker_options(client.get("/?language=en").text)
-    assert options == ["en", "es", "he", "ru"]
+    assert options == ["en", "es", "he", "it", "ru"]
 
 
-def test_home_language_picker_edition_plus_adds_italian_and_french(client: TestClient, monkeypatch) -> None:
-    """Italian and French both have real registered plugins (Plus-only).
-    Free edition must still exclude both; EDITION=plus must add exactly
-    "it" and "fr" and nothing else."""
+def test_home_language_picker_edition_plus_adds_french(client: TestClient, monkeypatch) -> None:
+    """French has a real registered plugin but remains Plus-only. Italian
+    moved from Plus-only to free-tier 2026-09-07, so it's already in the
+    free-edition baseline; EDITION=plus must add exactly "fr" on top."""
     baseline_options = _language_picker_options(client.get("/?language=en").text)
-    assert "it" not in baseline_options
+    assert "it" in baseline_options
     assert "fr" not in baseline_options
 
     monkeypatch.setenv("EDITION", "plus")
     plus_options = _language_picker_options(client.get("/?language=en").text)
 
-    assert set(plus_options) - set(baseline_options) == {"it", "fr"}
+    assert set(plus_options) - set(baseline_options) == {"fr"}
 
 
 # ── verbs ──────────────────────────────────────────────────────────────────
