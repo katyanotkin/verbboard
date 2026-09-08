@@ -41,6 +41,23 @@ document.addEventListener("DOMContentLoaded", function () {
     await progress.setKnown(language, verbId, nextKnown);
     await progress.markSeen(language, verbId);
     updateKnownButton(true);
+
+    // Login-nudge signal: only marking known (not un-marking) counts as the
+    // stronger +3 intent signal -- see login_nudge.js. Fired after
+    // updateKnownButton() (not blocking the button's own UI feedback) since
+    // this is a side signal, not part of the toggle itself. Unlike
+    // initializeProgress() above, this runs on every click, including ones
+    // that land before Firebase's onAuthStateChanged has fired for the
+    // first time -- currentUser() defaults to null until then, so without
+    // awaiting ready() here a signed-in user tapping the star fast enough
+    // right after page load would get silently credited to the anon-only
+    // counter.
+    if (nextKnown && window.VerbBoardLoginNudge) {
+      if (window.VerbBoardAuth && window.VerbBoardAuth.ready) {
+        await window.VerbBoardAuth.ready();
+      }
+      window.VerbBoardLoginNudge.recordKnownMarked();
+    }
   }
 
   knownButton.addEventListener("click", function (event) {
@@ -57,6 +74,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     await progress.markSeen(language, verbId);
+
+    // Login-nudge signal: a verb page view, +1 -- gated behind the
+    // authReadyPromise await above so currentUser() (checked inside
+    // recordVerbView -> isAnonymous) reflects the real auth state rather
+    // than the pre-resolution null default.
+    if (window.VerbBoardLoginNudge) {
+      window.VerbBoardLoginNudge.recordVerbView();
+    }
 
     updateKnownButton(false);
   }

@@ -79,6 +79,8 @@
   "practice.due_today": "due for review today",
   "practice.recall_yes": "Knew it",
   "practice.recall_no": "Show me again",
+  "login_nudge.badge": "You just earned a badge! Sign in with Google so it's still here next time.",
+  "login_nudge.progress": "Don't lose your progress. Sign in to keep it if you switch devices.",
   "auth.login": "Login",
   "auth.logout": "Logout",
   "board.back": "⟵ Back",

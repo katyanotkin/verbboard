@@ -104,6 +104,13 @@ def verb_browser(
         # Login/Logout button regardless of whether the practice loop is on.
         "auth.login": ui["auth.login"],
         "auth.logout": ui["auth.logout"],
+        # Login-nudge copy -- always included (not gated behind any
+        # condition here) since login_nudge_card.js and practice_loop.js's
+        # showWrapUp() decide at render time, client-side, whether either
+        # surface actually shows; both need the strings present regardless.
+        "login_nudge.badge": ui["login_nudge.badge"],
+        "login_nudge.progress": ui["login_nudge.progress"],
+        "home.install_hint_dismiss": ui["home.install_hint_dismiss"],
     }
 
     if "verbs.count_few" in ui:

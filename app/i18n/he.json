@@ -79,6 +79,8 @@
   "practice.due_today": "לחזרה היום",
   "practice.recall_yes": "ידעתי",
   "practice.recall_no": "הראה לי שוב",
+  "login_nudge.badge": "זכית בתג! התחבר עם Google כדי שהוא יישמר גם בפעם הבאה.",
+  "login_nudge.progress": "אל תאבד את ההתקדמות שלך. התחבר כדי לשמור עליה גם במעבר בין מכשירים.",
   "auth.login": "כניסה",
   "auth.logout": "יציאה",
   "board.back": "חזרה ⟶",

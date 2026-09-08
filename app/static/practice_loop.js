@@ -550,6 +550,51 @@
 
       actions.appendChild(doneButton);
 
+      // Login-nudge badge-earned CTA -- eligibility was already decided in
+      // learn_practice.js's _finishPractice() (at the moment the badge was
+      // actually earned, on the previous page) and travels here via
+      // wrapupData.loginNudge, since this modal only mounts after the
+      // redirect to /verbs. markShown() here (not there) is deliberate: it
+      // marks the lifetime-cap slot used at the point the CTA is actually
+      // rendered, not merely decided-eligible.
+      //
+      // isAnonymous() is re-checked live via whenAuthReady() (not just
+      // trusted from the stale decision above) because practice_wrapup:
+      // {lang} is a localStorage payload that can outlive the page that
+      // wrote it -- a backgrounded/OS-killed mobile tab can die before the
+      // redirect to /verbs completes, leaving the payload behind. If the
+      // user then signs in and later opens /verbs in a fresh tab,
+      // maybeShowWrapUp() would otherwise replay a decision made while
+      // still anonymous and show this CTA to a now-signed-in user.
+      // whenAuthReady() (not a bare isAnonymous() check) because this
+      // script (practice_loop.js) is a non-deferred body script that can
+      // run before window.VerbBoardAuth even exists yet -- see its comment
+      // in login_nudge.js. The callback below is guaranteed to run after
+      // `actions` has already been appended to `card` (that happens
+      // synchronously, right after this block, before any promise
+      // resolves), so insertBefore(nudgeEl, actions) is always valid.
+      //
+      // reserveThisPageLoad() is called synchronously here, before
+      // whenAuthReady() -- not inside its async callback -- so the "one
+      // nudge per page load" guarantee (shared with login_nudge_card.js's
+      // /verbs threshold card) holds unconditionally, during initial parse,
+      // regardless of script load order or which of the two surfaces'
+      // whenAuthReady() callbacks happens to resolve first. It reserves the
+      // slot whenever this badge-earned payload is in play at all, even if
+      // the live isAnonymous() check below later decides not to render.
+      if (wrapupData.loginNudge && window.VerbBoardLoginNudge) {
+        window.VerbBoardLoginNudge.reserveThisPageLoad();
+        window.VerbBoardLoginNudge.whenAuthReady(function () {
+          if (!window.VerbBoardLoginNudge.isAnonymous()) return;
+          const nudgeCopy =
+            ui['login_nudge.badge'] ||
+            "You just earned a badge! Sign in with Google so it's still here next time.";
+          const nudgeEl = window.VerbBoardLoginNudge.buildCta(nudgeCopy);
+          card.insertBefore(nudgeEl, actions);
+          window.VerbBoardLoginNudge.markShown();
+        });
+      }
+
       card.appendChild(actions);
 
       overlay.appendChild(card);

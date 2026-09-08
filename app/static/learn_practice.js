@@ -287,6 +287,18 @@ document.addEventListener("DOMContentLoaded", function () {
       badges.push(session.size || session.ids.length);
       localStorage.setItem(badgesKey, JSON.stringify(badges));
 
+      // Login-nudge signal: a completed practice session / earned badge is
+      // the strongest engagement signal (+10) and, unless the lifetime show
+      // cap has already been hit, always fires the prompt -- but the actual
+      // wrap-up modal (where the CTA renders) only mounts after the
+      // redirect to /verbs below, so the eligibility decision made here has
+      // to travel with the wrapup payload (see practice_wrapup below and
+      // showWrapUp() in practice_loop.js).
+      let showLoginNudge = false;
+      if (window.VerbBoardLoginNudge) {
+        showLoginNudge = window.VerbBoardLoginNudge.recordBadgeEarned();
+      }
+
       const practicePostBody = { language: language, badges: badges };
 
       if (window.VerbBoardAuth && window.VerbBoardAuth.getIdToken) {
@@ -310,6 +322,7 @@ document.addEventListener("DOMContentLoaded", function () {
         JSON.stringify({
           ids: session.ids,
           lemmas: session.lemmas || {},
+          loginNudge: showLoginNudge,
         })
       );
     } else if (capsuleEl) {

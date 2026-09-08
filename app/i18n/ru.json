@@ -79,6 +79,8 @@
   "practice.due_today": "на повторение сегодня",
   "practice.recall_yes": "Помню",
   "practice.recall_no": "Не помню",
+  "login_nudge.badge": "Вы только что заработали значок! Войдите через Google, чтобы он сохранился и в следующий раз.",
+  "login_nudge.progress": "Не теряйте свой прогресс. Войдите, чтобы сохранить его при смене устройства.",
   "auth.login": "Войти",
   "auth.logout": "Выйти",
   "board.back": "⟵ Назад",

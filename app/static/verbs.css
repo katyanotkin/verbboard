@@ -696,3 +696,86 @@
   color: #f59e0b;
   line-height: 1;
 }
+
+/* ── login nudge (anonymous-only) ────────────────────────────────────────── */
+/* Shared card, built by login_nudge.js's buildCta() and used in two places:
+   - inside the practice-wrapup-card above, as the badge-earned CTA row
+   - standalone in #vb-login-nudge-slot (top of /verbs), as the
+     threshold-crossed card (.vb-login-nudge--card)
+   The slot/overlay stays empty (zero footprint) until JS decides to render
+   this -- no [hidden] toggling involved, so no risk of the [hidden] +
+   display:flex conflict common.css otherwise warns about. */
+
+.vb-login-nudge {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #eef4ff;
+  border: 1px solid #c7d9f7;
+  color: var(--color-navy, #1e3a5f);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.vb-login-nudge-text {
+  flex: 1 1 200px;
+  margin: 0;
+}
+
+.vb-login-nudge-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.vb-login-nudge-signin {
+  flex-shrink: 0;
+}
+
+.vb-login-nudge-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  opacity: 0.6;
+}
+
+.vb-login-nudge-dismiss:hover {
+  opacity: 1;
+}
+
+/* Sits between the checklist and the Done button inside the wrap-up modal. */
+.practice-wrapup-card .vb-login-nudge {
+  margin-bottom: 16px;
+}
+
+/* Standalone top-of-page card on /verbs. */
+.vb-login-nudge--card {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 480px) {
+  .vb-login-nudge {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* .vb-login-nudge-text's flex-basis: 200px is a *width* basis in the
+     default row layout; flex-direction: column above reinterprets the same
+     basis as a *height*, forcing a 200px-tall text block regardless of
+     content. Reset to content-based sizing for the column layout. */
+  .vb-login-nudge-text {
+    flex: 0 1 auto;
+  }
+
+  .vb-login-nudge-actions {
+    justify-content: flex-end;
+  }
+}
