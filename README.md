@@ -57,6 +57,7 @@ Visual indicators:
 - Browse with filters: new / seen / known / recent
 - Practice session entry point
 - Export known verbs as a CSV (Anki-importable) — appears once you've learned at least one verb in that language
+- Login nudge: a dismissible sign-in prompt appears for anonymous users who browse and star verbs but never start a practice session
 
 ---
 
@@ -76,6 +77,7 @@ Visual indicators:
 - Audio listening required before advancing to the next verb
 - Skip & mark as learned — for verbs you already know
 - Complete a session to earn a badge
+- Anonymous users earning a badge see a one-tap sign-in prompt in the completion screen, so progress isn't lost if the device changes
 - Learning badges and persistent progress tracking
 - Cross-device sync for authenticated users
 - Spaced repetition on the free tier: marking a verb known (star or "Skip & mark as learned") enters it into a Leitner box ladder (1 / 3 / 7 / 16 / 35 day intervals). Due verbs are quietly mixed back into a normal practice session -- capped at roughly a third of the session -- and resurface with a simple "Knew it" / "Show me again" self-report. There is no separate review screen, no notifications, and no streak pressure to drive it.
