@@ -65,8 +65,8 @@ Visual indicators:
 
 - Search across infinitives, conjugated forms, and partial matches
 - Cross-language: type an English word, select English — Gemini translates and finds the matching verb in your studied language
-- For English and Spanish: missing verbs are generated automatically via Gemini (VertexAI), no admin review, added directly to the live verb set within ~30 seconds
-- For Hebrew, Russian, Italian, and French: unknown searches are logged as demand signals for human-reviewed AI generation
+- For English, Spanish, Italian, and French: missing verbs are generated automatically via Gemini (VertexAI), no admin review, added directly to the live verb set within ~30 seconds
+- For Hebrew and Russian: unknown searches are logged as demand signals for human-reviewed AI generation
 - Human-reviewed workflow: admin reviews signals, Claude + Gemini generate candidate, human promotes to live verbs
 
 ---
