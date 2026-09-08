@@ -2,9 +2,11 @@
 real AI-generation pipeline and write them straight into the live `verbs`
 Firestore collection, bypassing the admin candidate-review queue.
 
-This exists to stand up real Plus-only content for testing the entitlement
-gate end to end (Phase 1), not as a repeatable production tool -- the normal
-path for adding verbs is the admin candidate review flow in
+This originally existed to stand up real Plus-only content for testing the
+entitlement gate end to end (Phase 1) -- Italian moved to the free tier
+2026-09-07, so this content is no longer Plus-gated, but the script itself
+is unchanged and not a repeatable production tool -- the normal path for
+adding verbs is the admin candidate review flow in
 app/routes/admin_candidates.py.
 
 Usage:

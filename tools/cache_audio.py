@@ -6,7 +6,7 @@ buckets with a single TTS call per file (stage + prod in one run), or pass
 --both-buckets as shorthand for --bucket verbboard-audio-stage --bucket
 verbboard-audio-prod.
 
---language accepts every registered plugin, including the Plus-only study
+--language accepts every registered plugin, including study
 languages (it, fr) -- 'all' expands to all of them, free and Plus alike.
 
 Run from project root (needs GCP auth):
@@ -47,21 +47,20 @@ import core.languages.it.plugin  # noqa: E402, F401
 import core.languages.ru.plugin  # noqa: E402, F401
 from core.audio_backend.gcs import GCSAudioBackend  # noqa: E402
 from core.audio_service import build_audio_key, build_hashed_audio_key  # noqa: E402
-from core.languages.config import PLUS_EXTRA_STUDY_LANGUAGES  # noqa: E402
+from core.languages.config import ALL_STUDY_LANGUAGES  # noqa: E402
 from core.registry import get as get_plugin  # noqa: E402
-from core.supported_languages import supported_languages_list  # noqa: E402
 from core.tts import VOICES, tts_to_mp3  # noqa: E402
 from core.verb_loader import load_entries_for_language  # noqa: E402
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
 
-# tools/cache_audio.py caches audio for every registered plugin, not just the
-# free/UI-language set core.supported_languages exposes -- Plus-only study
-# languages (Italian/French) need their audio cached too, same as any other
-# language. Deliberately not extending core.supported_languages.SUPPORTED_LANGUAGES
-# itself, since that list also gates things like demand-signal validation
-# (core/demand/gcs_events.py) where Plus-only codes aren't necessarily wanted yet.
-_ALL_CACHEABLE_LANGUAGES: list[str] = supported_languages_list() + list(PLUS_EXTRA_STUDY_LANGUAGES)
+# tools/cache_audio.py caches audio for every registered study-language
+# plugin regardless of edition tier -- French (currently Plus-only) needs
+# its audio cached too, same as any free-tier language. Deliberately not
+# core.supported_languages.SUPPORTED_LANGUAGES (the UI-language set), since
+# that list also gates things like demand-signal validation
+# (core/demand/gcs_events.py) where a study-only language isn't wanted.
+_ALL_CACHEABLE_LANGUAGES: list[str] = list(ALL_STUDY_LANGUAGES)
 
 # Canonical bucket names, mirrored from the Makefile's AUDIO_BUCKET_STAGE/AUDIO_BUCKET_PROD.
 _STAGE_BUCKET = "verbboard-audio-stage"
@@ -225,7 +224,7 @@ def _parse_args() -> argparse.Namespace:
         "--language",
         required=True,
         choices=_ALL_CACHEABLE_LANGUAGES + ["all"],
-        help="Language code or 'all' (includes Plus-only study languages: it, fr)",
+        help="Language code or 'all' (includes study languages: it, fr)",
     )
     parser.add_argument(
         "--voice",
@@ -272,7 +271,7 @@ def main() -> None:
     if not buckets:
         sys.exit("ERROR: --bucket or AUDIO_BUCKET is required")
 
-    languages = supported_languages_list() if args.language == "all" else [args.language]
+    languages = _ALL_CACHEABLE_LANGUAGES if args.language == "all" else [args.language]
     backends = [GCSAudioBackend(project=args.project, bucket=b) for b in buckets]
     asyncio.run(_run(languages, args.voice, backends, args.dry_run))
 

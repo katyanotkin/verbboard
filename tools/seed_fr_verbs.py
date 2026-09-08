@@ -3,9 +3,10 @@ real AI-generation pipeline and write them straight into the live `verbs`
 Firestore collection, bypassing the admin candidate-review queue.
 
 Modeled on tools/seed_it_verbs.py -- same rationale: stand up real Plus-only
-content (core/languages/config.py's PLUS_EXTRA_STUDY_LANGUAGES = ("it", "fr"))
-instead of dead code. Not a repeatable production tool -- the normal path for
-adding verbs is the admin candidate review flow in
+content (core/languages/config.py's PLUS_EXTRA_STUDY_LANGUAGES = ("fr",) --
+Italian moved to the free tier 2026-09-07, French remains the sole Plus-only
+study language) instead of dead code. Not a repeatable production tool --
+the normal path for adding verbs is the admin candidate review flow in
 app/routes/admin_candidates.py.
 
 Usage:

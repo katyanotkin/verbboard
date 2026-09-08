@@ -64,8 +64,9 @@ def verb_browser(
         # get_strings(selected_language) gives the sort-order label in the
         # studied language's own alphabet (e.g. Hebrew "א ← ת", Russian
         # "А → Я") -- but only en/ru/he/es actually have a locale file.
-        # A Plus-only study language (e.g. Italian) has none, so fall back
-        # to the UI language's label rather than crashing on a missing file.
+        # A study language with no UI locale file (e.g. French) has none, so
+        # fall back to the UI language's label rather than crashing on a
+        # missing file.
         sort_az_label = (
             get_strings(selected_language).get("verbs.sort_az", "A → Z")
             if selected_language in UI_LANGUAGES
