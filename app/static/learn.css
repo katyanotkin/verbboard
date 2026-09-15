@@ -665,6 +665,39 @@ button {
   display: block;
 }
 
+/* ── pronoun reference block (issue #32) ──────────────────────────────────── */
+.pronoun-block {
+  margin-bottom: 10px;
+}
+
+.pronoun-block summary {
+  cursor: pointer;
+}
+
+.pronoun-table {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  border-collapse: collapse;
+}
+
+.pronoun-table td {
+  padding: 2px 10px 2px 0;
+}
+
+.pronoun-word {
+  color: var(--text-muted);
+}
+
+.pronoun-translation {
+  display: none;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+#learn-page.translations-visible .pronoun-translation:not(:empty) {
+  display: table-cell;
+}
+
 /* ── jump-to-example button ───────────────────────────────────────────────── */
 .jump-example-btn {
   width: 48px;

@@ -347,7 +347,14 @@ def test_toggle_absent_when_ui_lang_equals_verb_lang(lang: str) -> None:
 
 
 @pytest.mark.parametrize("verb_lang", SUPPORTED_VERB_LANGS)
-def test_toggle_absent_when_no_examples_have_translations(verb_lang: str) -> None:
+def test_toggle_absent_when_no_examples_have_translations(verb_lang: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Isolate this test's original intent (no example/lemma translations =>
+    # no toggle) from the pronoun-reference block added in issue #32, which
+    # now makes the toggle appear whenever both languages have pronoun data
+    # -- see test_board_render.py's pronoun-specific coverage for that
+    # behavior.
+    monkeypatch.setattr("core.render.PRONOUNS", {})
+
     verb = _minimal_verb(verb_lang, [Example(dst="source sentence")])
 
     other_lang = next(lang for lang in SUPPORTED_VERB_LANGS if lang != verb_lang)
@@ -358,7 +365,11 @@ def test_toggle_absent_when_no_examples_have_translations(verb_lang: str) -> Non
         ui_lang=other_lang,
     )
 
-    assert 'class="toggle-translations"' not in html
+    # id='toggle-translations' (single-quoted, matching render.py's HTML
+    # assembly convention) -- not the double-quoted `class="toggle-translations"`
+    # this assertion previously checked, which never matched render.py's output
+    # and so never actually exercised this invariant.
+    assert "toggle-translations" not in html
 
 
 @pytest.mark.parametrize(
@@ -370,8 +381,15 @@ def test_toggle_absent_when_no_examples_have_translations(verb_lang: str) -> Non
     ],
 )
 def test_toggle_absent_when_translation_missing_for_ui_lang(
-    verb_lang: str, ui_lang: str, translation_langs: list[str]
+    verb_lang: str, ui_lang: str, translation_langs: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    # Isolate this test's original intent (example translation missing for
+    # ui_lang => no toggle) from the pronoun-reference block added in
+    # issue #32, which now makes the toggle appear whenever both languages
+    # have pronoun data -- see test_board_render.py's pronoun-specific
+    # coverage for that behavior.
+    monkeypatch.setattr("core.render.PRONOUNS", {})
+
     translation = {k: _TRANSLATIONS_ALL[k] for k in translation_langs}
     examples = [Example(dst="source sentence", translations=translation)]
     verb = _minimal_verb(verb_lang, examples)

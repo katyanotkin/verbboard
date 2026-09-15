@@ -10,6 +10,7 @@ from core.audio_service import build_hashed_audio_key
 from core.languages.config import LANGUAGE as LANG_CONFIG
 from core.models import Board
 from core.paths import TEMPLATES_DIR
+from core.pronouns import PRONOUN_PERSONS, PRONOUNS
 from core.safe_return import safe_return_to as _safe_return_to
 
 NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}
@@ -154,8 +155,43 @@ def render_board_html(
     lemma_translation_html = (
         f"<span class='lemma-translation' dir='{translation_dir}'>{escape(lemma_translation_text)}</span>"
     )
+    # Pronoun reference block (issue #32). Independent of board.sections --
+    # not verb-specific, so it deliberately does not go through the
+    # sections/conj-table/NO_AUDIO_ROW_KEYS machinery (that would incorrectly
+    # drag in per-row audio buttons, the gender/persona filter, and
+    # jump-to-example targeting, none of which apply to a static pronoun
+    # table). Reuses the same translation-reveal convention as
+    # .example-translation/.lemma-translation, driven by the existing
+    # #toggle-translations button -- no new JS.
+    pronoun_rows = []
+    if board.language in PRONOUNS:
+        study_pronouns = PRONOUNS[board.language]
+        ui_pronouns = PRONOUNS.get(ui_lang, {})
+        for person in PRONOUN_PERSONS:
+            word = study_pronouns.get(person, "")
+            translation = ui_pronouns.get(person, "") if board.language != ui_lang else ""
+            pronoun_rows.append(
+                "<tr>"
+                f"<td class='pronoun-word'{label_dir}>{escape(word)}</td>"
+                f"<td class='pronoun-translation' dir='{translation_dir}'>{escape(translation)}</td>"
+                "</tr>"
+            )
+
+    if pronoun_rows:
+        pronoun_label = escape(ui.get("board.pronouns", "Pronouns"))
+        board_pronouns = (
+            "<details class='pronoun-block'>"
+            f"<summary>{pronoun_label}</summary>"
+            "<table class='pronoun-table'>" + "".join(pronoun_rows) + "</table>"
+            "</details>"
+        )
+    else:
+        board_pronouns = ""
+
     has_any_translation = board.language != ui_lang and (
-        any(ui_lang in ex.translations for ex in board.verb.examples) or bool(lemma_translation_text)
+        any(ui_lang in ex.translations for ex in board.verb.examples)
+        or bool(lemma_translation_text)
+        or (board.language in PRONOUNS and ui_lang in PRONOUNS)
     )
 
     examples_rows = []
@@ -328,6 +364,7 @@ def render_board_html(
         verb_id_urlencode=quote(board.verb.id, safe=""),
         learn_href_urlencode=quote(full_learn_href, safe="/"),
         sections_meta=meta_section_html,
+        board_pronouns=board_pronouns,
         board_examples_heading=ui.get("board.examples_heading", "Examples"),
         board_examples_toggle=examples_toggle,
         board_col_sentence=ui.get("board.col_sentence", "Sentence"),

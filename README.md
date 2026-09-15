@@ -52,6 +52,7 @@ Visual indicators:
 - Switch between female and male voices
 - Inline translations when UI language differs from the verb's language
 - Focus filter: hide conjugation rows by gender (masculine / feminine) and number (singular / plural) — Hebrew, Russian, Spanish
+- Pronoun reference: a collapsible "Pronouns" panel shows I/you/he-she-it/we/you/they in the verb's language, with translations revealed by the same toggle used for example sentences
 
 ### Verbs page
 - Browse with filters: new / seen / known / recent

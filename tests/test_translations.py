@@ -446,6 +446,11 @@ def test_learn_url_no_toggle_without_translations(client, monkeypatch) -> None:
         lambda **kw: verb_no_translations,
     )
     monkeypatch.setattr("app.routes.learn.ensure_audio", noop_ensure_audio)
+    # Isolate this test's original intent (no example/lemma translations => no
+    # toggle) from the pronoun-reference block added in issue #32, which now
+    # makes the toggle appear whenever both languages have pronoun data --
+    # see test_board_render.py's pronoun-specific coverage for that behavior.
+    monkeypatch.setattr("core.render.PRONOUNS", {})
 
     resp = client.get("/learn?language=ru&verb_id=ru_viset&ui_language=en")
     assert resp.status_code == 200
