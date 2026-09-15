@@ -42,6 +42,12 @@ repos:
         language: system
         pass_filenames: false
 
+      - id: check-sw-cache-bump
+        name: Check SW cache version bumped for precached file changes
+        entry: .venv/bin/python tools/check_sw_cache_bump.py
+        language: system
+        pass_filenames: false
+
       - id: pytest-all
         name: pytest all regression tests
         entry: tools/run_pytest_hook.sh
