@@ -432,13 +432,53 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
             detail=f"'{verb_id}' already exists in the verbs collection",
         )
 
+    # Translation completeness safety net: generate_candidate/regenerate_verb
+    # launch translate_lemma/translate_examples as two independent, non-fatal
+    # LLM calls -- a transient failure in just one of them (rate limit,
+    # malformed JSON, etc.) can leave a "pending" candidate with a translated
+    # lemma but untranslated examples (or vice versa), and nothing previously
+    # re-checked that before promoting it live. Both calls only fill missing
+    # target languages and are no-ops (no LLM call at all) when already
+    # complete, so this is safe/cheap to run on every promote.
+    language = data.get("language", "")
+    lemma = data.get("lemma", "")
+    api_key = _load_anthropic_api_key()
+    translated_examples, lemma_translations = await asyncio.gather(
+        asyncio.to_thread(
+            translate_examples,
+            verb_lang=language,
+            lemma=lemma,
+            examples=data.get("examples", []),
+            project=_GCP_PROJECT,
+            api_key=api_key,
+        ),
+        asyncio.to_thread(
+            translate_lemma,
+            verb_lang=language,
+            lemma=lemma,
+            existing_translations=data.get("lemma_translations"),
+            project=_GCP_PROJECT,
+            api_key=api_key,
+        ),
+    )
+    data["examples"] = translated_examples
+    if lemma_translations:
+        data["lemma_translations"] = lemma_translations
+
     now = datetime.now(UTC).isoformat()
     verb_doc = {key: value for key, value in data.items() if key != "status"}
     verb_doc["created_at"] = now
     verb_doc["updated_at"] = now
 
     db.collection(VERBS_COLLECTION).document(verb_id).set(verb_doc)
-    candidate_ref.update({"status": "promoted", "updated_at": now})
+    candidate_ref.update(
+        {
+            "status": "promoted",
+            "examples": data["examples"],
+            "lemma_translations": data.get("lemma_translations", {}),
+            "updated_at": now,
+        }
+    )
     resolve_signal_label(language=data.get("language", ""), query=data.get("query", ""))
 
     return JSONResponse({"verb_id": verb_id, "promoted": True, "rank": data.get("rank")})

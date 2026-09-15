@@ -120,12 +120,29 @@ class TestIsPlausibleVerbQuery:
     def test_translation_targets_for_italian(self):
         from core.verb_autogen import _TRANSLATION_TARGETS
 
-        assert _TRANSLATION_TARGETS["it"] == ["en", "es"]
+        assert _TRANSLATION_TARGETS["it"] == ["en", "ru", "es"]
 
     def test_translation_targets_for_french(self):
         from core.verb_autogen import _TRANSLATION_TARGETS
 
-        assert _TRANSLATION_TARGETS["fr"] == ["en", "es"]
+        assert _TRANSLATION_TARGETS["fr"] == ["en", "ru", "es"]
+
+    def test_translation_targets_never_include_hebrew(self):
+        from core.verb_autogen import _TRANSLATION_TARGETS
+
+        for language, targets in _TRANSLATION_TARGETS.items():
+            assert "he" not in targets, f"{language} target list must not include Hebrew"
+
+    def test_translation_targets_cover_every_other_ui_language(self):
+        from core.languages.config import UI_LANGUAGES
+        from core.verb_autogen import _TRANSLATION_TARGETS, AUTOGEN_LANGUAGES
+
+        gemini_ui_languages = {lang for lang in UI_LANGUAGES if lang != "he"}
+        for language in AUTOGEN_LANGUAGES:
+            expected = gemini_ui_languages - {language}
+            assert set(_TRANSLATION_TARGETS[language]) == expected, (
+                f"{language} should target {sorted(expected)}, got {sorted(_TRANSLATION_TARGETS[language])}"
+            )
 
 
 # ---------------------------------------------------------------------------

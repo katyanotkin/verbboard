@@ -1,14 +1,26 @@
 """
-Backfill example translations for all verbs in Firestore.
+Backfill example and/or lemma translations for all verbs in Firestore.
 
-Translates example sentences into all supported UI languages except the verb's
-own language. Only fills missing translation keys — safe to re-run at any time.
+Translates example sentences and/or verb infinitives into all supported UI
+languages except the verb's own language. Only fills missing translation
+keys — safe to re-run at any time.
 
 Usage (run from project root, needs GCP auth + ANTHROPIC_API_KEY in .env):
 
     python -m tools.backfill_translations --language ru
     python -m tools.backfill_translations --language all --dry-run
     python -m tools.backfill_translations --language en --target-lang ru
+    python -m tools.backfill_translations --language fr --field lemma
+    python -m tools.backfill_translations --language it --field examples --force
+
+--field defaults to "both" (examples + lemma) -- the two were previously
+separate scripts (backfill_translations.py / backfill_lemma_translations.py)
+with near-identical boilerplate, which made it easy to run one and forget
+the other, leaving a verb with (e.g.) a translated lemma but untranslated
+examples. Merged 2026-09-15; also replaces the one-off, non-resumable
+backfill_fr_translations.py / backfill_it_translations.py (this script's
+--language flag already accepts any verb-source language, not just
+SUPPORTED_LANGUAGES).
 """
 
 from __future__ import annotations
@@ -21,7 +33,7 @@ import sys
 from dotenv import load_dotenv
 from google.cloud import firestore
 
-from core.translation_service import SUPPORTED_LANGUAGES, translate_examples
+from core.translation_service import SUPPORTED_LANGUAGES, translate_examples, translate_lemma
 
 load_dotenv(override=True)
 
@@ -30,8 +42,16 @@ logger = logging.getLogger(__name__)
 
 VERBS_COLLECTION = os.getenv("VERBS_COLLECTION", "verbs")
 
+FIELD_CHOICES = ("both", "examples", "lemma")
 
-def _needs_translation(examples: list[dict], target_langs: list[str]) -> bool:
+
+def _lemma_as_str(lemma: object) -> str:
+    if isinstance(lemma, dict):
+        return lemma.get("imperfective") or lemma.get("perfective") or str(lemma)
+    return str(lemma or "")
+
+
+def _needs_example_translation(examples: list[dict], target_langs: list[str]) -> bool:
     return any(
         lang not in ex.get("translations", {})
         for ex in examples
@@ -40,7 +60,7 @@ def _needs_translation(examples: list[dict], target_langs: list[str]) -> bool:
     )
 
 
-def _strip_translations(examples: list[dict], target_langs: list[str]) -> list[dict]:
+def _strip_example_translations(examples: list[dict], target_langs: list[str]) -> list[dict]:
     stripped = []
     for ex in examples:
         if not isinstance(ex, dict):
@@ -55,20 +75,17 @@ def _strip_translations(examples: list[dict], target_langs: list[str]) -> list[d
     return stripped
 
 
-def process_verb(
+def _process_examples(
     doc_ref: firestore.DocumentReference,
     data: dict,
+    verb_lang: str,
+    lemma: str,
     target_langs: list[str] | None,
     project: str,
     api_key: str,
     dry_run: bool,
-    force: bool = False,
+    force: bool,
 ) -> bool:
-    verb_lang = data.get("language", "")
-    lemma = data.get("lemma", "") or data.get("verb_id", "")
-    if isinstance(lemma, dict):
-        lemma = lemma.get("imperfective") or lemma.get("perfective") or str(lemma)
-
     examples: list[dict] = [
         ex for ex in data.get("examples", []) if isinstance(ex, dict) and isinstance(ex.get("dst"), str)
     ]
@@ -78,11 +95,11 @@ def process_verb(
     effective_targets = target_langs or [lang for lang in SUPPORTED_LANGUAGES if lang != verb_lang]
 
     if force:
-        examples = _strip_translations(examples, effective_targets)
-    elif not _needs_translation(examples, effective_targets):
+        examples = _strip_example_translations(examples, effective_targets)
+    elif not _needs_example_translation(examples, effective_targets):
         return False
 
-    logger.info("  translating %d examples → %s", len(examples), effective_targets)
+    logger.info("  examples: translating %d → %s", len(examples), effective_targets)
     if dry_run:
         return True
 
@@ -96,18 +113,79 @@ def process_verb(
     )
 
     if translated is not examples:
-        doc_ref.update(
-            {
-                "examples": translated,
-                "updated_at": firestore.SERVER_TIMESTAMP,
-            }
-        )
+        doc_ref.update({"examples": translated, "updated_at": firestore.SERVER_TIMESTAMP})
 
     return True
 
 
+def _process_lemma(
+    doc_ref: firestore.DocumentReference,
+    data: dict,
+    verb_lang: str,
+    lemma: str,
+    target_langs: list[str] | None,
+    project: str,
+    api_key: str,
+    dry_run: bool,
+    force: bool,
+) -> bool:
+    if not lemma:
+        return False
+
+    effective_targets = target_langs or [lang for lang in SUPPORTED_LANGUAGES if lang != verb_lang]
+    existing = {} if force else (data.get("lemma_translations") or {})
+
+    if not force and all(t in existing for t in effective_targets):
+        return False
+
+    logger.info("  lemma: translating %r → %s", lemma, effective_targets)
+    if dry_run:
+        return True
+
+    translated = translate_lemma(
+        verb_lang=verb_lang,
+        lemma=lemma,
+        existing_translations=existing,
+        target_langs=effective_targets,
+        project=project,
+        api_key=api_key,
+    )
+
+    if translated and translated != existing:
+        doc_ref.update({"lemma_translations": translated, "updated_at": firestore.SERVER_TIMESTAMP})
+
+    return True
+
+
+def process_verb(
+    doc_ref: firestore.DocumentReference,
+    data: dict,
+    field: str,
+    target_langs: list[str] | None,
+    project: str,
+    api_key: str,
+    dry_run: bool,
+    force: bool = False,
+) -> bool:
+    verb_lang = data.get("language", "")
+    lemma = _lemma_as_str(data.get("lemma") or data.get("verb_id", ""))
+
+    updated = False
+    if field in ("both", "examples"):
+        updated = (
+            _process_examples(doc_ref, data, verb_lang, lemma, target_langs, project, api_key, dry_run, force)
+            or updated
+        )
+    if field in ("both", "lemma"):
+        updated = (
+            _process_lemma(doc_ref, data, verb_lang, lemma, target_langs, project, api_key, dry_run, force) or updated
+        )
+    return updated
+
+
 def run(
     language: str,
+    field: str,
     target_langs: list[str] | None,
     project: str,
     api_key: str,
@@ -120,23 +198,29 @@ def run(
     for verb_lang in verb_langs:
         logger.info("Processing language: %s", verb_lang)
         docs = db.collection(VERBS_COLLECTION).where("language", "==", verb_lang).stream()
-        updated = skipped = 0
+        updated_count = skipped = 0
         for doc in docs:
             data = doc.to_dict()
             logger.info("  %s", data.get("verb_id", doc.id))
-            if process_verb(doc.reference, data, target_langs, project, api_key, dry_run, force):
-                updated += 1
+            if process_verb(doc.reference, data, field, target_langs, project, api_key, dry_run, force):
+                updated_count += 1
             else:
                 skipped += 1
-        logger.info("  %s: %d updated, %d already complete", verb_lang, updated, skipped)
+        logger.info("  %s: %d updated, %d already complete", verb_lang, updated_count, skipped)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Backfill example translations.")
+    parser = argparse.ArgumentParser(description="Backfill example and/or lemma translations.")
     parser.add_argument(
         "--language",
         default="all",
-        help="Verb language to process (en/ru/he/es/all). Default: all",
+        help="Verb language to process (any source language, or 'all' for SUPPORTED_LANGUAGES). Default: all",
+    )
+    parser.add_argument(
+        "--field",
+        choices=FIELD_CHOICES,
+        default="both",
+        help="Which field(s) to backfill. Default: both",
     )
     parser.add_argument(
         "--target-lang",
@@ -176,6 +260,7 @@ def main() -> None:
 
     run(
         language=args.language,
+        field=args.field,
         target_langs=[args.target_lang] if args.target_lang else None,
         project=args.project,
         api_key=api_key,

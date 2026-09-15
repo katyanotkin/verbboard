@@ -45,8 +45,8 @@ _GENERATING: set[str] = set()
 _TRANSLATION_TARGETS: dict[str, list[str]] = {
     "en": ["ru", "es"],
     "es": ["en", "ru"],
-    "it": ["en", "es"],
-    "fr": ["en", "es"],
+    "it": ["en", "ru", "es"],
+    "fr": ["en", "ru", "es"],
 }
 
 # Accented Latin letters beyond ASCII that a language's own verb forms
