@@ -361,8 +361,8 @@
             ${practiceTitleHtml}
             ${badgesHtml}
           </div>
+          ${dueHtml}
           <div class="practice-picker">
-            ${dueHtml}
             <div class="practice-picker-rows">
               <div class="practice-picker-row">
                 <span class="practice-size-hint">${escapeHtml(ui['practice.size_unit'] || '# of verbs')}</span>
