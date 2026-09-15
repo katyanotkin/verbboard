@@ -331,7 +331,7 @@
 
       const dueCount = countDueToday();
       const dueHtml = dueCount > 0
-        ? `<div class="practice-due-today">${dueCount} ${escapeHtml(ui['practice.due_today'] || 'due for review today')} ${helpHint('due_review')}</div>`
+        ? `<div class="practice-due-today">${dueCount} ${escapeHtml(ui['practice.due_today'] || 'due for review today')}</div>`
         : '';
 
       const sizeButtons = PRACTICE_SIZES

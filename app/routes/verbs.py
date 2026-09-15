@@ -134,7 +134,6 @@ def verb_browser(
             "help.practice": ui["help.practice"],
             "help.session_size": ui["help.session_size"],
             "help.listens": ui["help.listens"],
-            "help.due_review": ui["help.due_review"],
         }
     )
 

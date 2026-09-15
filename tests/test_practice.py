@@ -165,12 +165,17 @@ def test_verbs_page_unit_strings_match_locale_file(client: TestClient, monkeypat
 # practice_loop.js's helpHint() rendering blank popovers for every UI locale.
 # Same failure shape as the practice.size_unit/listens_unit regression above.
 #
-# help.due_review (the due-for-review practice-panel hint) went through the
-# same route allowlist and is covered here too. help.export_known is NOT --
-# it's rendered directly from the full `ui` dict in verbs.html (Jinja), never
-# passed through window.UI, so it can't hit this particular failure mode.
+# help.export_known is NOT covered here -- it's rendered directly from the
+# full `ui` dict in verbs.html (Jinja), never passed through window.UI, so it
+# can't hit this particular failure mode.
+#
+# help.due_review (the due-for-review practice-panel hint) was removed
+# 2026-09-15: the due-count line has no adjacent choice control for a
+# tap-to-reveal explainer to sit next to (unlike session_size/listens, which
+# sit next to pills/a stepper the student actually operates), so the
+# explanation moved to the About page's Practice section instead.
 
-_HELP_HINT_KEYS = ["help.hint_label", "help.practice", "help.session_size", "help.listens", "help.due_review"]
+_HELP_HINT_KEYS = ["help.hint_label", "help.practice", "help.session_size", "help.listens"]
 
 
 @pytest.mark.parametrize("ui_lang", ["en", "ru", "he", "es"])

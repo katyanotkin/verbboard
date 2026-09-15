@@ -107,7 +107,6 @@
   "help.practice": "Starts a practice session with a set of verbs and audio; earn a badge when you finish.",
   "help.session_size": "Sets how many verbs are included in the practice session.",
   "help.listens": "Sets how many times you must listen to the audio before moving to the next verb.",
-  "help.due_review": "Mixes due verbs into practice; your answer decides when they resurface.",
   "help.export_known": "Anki-ready CSV of verbs marked known in this language.",
   "feedback.title": "VerbBoard feedback",
   "feedback.heading": "Feedback",
