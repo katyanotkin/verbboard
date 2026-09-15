@@ -357,8 +357,14 @@
 .vb-load-more-btn:active { background: #e0eaff; }
 .vb-load-more-btn:disabled { opacity: 0.5; cursor: default; }
 
-.vb-export-btn {
+.vb-export-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin-top: 8px;
+}
+
+.vb-export-btn {
   padding: 6px 16px;
   font-size: 13px;
 }

@@ -164,8 +164,13 @@ def test_verbs_page_unit_strings_match_locale_file(client: TestClient, monkeypat
 # verbs.py during implementation of the practice-panel help hints, which left
 # practice_loop.js's helpHint() rendering blank popovers for every UI locale.
 # Same failure shape as the practice.size_unit/listens_unit regression above.
+#
+# help.due_review (the due-for-review practice-panel hint) went through the
+# same route allowlist and is covered here too. help.export_known is NOT --
+# it's rendered directly from the full `ui` dict in verbs.html (Jinja), never
+# passed through window.UI, so it can't hit this particular failure mode.
 
-_HELP_HINT_KEYS = ["help.hint_label", "help.practice", "help.session_size", "help.listens"]
+_HELP_HINT_KEYS = ["help.hint_label", "help.practice", "help.session_size", "help.listens", "help.due_review"]
 
 
 @pytest.mark.parametrize("ui_lang", ["en", "ru", "he", "es"])

@@ -26,7 +26,10 @@ def test_api_verbs_includes_translation_when_requested(client: TestClient) -> No
 def test_verbs_page_has_hidden_export_button_and_script(client: TestClient) -> None:
     html = client.get("/verbs?language=es&ui_language=en").text
     assert 'id="vb-export-btn"' in html
-    assert 'class="vb-load-more-btn vb-export-btn" hidden' in html
+    # The button's wrapper div (not the button itself) is hidden by default --
+    # it now also wraps a help-hint, and JS toggles the wrapper's `hidden`
+    # attribute (see verbs_export.js's updateVisibility()).
+    assert 'id="vb-export-wrap" hidden' in html
     assert "verbs_export.js" in html
 
 

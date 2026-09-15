@@ -62,14 +62,15 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('vb-export-btn');
-    if (!btn || !window.VerbBoardStorage) return;
+    var wrap = document.getElementById('vb-export-wrap');
+    if (!btn || !wrap || !window.VerbBoardStorage) return;
 
     var lang = window.VB_LANGUAGE;
     var uiLang = window.VB_UI_LANG || 'en';
 
     function updateVisibility() {
       var knownSet = window.VerbBoardStorage.readSet('known:' + lang);
-      btn.hidden = knownSet.size === 0;
+      wrap.hidden = knownSet.size === 0;
     }
 
     // Known-verb data can arrive after DOMContentLoaded: hydrateProgress()

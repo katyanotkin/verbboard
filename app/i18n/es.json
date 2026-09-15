@@ -107,6 +107,8 @@
   "help.practice": "Inicia una práctica con un conjunto de verbos y audio; gana una insignia al terminar.",
   "help.session_size": "Determina cuántos verbos incluye la sesión de práctica.",
   "help.listens": "Determina cuántas veces debes escuchar el audio antes de pasar al siguiente verbo.",
+  "help.due_review": "Mezcla verbos pendientes de repaso; tu respuesta decide cuándo repetirlos.",
+  "help.export_known": "CSV para Anki: solo los verbos conocidos de este idioma.",
   "feedback.title": "VerbBoard — Comentarios",
   "feedback.heading": "Comentarios",
   "feedback.poll_yes": "Sí",

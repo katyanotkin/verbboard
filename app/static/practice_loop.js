@@ -16,18 +16,27 @@
     const _uiLang = window.VB_UI_LANG || '';
     const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
 
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
     const helpHintLabel = ui['help.hint_label'] || 'More info';
     function helpHint(spot) {
       return `
         <span class="help-hint">
-          <button type="button" class="help-hint-trigger" aria-expanded="false" aria-label="${helpHintLabel}">?</button>
-          <span class="help-hint-panel" role="note" hidden>${ui['help.' + spot] || ''}</span>
+          <button type="button" class="help-hint-trigger" aria-expanded="false" aria-label="${escapeHtml(helpHintLabel)}">?</button>
+          <span class="help-hint-panel" role="note" hidden>${escapeHtml(ui['help.' + spot] || '')}</span>
         </span>
       `;
     }
     const practiceTitleHtml = `
       <span class="practice-label">
-        ${ui['practice.label'] || 'Practice'}
+        ${escapeHtml(ui['practice.label'] || 'Practice')}
         ${helpHint('practice')}
       </span>
     `;
@@ -289,16 +298,16 @@
             </div>
             <div class="practice-inprogress">
               <span class="practice-inprogress-label">
-                ${ui['practice.in_progress'] || 'In progress'}:
+                ${escapeHtml(ui['practice.in_progress'] || 'In progress')}:
                 ${visitedCount}/${session.ids.length}
               </span>
 
               <a href="${continueUrl}" class="btn-pill-navy">
-                ${ui['practice.continue'] || 'Continue'}
+                ${escapeHtml(ui['practice.continue'] || 'Continue')}
               </a>
 
               <button class="practice-abandon-btn" id="practice-abandon">
-                ${ui['practice.abandon'] || 'Discard practice'}
+                ${escapeHtml(ui['practice.abandon'] || 'Discard practice')}
               </button>
             </div>
           </div>
@@ -322,7 +331,7 @@
 
       const dueCount = countDueToday();
       const dueHtml = dueCount > 0
-        ? `<div class="practice-due-today">${dueCount} ${ui['practice.due_today'] || 'due for review today'}</div>`
+        ? `<div class="practice-due-today">${dueCount} ${escapeHtml(ui['practice.due_today'] || 'due for review today')} ${helpHint('due_review')}</div>`
         : '';
 
       const sizeButtons = PRACTICE_SIZES
@@ -356,21 +365,21 @@
             ${dueHtml}
             <div class="practice-picker-rows">
               <div class="practice-picker-row">
-                <span class="practice-size-hint">${ui['practice.size_unit'] || '# of verbs'}</span>
+                <span class="practice-size-hint">${escapeHtml(ui['practice.size_unit'] || '# of verbs')}</span>
                 ${helpHint('session_size')}
                 <div class="practice-size-group">
                   ${sizeButtons}
                 </div>
               </div>
               <div class="practice-picker-row">
-                <span class="practice-size-hint">${ui['practice.listens_unit'] || '# audios / verb'}</span>
+                <span class="practice-size-hint">${escapeHtml(ui['practice.listens_unit'] || '# audios / verb')}</span>
                 ${helpHint('listens')}
                 ${listenStepper}
               </div>
             </div>
             <div class="practice-picker-start">
               <button class="btn-pill-navy" id="practice-start">
-                ${startLabel}
+                ${escapeHtml(startLabel)}
               </button>
             </div>
           </div>
