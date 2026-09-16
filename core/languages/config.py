@@ -54,6 +54,30 @@ PLUS_EXTRA_STUDY_LANGUAGES: tuple[str, ...] = ("fr",)
 ALL_STUDY_LANGUAGES: tuple[str, ...] = FREE_STUDY_LANGUAGES + PLUS_EXTRA_STUDY_LANGUAGES
 
 
+@dataclass(frozen=True)
+class ScriptConfig:
+    """Valid-letter definition for a study language's script, used by the
+    garbage-query filter (core/verb_autogen.py's is_plausible_verb_query).
+    Deliberately keyed by ALL_STUDY_LANGUAGES, not LANGUAGE -- that gate runs
+    per study language regardless of UI-language status, so it needs it/fr
+    too, which have no LANGUAGE/UI entry (see the comment on FREE_STUDY_
+    LANGUAGES above for why LANGUAGE must not be extended to cover them)."""
+
+    ascii_ok: bool  # True for Latin-script languages (plain ASCII a-z is valid)
+    extra_letters: str = ""  # additional valid letters beyond the ascii_ok baseline:
+    # accented Latin for es/it/fr, or the full alphabet for a non-Latin script
+
+
+STUDY_LANGUAGE_SCRIPTS: dict[str, ScriptConfig] = {
+    "en": ScriptConfig(ascii_ok=True),
+    "es": ScriptConfig(ascii_ok=True, extra_letters="ñ"),
+    "it": ScriptConfig(ascii_ok=True, extra_letters="àèéìíîòóùú"),
+    "fr": ScriptConfig(ascii_ok=True, extra_letters="àâäéèêëïîôöùûüÿçœæ"),
+    "ru": ScriptConfig(ascii_ok=False, extra_letters="абвгдеёжзийклмнопрстуфхцчшщъыьэюя"),
+    "he": ScriptConfig(ascii_ok=False, extra_letters="אבגדהוזחטיכלמנסעפצקרשת"),
+}
+
+
 def default_study_languages(edition: str) -> tuple[str, ...]:
     if edition == "plus":
         return ALL_STUDY_LANGUAGES

@@ -674,14 +674,14 @@ button {
   cursor: pointer;
 }
 
+/* No border-collapse override -- the global `table` rule (border-radius +
+   overflow:hidden for the card look) renders incorrectly with collapsed
+   borders in most browsers, clipping/cutting off the first and last rows.
+   Falls through to the default border-collapse:separate, matching every
+   other table on this page. */
 .pronoun-table {
   margin-top: 6px;
   font-size: 0.9rem;
-  border-collapse: collapse;
-}
-
-.pronoun-table td {
-  padding: 2px 10px 2px 0;
 }
 
 .pronoun-word {

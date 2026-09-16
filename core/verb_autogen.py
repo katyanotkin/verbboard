@@ -20,6 +20,7 @@ import vertexai
 from pydantic import BaseModel, ValidationError
 from vertexai.generative_models import GenerationConfig, GenerativeModel
 
+from core.languages.config import STUDY_LANGUAGE_SCRIPTS
 from core.settings_ai import _LANG_PROMPTS
 from core.storage.firestore_db import get_db
 from core.storage.verb_document import build_search_extract_from_entry, build_storage_verb_id
@@ -49,16 +50,6 @@ _TRANSLATION_TARGETS: dict[str, list[str]] = {
     "fr": ["en", "ru", "es"],
 }
 
-# Accented Latin letters beyond ASCII that a language's own verb forms
-# legitimately use (e.g. French "être", "préférer"; Italian "però", "città";
-# Spanish "reñir", "soñar"). EN needs no entry -- English verb forms are
-# always plain ASCII.
-_EXTRA_LATIN_CHARS: dict[str, str] = {
-    "es": "ñ",
-    "fr": "àâäéèêëïîôöùûüÿçœæ",
-    "it": "àèéìíîòóùú",
-}
-
 
 class _VerbGenResponse(BaseModel):
     lemma: str | None = None
@@ -76,11 +67,24 @@ def is_plausible_verb_query(query: str, language: str) -> bool:
     stripped = query.strip()
     if not stripped or len(stripped) < 2 or len(stripped) > 30:
         return False
-    # Latin-script languages; reject Cyrillic, Hebrew, digits, symbols. Each
-    # language's own accented letters (see _EXTRA_LATIN_CHARS) are admitted
-    # alongside plain ASCII so real queries like "être"/"però" aren't rejected.
-    extra_chars = _EXTRA_LATIN_CHARS.get(language, "")
-    if not all((c.isascii() or c.lower() in extra_chars) and (c.isalpha() or c in " '-") for c in stripped):
+    # Script gate, sourced from core.languages.config.STUDY_LANGUAGE_SCRIPTS
+    # (single source of truth for which letters are valid per study language)
+    # rather than a duplicate per-language dict here. Latin-script languages
+    # admit plain ASCII plus their own accented letters (e.g. "être", "però");
+    # non-Latin scripts (Russian) admit only their own alphabet -- a Latin or
+    # mixed-script query for those languages is rejected here.
+    script = STUDY_LANGUAGE_SCRIPTS.get(language)
+    if script is None:
+        return False
+    for char in stripped:
+        if char in " '-":
+            continue
+        if not char.isalpha():
+            return False
+        if char.lower() in script.extra_letters:
+            continue
+        if script.ascii_ok and char.isascii():
+            continue
         return False
     # Reflexive forms like "se ir" are 2 tokens max; anything longer is a phrase
     if len(stripped.split()) > 2:

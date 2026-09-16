@@ -144,6 +144,55 @@ class TestIsPlausibleVerbQuery:
                 f"{language} should target {sorted(expected)}, got {sorted(_TRANSLATION_TARGETS[language])}"
             )
 
+    # -- Script gate now sourced from core.languages.config.STUDY_LANGUAGE_SCRIPTS
+    # (issue #31 prep) -- these monkeypatch AUTOGEN_LANGUAGES to include "ru" so
+    # the script-gate logic itself is exercised end-to-end even before Russian
+    # is actually flipped on for real.
+
+    def test_accepts_cyrillic_for_russian_once_enabled(self, monkeypatch):
+        import core.verb_autogen as va
+
+        monkeypatch.setattr(va, "AUTOGEN_LANGUAGES", frozenset({"ru"}))
+        assert va.is_plausible_verb_query("бежать", "ru") is True
+
+    def test_accepts_uppercase_cyrillic_once_enabled(self, monkeypatch):
+        import core.verb_autogen as va
+
+        monkeypatch.setattr(va, "AUTOGEN_LANGUAGES", frozenset({"ru"}))
+        assert va.is_plausible_verb_query("Бежать", "ru") is True
+
+    def test_rejects_latin_for_russian_once_enabled(self, monkeypatch):
+        import core.verb_autogen as va
+
+        monkeypatch.setattr(va, "AUTOGEN_LANGUAGES", frozenset({"ru"}))
+        assert va.is_plausible_verb_query("run", "ru") is False
+
+    def test_rejects_mixed_script_for_russian_once_enabled(self, monkeypatch):
+        import core.verb_autogen as va
+
+        monkeypatch.setattr(va, "AUTOGEN_LANGUAGES", frozenset({"ru"}))
+        assert va.is_plausible_verb_query("бежatь", "ru") is False
+
+    def test_rejects_hebrew_for_russian_once_enabled(self, monkeypatch):
+        import core.verb_autogen as va
+
+        monkeypatch.setattr(va, "AUTOGEN_LANGUAGES", frozenset({"ru"}))
+        assert va.is_plausible_verb_query("ללכת", "ru") is False
+
+    def test_script_gate_unaffected_for_currently_enabled_languages(self):
+        # Refactor safety net: the config-driven gate must not change behavior
+        # for en/es/it/fr, which is exactly what the full existing test suite
+        # above already exercises -- this just pins the two representative
+        # accented-char cases directly against the new STUDY_LANGUAGE_SCRIPTS
+        # source of truth, rather than a since-removed local dict.
+        from core.languages.config import STUDY_LANGUAGE_SCRIPTS
+
+        assert STUDY_LANGUAGE_SCRIPTS["fr"].extra_letters == "àâäéèêëïîôöùûüÿçœæ"
+        assert STUDY_LANGUAGE_SCRIPTS["es"].extra_letters == "ñ"
+        assert STUDY_LANGUAGE_SCRIPTS["en"].extra_letters == ""
+        assert STUDY_LANGUAGE_SCRIPTS["en"].ascii_ok is True
+        assert STUDY_LANGUAGE_SCRIPTS["ru"].ascii_ok is False
+
 
 # ---------------------------------------------------------------------------
 # Integration tests for /search_verb autogen trigger
