@@ -21,6 +21,7 @@ from core.safe_return import safe_return_to
 from core.search_utils import find_best_entry, tokenize_text
 from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
+from core.task_tracking import track
 from core.translation_service import translate_search_query
 from core.verb_autogen import (
     AUTOGEN_LANGUAGES,
@@ -207,11 +208,13 @@ async def search_verb_by_lang(
                 return RedirectResponse(
                     url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native"
                 )
-            asyncio.create_task(
-                autogenerate_missing_verb(
-                    language=language,
-                    query=translated,
-                    audio_backend=request.app.state.audio_backend,
+            track(
+                asyncio.create_task(
+                    autogenerate_missing_verb(
+                        language=language,
+                        query=translated,
+                        audio_backend=request.app.state.audio_backend,
+                    )
                 )
             )
             return RedirectResponse(
@@ -276,11 +279,13 @@ async def search_verb(
             if autogen_rate_limited(_client_ip(request)):
                 logger.warning("autogen rate-limited client for %s/%s", language, query)
                 return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}")
-            asyncio.create_task(
-                autogenerate_missing_verb(
-                    language=language,
-                    query=query,
-                    audio_backend=request.app.state.audio_backend,
+            track(
+                asyncio.create_task(
+                    autogenerate_missing_verb(
+                        language=language,
+                        query=query,
+                        audio_backend=request.app.state.audio_backend,
+                    )
                 )
             )
             return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&generating=1")

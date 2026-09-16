@@ -35,6 +35,7 @@ from core.storage.verb_document import (
     build_storage_verb_id,
 )
 from core.storage.verb_repository import find_verb_by_search_extract
+from core.task_tracking import track
 from core.translation_service import translate_examples, translate_lemma
 from core.utils import json_safe
 from core.verb_loader import invalidate_entries_cache
@@ -376,11 +377,13 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         translation_update["updated_at"] = datetime.now(UTC).isoformat()
         db.collection(CANDIDATES_COLLECTION).document(new_id).update(translation_update)
 
-    asyncio.create_task(
-        _warm_verb_audio(
-            audio_backend=request.app.state.audio_backend,
-            language=language,
-            verb_data=updated,
+    track(
+        asyncio.create_task(
+            _warm_verb_audio(
+                audio_backend=request.app.state.audio_backend,
+                language=language,
+                verb_data=updated,
+            )
         )
     )
 
@@ -588,11 +591,13 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
         translation_update["updated_at"] = datetime.now(UTC).isoformat()
         doc_ref.update(translation_update)
 
-    asyncio.create_task(
-        _warm_verb_audio(
-            audio_backend=request.app.state.audio_backend,
-            language=language,
-            verb_data=payload,
+    track(
+        asyncio.create_task(
+            _warm_verb_audio(
+                audio_backend=request.app.state.audio_backend,
+                language=language,
+                verb_data=payload,
+            )
         )
     )
     invalidate_entries_cache(language)
@@ -669,11 +674,13 @@ async def regen_verb_forms(request: Request, verb_id: str) -> JSONResponse:
     doc_ref.update(update)
 
     updated_verb_data = {**existing, **update}
-    asyncio.create_task(
-        _warm_verb_audio(
-            audio_backend=request.app.state.audio_backend,
-            language=language,
-            verb_data=updated_verb_data,
+    track(
+        asyncio.create_task(
+            _warm_verb_audio(
+                audio_backend=request.app.state.audio_backend,
+                language=language,
+                verb_data=updated_verb_data,
+            )
         )
     )
     invalidate_entries_cache(language)

@@ -198,8 +198,13 @@ def _write_promoted_verb(
     # Live record: no status/query/source -- matches the shape of manually promoted verbs
     live_doc = {**base}
 
-    db.collection(_CANDIDATES_COLLECTION).document(verb_id).set(candidate_doc)
-    db.collection(_VERBS_COLLECTION).document(verb_id).set(live_doc)
+    # Atomic: a batch commits both writes together or neither, so a crash/kill
+    # mid-write can't leave verb_candidates marked "promoted" with no
+    # corresponding live verb (invisible to both learners and the admin queue).
+    batch = db.batch()
+    batch.set(db.collection(_CANDIDATES_COLLECTION).document(verb_id), candidate_doc)
+    batch.set(db.collection(_VERBS_COLLECTION).document(verb_id), live_doc)
+    batch.commit()
 
     from core.admin_logging import resolve_signal_label
 

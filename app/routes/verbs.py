@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
 from urllib.parse import quote
 
 from fastapi import APIRouter, Query, Request
@@ -15,7 +14,6 @@ from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import UI_LANGUAGES
 from core.settings import load_settings
-from core.storage.firestore_db import get_db
 from core.storage.verb_repository import list_verbs_recent
 from core.verb_loader import load_entries_for_language
 
@@ -218,18 +216,6 @@ def api_verbs(
     sorted_entries = sorted(all_entries, key=lambda e: e.rank)
     page = sorted_entries[offset : offset + limit]
     verbs = [_build_verb_item(e, ui_lang) for e in page]
-
-    try:
-        get_db().collection("verb_paging_events").add(
-            {
-                "language": language,
-                "offset": offset,
-                "limit": limit,
-                "timestamp": datetime.now(timezone.utc),
-            }
-        )
-    except Exception:
-        log.warning("verb_paging_events write failed", exc_info=True)
 
     return JSONResponse(
         {
