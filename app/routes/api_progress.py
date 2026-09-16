@@ -8,6 +8,7 @@ from core.progress.progress_service import (
     get_language_progress,
     load_practice_progress,
     record_known,
+    record_known_batch,
     record_practice_progress,
     record_review_result,
     record_seen,
@@ -27,6 +28,19 @@ class KnownRequest(BaseModel):
     language: str = Field(min_length=2, max_length=3)
     verb_id: str = Field(min_length=1, max_length=80)
     known: bool
+
+
+class KnownBatchRequest(BaseModel):
+    language: str = Field(min_length=2, max_length=3)
+    verb_ids: list[str] = Field(min_length=1, max_length=2000)
+
+    @field_validator("verb_ids")
+    @classmethod
+    def verb_ids_must_be_reasonable(cls, v: list[str]) -> list[str]:
+        for verb_id in v:
+            if not (1 <= len(verb_id) <= 80):
+                raise ValueError("each verb_id must be 1-80 characters")
+        return v
 
 
 class ReviewRequest(BaseModel):
@@ -137,6 +151,22 @@ def set_progress_known(
     )
 
     return {"ok": True}
+
+
+@router.post("/known/batch")
+def set_progress_known_batch(
+    request: Request,
+    payload: KnownBatchRequest,
+):
+    user = _require_user(request)
+
+    record_known_batch(
+        user=user,
+        language=payload.language,
+        verb_ids=payload.verb_ids,
+    )
+
+    return {"ok": True, "count": len(payload.verb_ids)}
 
 
 @router.post("/review")

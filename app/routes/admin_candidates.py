@@ -37,6 +37,7 @@ from core.storage.verb_document import (
 from core.storage.verb_repository import find_verb_by_search_extract
 from core.translation_service import translate_examples, translate_lemma
 from core.utils import json_safe
+from core.verb_loader import invalidate_entries_cache
 
 _GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
 
@@ -480,6 +481,7 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
         }
     )
     resolve_signal_label(language=data.get("language", ""), query=data.get("query", ""))
+    invalidate_entries_cache(language)
 
     return JSONResponse({"verb_id": verb_id, "promoted": True, "rank": data.get("rank")})
 
@@ -593,6 +595,7 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
             verb_data=payload,
         )
     )
+    invalidate_entries_cache(language)
 
     return JSONResponse({"verb_id": verb_id, "regenerated": True, "lemma": lemma, "updated_at": now})
 
@@ -626,6 +629,7 @@ async def regen_verb_examples(request: Request, verb_id: str) -> JSONResponse:
 
     now = datetime.now(UTC).isoformat()
     doc_ref.update({"examples": translated, "updated_at": now})
+    invalidate_entries_cache(language)
 
     return JSONResponse({"verb_id": verb_id, "examples_count": len(translated), "updated_at": now})
 
@@ -672,6 +676,7 @@ async def regen_verb_forms(request: Request, verb_id: str) -> JSONResponse:
             verb_data=updated_verb_data,
         )
     )
+    invalidate_entries_cache(language)
 
     return JSONResponse({"verb_id": verb_id, "regenerated": True, "updated_at": now})
 

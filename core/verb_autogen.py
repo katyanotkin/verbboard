@@ -21,6 +21,7 @@ from pydantic import BaseModel, ValidationError
 from vertexai.generative_models import GenerationConfig, GenerativeModel
 
 from core.languages.config import STUDY_LANGUAGE_SCRIPTS
+from core.rate_limit import SlidingWindowRateLimiter
 from core.settings_ai import _LANG_PROMPTS
 from core.storage.firestore_db import get_db
 from core.storage.verb_document import build_search_extract_from_entry, build_storage_verb_id
@@ -40,6 +41,18 @@ _VERBS_COLLECTION = "verbs"
 
 # In-process dedup: prevents redundant concurrent tasks for the same query
 _GENERATING: set[str] = set()
+
+# Caps paid-LLM-call exposure from a single client varying its query string to
+# dodge the exact-string dedup above (e.g. "blorf", "blorf2", "blorfx", ...).
+# Per-IP, per-instance -- see core/rate_limit.py docstring for why that's the
+# right tradeoff here.
+_AUTOGEN_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=5, window_seconds=600)
+
+
+def autogen_rate_limited(client_ip: str) -> bool:
+    """Return True if this client should NOT be allowed to trigger another autogen call."""
+    return not _AUTOGEN_RATE_LIMITER.allow(client_ip)
+
 
 # Gemini-only translation targets per source language.
 # Hebrew is intentionally excluded -- it routes through Anthropic which we avoid here.

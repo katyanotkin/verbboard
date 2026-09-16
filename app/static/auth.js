@@ -199,6 +199,36 @@
     target.appendChild(button);
   }
 
+  async function uploadKnownBatchChunk(language, verbIds, token) {
+    try {
+      const response = await fetch('/api/progress/known/batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+        body: JSON.stringify({ language: language, verb_ids: verbIds }),
+      });
+      return response.ok;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function uploadKnownBatch(language, verbIds, token) {
+    const CHUNK_SIZE = 500;
+    for (let start = 0; start < verbIds.length; start += CHUNK_SIZE) {
+      const chunk = verbIds.slice(start, start + CHUNK_SIZE);
+      let ok = await uploadKnownBatchChunk(language, chunk, token);
+      if (!ok) {
+        ok = await uploadKnownBatchChunk(language, chunk, token);
+      }
+      if (!ok) {
+        console.warn('VB: failed to upload known-verb batch after retry', chunk.length, 'verbs');
+      }
+    }
+  }
+
   async function hydrateProgress() {
     if (!currentUser) return;
 
@@ -296,21 +326,16 @@
       JSON.stringify(Array.from(known))
     );
 
-    // Upload any locally-known verbs the server doesn't have yet.
+    // Upload any locally-known verbs the server doesn't have yet, as one
+    // batched request (with one retry on failure) instead of one fetch per
+    // verb -- a returning power user can have hundreds of locally-known
+    // verbs on first login, and per-verb fetches with no concurrency cap and
+    // a silent catch used to drop failures with no retry and no signal.
     const toUpload = Array.from(known).filter(function (id) {
       return !serverKnownIds.has(id);
     });
     if (toUpload.length > 0) {
-      toUpload.forEach(function (verbId) {
-        fetch('/api/progress/known', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + token,
-          },
-          body: JSON.stringify({ language: language, verb_id: verbId, known: true }),
-        }).catch(function () {});
-      });
+      uploadKnownBatch(language, toUpload, token);
     }
 
     window.dispatchEvent(

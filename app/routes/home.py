@@ -22,7 +22,13 @@ from core.search_utils import find_best_entry, tokenize_text
 from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 from core.translation_service import translate_search_query
-from core.verb_autogen import AUTOGEN_LANGUAGES, autogenerate_missing_verb, check_verb_rejected, is_plausible_verb_query
+from core.verb_autogen import (
+    AUTOGEN_LANGUAGES,
+    autogen_rate_limited,
+    autogenerate_missing_verb,
+    check_verb_rejected,
+    is_plausible_verb_query,
+)
 from core.verb_loader import load_entries_for_language, pick_verb_of_the_day
 
 logger = logging.getLogger(__name__)
@@ -54,6 +60,26 @@ def _entitlement_redirect(
     base = safe_return_to(return_to or "", fallback="") or f"/verbs?language={language}{_ui_suffix}"
     sep = "&" if "?" in base else "?"
     return RedirectResponse(url=f"{base}{sep}plus_required=1")
+
+
+def _client_ip(request: Request) -> str:
+    """Best-effort per-instance rate-limit key -- NOT a hard security boundary.
+
+    Deliberately takes the LAST X-Forwarded-For hop, not the first: unlike
+    core.analytics.session_tracker's fingerprint (best-effort analytics, first
+    hop is fine), this key gates a paid-LLM-call rate limit, where the first
+    hop is whatever the client itself sent and trivially spoofable. The last
+    hop is appended by the infra closest to Cloud Run and is the one a client
+    can't directly control. If this deployment's proxy chain doesn't append in
+    that order, this key stops being a meaningful rate-limit boundary -- worth
+    confirming against the actual Fastly/GFE config in front of Cloud Run.
+    """
+    forwarded_for = request.headers.get("x-forwarded-for", "")
+    if forwarded_for:
+        hops = [hop.strip() for hop in forwarded_for.split(",") if hop.strip()]
+        if hops:
+            return hops[-1]
+    return (request.client.host if request.client else "") or "unknown"
 
 
 def _looks_english(query: str) -> bool:
@@ -176,6 +202,11 @@ async def search_verb_by_lang(
                 return RedirectResponse(
                     url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native&not_a_verb=1"
                 )
+            if autogen_rate_limited(_client_ip(request)):
+                logger.warning("autogen rate-limited client for %s/%s", language, translated)
+                return RedirectResponse(
+                    url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native"
+                )
             asyncio.create_task(
                 autogenerate_missing_verb(
                     language=language,
@@ -242,6 +273,9 @@ async def search_verb(
         if is_plausible_verb_query(query, language):
             if await asyncio.to_thread(check_verb_rejected, language, query):
                 return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&not_a_verb=1")
+            if autogen_rate_limited(_client_ip(request)):
+                logger.warning("autogen rate-limited client for %s/%s", language, query)
+                return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}")
             asyncio.create_task(
                 autogenerate_missing_verb(
                     language=language,

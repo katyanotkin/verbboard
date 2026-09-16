@@ -574,3 +574,106 @@ def test_get_practice_rejects_language_too_long() -> None:
         headers=AUTH,
     )
     assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# POST /api/progress/known/batch
+# ---------------------------------------------------------------------------
+
+
+def test_set_known_batch_requires_auth() -> None:
+    response = client.post(
+        "/api/progress/known/batch",
+        json={"language": "en", "verb_ids": ["en_go"]},
+    )
+
+    assert response.status_code == 401
+
+
+def test_set_known_batch_local_dev() -> None:
+    verb_ids = [_unique_verb_id(f"en_batch_{i}") for i in range(5)]
+
+    response = client.post(
+        "/api/progress/known/batch",
+        headers=AUTH,
+        json={"language": "en", "verb_ids": verb_ids},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True, "count": len(verb_ids)}
+
+    payload = client.get("/api/progress?language=en", headers=AUTH).json()
+    for verb_id in verb_ids:
+        assert verb_id in payload["verbs"], f"{verb_id} missing from GET after batch known"
+        assert payload["verbs"][verb_id]["known"] is True
+
+
+def test_set_known_batch_seeds_srs_ladder() -> None:
+    """A verb newly marked known via the batch endpoint enters the SRS ladder,
+    same as the single /known endpoint."""
+    verb_id = _unique_verb_id("en_batch_srs")
+
+    client.post(
+        "/api/progress/known/batch",
+        headers=AUTH,
+        json={"language": "en", "verb_ids": [verb_id]},
+    )
+
+    row = client.get("/api/progress?language=en", headers=AUTH).json()["verbs"][verb_id]
+
+    assert row["srs_box"] == 1
+    assert row["srs_due_at"] is not None
+    assert row["srs_reviewed_at"] is not None
+
+
+def test_set_known_batch_rejects_empty_list() -> None:
+    response = client.post(
+        "/api/progress/known/batch",
+        headers=AUTH,
+        json={"language": "en", "verb_ids": []},
+    )
+
+    assert response.status_code == 422
+
+
+def test_set_known_batch_rejects_verb_id_too_long() -> None:
+    response = client.post(
+        "/api/progress/known/batch",
+        headers=AUTH,
+        json={"language": "en", "verb_ids": ["x" * 81]},
+    )
+
+    assert response.status_code == 422
+
+
+def test_set_known_batch_accepts_verb_id_at_max_length() -> None:
+    verb_id = "en_" + ("v" * 77)  # 80 chars total
+    assert len(verb_id) == 80
+
+    response = client.post(
+        "/api/progress/known/batch",
+        headers=AUTH,
+        json={"language": "en", "verb_ids": [verb_id]},
+    )
+
+    assert response.status_code == 200
+
+
+def test_set_known_batch_rejects_too_many_verb_ids() -> None:
+    response = client.post(
+        "/api/progress/known/batch",
+        headers=AUTH,
+        json={"language": "en", "verb_ids": [f"en_v{i}" for i in range(2001)]},
+    )
+
+    assert response.status_code == 422
+
+
+def test_set_known_batch_rejects_language_too_long() -> None:
+    response = client.post(
+        "/api/progress/known/batch",
+        headers=AUTH,
+        json={"language": "toolong", "verb_ids": ["en_go"]},
+    )
+
+    assert response.status_code == 422

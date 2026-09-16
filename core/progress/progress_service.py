@@ -9,6 +9,7 @@ from core.progress.progress_repository import (
     record_review,
     save_practice_progress,
     set_known,
+    set_known_batch,
     upsert_user_profile,
 )
 
@@ -46,6 +47,21 @@ def record_known(
         language=language,
         verb_id=verb_id,
         known=known,
+    )
+
+
+def record_known_batch(
+    *,
+    user: AuthUser,
+    language: str,
+    verb_ids: list[str],
+) -> None:
+    sync_user_profile(user)
+
+    set_known_batch(
+        user_id=user.uid,
+        language=language,
+        verb_ids=verb_ids,
     )
 
 

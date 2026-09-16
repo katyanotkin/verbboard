@@ -387,3 +387,54 @@ def test_verbs_page_no_notice_without_not_available(client: TestClient, monkeypa
     assert response.status_code == 200
     html = response.text
     assert "vb-notice" not in html
+
+
+# ---------------------------------------------------------------------------
+# autogen_rate_limited (core/verb_autogen.py) -- caps paid-LLM-call exposure
+# per client IP, independent of the exact-string _GENERATING dedup.
+# ---------------------------------------------------------------------------
+
+
+class TestAutogenRateLimited:
+    def test_default_limiter_matches_documented_budget(self) -> None:
+        """5 calls / 600s per key, per the module docstring/comment."""
+        import core.verb_autogen as va
+
+        assert va._AUTOGEN_RATE_LIMITER._max_calls == 5
+        assert va._AUTOGEN_RATE_LIMITER._window_seconds == 600
+
+    def test_allows_up_to_max_calls_then_blocks_same_ip(self, monkeypatch) -> None:
+        import core.verb_autogen as va
+        from core.rate_limit import SlidingWindowRateLimiter
+
+        # Fresh limiter instance so this test can't be polluted by (or pollute)
+        # the real module-level singleton shared with live request handling.
+        monkeypatch.setattr(va, "_AUTOGEN_RATE_LIMITER", SlidingWindowRateLimiter(max_calls=5, window_seconds=600))
+
+        ip = "203.0.113.10"
+        for _ in range(5):
+            assert va.autogen_rate_limited(ip) is False
+
+        assert va.autogen_rate_limited(ip) is True
+
+    def test_different_ip_has_its_own_quota(self, monkeypatch) -> None:
+        import core.verb_autogen as va
+        from core.rate_limit import SlidingWindowRateLimiter
+
+        monkeypatch.setattr(va, "_AUTOGEN_RATE_LIMITER", SlidingWindowRateLimiter(max_calls=1, window_seconds=600))
+
+        assert va.autogen_rate_limited("198.51.100.1") is False
+        assert va.autogen_rate_limited("198.51.100.1") is True
+        # A different client IP must not be affected by the first IP's quota.
+        assert va.autogen_rate_limited("198.51.100.2") is False
+
+    def test_autogen_rate_limited_inverts_limiter_allow(self, monkeypatch) -> None:
+        """autogen_rate_limited() returns True exactly when the underlying
+        limiter's allow() would return False."""
+        import core.verb_autogen as va
+        from core.rate_limit import SlidingWindowRateLimiter
+
+        monkeypatch.setattr(va, "_AUTOGEN_RATE_LIMITER", SlidingWindowRateLimiter(max_calls=1, window_seconds=600))
+
+        assert va.autogen_rate_limited("192.0.2.1") is False
+        assert va.autogen_rate_limited("192.0.2.1") is True

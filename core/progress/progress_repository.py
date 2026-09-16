@@ -202,6 +202,53 @@ def set_known(
     doc_ref.set(payload, merge=True)
 
 
+def set_known_batch(
+    *,
+    user_id: str,
+    language: str,
+    verb_ids: list[str],
+) -> None:
+    """Batched version of set_known(known=True) for many verbs at once.
+
+    Used by the first-login localStorage -> server sync so a power user's
+    known-verb list uploads as a handful of committed Firestore batches
+    instead of one unbounded, unbatched fetch per verb from the client.
+    """
+    if not verb_ids:
+        return
+
+    _upsert_language_doc(user_id, language)
+    now = datetime.now(timezone.utc)
+    db = get_db()
+
+    batch_limit = 400  # Firestore's hard cap is 500 writes/batch; leave headroom
+    for start in range(0, len(verb_ids), batch_limit):
+        chunk = verb_ids[start : start + batch_limit]
+        refs = {verb_id: _progress_verb_ref(user_id, language, verb_id) for verb_id in chunk}
+
+        # One batched read for the whole chunk instead of one .get() per verb_id --
+        # get_all() doesn't guarantee it returns snapshots in ref order, so key
+        # the lookup by snapshot id rather than zipping positionally.
+        existing_srs_box = {snap.id: (snap.to_dict() or {}).get("srs_box") for snap in db.get_all(list(refs.values()))}
+
+        batch = db.batch()
+        for verb_id, doc_ref in refs.items():
+            payload: dict[str, Any] = {
+                "language": language,
+                "verb_id": verb_id,
+                "known": True,
+                "known_updated_at": firestore.SERVER_TIMESTAMP,
+                "updated_at": firestore.SERVER_TIMESTAMP,
+            }
+            # Same "only seed the ladder once" rule as set_known() above.
+            if not existing_srs_box.get(verb_id):
+                payload["srs_box"] = 1
+                payload["srs_due_at"] = _leitner_due_at(1, from_time=now)
+                payload["srs_reviewed_at"] = now
+            batch.set(doc_ref, payload, merge=True)
+        batch.commit()
+
+
 def record_review(
     *,
     user_id: str,
