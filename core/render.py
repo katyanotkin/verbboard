@@ -191,10 +191,11 @@ def render_board_html(
     else:
         board_pronouns = ""
 
+    # Pronoun translations no longer gate on this toggle (they reveal on
+    # unwrapping the Pronouns block itself, see .pronoun-block[open] in
+    # learn.css) -- this button is only about example/lemma translations now.
     has_any_translation = board.language != ui_lang and (
-        any(ui_lang in ex.translations for ex in board.verb.examples)
-        or bool(lemma_translation_text)
-        or (board.language in PRONOUNS and ui_lang in PRONOUNS)
+        any(ui_lang in ex.translations for ex in board.verb.examples) or bool(lemma_translation_text)
     )
 
     examples_rows = []

@@ -149,29 +149,37 @@ def test_pronoun_block_translation_cell_empty_when_ui_lang_matches_verb_lang(
     assert "я" not in html
 
 
-def test_translation_toggle_appears_when_only_pronoun_data_differs(mock_verb: VerbEntry) -> None:
-    """mock_verb has zero example translations and zero lemma_translations for
-    ui_lang -- the toggle must still appear because the pronoun glosses are
-    revealable (has_any_translation's issue #32 clause)."""
+def test_translation_toggle_independent_of_pronoun_data(mock_verb: VerbEntry) -> None:
+    """Reveal decoupling (2026-09-16): pronoun translations no longer gate on
+    #toggle-translations at all (they reveal on unwrapping .pronoun-block
+    itself, via CSS [open], not this button) -- so having pronoun data for
+    the language pair must NOT make the toggle appear on its own. mock_verb
+    has zero example translations and zero lemma_translations for ui_lang;
+    en/ru both have PRONOUNS data (would have triggered the old clause)."""
     from core.render import render_board_html
 
     assert not mock_verb.examples[0].translations
     assert not mock_verb.lemma_translations
 
     html = render_board_html(_make_board(mock_verb), return_to="/?language=en", ui_lang="ru")
-    assert "toggle-translations" in html
+    assert "toggle-translations" not in html
 
 
-def test_translation_toggle_absent_without_pronoun_data_and_without_examples(
-    mock_verb: VerbEntry, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Sanity check for the previous test: with pronoun data removed and no
-    example/lemma translations, the toggle must go back to being absent."""
+def test_pronoun_translation_independent_of_toggle_state(mock_verb: VerbEntry) -> None:
+    """The pronoun translation cell must be revealable purely by the
+    .pronoun-block[open] CSS selector, with no dependency on
+    #learn-page.translations-visible -- confirm the old selector is gone
+    and the new one is present in the stylesheet-driving markup contract
+    (the reveal itself is a CSS rule in learn.css, not server-rendered
+    state, so this pins the HTML side of the contract: the cell always
+    renders with real content, never conditionally omitted based on
+    whether the example-translation toggle would be shown)."""
     from core.render import render_board_html
 
-    monkeypatch.setattr("core.render.PRONOUNS", {})
     html = render_board_html(_make_board(mock_verb), return_to="/?language=en", ui_lang="ru")
-    assert "toggle-translations" not in html
+    assert "toggle-translations" not in html  # no example/lemma translations for this mock
+    assert "class='pronoun-translation'" in html
+    assert ">я<" in html  # translation text always rendered, regardless of toggle absence
 
 
 def test_pronoun_block_word_column_rtl_for_hebrew_study_language(mock_verb: VerbEntry) -> None:

@@ -700,7 +700,13 @@ button {
   border-inline-start: 1px solid var(--line-soft);
 }
 
-#learn-page.translations-visible .pronoun-translation:not(:empty) {
+/* Independent of the global #toggle-translations/.translations-visible
+   mechanism used by examples -- pronoun translations reveal as soon as the
+   student unwraps the Pronouns block itself, no extra click needed
+   (product decision 2026-09-16, after the shared-toggle dependency was
+   repeatedly mistaken for a rendering bug). Native <details> gets the
+   [open] attribute automatically -- no new JS. */
+.pronoun-block[open] .pronoun-translation:not(:empty) {
   display: table-cell;
 }
 
