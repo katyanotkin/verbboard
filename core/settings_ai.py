@@ -202,7 +202,7 @@ _GENERATION_SYSTEM_PROMPT = (
 _MODEL: dict[str, str] = {"en": "claude-haiku-4-5-20251001"}
 _MODEL_DEFAULT = "claude-sonnet-4-6"
 
-_MAX_TOKENS: dict[str, int] = {"he": 4096}
+_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072}
 _MAX_TOKENS_DEFAULT = 2048
 
 # ---------------------------------------------------------------------------

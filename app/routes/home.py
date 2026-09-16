@@ -198,13 +198,22 @@ async def search_verb_by_lang(
         source="search_by_lang",
     )
     if language in AUTOGEN_LANGUAGES:
-        if is_plausible_verb_query(translated, language):
-            if await asyncio.to_thread(check_verb_rejected, language, translated):
+        autogen_query = translated
+        if not is_plausible_verb_query(autogen_query, language):
+            # translate_search_query() can return an aspect pair for Russian
+            # (e.g. "бегать/бежать") -- "/" fails the plausibility gate even
+            # though the first token alone is a perfectly good query. Retry
+            # before giving up; the displayed `search=` stays the full string.
+            tokens = tokenize_text(translated)
+            if tokens and is_plausible_verb_query(tokens[0], language):
+                autogen_query = tokens[0]
+        if is_plausible_verb_query(autogen_query, language):
+            if await asyncio.to_thread(check_verb_rejected, language, autogen_query):
                 return RedirectResponse(
                     url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native&not_a_verb=1"
                 )
             if autogen_rate_limited(_client_ip(request)):
-                logger.warning("autogen rate-limited client for %s/%s", language, translated)
+                logger.warning("autogen rate-limited client for %s/%s", language, autogen_query)
                 return RedirectResponse(
                     url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native"
                 )
@@ -212,7 +221,7 @@ async def search_verb_by_lang(
                 asyncio.create_task(
                     autogenerate_missing_verb(
                         language=language,
-                        query=translated,
+                        query=autogen_query,
                         audio_backend=request.app.state.audio_backend,
                     )
                 )
