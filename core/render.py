@@ -170,9 +170,12 @@ def render_board_html(
         for person in PRONOUN_PERSONS:
             word = study_pronouns.get(person, "")
             translation = ui_pronouns.get(person, "") if board.language != ui_lang else ""
+            # Side-by-side columns (word | translation), same as before --
+            # leading blank on the word cell only adds breathing room from
+            # the cell edge, requested 2026-09-15.
             pronoun_rows.append(
                 "<tr>"
-                f"<td class='pronoun-word'{label_dir}>{escape(word)}</td>"
+                f"<td class='pronoun-word'{label_dir}>&nbsp;{escape(word)}</td>"
                 f"<td class='pronoun-translation' dir='{translation_dir}'>{escape(translation)}</td>"
                 "</tr>"
             )

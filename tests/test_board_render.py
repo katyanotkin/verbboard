@@ -115,12 +115,14 @@ def test_pronoun_block_renders_for_language_with_pronoun_data(mock_verb: VerbEnt
     html = render_board_html(_make_board(mock_verb), return_to="/?language=en", ui_lang="ru")
     assert "pronoun-block" in html
     assert "pronoun-table" in html
-    # English pronoun words, in 1sg/2sg/3sg/1pl/2pl/3pl order.
-    i_index = html.index(">I<")
-    you_index = html.index(">you<")
+    # English pronoun words, in 1sg/2sg/3sg/1pl/2pl/3pl order. Word cells get
+    # a leading &nbsp; (issue #32 follow-up, 2026-09-15) for breathing room
+    # from the cell edge, alongside the side-by-side translation column.
+    i_index = html.index(">&nbsp;I<")
+    you_index = html.index(">&nbsp;you<")
     he_index = html.index("he / she / it")
-    we_index = html.index(">we<")
-    they_index = html.index(">they<")
+    we_index = html.index(">&nbsp;we<")
+    they_index = html.index(">&nbsp;they<")
     assert i_index < you_index < he_index < we_index < they_index
 
 
