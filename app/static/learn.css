@@ -682,16 +682,22 @@ button {
 .pronoun-table {
   margin-top: 6px;
   font-size: 0.9rem;
+  table-layout: fixed;
+}
+
+.pronoun-table td {
+  width: 50%;
 }
 
 .pronoun-word {
-  color: var(--text-muted);
+  color: var(--text-body);
 }
 
 .pronoun-translation {
   display: none;
   font-style: italic;
   color: var(--text-muted);
+  border-inline-start: 1px solid var(--line-soft);
 }
 
 #learn-page.translations-visible .pronoun-translation:not(:empty) {
