@@ -7,10 +7,10 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from app.routes.admin_utils import (
-    CANDIDATES_COLLECTION,
     require_admin_api,
     signal_collections,
 )
+from core.settings import verb_candidates_collection_name, verbs_collection_name
 from core.storage.firestore_db import get_db
 
 router = APIRouter()
@@ -156,10 +156,10 @@ async def classify_signal_group(request: Request) -> JSONResponse:
     if status == "candidate":
         db_ref = get_db()
         stub_id = f"{language}_{query}"
-        existing = db_ref.collection(CANDIDATES_COLLECTION).document(stub_id).get()
+        existing = db_ref.collection(verb_candidates_collection_name()).document(stub_id).get()
         if not existing.exists:
             now = datetime.now(UTC).isoformat()
-            db_ref.collection(CANDIDATES_COLLECTION).document(stub_id).set(
+            db_ref.collection(verb_candidates_collection_name()).document(stub_id).set(
                 {
                     "verb_id": stub_id,
                     "language": language,
@@ -297,7 +297,7 @@ async def delete_signal_label(request: Request, label_id: str) -> JSONResponse:
     deleted_candidate = False
     if label_status == "candidate":
         candidate_id = f"{language}_{query}"
-        candidate_ref = db.collection(CANDIDATES_COLLECTION).document(candidate_id)
+        candidate_ref = db.collection(verb_candidates_collection_name()).document(candidate_id)
         candidate_doc = candidate_ref.get()
         if candidate_doc.exists:
             candidate_data = candidate_doc.to_dict()
@@ -319,7 +319,7 @@ async def get_search_extracts(request: Request, language: str) -> JSONResponse:
     require_admin_api(request)
 
     db = get_db()
-    docs = db.collection("verbs").where("language", "==", language).stream()
+    docs = db.collection(verbs_collection_name()).where("language", "==", language).stream()
 
     extracts: set[str] = set()
     for doc in docs:

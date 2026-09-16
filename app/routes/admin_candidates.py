@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import re
 from datetime import UTC, datetime
 from typing import Any
@@ -13,14 +12,17 @@ from pydantic import BaseModel, ValidationError
 
 from app.routes.admin_utils import (
     CANDIDATE_STATUSES,
-    CANDIDATES_COLLECTION,
-    VERBS_COLLECTION,
     logger,
     require_admin_api,
 )
 from core.admin_logging import resolve_signal_label
 from core.search_utils import normalize_text
-from core.settings import _load_anthropic_api_key
+from core.settings import (
+    _load_anthropic_api_key,
+    load_settings,
+    verb_candidates_collection_name,
+    verbs_collection_name,
+)
 from core.settings_ai import (
     _MAX_TOKENS,
     _MAX_TOKENS_DEFAULT,
@@ -40,7 +42,10 @@ from core.translation_service import translate_examples, translate_lemma
 from core.utils import json_safe
 from core.verb_loader import invalidate_entries_cache
 
-_GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
+# Routed through Settings (not a bare os.getenv() here) so the value is
+# guaranteed correct regardless of module import order -- see
+# core/verb_autogen.py's identical comment for the same rationale.
+_GCP_PROJECT = load_settings().google_cloud_project
 
 
 class _ClaudeVerbResponse(BaseModel):
@@ -144,7 +149,7 @@ def _get_max_rank(language: str) -> int:
     # Concurrent generations can both read the same max before either writes,
     # so duplicate ranks are possible. Rank is a loose ordering hint, not a unique key.
     db = get_db()
-    result = db.collection(VERBS_COLLECTION).where("language", "==", language).count().get()
+    result = db.collection(verbs_collection_name()).where("language", "==", language).count().get()
     return result[0][0].value
 
 
@@ -237,7 +242,7 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
 async def list_candidates(request: Request, language: str | None = None) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
-    col = db.collection(CANDIDATES_COLLECTION)
+    col = db.collection(verb_candidates_collection_name())
     if language:
         col = col.where("language", "==", language)
 
@@ -268,7 +273,7 @@ async def list_candidates(request: Request, language: str | None = None) -> JSON
 async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
-    ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    ref = db.collection(verb_candidates_collection_name()).document(verb_id)
     doc = ref.get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Candidate not found")
@@ -285,7 +290,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
             detail=f"'{query}' is already in the live verb set",
         )
 
-    existing_by_id = db.collection(VERBS_COLLECTION).document(verb_id).get()
+    existing_by_id = db.collection(verbs_collection_name()).document(verb_id).get()
     if existing_by_id.exists:
         ref.delete()
         raise HTTPException(
@@ -306,7 +311,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
     now = datetime.now(UTC).isoformat()
 
     if new_id != verb_id:
-        existing_verb = db.collection(VERBS_COLLECTION).document(new_id).get()
+        existing_verb = db.collection(verbs_collection_name()).document(new_id).get()
         if existing_verb.exists:
             ref.delete()
             raise HTTPException(
@@ -314,7 +319,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
                 detail=f"Resolves to '{new_id}' which already exists in live verbs",
             )
 
-        existing_cand = db.collection(CANDIDATES_COLLECTION).document(new_id).get()
+        existing_cand = db.collection(verb_candidates_collection_name()).document(new_id).get()
         if existing_cand.exists:
             ref.delete()
             raise HTTPException(
@@ -343,7 +348,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         updated["tts_forms"] = generated["tts_forms"]
 
     if new_id != verb_id:
-        db.collection(CANDIDATES_COLLECTION).document(new_id).set(updated)
+        db.collection(verb_candidates_collection_name()).document(new_id).set(updated)
         ref.delete()
     else:
         ref.set(updated)
@@ -375,7 +380,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         updated["lemma_translations"] = lemma_translations
     if translation_update:
         translation_update["updated_at"] = datetime.now(UTC).isoformat()
-        db.collection(CANDIDATES_COLLECTION).document(new_id).update(translation_update)
+        db.collection(verb_candidates_collection_name()).document(new_id).update(translation_update)
 
     track(
         asyncio.create_task(
@@ -402,7 +407,7 @@ async def set_candidate_status(request: Request, verb_id: str) -> JSONResponse:
         )
 
     db = get_db()
-    ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    ref = db.collection(verb_candidates_collection_name()).document(verb_id)
     if not ref.get().exists:
         raise HTTPException(status_code=404, detail="Candidate not found")
 
@@ -414,7 +419,7 @@ async def set_candidate_status(request: Request, verb_id: str) -> JSONResponse:
 async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
-    candidate_ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    candidate_ref = db.collection(verb_candidates_collection_name()).document(verb_id)
     candidate_doc = candidate_ref.get()
 
     if not candidate_doc.exists:
@@ -428,7 +433,7 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
             detail=f"Cannot promote: only 'pending' candidates can be promoted, got '{data.get('status')}'",
         )
 
-    existing_verb = db.collection(VERBS_COLLECTION).document(verb_id).get()
+    existing_verb = db.collection(verbs_collection_name()).document(verb_id).get()
     if existing_verb.exists:
         candidate_ref.update({"status": "duplicate", "updated_at": datetime.now(UTC).isoformat()})
         raise HTTPException(
@@ -474,7 +479,7 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
     verb_doc["created_at"] = now
     verb_doc["updated_at"] = now
 
-    db.collection(VERBS_COLLECTION).document(verb_id).set(verb_doc)
+    db.collection(verbs_collection_name()).document(verb_id).set(verb_doc)
     candidate_ref.update(
         {
             "status": "promoted",
@@ -497,7 +502,7 @@ async def search_live_verbs(request: Request, query: str = "", language: str = "
         raise HTTPException(status_code=400, detail="query parameter is required")
 
     db = get_db()
-    q = db.collection(VERBS_COLLECTION).where("search_extract", "array_contains", normalized)
+    q = db.collection(verbs_collection_name()).where("search_extract", "array_contains", normalized)
     if language:
         q = q.where("language", "==", language)
 
@@ -510,7 +515,7 @@ async def search_live_verbs(request: Request, query: str = "", language: str = "
 async def get_live_verb(request: Request, verb_id: str) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
-    doc = db.collection(VERBS_COLLECTION).document(verb_id).get()
+    doc = db.collection(verbs_collection_name()).document(verb_id).get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Verb not found in live verbs collection")
     return JSONResponse(json_safe(doc.to_dict()))
@@ -520,7 +525,7 @@ async def get_live_verb(request: Request, verb_id: str) -> JSONResponse:
 async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
-    doc_ref = db.collection(VERBS_COLLECTION).document(verb_id)
+    doc_ref = db.collection(verbs_collection_name()).document(verb_id)
     doc = doc_ref.get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Verb not found in live verbs collection")
@@ -609,7 +614,7 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
 async def regen_verb_examples(request: Request, verb_id: str) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
-    doc_ref = db.collection(VERBS_COLLECTION).document(verb_id)
+    doc_ref = db.collection(verbs_collection_name()).document(verb_id)
     doc = doc_ref.get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Verb not found in live verbs collection")
@@ -643,7 +648,7 @@ async def regen_verb_examples(request: Request, verb_id: str) -> JSONResponse:
 async def regen_verb_forms(request: Request, verb_id: str) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
-    doc_ref = db.collection(VERBS_COLLECTION).document(verb_id)
+    doc_ref = db.collection(verbs_collection_name()).document(verb_id)
     doc = doc_ref.get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Verb not found in live verbs collection")
@@ -692,7 +697,7 @@ async def regen_verb_forms(request: Request, verb_id: str) -> JSONResponse:
 async def regen_candidate_example(request: Request, verb_id: str, index: int) -> JSONResponse:
     require_admin_api(request)
     db = get_db()
-    ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    ref = db.collection(verb_candidates_collection_name()).document(verb_id)
     doc = ref.get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Candidate not found")
@@ -743,7 +748,7 @@ async def delete_candidate(request: Request, verb_id: str) -> JSONResponse:
     require_admin_api(request)
 
     db = get_db()
-    ref = db.collection(CANDIDATES_COLLECTION).document(verb_id)
+    ref = db.collection(verb_candidates_collection_name()).document(verb_id)
     doc = ref.get()
 
     if not doc.exists:

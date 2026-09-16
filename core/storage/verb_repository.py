@@ -3,16 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 from core.search_utils import normalize_text
-from core.settings import load_settings
+from core.settings import verb_candidates_collection_name, verbs_collection_name
 from core.storage.firestore_db import get_db
 from core.storage.verb_document import build_verb_doc_id
-
-COLLECTION = "verbs"
 
 
 def get_verb(verb_id: str) -> dict[str, Any] | None:
     db = get_db()
-    document = db.collection(COLLECTION).document(build_verb_doc_id(verb_id)).get()
+    document = db.collection(verbs_collection_name()).document(build_verb_doc_id(verb_id)).get()
 
     if not document.exists:
         return None
@@ -22,7 +20,7 @@ def get_verb(verb_id: str) -> dict[str, Any] | None:
 
 def list_verbs(language: str) -> list[dict[str, Any]]:
     db = get_db()
-    documents = db.collection(COLLECTION).where("language", "==", language).stream()
+    documents = db.collection(verbs_collection_name()).where("language", "==", language).stream()
     return [document.to_dict() for document in documents]
 
 
@@ -31,7 +29,7 @@ def upsert_verb(
     payload: dict[str, Any],
 ) -> None:
     db = get_db()
-    doc_ref = db.collection(COLLECTION).document(build_verb_doc_id(verb_id))
+    doc_ref = db.collection(verbs_collection_name()).document(build_verb_doc_id(verb_id))
 
     existing = doc_ref.get()
 
@@ -59,7 +57,7 @@ def find_verb_by_search_extract(language: str, query: str) -> dict[str, Any] | N
         if not q:
             continue
         docs = (
-            db.collection(COLLECTION)
+            db.collection(verbs_collection_name())
             .where("language", "==", language)
             .where("search_extract", "array_contains", q)
             .limit(1)
@@ -73,8 +71,7 @@ def find_verb_by_search_extract(language: str, query: str) -> dict[str, Any] | N
 
 def get_candidate(verb_id: str) -> dict[str, Any] | None:
     db = get_db()
-    collection = load_settings().verb_candidates_collection
-    document = db.collection(collection).document(verb_id).get()
+    document = db.collection(verb_candidates_collection_name()).document(verb_id).get()
     if not document.exists:
         return None
     return document.to_dict()
@@ -82,7 +79,13 @@ def get_candidate(verb_id: str) -> dict[str, Any] | None:
 
 def find_verb_by_lemma(language: str, lemma: str) -> dict[str, Any] | None:
     db = get_db()
-    docs = db.collection(COLLECTION).where("language", "==", language).where("lemma", "==", lemma).limit(1).stream()
+    docs = (
+        db.collection(verbs_collection_name())
+        .where("language", "==", language)
+        .where("lemma", "==", lemma)
+        .limit(1)
+        .stream()
+    )
     for doc in docs:
         return doc.to_dict()
     return None
@@ -92,7 +95,7 @@ def list_verbs_recent(language: str, limit: int = 20) -> list[dict[str, Any]]:
     """Return the most recently added verbs for a language."""
     db = get_db()
     docs = (
-        db.collection(COLLECTION)
+        db.collection(verbs_collection_name())
         .where("language", "==", language)
         .order_by("created_at", direction="DESCENDING")
         .limit(limit)

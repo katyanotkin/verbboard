@@ -202,6 +202,22 @@ def load_settings() -> Settings:
     return settings
 
 
+def verbs_collection_name() -> str:
+    """Single source of truth for the live verb catalog's Firestore collection name.
+
+    Every read/write path for the top-level `verbs` collection must go through
+    this (not a local hardcoded "verbs" literal) -- otherwise setting
+    VERBS_COLLECTION to anything but the default silently produces a
+    split-brain where some code honors it and most doesn't.
+    """
+    return load_settings().verbs_collection
+
+
+def verb_candidates_collection_name() -> str:
+    """Same rationale as verbs_collection_name(), for `verb_candidates`."""
+    return load_settings().verb_candidates_collection
+
+
 def _safe_firebase_config(raw: str) -> str:
     """Re-parse and re-serialize Firebase config JSON with <, >, & unicode-escaped.
 

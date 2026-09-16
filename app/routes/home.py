@@ -30,7 +30,7 @@ from core.verb_autogen import (
     check_verb_rejected,
     is_plausible_verb_query,
 )
-from core.verb_loader import load_entries_for_language, pick_verb_of_the_day
+from core.verb_loader import get_verb_of_the_day, load_entries_for_language
 
 logger = logging.getLogger(__name__)
 
@@ -338,7 +338,7 @@ def home(
     votd: dict[str, str] | None = None
     try:
         date_str = datetime.now(UTC).strftime("%Y-%m-%d")
-        votd_entry = pick_verb_of_the_day(
+        votd_entry = get_verb_of_the_day(
             load_entries_for_language(language=selected_language),
             language=selected_language,
             date_str=date_str,

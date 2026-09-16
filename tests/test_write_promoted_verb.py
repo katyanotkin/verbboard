@@ -14,7 +14,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from core.verb_autogen import _CANDIDATES_COLLECTION, _VERBS_COLLECTION, _write_promoted_verb
+from core.settings import verb_candidates_collection_name, verbs_collection_name
+from core.verb_autogen import _write_promoted_verb
 
 
 def _make_fake_db() -> MagicMock:
@@ -91,10 +92,10 @@ def test_write_promoted_verb_writes_correctly_shaped_candidate_and_live_docs() -
         call.args[0].collection_name: (call.args[0].id, call.args[1]) for call in batch.set.call_args_list
     }
 
-    assert set(payload_by_collection.keys()) == {_CANDIDATES_COLLECTION, _VERBS_COLLECTION}
+    assert set(payload_by_collection.keys()) == {verb_candidates_collection_name(), verbs_collection_name()}
 
-    candidate_id, candidate_doc = payload_by_collection[_CANDIDATES_COLLECTION]
-    live_id, live_doc = payload_by_collection[_VERBS_COLLECTION]
+    candidate_id, candidate_doc = payload_by_collection[verb_candidates_collection_name()]
+    live_id, live_doc = payload_by_collection[verbs_collection_name()]
 
     assert candidate_id == "en_go"
     assert live_id == "en_go"

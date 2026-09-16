@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from app.routes.admin_utils import CANDIDATES_COLLECTION, VERBS_COLLECTION
 from core.admin_auth import ADMIN_SESSION_COOKIE, create_admin_session_token
+from core.settings import verb_candidates_collection_name, verbs_collection_name
 
 
 def _admin_cookies() -> dict[str, str]:
@@ -62,9 +62,9 @@ def _mock_promote_db(candidate_data: dict, *, live_exists: bool = False) -> Magi
 
     def _collection(name: str) -> MagicMock:
         col = MagicMock()
-        if name == CANDIDATES_COLLECTION:
+        if name == verb_candidates_collection_name():
             col.document.return_value = candidate_ref
-        elif name == VERBS_COLLECTION:
+        elif name == verbs_collection_name():
             col.document.return_value = live_ref
         else:
             col.document.return_value = MagicMock()

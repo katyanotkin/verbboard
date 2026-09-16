@@ -1,11 +1,19 @@
 {
   "indexes": [
     {
+      "collectionGroup": "verbs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "language", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "demand_signal",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "ts",     "order": "DESCENDING" }
+        { "fieldPath": "ts", "order": "DESCENDING" }
       ]
     },
     {
@@ -13,8 +21,8 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "language", "order": "ASCENDING" },
-        { "fieldPath": "status",   "order": "ASCENDING" },
-        { "fieldPath": "ts",       "order": "DESCENDING" }
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "ts", "order": "DESCENDING" }
       ]
     }
   ],

@@ -14,7 +14,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 from datetime import UTC, datetime
 from typing import Any
 
@@ -25,6 +24,7 @@ from vertexai.generative_models import GenerationConfig, GenerativeModel
 from core.languages.config import STUDY_LANGUAGE_SCRIPTS
 from core.languages.ru.validation import validate_ru_payload
 from core.rate_limit import SlidingWindowRateLimiter
+from core.settings import load_settings, verb_candidates_collection_name, verbs_collection_name
 from core.settings_ai import (
     _LANG_PROMPTS,
     _MAX_TOKENS,
@@ -50,11 +50,12 @@ AUTOGEN_LANGUAGES: frozenset[str] = frozenset({"en", "es", "it", "fr", "ru"})
 _CLAUDE_AUTOGEN_LANGUAGES: frozenset[str] = frozenset({"ru"})
 
 _GEMINI_VERB_MODEL = "gemini-2.5-flash"
-_GCP_LOCATION = os.getenv("GCP_REGION", "us-east1")
-_GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
-
-_CANDIDATES_COLLECTION = "verb_candidates"
-_VERBS_COLLECTION = "verbs"
+# Routed through Settings (not a bare os.getenv() here) so the value is
+# guaranteed correct regardless of module import order -- Settings' own
+# load_dotenv(override=True) is guaranteed to have already run by the time
+# this import completes, unlike a direct os.getenv() call in this module.
+_GCP_LOCATION = load_settings().gcp_region
+_GCP_PROJECT = load_settings().google_cloud_project
 
 # In-process dedup: prevents redundant concurrent tasks for the same query
 _GENERATING: set[str] = set()
@@ -186,7 +187,7 @@ async def _generate_verb_payload(language: str, query: str) -> dict[str, Any] | 
 
 def _get_max_rank(language: str) -> int:
     db = get_db()
-    result = db.collection(_VERBS_COLLECTION).where("language", "==", language).count().get()
+    result = db.collection(verbs_collection_name()).where("language", "==", language).count().get()
     return result[0][0].value
 
 
@@ -203,7 +204,7 @@ def _allocate_verb_id(*, language: str, lemma: str, max_attempts: int = 5) -> st
     base_id = build_storage_verb_id(language=language, lemma=lemma)
     candidate = base_id
     for attempt in range(1, max_attempts + 1):
-        doc = db.collection(_VERBS_COLLECTION).document(candidate).get()
+        doc = db.collection(verbs_collection_name()).document(candidate).get()
         if not doc.exists:
             return candidate
         existing_lemma = (doc.to_dict() or {}).get("lemma", "")
@@ -232,7 +233,7 @@ def _allocate_candidate_doc_id(*, language: str, query: str, max_attempts: int =
     base_id = build_storage_verb_id(language=language, lemma=query)
     candidate = base_id
     for attempt in range(1, max_attempts + 1):
-        doc = db.collection(_CANDIDATES_COLLECTION).document(candidate).get()
+        doc = db.collection(verb_candidates_collection_name()).document(candidate).get()
         if not doc.exists or (doc.to_dict() or {}).get("query", "").strip().lower() == query.strip().lower():
             return candidate
         candidate = f"{base_id}_{attempt + 1}"
@@ -243,7 +244,7 @@ def _write_rejection(*, language: str, query: str) -> None:
     """Record that the model confirmed this query is not a verb."""
     db = get_db()
     verb_id = _allocate_candidate_doc_id(language=language, query=query)
-    db.collection(_CANDIDATES_COLLECTION).document(verb_id).set(
+    db.collection(verb_candidates_collection_name()).document(verb_id).set(
         {
             "verb_id": verb_id,
             "language": language,
@@ -264,7 +265,7 @@ def _write_needs_review(*, language: str, query: str, lemma: str, reason: str) -
     """
     db = get_db()
     verb_id = _allocate_candidate_doc_id(language=language, query=query)
-    db.collection(_CANDIDATES_COLLECTION).document(verb_id).set(
+    db.collection(verb_candidates_collection_name()).document(verb_id).set(
         {
             "verb_id": verb_id,
             "language": language,
@@ -287,7 +288,7 @@ def check_verb_rejected(language: str, query: str) -> bool:
     """
     db = get_db()
     verb_id = build_storage_verb_id(language=language, lemma=query)
-    doc = db.collection(_CANDIDATES_COLLECTION).document(verb_id).get()
+    doc = db.collection(verb_candidates_collection_name()).document(verb_id).get()
     if not doc.exists:
         return False
     data = doc.to_dict() or {}
@@ -334,8 +335,8 @@ def _write_promoted_verb(
     # mid-write can't leave verb_candidates marked "promoted" with no
     # corresponding live verb (invisible to both learners and the admin queue).
     batch = db.batch()
-    batch.set(db.collection(_CANDIDATES_COLLECTION).document(verb_id), candidate_doc)
-    batch.set(db.collection(_VERBS_COLLECTION).document(verb_id), live_doc)
+    batch.set(db.collection(verb_candidates_collection_name()).document(verb_id), candidate_doc)
+    batch.set(db.collection(verbs_collection_name()).document(verb_id), live_doc)
     batch.commit()
 
     from core.admin_logging import resolve_signal_label

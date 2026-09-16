@@ -13,9 +13,6 @@ logger = logging.getLogger(__name__)
 _SETTINGS = load_settings()
 ADMIN_PREFIX = "/admin"
 
-VERBS_COLLECTION = "verbs"
-CANDIDATES_COLLECTION = "verb_candidates"
-
 CANDIDATE_STATUSES = {
     "needs_generation",
     "pending",

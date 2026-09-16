@@ -7,7 +7,7 @@ from typing import Any
 
 import anthropic
 
-from core.settings import _load_anthropic_api_key
+from core.settings import _load_anthropic_api_key, verbs_collection_name
 from core.settings_ai import get_cached_system
 from core.storage.firestore_db import get_db
 from core.storage.verb_document import (
@@ -17,7 +17,6 @@ from core.storage.verb_document import (
 
 logger = logging.getLogger(__name__)
 
-VERBS_COLLECTION = "verbs"
 # Bookkeeping only -- never read as a source of verb data, just a marker that a
 # given input lemma was already tried and either failed outright or resolved
 # to a different lemma. Prevents an unbounded retry loop from paying a fresh
@@ -37,7 +36,7 @@ _GENERATING: set[str] = set()
 
 def _get_max_rank(language: str) -> int:
     db = get_db()
-    docs = db.collection(VERBS_COLLECTION).where("language", "==", language).stream()
+    docs = db.collection(verbs_collection_name()).where("language", "==", language).stream()
     max_rank = 0
     for doc in docs:
         data = doc.to_dict()
@@ -103,13 +102,13 @@ def generate_and_promote_verb(language: str, lemma: str) -> dict[str, Any] | Non
     _GENERATING.add(dedup_key)
     try:
         db = get_db()
-        existing = db.collection(VERBS_COLLECTION).document(verb_id).get()
+        existing = db.collection(verbs_collection_name()).document(verb_id).get()
         if existing.exists:
             return existing.to_dict()
 
         blocked, known_resolved_verb_id = _pair_attempt_status(verb_id)
         if known_resolved_verb_id:
-            resolved_doc = db.collection(VERBS_COLLECTION).document(known_resolved_verb_id).get()
+            resolved_doc = db.collection(verbs_collection_name()).document(known_resolved_verb_id).get()
             if resolved_doc.exists:
                 return resolved_doc.to_dict()
         if blocked:
@@ -174,11 +173,11 @@ def generate_and_promote_verb(language: str, lemma: str) -> dict[str, Any] | Non
             "updated_at": now,
         }
 
-        existing_resolved = db.collection(VERBS_COLLECTION).document(resolved_verb_id).get()
+        existing_resolved = db.collection(verbs_collection_name()).document(resolved_verb_id).get()
         if existing_resolved.exists:
             return existing_resolved.to_dict()
 
-        db.collection(VERBS_COLLECTION).document(resolved_verb_id).set(doc)
+        db.collection(verbs_collection_name()).document(resolved_verb_id).set(doc)
         logger.info("Auto-promoted pair verb %s", resolved_verb_id)
         return doc
     finally:
