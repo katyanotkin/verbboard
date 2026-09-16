@@ -120,35 +120,72 @@ input[type="text"]:focus {
   box-shadow: 0 0 0 2px #2563eb;
 }
 
-/* ===== Verb of the day ===== */
+/* ===== Verb of the day (hero) ===== */
 
-.votd-chip {
+.votd-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  max-width: 420px;
+  margin: 0 auto 16px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  border: 1.5px solid var(--button-primary-bg);
+  border-radius: 18px;
+  text-decoration: none;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.16);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.votd-hero:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
+}
+
+.votd-hero:focus-visible {
+  outline: 2px solid var(--button-primary-bg);
+  outline-offset: 3px;
+}
+
+.votd-hero-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 14px;
-  background: var(--page-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  text-decoration: none;
+  gap: 3px;
+  min-width: 0;
 }
 
-.votd-chip:hover {
-  border-color: var(--input-focus);
-}
-
-.votd-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.votd-verb {
-  font-size: 1.05rem;
+.votd-hero-label {
+  font-size: 0.76rem;
   font-weight: 700;
   color: var(--button-primary-bg);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.votd-hero-verb {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.votd-hero-arrow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--button-primary-bg);
+  color: #ffffff;
+}
+
+[dir="rtl"] .votd-hero-arrow svg {
+  transform: scaleX(-1);
 }
 
 /* ===== Browse ===== */

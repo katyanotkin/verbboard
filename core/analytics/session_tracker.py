@@ -13,6 +13,11 @@ logger = logging.getLogger(__name__)
 
 COLLECTION = "analytics_sessions"
 
+# Referrers can carry arbitrarily long query strings (e.g. ad click IDs);
+# bound the stored length defensively -- this is a diagnostic field, not
+# something that needs full fidelity.
+_MAX_REFERRER_LEN = 500
+
 _pending: set[asyncio.Task] = set()
 
 
@@ -35,7 +40,13 @@ def get_fingerprint_sid(request: Request, date: str) -> str:
 
 
 def _create_session(
-    fingerprint: str, date: str, device_type: str, language: str, ui_lang: str, verb_viewed: bool = False
+    fingerprint: str,
+    date: str,
+    device_type: str,
+    language: str,
+    ui_lang: str,
+    verb_viewed: bool = False,
+    referrer: str = "",
 ) -> None:
     from google.api_core.exceptions import AlreadyExists
 
@@ -44,6 +55,7 @@ def _create_session(
     doc_id = f"{date}_{fingerprint}"
     clean_language = _clean_lang(language)
     clean_ui_lang = _clean_lang(ui_lang)
+    clean_referrer = (referrer or "").strip()[:_MAX_REFERRER_LEN]
     try:
         get_db().collection(COLLECTION).document(doc_id).create(
             {
@@ -54,13 +66,17 @@ def _create_session(
                 "ui_lang": clean_ui_lang,
                 "uid": None,
                 "verb_viewed": verb_viewed,
+                "referrer": clean_referrer,
                 "created_at": datetime.now(UTC),
             }
         )
     except AlreadyExists:
         # Session already exists for this day. Enrich language/ui_lang if the
         # session was created on a paramless first hit and now we have values;
-        # verb_viewed only ever flips false -> true, never back.
+        # verb_viewed only ever flips false -> true, never back. referrer is
+        # only meaningful for the very first hit that started the session (it
+        # identifies the traffic source), so it is deliberately not re-set here
+        # -- same set-once-on-create treatment as device_type.
         update: dict = {}
         if clean_language:
             update["language"] = clean_language
@@ -78,10 +94,16 @@ def _create_session(
 
 
 async def start_session(
-    fingerprint: str, date: str, device_type: str, language: str, ui_lang: str, verb_viewed: bool = False
+    fingerprint: str,
+    date: str,
+    device_type: str,
+    language: str,
+    ui_lang: str,
+    verb_viewed: bool = False,
+    referrer: str = "",
 ) -> None:
     task = asyncio.create_task(
-        asyncio.to_thread(_create_session, fingerprint, date, device_type, language, ui_lang, verb_viewed)
+        asyncio.to_thread(_create_session, fingerprint, date, device_type, language, ui_lang, verb_viewed, referrer)
     )
     _pending.add(task)
     task.add_done_callback(_pending.discard)
@@ -123,6 +145,45 @@ def _attach_uid(fingerprint: str, date: str, uid: str) -> None:
 
 async def attach_uid(fingerprint: str, date: str, uid: str) -> None:
     task = asyncio.create_task(asyncio.to_thread(_attach_uid, fingerprint, date, uid))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
+_VALID_SIGN_IN_BRANCHES = {"standalone", "mobile", "desktop"}
+
+
+def _record_sign_in_tap(fingerprint: str, date: str, branch: str) -> None:
+    """Record which signIn() branch (standalone/mobile/desktop) a user tapped.
+
+    Diagnostic only (issue #28: is sign-in friction losing people). Set-once
+    like device_type -- only the first tap of the day's session is recorded,
+    so a retry tap (e.g. after dismissing a popup) doesn't overwrite the
+    original branch.
+    """
+    if branch not in _VALID_SIGN_IN_BRANCHES:
+        return
+
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        if snapshot.exists and snapshot.to_dict().get("sign_in_tapped_branch"):
+            return
+        doc_ref.set(
+            {
+                "sign_in_tapped_branch": branch,
+                "sign_in_tapped_at": datetime.now(UTC),
+            },
+            merge=True,
+        )
+    except Exception:
+        logger.exception("Failed to record sign-in tap")
+
+
+async def record_sign_in_tap(fingerprint: str, date: str, branch: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_sign_in_tap, fingerprint, date, branch))
     _pending.add(task)
     task.add_done_callback(_pending.discard)
 

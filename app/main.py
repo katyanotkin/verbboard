@@ -82,11 +82,13 @@ class _PageViewMiddleware:
         language = request.query_params.get("language", "")
         ui_lang = resolve_ui_language(request)
         user_agent = request.headers.get("user-agent")
+        # Header name is "Referer" (the historical HTTP spec misspelling), not "Referrer".
+        referrer = request.headers.get("referer", "")
         date = datetime.now(UTC).strftime("%Y-%m-%d")
         verb_viewed = request.url.path == "/learn" and bool(request.query_params.get("verb_id"))
 
         fingerprint = get_fingerprint_sid(request, date)
-        await start_session(fingerprint, date, detect_device_type(user_agent), language, ui_lang, verb_viewed)
+        await start_session(fingerprint, date, detect_device_type(user_agent), language, ui_lang, verb_viewed, referrer)
 
         await self._app(scope, receive, send)
 

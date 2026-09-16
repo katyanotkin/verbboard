@@ -4,16 +4,33 @@ Covers:
 - get_fingerprint_sid: deterministic SHA256(ip|ua|date)[:32]; stable across
   calls, varies by IP / UA / date; uses X-Forwarded-For when present
 - delete_sessions_for_uid: query-and-delete-by-uid, used by account deletion
+- _create_session: referrer captured on create, truncated at 500 chars, and
+  never touched by the AlreadyExists enrich path (set-once, like device_type)
+- _record_sign_in_tap: valid-branch allowlist, set-once-per-day behavior
 """
 
 from __future__ import annotations
 
+import asyncio
+import concurrent.futures
 from unittest.mock import MagicMock, patch
 
 from starlette.requests import Request
 
 from core.analytics import session_tracker
 from core.analytics.session_tracker import get_fingerprint_sid
+
+
+def _run_async(coro):
+    """Run an async coroutine in a fresh worker-thread event loop.
+
+    Matches the pattern in tests/test_audio.py / tests/test_task_tracking.py:
+    Playwright e2e tests can leave a running asyncio loop in the main thread,
+    so asyncio.run() there would fail; a fresh thread has no loop.
+    """
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(asyncio.run, coro).result()
+
 
 # ── request helper ─────────────────────────────────────────────────────────────
 
@@ -128,3 +145,133 @@ def test_delete_sessions_for_uid_no_matches_is_a_noop() -> None:
 
     with patch("core.storage.firestore_db.get_db", return_value=db):
         session_tracker.delete_sessions_for_uid("u1")  # must not raise
+
+
+# ── _create_session: referrer capture ───────────────────────────────────────
+#
+# referrer is set-once at session creation, mirroring device_type: it
+# identifies the traffic source of the *first* hit that opened the session,
+# so a later request for the same (ip, ua, day) fingerprint must never
+# overwrite it.
+
+
+def test_create_session_writes_referrer_on_create() -> None:
+    db = MagicMock()
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._create_session("fp1", "2026-09-16", "mobile", "es", "en", False, "https://google.com/search")
+
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.create.assert_called_once()
+    written = doc_ref.create.call_args.args[0]
+    assert written["referrer"] == "https://google.com/search"
+
+
+def test_create_session_truncates_long_referrer() -> None:
+    db = MagicMock()
+    long_referrer = "https://example.com/?q=" + ("a" * 600)
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._create_session("fp1", "2026-09-16", "mobile", "es", "en", False, long_referrer)
+
+    doc_ref = db.collection.return_value.document.return_value
+    written = doc_ref.create.call_args.args[0]
+    assert len(written["referrer"]) == session_tracker._MAX_REFERRER_LEN
+    assert written["referrer"] == long_referrer[: session_tracker._MAX_REFERRER_LEN]
+
+
+def test_create_session_blank_referrer_stored_as_empty_string() -> None:
+    db = MagicMock()
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._create_session("fp1", "2026-09-16", "mobile", "es", "en", False, "")
+
+    doc_ref = db.collection.return_value.document.return_value
+    written = doc_ref.create.call_args.args[0]
+    assert written["referrer"] == ""
+
+
+def test_create_session_already_exists_does_not_write_referrer() -> None:
+    """Second call for the same fingerprint/day (AlreadyExists) enriches
+    language/ui_lang/verb_viewed only -- referrer must never appear in the
+    enrich payload, regardless of what referrer the second call carried, so
+    the originally captured value can never be clobbered."""
+    from google.api_core.exceptions import AlreadyExists
+
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.create.side_effect = AlreadyExists("already exists")
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._create_session(
+            "fp1", "2026-09-16", "mobile", "es", "en", True, "https://second-referrer.example.com"
+        )
+
+    doc_ref.set.assert_called_once()
+    update_payload = doc_ref.set.call_args.args[0]
+    assert "referrer" not in update_payload
+    assert update_payload["language"] == "es"
+    assert update_payload["ui_lang"] == "en"
+    assert update_payload["verb_viewed"] is True
+
+
+# ── _record_sign_in_tap / record_sign_in_tap ────────────────────────────────
+
+
+def test_record_sign_in_tap_writes_valid_branch() -> None:
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.get.return_value.exists = False
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._record_sign_in_tap("fp1", "2026-09-16", "mobile")
+
+    doc_ref.set.assert_called_once()
+    payload = doc_ref.set.call_args.args[0]
+    assert payload["sign_in_tapped_branch"] == "mobile"
+    assert "sign_in_tapped_at" in payload
+
+
+def test_record_sign_in_tap_rejects_invalid_branch() -> None:
+    db = MagicMock()
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._record_sign_in_tap("fp1", "2026-09-16", "tablet")
+
+    db.collection.assert_not_called()
+
+
+def test_record_sign_in_tap_is_set_once_per_day() -> None:
+    """A second tap (e.g. after dismissing the account chooser) must not
+    overwrite the branch recorded by the first tap of the day."""
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.get.return_value.exists = True
+    doc_ref.get.return_value.to_dict.return_value = {"sign_in_tapped_branch": "mobile"}
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._record_sign_in_tap("fp1", "2026-09-16", "desktop")
+
+    doc_ref.set.assert_not_called()
+
+
+def test_record_sign_in_tap_async_wrapper_schedules_and_awaits() -> None:
+    """record_sign_in_tap() is the fire-and-forget async wrapper the route
+    handler calls; confirm it actually runs the sync helper (not just
+    schedules a task that's never awaited by the test)."""
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.get.return_value.exists = False
+
+    async def _scenario() -> None:
+        await session_tracker.record_sign_in_tap("fp1", "2026-09-16", "standalone")
+        # Wait for the fire-and-forget task to actually finish running.
+        for task in list(session_tracker._pending):
+            await task
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        _run_async(_scenario())
+
+    doc_ref.set.assert_called_once()
+    payload = doc_ref.set.call_args.args[0]
+    assert payload["sign_in_tapped_branch"] == "standalone"

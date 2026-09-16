@@ -62,10 +62,25 @@
     return /Mobi|Android|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
   }
 
+  // Fire-and-forget diagnostic ping for issue #28 (is sign-in friction
+  // losing people): tags which signIn() branch was taken so conversion can
+  // be compared across standalone/mobile/desktop. Must never block or fail
+  // the actual sign-in flow.
+  function _trackSignInTapped(branch) {
+    try {
+      fetch('/api/analytics/sign_in_tapped', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ branch: branch }),
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
   async function signIn() {
     if (signInInProgress) return;
     signInInProgress = true;
     try {
+      _trackSignInTapped(isStandalone() ? 'standalone' : (isMobile() ? 'mobile' : 'desktop'));
       const provider = new firebase.auth.GoogleAuthProvider();
       // Always show the account chooser, even when the browser has a cached
       // Google session -- prevents silent single-account auto-sign-in.

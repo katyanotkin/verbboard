@@ -28,12 +28,21 @@ def test_home_has_verbs_browse_link(client: TestClient) -> None:
 
 def test_home_verb_of_the_day_links_to_learn(client: TestClient) -> None:
     html = client.get("/?language=es&ui_language=en").text
-    assert 'class="votd-chip"' in html
+    assert 'class="votd-hero"' in html
     match = re.search(r'href="(/learn\?language=es&verb_id=es_[^"&]+&ui_language=en)"', html)
     assert match, html
 
     learn_response = client.get(match.group(1))
     assert learn_response.status_code == 200
+
+
+def test_home_verb_of_the_day_absent_renders_no_hero(client: TestClient, monkeypatch) -> None:
+    """When pick_verb_of_the_day() finds nothing (e.g. an empty catalog), the
+    home route's votd context var is None/falsy and the template must not
+    render the hero markup at all -- not an empty/broken hero."""
+    monkeypatch.setattr("app.routes.home.load_entries_for_language", lambda **kw: [])
+    html = client.get("/?language=es&ui_language=en").text
+    assert "votd-hero" not in html
 
 
 def test_home_feedback_link_carries_page_and_language(client: TestClient) -> None:
