@@ -6,10 +6,9 @@ practice_loop.js has no auth gate and the uid-keyed user_practice collection
 misses anonymous sessions. Unauthenticated, fail-open shape -- same as
 /api/analytics/enrich and /api/analytics/sign_in_tapped.
 
-Note: a non-dict JSON body (e.g. a bare list) 500s on this endpoint via the
-unguarded `body.get(...)` call -- a known, already-flagged pre-existing bug
-shared with /sign_in_tapped and /enrich, tracked separately. Not covered or
-asserted-as-correct here; see code review notes on issue #48.
+A syntactically valid but non-dict JSON body (e.g. a bare list) is also
+covered here (issue #52): it fails open to an empty body rather than 500ing
+via an unguarded `body.get(...)` call.
 """
 
 from __future__ import annotations
@@ -88,6 +87,22 @@ def test_practice_event_malformed_body_fails_open(client: TestClient) -> None:
             content=b"not json",
             headers={"Content-Type": "application/json"},
         )
+
+    assert resp.status_code == 200
+    assert resp.json() == {"ok": False}
+    mock_started.assert_not_awaited()
+    mock_completed.assert_not_awaited()
+
+
+def test_practice_event_non_dict_body_fails_open(client: TestClient) -> None:
+    """A syntactically valid but non-dict JSON body (e.g. a bare list) must
+    not 500 via an unguarded body.get(...) call -- it fails open, same as a
+    missing "event" key."""
+    with (
+        patch("app.routes.api_analytics.record_practice_started", new_callable=AsyncMock) as mock_started,
+        patch("app.routes.api_analytics.record_practice_completed", new_callable=AsyncMock) as mock_completed,
+    ):
+        resp = client.post("/api/analytics/practice_event", json=[1, 2, 3])
 
     assert resp.status_code == 200
     assert resp.json() == {"ok": False}

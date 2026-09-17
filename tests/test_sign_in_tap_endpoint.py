@@ -81,3 +81,19 @@ def test_sign_in_tapped_invalid_branch_still_returns_ok(client: TestClient) -> N
     assert resp.status_code == 200
     assert resp.json() == {"ok": True}
     mock_get_db.assert_not_called()
+
+
+def test_sign_in_tapped_non_dict_body_fails_open(client: TestClient) -> None:
+    """A syntactically valid but non-dict JSON body (e.g. a bare list) must
+    not 500 via an unguarded body.get(...) call -- it fails open to branch
+    resolving to "", same as a missing "branch" key."""
+    with patch(
+        "app.routes.api_analytics.record_sign_in_tap",
+        new_callable=AsyncMock,
+    ) as mock_record:
+        resp = client.post("/api/analytics/sign_in_tapped", json=[1, 2, 3])
+
+    assert resp.status_code == 200
+    assert resp.json() == {"ok": True}
+    mock_record.assert_awaited_once()
+    assert mock_record.call_args.args[2] == ""

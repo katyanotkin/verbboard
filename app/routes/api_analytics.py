@@ -61,6 +61,8 @@ async def record_sign_in_tapped(request: Request) -> JSONResponse:
         body = await request.json()
     except Exception:
         body = {}
+    if not isinstance(body, dict):
+        body = {}
     branch = str(body.get("branch") or "")
     date = datetime.now(UTC).strftime("%Y-%m-%d")
     fingerprint = get_fingerprint_sid(request, date)
@@ -79,6 +81,8 @@ async def record_practice_event(request: Request) -> JSONResponse:
         body = await request.json()
     except Exception:
         body = {}
+    if not isinstance(body, dict):
+        body = {}
     event = str(body.get("event") or "")
     if event not in _VALID_PRACTICE_EVENTS:
         return JSONResponse({"ok": False})
@@ -96,6 +100,8 @@ async def enrich_session(request: Request) -> JSONResponse:
     try:
         body = await request.json()
     except Exception:
+        return JSONResponse({"ok": False}, status_code=400)
+    if not isinstance(body, dict):
         return JSONResponse({"ok": False}, status_code=400)
     language = _clean_lang(str(body.get("language") or ""))
     ui_lang = _clean_lang(str(body.get("ui_lang") or ""))
