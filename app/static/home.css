@@ -49,7 +49,7 @@ h1 {
 .page-title {
   margin: 0;
   text-align: center;
-  font-size: 2.1rem;
+  font-size: 1.6rem;
   font-weight: 800;
   line-height: 1.1;
   color: var(--text-main);
@@ -64,7 +64,7 @@ h1 {
 }
 
 .page-tagline {
-  margin: 6px 0 0;
+  margin: 2px 0 0;
   font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 1rem;
   font-weight: 600;
@@ -128,13 +128,13 @@ input[type="text"]:focus {
   justify-content: space-between;
   gap: 14px;
   max-width: 420px;
-  margin: 0 auto 16px;
-  padding: 18px 20px;
+  margin: 0 auto 10px;
+  padding: 14px 18px;
   background: linear-gradient(135deg, #eff6ff, #ffffff);
-  border: 1.5px solid var(--button-primary-bg);
+  border: 1px solid var(--button-primary-bg);
   border-radius: 18px;
   text-decoration: none;
-  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.16);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.12);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
@@ -164,7 +164,7 @@ input[type="text"]:focus {
 }
 
 .votd-hero-verb {
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.2;
   color: var(--text-main);
@@ -177,8 +177,8 @@ input[type="text"]:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   background: var(--button-primary-bg);
   color: #ffffff;
