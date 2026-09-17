@@ -5,16 +5,33 @@ body {
   justify-content: center;
   min-height: 100vh;
   margin: 0;
-  background: #f8fafc;
-  color: #374151;
+  background: var(--page-bg);
+  color: var(--text-body);
 }
 
-/* max-width prevents the card from floating in a sea of whitespace on tablets */
+/* Card surface + max-width prevents it from floating in a sea of whitespace
+   on tablets -- same visual language as feedback.html's .card chrome. */
 .msg {
   text-align: center;
   padding: 24px;
   max-width: 360px;
   margin: 0 auto;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.signin-logo {
+  display: block;
+  margin: 0 auto 8px;
+}
+
+.signin-wordmark {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 14px;
 }
 
 .msg p {
@@ -24,7 +41,7 @@ body {
 
 .msg small {
   display: block;
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 0.85rem;
   margin-top: 8px;
 }
@@ -34,7 +51,9 @@ body {
   padding: 12px 24px;
   font-size: 1rem;
   font-weight: 600;
-  background: #2d6a4f; /* matches --color-nav-active in common.css */
+  /* VerbBoard brand green -- same literal as manifest.json's theme_color and
+     snail-logo.svg's fill; no shared token exists yet. */
+  background: #2d6a4f;
   color: white;
   border: none;
   border-radius: 999px;
@@ -47,6 +66,6 @@ body {
 }
 
 #signin-btn:focus-visible {
-  outline: 3px solid #fff;
+  outline: 3px solid var(--input-focus);
   outline-offset: 2px;
 }

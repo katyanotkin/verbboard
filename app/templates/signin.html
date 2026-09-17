@@ -4,51 +4,123 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Sign in to VerbBoard</title>
+  <meta name="theme-color" content="#2d6a4f"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <link rel="manifest" href="/static/manifest.json"/>
+  <link rel="stylesheet" href="/static/common.css"/>
   <link rel="stylesheet" href="/static/signin.css"/>
 </head>
 <body>
   <div class="msg">
-    <p id="status">Tap the button to sign in to VerbBoard.</p>
-    <button id="signin-btn" type="button" onclick="doSignIn()">Sign in with Google</button>
+    <img src="/static/snail-logo.svg" alt="" width="56" height="56" class="signin-logo">
+    <div class="signin-wordmark">VerbBoard</div>
+    <p id="status">Checking sign-in status…</p>
+    <button id="signin-btn" type="button" onclick="doSignIn()" hidden>Sign in with Google</button>
     <small id="hint"></small>
   </div>
-  <script>window.FIREBASE_WEB_CONFIG = {{ firebase_cfg_json | safe }};</script>
-  <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+  <script>
+    window.FIREBASE_WEB_CONFIG = {{ firebase_cfg_json | safe }};
+    // If the Firebase CDN scripts fail to load (ad-blocker, corporate firewall,
+    // flaky mobile connection -- exactly the population most likely to land on
+    // this bounce page), fail visibly instead of leaving the button permanently
+    // hidden behind "Checking sign-in status...". The button stays disabled
+    // since firebase is genuinely unavailable; a reload is the only real retry.
+    function handleSdkLoadFailure() {
+      var statusEl = document.getElementById('status');
+      var btnEl = document.getElementById('signin-btn');
+      var hintEl = document.getElementById('hint');
+      if (statusEl) statusEl.textContent = 'Sign-in is temporarily unavailable.';
+      if (btnEl) { btnEl.hidden = false; btnEl.disabled = true; }
+      if (hintEl) hintEl.textContent = 'Could not load Google Sign-In. Check your connection or content blockers, then reload this page.';
+    }
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js" onerror="handleSdkLoadFailure()"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js" onerror="handleSdkLoadFailure()"></script>
   <script>
     const cfg = window.FIREBASE_WEB_CONFIG;
     const returnTo = {{ safe_return_json | safe }};
     const status = document.getElementById('status');
     const hint = document.getElementById('hint');
     const btn = document.getElementById('signin-btn');
-    if (!cfg || !cfg.apiKey) {
-      status.textContent = 'Auth not configured.';
-      btn.hidden = true;
-    } else {
-      firebase.initializeApp(cfg);
+
+    // Establishes the __session cookie's uid claim server-side (normally done by
+    // auth.js's onAuthStateChanged handler, which this standalone page doesn't
+    // load). Without this, a server-side redirect to /auth/signin?return_to=...
+    // (entitlement gating) would bounce the user right back here after sign-in,
+    // since the server-side session check would still find no uid. Fail open --
+    // never strand the user on this page over an analytics-session call.
+    async function establishSessionCookie(user) {
+      try {
+        const token = await user.getIdToken();
+        await fetch('/api/analytics/session', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+        });
+      } catch (e) {
+        // ignore -- fail open
+      }
     }
+
+    function proceedAfterSignIn() {
+      status.textContent = 'Signed in!';
+      if (returnTo) {
+        window.location.href = returnTo;
+      } else {
+        // Show hint before attempting close so it's visible if close() is a no-op.
+        hint.textContent = 'You can close this tab and return to VerbBoard.';
+        btn.hidden = true;
+        // Notify the PWA shell window (future hook; Firebase IndexedDB sync also fires).
+        try { window.opener?.postMessage('vb:signed-in', location.origin); } catch (_) {}
+        window.close();
+      }
+    }
+
     async function doSignIn() {
       btn.disabled = true;
       status.textContent = 'Signing in…';
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
-        await firebase.auth().signInWithPopup(provider);
-        status.textContent = 'Signed in!';
-        if (returnTo) {
-          window.location.href = returnTo;
-        } else {
-          // Show hint before attempting close so it's visible if close() is a no-op.
-          hint.textContent = 'You can close this tab and return to VerbBoard.';
-          btn.hidden = true;
-          // Notify the PWA shell window (future hook; Firebase IndexedDB sync also fires).
-          try { window.opener?.postMessage('vb:signed-in', location.origin); } catch (_) {}
-          window.close();
-        }
+        const cred = await firebase.auth().signInWithPopup(provider);
+        await establishSessionCookie(cred.user);
+        proceedAfterSignIn();
       } catch (err) {
         status.textContent = 'Sign-in failed.';
         hint.textContent = err.message || String(err);
         btn.disabled = false;
+        btn.hidden = false;
+      }
+    }
+
+    if (!cfg || !cfg.apiKey) {
+      status.textContent = 'Auth not configured.';
+      btn.hidden = true;
+    } else {
+      try {
+        firebase.initializeApp(cfg);
+        // Already-signed-in fast path (tap-saver): on a repeat visit within
+        // Firebase's persisted session, or a cookie-expiry-triggered bounce back
+        // here, skip showing the button entirely. Only the *first* auth-state
+        // event is acted on -- doSignIn()'s own signInWithPopup() call triggers a
+        // second event, which must not be replayed through this branch too.
+        let handledInitialAuthState = false;
+        firebase.auth().onAuthStateChanged(function (user) {
+          if (handledInitialAuthState) return;
+          handledInitialAuthState = true;
+          if (user) {
+            status.textContent = 'Signing you in…';
+            btn.hidden = true;
+            establishSessionCookie(user).then(proceedAfterSignIn);
+          } else {
+            status.textContent = 'Tap the button to sign in to VerbBoard.';
+            btn.hidden = false;
+          }
+        });
+      } catch (err) {
+        // Covers init-time failures beyond a script-load error (e.g. SDK loaded
+        // but firebase.initializeApp() itself threw) -- same visible-failure
+        // fallback as handleSdkLoadFailure() rather than a silent stuck spinner.
+        handleSdkLoadFailure();
       }
     }
   </script>
