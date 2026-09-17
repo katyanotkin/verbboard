@@ -79,7 +79,7 @@
   "practice.recall_yes": "Lo sabía",
   "practice.recall_no": "Muéstramelo otra vez",
   "login_nudge.badge": "¡Acabas de ganar una insignia! Inicia sesión con Google para que siga aquí la próxima vez.",
-  "login_nudge.progress": "No pierdas tu progreso. Inicia sesión para conservarlo si cambias de dispositivo.",
+  "login_nudge.progress": "Ya marcaste verbos como conocidos. Inicia sesión con Google para que ese progreso siga aquí la próxima vez.",
   "auth.login": "Iniciar sesión",
   "auth.logout": "Cerrar sesión",
   "board.back": "⟵ Volver",
