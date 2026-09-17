@@ -109,25 +109,7 @@ def _load_admin_session_secret() -> str:
 
 @lru_cache(maxsize=1)
 def _load_anthropic_api_key() -> str:
-    env_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
-    if env_key:
-        return env_key
-
-    environment = _resolve_environment()
-    if environment == "local":
-        raise ValueError("ANTHROPIC_API_KEY is not set in environment or .env for local run")
-
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
-    if not project_id:
-        raise ValueError("GOOGLE_CLOUD_PROJECT must be set when ANTHROPIC_API_KEY is not provided")
-
-    client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{project_id}/secrets/{_ANTHROPIC_SECRET_NAME}/versions/latest"
-    response = client.access_secret_version(request={"name": name})
-    secret_value = response.payload.data.decode("utf-8").strip()
-    if not secret_value:
-        raise ValueError(f"Secret {_ANTHROPIC_SECRET_NAME} resolved to an empty value")
-    return secret_value
+    return _load_secret(env_var="ANTHROPIC_API_KEY", secret_name=_ANTHROPIC_SECRET_NAME)
 
 
 def _parse_excluded_emails(raw: str) -> tuple[str, ...]:
