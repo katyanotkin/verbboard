@@ -7,6 +7,8 @@ Covers:
 - _create_session: referrer captured on create, truncated at 500 chars, and
   never touched by the AlreadyExists enrich path (set-once, like device_type)
 - _record_sign_in_tap: valid-branch allowlist, set-once-per-day behavior
+- _record_practice_started / _record_practice_completed (issue #48):
+  set-once-per-day writes, independent of each other
 """
 
 from __future__ import annotations
@@ -275,3 +277,103 @@ def test_record_sign_in_tap_async_wrapper_schedules_and_awaits() -> None:
     doc_ref.set.assert_called_once()
     payload = doc_ref.set.call_args.args[0]
     assert payload["sign_in_tapped_branch"] == "standalone"
+
+
+# ── _record_practice_started / _record_practice_completed (issue #48) ──────
+#
+# Auth-independent practice engagement signal on analytics_sessions. Both
+# fields are set-once-per-day, mirroring _record_sign_in_tap, but unlike the
+# sign-in-tap branch field there's no allowlist to validate (the route layer
+# already restricts to _VALID_PRACTICE_EVENTS before calling these).
+
+
+def test_record_practice_started_writes_when_unset() -> None:
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.get.return_value.exists = False
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._record_practice_started("fp1", "2026-09-16")
+
+    doc_ref.set.assert_called_once()
+    payload = doc_ref.set.call_args.args[0]
+    assert payload == {"practice_started": True}
+
+
+def test_record_practice_started_is_set_once_per_day() -> None:
+    """A second practice start the same session-day must not re-write the field."""
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.get.return_value.exists = True
+    doc_ref.get.return_value.to_dict.return_value = {"practice_started": True}
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._record_practice_started("fp1", "2026-09-16")
+
+    doc_ref.set.assert_not_called()
+
+
+def test_record_practice_completed_writes_when_unset() -> None:
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.get.return_value.exists = False
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._record_practice_completed("fp1", "2026-09-16")
+
+    doc_ref.set.assert_called_once()
+    payload = doc_ref.set.call_args.args[0]
+    assert payload == {"practice_completed": True}
+
+
+def test_record_practice_completed_is_set_once_per_day() -> None:
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.get.return_value.exists = True
+    doc_ref.get.return_value.to_dict.return_value = {"practice_completed": True}
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._record_practice_completed("fp1", "2026-09-16")
+
+    doc_ref.set.assert_not_called()
+
+
+def test_record_practice_completed_does_not_require_practice_started() -> None:
+    """practice_completed is independently gated on its own field only --
+    it must write fine even when practice_started was never set for this
+    session-day (e.g. the started beacon was lost to a flaky network)."""
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.get.return_value.exists = True
+    doc_ref.get.return_value.to_dict.return_value = {}  # no practice_started, no practice_completed
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        session_tracker._record_practice_completed("fp1", "2026-09-16")
+
+    doc_ref.set.assert_called_once()
+    payload = doc_ref.set.call_args.args[0]
+    assert payload == {"practice_completed": True}
+
+
+def test_record_practice_started_and_completed_async_wrappers_schedule_and_await() -> None:
+    """record_practice_started()/record_practice_completed() are the
+    fire-and-forget async wrappers the route handler calls; confirm each
+    actually runs its sync helper (not just schedules a task that's never
+    awaited by the test)."""
+    db = MagicMock()
+    doc_ref = db.collection.return_value.document.return_value
+    doc_ref.get.return_value.exists = False
+
+    async def _scenario() -> None:
+        await session_tracker.record_practice_started("fp1", "2026-09-16")
+        await session_tracker.record_practice_completed("fp1", "2026-09-16")
+        for task in list(session_tracker._pending):
+            await task
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        _run_async(_scenario())
+
+    assert doc_ref.set.call_count == 2
+    written_payloads = [call.args[0] for call in doc_ref.set.call_args_list]
+    assert {"practice_started": True} in written_payloads
+    assert {"practice_completed": True} in written_payloads

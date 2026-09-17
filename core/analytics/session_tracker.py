@@ -188,6 +188,61 @@ async def record_sign_in_tap(fingerprint: str, date: str, branch: str) -> None:
     task.add_done_callback(_pending.discard)
 
 
+def _record_practice_started(fingerprint: str, date: str) -> None:
+    """Record that a practice session was started this session-day (issue #48).
+
+    practice_loop.js has no auth gate anywhere -- an anonymous visitor can run
+    full practice sessions leaving zero trace in the uid-keyed user_practice
+    collection. This is a parallel, auth-independent engagement signal on
+    analytics_sessions instead. Set-once like sign_in_tapped_branch -- only
+    the first start of the day's session is recorded.
+    """
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        if snapshot.exists and snapshot.to_dict().get("practice_started"):
+            return
+        doc_ref.set({"practice_started": True}, merge=True)
+    except Exception:
+        logger.exception("Failed to record practice started")
+
+
+async def record_practice_started(fingerprint: str, date: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_practice_started, fingerprint, date))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
+def _record_practice_completed(fingerprint: str, date: str) -> None:
+    """Record that a practice session was completed this session-day (issue #48).
+
+    Set-once, but deliberately does not depend on practice_started having
+    landed first -- the started beacon could be lost (e.g. tab closed, flaky
+    network) and completion is the more valuable of the two signals, so it
+    must not be silently skipped just because the earlier write is missing.
+    """
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        if snapshot.exists and snapshot.to_dict().get("practice_completed"):
+            return
+        doc_ref.set({"practice_completed": True}, merge=True)
+    except Exception:
+        logger.exception("Failed to record practice completed")
+
+
+async def record_practice_completed(fingerprint: str, date: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_practice_completed, fingerprint, date))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
 def delete_sessions_for_uid(uid: str) -> None:
     """Delete every analytics_sessions doc attached to this uid.
 

@@ -20,6 +20,19 @@ document.addEventListener("DOMContentLoaded", function () {
   const _minPlaysRaw = parseInt(localStorage.getItem('practice_min_plays'), 10);
   const PRACTICE_MIN_PLAYS = (_minPlaysRaw >= 1 && _minPlaysRaw <= 12) ? _minPlaysRaw : 5;
 
+  // Fire-and-forget, auth-independent practice engagement beacon (issue
+  // #48) -- must never block or fail the actual practice flow, same
+  // try/catch + .catch(() => {}) idiom as auth.js's _trackSignInTapped().
+  function _trackPracticeEvent(event) {
+    try {
+      fetch('/api/analytics/practice_event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: event }),
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
   function _audioProgressHtml() {
     let plays;
     try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || '{}'); } catch (_) { plays = {}; }
@@ -281,6 +294,8 @@ document.addEventListener("DOMContentLoaded", function () {
     } catch (_) {}
 
     if (accomplished) {
+      _trackPracticeEvent('completed');
+
       let badges;
       try { badges = JSON.parse(localStorage.getItem(badgesKey) || "[]"); } catch (_) { badges = []; }
 

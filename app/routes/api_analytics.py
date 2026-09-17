@@ -7,10 +7,19 @@ from fastapi.responses import JSONResponse
 
 from core.admin_auth import update_session_claims
 from core.analytics.daily_counters import _clean_lang
-from core.analytics.session_tracker import attach_uid, enrich_lang, get_fingerprint_sid, record_sign_in_tap
+from core.analytics.session_tracker import (
+    attach_uid,
+    enrich_lang,
+    get_fingerprint_sid,
+    record_practice_completed,
+    record_practice_started,
+    record_sign_in_tap,
+)
 from core.auth.firebase_auth import get_optional_auth_user
 
 router = APIRouter()
+
+_VALID_PRACTICE_EVENTS = {"started", "completed"}
 
 
 @router.post("/api/analytics/session")
@@ -56,6 +65,29 @@ async def record_sign_in_tapped(request: Request) -> JSONResponse:
     date = datetime.now(UTC).strftime("%Y-%m-%d")
     fingerprint = get_fingerprint_sid(request, date)
     await record_sign_in_tap(fingerprint, date, branch)
+    return JSONResponse({"ok": True})
+
+
+@router.post("/api/analytics/practice_event")
+async def record_practice_event(request: Request) -> JSONResponse:
+    """Diagnostic-only (issue #48): auth-independent practice engagement signal
+    on analytics_sessions. practice_loop.js is localStorage-first with no auth
+    gate, so the uid-keyed user_practice collection misses the ~99.6% of
+    sessions that never sign in. No auth required, same unauthenticated,
+    fail-open shape as /enrich and /sign_in_tapped."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    event = str(body.get("event") or "")
+    if event not in _VALID_PRACTICE_EVENTS:
+        return JSONResponse({"ok": False})
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
+    fingerprint = get_fingerprint_sid(request, date)
+    if event == "started":
+        await record_practice_started(fingerprint, date)
+    else:
+        await record_practice_completed(fingerprint, date)
     return JSONResponse({"ok": True})
 
 

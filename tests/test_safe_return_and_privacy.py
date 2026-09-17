@@ -168,11 +168,11 @@ def test_auth_signin_return_to_empty_when_unsafe(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_sw_cache_version_is_v40() -> None:
+def test_sw_cache_version_is_v41() -> None:
     import pathlib
 
     sw = pathlib.Path("app/static/sw.js").read_text()
-    assert '"vb-v40"' in sw
+    assert '"vb-v41"' in sw
 
 
 def test_sw_precache_includes_offline_html() -> None:

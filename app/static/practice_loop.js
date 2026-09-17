@@ -434,6 +434,19 @@
         .addEventListener('click', startPractice);
     }
 
+    // Fire-and-forget, auth-independent practice engagement beacon (issue
+    // #48) -- must never block or fail the actual practice flow, same
+    // try/catch + .catch(() => {}) idiom as auth.js's _trackSignInTapped().
+    function _trackPracticeEvent(event) {
+      try {
+        fetch('/api/analytics/practice_event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: event }),
+        }).catch(function () {});
+      } catch (_) {}
+    }
+
     function startPractice() {
       const reviewPicked = dueReviewCandidates(activePracticeSize);
       const reviewIds = new Set(reviewPicked.map(v => v.id));
@@ -444,6 +457,8 @@
       if (pool.length === 0 && reviewPicked.length === 0) {
         return;
       }
+
+      _trackPracticeEvent('started');
 
       const shuffled = [...pool].sort(function () {
         return Math.random() - 0.5;
