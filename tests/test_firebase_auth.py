@@ -33,6 +33,7 @@ def _mock_settings(environment: str, allow_local_dev_auth: bool = True) -> Setti
         verb_candidates_collection="verb_candidates",
         log_level="INFO",
         admin_secret="test-secret",
+        admin_session_secret="test-session-secret",
         firebase_web_config_json="{}",
         allow_local_dev_auth=allow_local_dev_auth,
         badge_compact_threshold=20,

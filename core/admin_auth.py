@@ -24,8 +24,11 @@ ADMIN_SESSION_MAX_AGE_SECONDS = 60 * 60 * 12  # 12 hours
 
 
 def _serializer() -> URLSafeTimedSerializer:
+    # admin_session_secret, not admin_secret: the session-signing key is
+    # deliberately a separate value from the admin login password (issue #6)
+    # -- see core.settings._load_admin_session_secret for why.
     settings = load_settings()
-    return URLSafeTimedSerializer(settings.admin_secret)
+    return URLSafeTimedSerializer(settings.admin_session_secret)
 
 
 def verify_admin_password(password: str) -> bool:
@@ -41,7 +44,7 @@ def create_admin_session_token() -> str:
 def verify_admin_session_token(token: str) -> bool:
     if not token:
         return False
-    serializer = URLSafeTimedSerializer(load_settings().admin_secret)
+    serializer = URLSafeTimedSerializer(load_settings().admin_session_secret)
     try:
         payload = serializer.loads(
             token,
@@ -69,7 +72,7 @@ def _decode_session_token(token: str) -> dict:
     rather than an error."""
     if not token:
         return {}
-    serializer = URLSafeTimedSerializer(load_settings().admin_secret)
+    serializer = URLSafeTimedSerializer(load_settings().admin_session_secret)
     try:
         payload = serializer.loads(
             token,

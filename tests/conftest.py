@@ -4,6 +4,7 @@ import os
 
 # Must be set before any import that calls load_settings()
 os.environ.setdefault("ADMIN_SECRET", "test-secret")
+os.environ.setdefault("ADMIN_SESSION_SECRET", "test-session-secret")
 os.environ.setdefault("ENVIRONMENT", "local")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "test-project")
 os.environ.setdefault("AUDIO_BUCKET", "test-bucket")

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from core.settings import _load_admin_secret, load_settings
+from core.settings import _load_admin_secret, _load_admin_session_secret, load_settings
 
 
 def test_missing_audio_bucket_raises(monkeypatch):
@@ -27,11 +27,38 @@ def test_missing_admin_secret_raises(monkeypatch):
         _load_admin_secret.cache_clear()
 
 
+def test_missing_admin_session_secret_raises(monkeypatch):
+    monkeypatch.delenv("ADMIN_SESSION_SECRET", raising=False)
+    _load_admin_session_secret.cache_clear()
+    try:
+        with pytest.raises(ValueError):
+            load_settings()
+    finally:
+        _load_admin_session_secret.cache_clear()
+
+
+def test_admin_secret_and_session_secret_must_differ(monkeypatch):
+    """Issue #6: sharing one secret for both the admin password and session
+    signing key must be rejected, not just discouraged."""
+    monkeypatch.setenv("ADMIN_SECRET", "same-value")
+    monkeypatch.setenv("ADMIN_SESSION_SECRET", "same-value")
+    _load_admin_secret.cache_clear()
+    _load_admin_session_secret.cache_clear()
+    try:
+        with pytest.raises(ValueError, match="must be different values"):
+            load_settings()
+    finally:
+        _load_admin_secret.cache_clear()
+        _load_admin_session_secret.cache_clear()
+
+
 def test_valid_settings_loads():
     settings = load_settings()
     assert settings.audio_bucket
     assert settings.google_cloud_project
     assert settings.admin_secret
+    assert settings.admin_session_secret
+    assert settings.admin_secret != settings.admin_session_secret
 
 
 # ── edition config -- zero-env no-op contract ─────────────────────────────────

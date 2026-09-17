@@ -13,6 +13,7 @@ from core.languages.config import FREE_STUDY_LANGUAGES, default_study_languages
 load_dotenv(override=True)
 
 _ADMIN_SECRET_NAME = "verbboard-admin-secret"
+_ADMIN_SESSION_SECRET_NAME = "verbboard-admin-session-secret"
 _ANTHROPIC_SECRET_NAME = "verbboard-anthropic-api-key"
 _ANALYTICS_EXCLUDED_EMAILS_SECRET_NAME = "verbboard-analytics-excluded-emails"
 
@@ -37,6 +38,7 @@ class Settings:
     verb_candidates_collection: str
     log_level: str
     admin_secret: str
+    admin_session_secret: str
     firebase_web_config_json: str
     allow_local_dev_auth: bool
     badge_compact_threshold: int
@@ -66,27 +68,43 @@ def _resolve_environment() -> str:
     return "local"
 
 
-@lru_cache(maxsize=1)
-def _load_admin_secret() -> str:
-    env_secret = os.getenv("ADMIN_SECRET", "").strip()
-    if env_secret:
-        return env_secret
+def _load_secret(*, env_var: str, secret_name: str) -> str:
+    env_value = os.getenv(env_var, "").strip()
+    if env_value:
+        return env_value
 
     environment = _resolve_environment()
     if environment == "local":
-        raise ValueError("ADMIN_SECRET is not set in environment or .env for local run")
+        raise ValueError(f"{env_var} is not set in environment or .env for local run")
 
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
     if not project_id:
-        raise ValueError("GOOGLE_CLOUD_PROJECT must be set when ADMIN_SECRET is not provided")
+        raise ValueError(f"GOOGLE_CLOUD_PROJECT must be set when {env_var} is not provided")
 
     client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{project_id}/secrets/{_ADMIN_SECRET_NAME}/versions/latest"
+    name = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
     response = client.access_secret_version(request={"name": name})
     secret_value = response.payload.data.decode("utf-8").strip()
     if not secret_value:
-        raise ValueError(f"Secret {_ADMIN_SECRET_NAME} resolved to an empty value")
+        raise ValueError(f"Secret {secret_name} resolved to an empty value")
     return secret_value
+
+
+@lru_cache(maxsize=1)
+def _load_admin_secret() -> str:
+    return _load_secret(env_var="ADMIN_SECRET", secret_name=_ADMIN_SECRET_NAME)
+
+
+@lru_cache(maxsize=1)
+def _load_admin_session_secret() -> str:
+    """Separate from _load_admin_secret(): the admin login password and the
+    session-cookie signing key used to be the literal same value (issue #6)
+    -- a leak of one meant a leak of the other, and a human-typed,
+    occasionally-rotated password is a poor fit for a key that should be
+    long, random, and never entered by a human. Kept as its own Secret
+    Manager entry (verbboard-admin-session-secret) so the two can be
+    rotated independently."""
+    return _load_secret(env_var="ADMIN_SESSION_SECRET", secret_name=_ADMIN_SESSION_SECRET_NAME)
 
 
 @lru_cache(maxsize=1)
@@ -171,6 +189,7 @@ def load_settings() -> Settings:
         verb_candidates_collection=os.getenv("VERB_CANDIDATES_COLLECTION", "verb_candidates"),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         admin_secret=_load_admin_secret(),
+        admin_session_secret=_load_admin_session_secret(),
         firebase_web_config_json=_safe_firebase_config(os.getenv("FIREBASE_WEB_CONFIG_JSON", "")),
         allow_local_dev_auth=os.getenv("ALLOW_LOCAL_DEV_AUTH", "").lower() == "true",
         badge_compact_threshold=int(os.getenv("BADGE_COMPACT_THRESHOLD", "20")),
@@ -243,6 +262,13 @@ def _validate(settings: Settings) -> None:
         raise ValueError("AUDIO_BUCKET must be set")
     if not settings.admin_secret:
         raise ValueError("ADMIN_SECRET must not be empty")
+    if not settings.admin_session_secret:
+        raise ValueError("ADMIN_SESSION_SECRET must not be empty")
+    if settings.admin_secret == settings.admin_session_secret:
+        raise ValueError(
+            "ADMIN_SECRET and ADMIN_SESSION_SECRET must be different values "
+            "(sharing one secret for both the admin password and session signing is issue #6)"
+        )
     if settings.verbs_page_limit > 0 and settings.verbs_page_limit <= settings.verbs_display_batch:
         raise ValueError(
             f"VERBS_PAGE_LIMIT ({settings.verbs_page_limit}) must be greater than "
