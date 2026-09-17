@@ -226,10 +226,6 @@
       return shuffled.slice(0, cap);
     }
 
-    function countDueToday() {
-      return allDueVerbIds().size;
-    }
-
     function needsMixIn(size) {
       const nonKnownCount = verbs.filter(v => !known().has(v.id)).length;
       // Warn when non-known pool is smaller than the minimum or the session size.
@@ -329,11 +325,6 @@
         ? (ui['practice.start_mixed'] || 'Start (includes known)')
         : (ui['practice.start'] || 'Start');
 
-      const dueCount = countDueToday();
-      const dueHtml = dueCount > 0
-        ? `<div class="practice-due-today">${dueCount} ${escapeHtml(ui['practice.due_today'] || 'due for review today')}</div>`
-        : '';
-
       const sizeButtons = PRACTICE_SIZES
         .map(function (size) {
           return `
@@ -361,7 +352,6 @@
             ${practiceTitleHtml}
             ${badgesHtml}
           </div>
-          ${dueHtml}
           <div class="practice-picker">
             <div class="practice-picker-rows">
               <div class="practice-picker-row">
