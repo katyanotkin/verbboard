@@ -91,6 +91,19 @@ Skip when: the change is a pure internal refactor, test-only, or copy-only edit 
 
 This phase exists so doc staleness doesn't require the user to notice and ask -- treat it as a standing part of shipping a feature, not an optional cleanup pass.
 
+## Phase 8 -- Close the issue (after stage verification)
+
+Trigger: the change closes or is described as a fix/follow-up for a tracked GitHub issue, has been pushed to `main`, and stage has redeployed (`git push` to `main` auto-deploys stage -- no manual command needed; confirm via `gcloud builds list --project knotmem26 --region us-east1 --limit=1` if timing is unclear).
+
+Action:
+- Once the build succeeds and the change is confirmed working on stage (or, for a backend-only change with no live-behavior surface to click through, once the full test suite is green post-push), close the issue with `gh issue close <n>`, referencing the commit SHA.
+- If stage verification finds a problem, do not close the issue -- return to implementation and repeat the review/test/verify cycle.
+- For a multi-issue push (several commits in one push), verify and close each issue independently -- one commit's stage behavior confirms only that commit's issue, not siblings in the same push.
+
+Skip when: no GitHub issue is associated with the change (e.g. a purely exploratory or user-directed one-off edit with nothing tracked).
+
+This phase exists so a shipped, verified fix doesn't sit open in the tracker waiting for the user to notice and close it themselves.
+
 ## Trivial Changes
 
 For trivial one-liners, such as a typo fix or single-constant change:
@@ -99,3 +112,4 @@ For trivial one-liners, such as a typo fix or single-constant change:
 - Phase 5 (Tests) may be skipped.
 - Phase 7 (Docs) may be skipped, unless the one-liner itself makes a doc claim wrong (e.g. renaming something a doc references by name).
 - Phase 4 (Review) still applies to code changes.
+- Phase 8 (Close the issue) still applies once pushed and stage-verified.
