@@ -9,12 +9,44 @@ os.environ.setdefault("ENVIRONMENT", "local")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "test-project")
 os.environ.setdefault("AUDIO_BUCKET", "test-bucket")
 
+import sys  # noqa: E402
+
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
+import core.storage.firestore_db as firestore_db  # noqa: E402
 from app.main import app  # noqa: E402
 from core.audio_backend.base import AudioBackend  # noqa: E402
 from core.models import Example, VerbEntry  # noqa: E402
+from tests.fake_firestore import FakeFirestore  # noqa: E402
+
+
+@pytest.fixture()
+def fake_db(monkeypatch):
+    """Opt-in in-memory Firestore fake (issue #8) -- request this explicitly
+    in a test's signature to get a FakeFirestore instance with get_db()
+    patched to return it.
+
+    Patches both core.storage.firestore_db.get_db (the deferred-import call
+    site used by e.g. session_tracker.py) and, by identity, every
+    already-imported module's own `get_db` name if it's the same function
+    object -- several modules (verb_repository.py, admin_feedback_service.py,
+    and others) do `from core.storage.firestore_db import get_db` at module
+    scope, so patching only the factory module misses them.
+
+    NOT autouse: roughly 150 existing tests implicitly rely on a real (but
+    doomed-to-fail against the test-only GOOGLE_CLOUD_PROJECT) Firestore call
+    silently producing empty/not-found results, rather than mocking Firestore
+    at all -- making this autouse broke all of them (see issue #8). New tests
+    should opt in via this fixture instead of adding another one-off fake.
+    """
+    fake = FakeFirestore()
+    real_get_db = firestore_db.get_db
+    monkeypatch.setattr(firestore_db, "get_db", lambda: fake)
+    for mod in list(sys.modules.values()):
+        if mod is not None and getattr(mod, "get_db", None) is real_get_db:
+            monkeypatch.setattr(mod, "get_db", lambda: fake)
+    return fake
 
 
 class _StubAudioBackend(AudioBackend):
