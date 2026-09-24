@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from core.admin_logging import log_missing_verb_search, resolve_signal_label
+from tests.conftest import patch_everywhere
 
 
 def test_empty_query_is_skipped(monkeypatch) -> None:
@@ -86,7 +87,8 @@ class _FakeDb:
 
 
 def _patch_label_settings(monkeypatch) -> None:
-    monkeypatch.setattr(
+    patch_everywhere(
+        monkeypatch,
         "core.settings.load_settings",
         lambda: SimpleNamespace(verb_signal_labels_collection="demand_signal_labels"),
     )

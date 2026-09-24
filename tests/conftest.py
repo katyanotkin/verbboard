@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import importlib
 import os
+import sys
 
 # Must be set before any import that calls load_settings()
 os.environ.setdefault("ADMIN_SECRET", "test-secret")
@@ -128,3 +130,51 @@ def seed_spanish_verb(fake) -> None:
             "lemma_translations": {"en": "to speak"},
         }
     )
+
+
+def resolve_dotted_target(dotted_path: str):
+    """Split "pkg.mod.name" into (module, attribute name, original object).
+
+    Raises AttributeError/ImportError-derived errors with a clear message if
+    the path does not resolve.
+    """
+    module_path, _, attribute_name = dotted_path.rpartition(".")
+    if not module_path:
+        raise ValueError(f"patch target {dotted_path!r} must be a dotted 'module.attribute' path")
+    module = importlib.import_module(module_path)
+    if not hasattr(module, attribute_name):
+        raise AttributeError(
+            f"patch target {dotted_path!r}: module {module_path!r} has no attribute {attribute_name!r}"
+        )
+    return module, attribute_name, getattr(module, attribute_name)
+
+
+def modules_holding_same_object(dotted_path: str) -> list[tuple[str, str]]:
+    """(module name, attribute name) of every loaded app.*/core.* module other
+    than the defining one that binds the very same object as `dotted_path`."""
+    module, attribute_name, original = resolve_dotted_target(dotted_path)
+    holders: list[tuple[str, str]] = []
+    for module_name, candidate in list(sys.modules.items()):
+        if candidate is None or candidate is module:
+            continue
+        if not (module_name.startswith("app.") or module_name.startswith("core.")):
+            continue
+        for name, value in list(vars(candidate).items()):
+            if value is original:
+                holders.append((module_name, name))
+    return holders
+
+
+def patch_everywhere(monkeypatch, dotted_path: str, replacement) -> None:
+    """Patch `dotted_path` in its defining module AND in every loaded app.*/core.*
+    module that holds the same object under any name (issue #58).
+
+    A plain monkeypatch of the defining module silently stops applying the
+    moment a consumer does a module-scope `from x import name`; this patches
+    every copy so the test is independent of the consumer's import style.
+    Raises if the path does not resolve.
+    """
+    module, attribute_name, original = resolve_dotted_target(dotted_path)
+    monkeypatch.setattr(module, attribute_name, replacement)
+    for holder_name, name in modules_holding_same_object(dotted_path):
+        monkeypatch.setattr(sys.modules[holder_name], name, replacement)

@@ -14,8 +14,11 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from core.settings import verb_candidates_collection_name, verbs_collection_name
 from core.verb_autogen import _write_promoted_verb
+from tests.conftest import patch_everywhere
 
 
 def _make_fake_db() -> MagicMock:
@@ -50,11 +53,10 @@ def _make_fake_db() -> MagicMock:
     return db
 
 
-def _call_write_promoted_verb(db: MagicMock) -> None:
-    with (
-        patch("core.verb_autogen.get_db", return_value=db),
-        patch("core.admin_logging.resolve_signal_label") as mock_resolve_signal_label,
-    ):
+def _call_write_promoted_verb(db: MagicMock, monkeypatch: pytest.MonkeyPatch) -> None:
+    mock_resolve_signal_label = MagicMock()
+    patch_everywhere(monkeypatch, "core.admin_logging.resolve_signal_label", mock_resolve_signal_label)
+    with patch("core.verb_autogen.get_db", return_value=db):
         _write_promoted_verb(
             language="en",
             verb_id="en_go",
@@ -70,10 +72,10 @@ def _call_write_promoted_verb(db: MagicMock) -> None:
     mock_resolve_signal_label.assert_called_once_with(language="en", query="go")
 
 
-def test_write_promoted_verb_commits_a_single_batch_with_both_docs() -> None:
+def test_write_promoted_verb_commits_a_single_batch_with_both_docs(monkeypatch: pytest.MonkeyPatch) -> None:
     db = _make_fake_db()
 
-    _call_write_promoted_verb(db)
+    _call_write_promoted_verb(db, monkeypatch)
 
     assert len(db.created_batches) == 1
     batch = db.created_batches[0]
@@ -82,10 +84,10 @@ def test_write_promoted_verb_commits_a_single_batch_with_both_docs() -> None:
     batch.commit.assert_called_once()
 
 
-def test_write_promoted_verb_writes_correctly_shaped_candidate_and_live_docs() -> None:
+def test_write_promoted_verb_writes_correctly_shaped_candidate_and_live_docs(monkeypatch: pytest.MonkeyPatch) -> None:
     db = _make_fake_db()
 
-    _call_write_promoted_verb(db)
+    _call_write_promoted_verb(db, monkeypatch)
 
     batch = db.created_batches[0]
     payload_by_collection = {
@@ -123,13 +125,11 @@ def test_write_promoted_verb_writes_correctly_shaped_candidate_and_live_docs() -
         assert "pronoun_forms" not in doc
 
 
-def test_write_promoted_verb_includes_pronoun_forms_when_present() -> None:
+def test_write_promoted_verb_includes_pronoun_forms_when_present(monkeypatch: pytest.MonkeyPatch) -> None:
     db = _make_fake_db()
 
-    with (
-        patch("core.verb_autogen.get_db", return_value=db),
-        patch("core.admin_logging.resolve_signal_label"),
-    ):
+    patch_everywhere(monkeypatch, "core.admin_logging.resolve_signal_label", MagicMock())
+    with patch("core.verb_autogen.get_db", return_value=db):
         _write_promoted_verb(
             language="en",
             verb_id="en_go",
@@ -149,7 +149,7 @@ def test_write_promoted_verb_includes_pronoun_forms_when_present() -> None:
         assert doc["pronoun_forms"] == {"1sg": "I"}
 
 
-def test_write_promoted_verb_does_not_commit_if_first_set_raises() -> None:
+def test_write_promoted_verb_does_not_commit_if_first_set_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     """If the batch construction/set step blows up before commit, no partial
     write should be flushed -- guards against a future refactor accidentally
     calling commit() outside the batch's own atomicity guarantee."""
@@ -158,10 +158,8 @@ def test_write_promoted_verb_does_not_commit_if_first_set_raises() -> None:
     batch.set.side_effect = RuntimeError("boom")
     db.batch.side_effect = lambda: batch
 
-    with (
-        patch("core.verb_autogen.get_db", return_value=db),
-        patch("core.admin_logging.resolve_signal_label"),
-    ):
+    patch_everywhere(monkeypatch, "core.admin_logging.resolve_signal_label", MagicMock())
+    with patch("core.verb_autogen.get_db", return_value=db):
         try:
             _write_promoted_verb(
                 language="en",

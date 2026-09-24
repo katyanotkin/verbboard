@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from core.audio_backend.base import AudioBackend
 from core.audio_service import build_hashed_audio_key
 from core.models import VerbEntry
+from tests.conftest import patch_everywhere
 
 # ── shared fixtures ──────────────────────────────────────────────────────────
 
@@ -87,7 +88,7 @@ def test_audio_miss_generates_and_returns_200(client: TestClient, monkeypatch, m
         called_with.append(kwargs)
 
     monkeypatch.setattr("app.routes.audio.ensure_audio", _capture_ensure)
-    monkeypatch.setattr("core.verb_loader.load_entry_by_id", lambda **kw: mock_verb)
+    patch_everywhere(monkeypatch, "core.verb_loader.load_entry_by_id", lambda **kw: mock_verb)
 
     form_key = build_hashed_audio_key("base", "go")
     resp = client.get(f"/audio/en/en_go/female/{form_key}.mp3")
@@ -107,7 +108,7 @@ def test_audio_miss_example_generates_on_demand(client: TestClient, monkeypatch,
         called_with.append(kwargs)
 
     monkeypatch.setattr("app.routes.audio.ensure_audio", _capture_ensure)
-    monkeypatch.setattr("core.verb_loader.load_entry_by_id", lambda **kw: mock_verb)
+    patch_everywhere(monkeypatch, "core.verb_loader.load_entry_by_id", lambda **kw: mock_verb)
 
     example_text = "I go to school every day."
     form_key = build_hashed_audio_key("example_1", example_text)
@@ -118,7 +119,7 @@ def test_audio_miss_example_generates_on_demand(client: TestClient, monkeypatch,
 
 
 def test_audio_miss_verb_not_found_returns_404(client: TestClient, monkeypatch) -> None:
-    monkeypatch.setattr("core.verb_loader.load_entry_by_id", lambda **kw: None)
+    patch_everywhere(monkeypatch, "core.verb_loader.load_entry_by_id", lambda **kw: None)
 
     form_key = build_hashed_audio_key("base", "go")
     resp = client.get(f"/audio/en/en_go/female/{form_key}.mp3")
@@ -131,7 +132,7 @@ def test_audio_miss_unknown_form_key_returns_404(client: TestClient, monkeypatch
         pass
 
     monkeypatch.setattr("app.routes.audio.ensure_audio", _noop)
-    monkeypatch.setattr("core.verb_loader.load_entry_by_id", lambda **kw: mock_verb)
+    patch_everywhere(monkeypatch, "core.verb_loader.load_entry_by_id", lambda **kw: mock_verb)
 
     resp = client.get("/audio/en/en_go/female/base_deadbeef00.mp3")
     assert resp.status_code == 404
@@ -159,7 +160,7 @@ def test_warm_generates_both_voices(monkeypatch) -> None:
     async def _capture(**kwargs):
         called_voices.append(kwargs["voice"])
 
-    monkeypatch.setattr("core.audio_service.ensure_audio", _capture)
+    patch_everywhere(monkeypatch, "core.audio_service.ensure_audio", _capture)
 
     _run_async(_warm_verb_audio(_StubBackend(), "en", _EN_VERB_DATA))
 
@@ -175,7 +176,7 @@ def test_warm_covers_all_forms_and_examples(monkeypatch) -> None:
     async def _capture(**kwargs):
         calls.append({"voice": kwargs["voice"], "text": kwargs["text"]})
 
-    monkeypatch.setattr("core.audio_service.ensure_audio", _capture)
+    patch_everywhere(monkeypatch, "core.audio_service.ensure_audio", _capture)
 
     _run_async(_warm_verb_audio(_StubBackend(), "en", _EN_VERB_DATA))
 
@@ -200,7 +201,7 @@ def test_warm_skips_no_audio_row_keys(monkeypatch) -> None:
     async def _capture(**kwargs):
         called_texts.append(kwargs["text"])
 
-    monkeypatch.setattr("core.audio_service.ensure_audio", _capture)
+    patch_everywhere(monkeypatch, "core.audio_service.ensure_audio", _capture)
 
     _run_async(_warm_verb_audio(_StubBackend(), "he", _HE_VERB_DATA))
 

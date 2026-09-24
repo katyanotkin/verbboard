@@ -26,6 +26,7 @@ from core.admin_auth import ADMIN_SESSION_COOKIE, create_admin_session_token
 from core.audio_backend.base import AudioBackend
 from core.audio_service import build_hashed_audio_key
 from core.models import Example, VerbEntry
+from tests.conftest import patch_everywhere
 
 # ---------------------------------------------------------------------------
 # Shared nikud constants for הלך homograph forms
@@ -346,7 +347,7 @@ def test_warm_legacy_uses_tts_text_for_form_key(monkeypatch) -> None:
     async def _capture(**kwargs):
         calls.append({"form_key": kwargs["form_key"], "text": kwargs["text"]})
 
-    monkeypatch.setattr("core.audio_service.ensure_audio", _capture)
+    patch_everywhere(monkeypatch, "core.audio_service.ensure_audio", _capture)
     _run_async(_warm_verb_audio(_StubBackend(), "he", _HE_VERB_DATA_LEGACY))
 
     keys_by_text = {c["text"]: c["form_key"] for c in calls}
@@ -363,7 +364,7 @@ def test_warm_option_a_uses_nikud_forms_for_form_key(monkeypatch) -> None:
     async def _capture(**kwargs):
         calls.append({"form_key": kwargs["form_key"], "text": kwargs["text"]})
 
-    monkeypatch.setattr("core.audio_service.ensure_audio", _capture)
+    patch_everywhere(monkeypatch, "core.audio_service.ensure_audio", _capture)
     _run_async(_warm_verb_audio(_StubBackend(), "he", _HE_VERB_DATA_NIKUD))
 
     keys_by_text = {c["text"]: c["form_key"] for c in calls}
@@ -381,7 +382,7 @@ def test_warm_homograph_forms_get_distinct_form_keys(monkeypatch) -> None:
         if kwargs["text"] in (_NIKUD_2MSG, _NIKUD_2FSG):
             form_keys.append(kwargs["form_key"])
 
-    monkeypatch.setattr("core.audio_service.ensure_audio", _capture)
+    patch_everywhere(monkeypatch, "core.audio_service.ensure_audio", _capture)
     _run_async(_warm_verb_audio(_StubBackend(), "he", _HE_VERB_DATA_NIKUD))
 
     assert len(form_keys) == 4, "both homograph forms × 2 voices"
@@ -401,7 +402,7 @@ def test_audio_route_resolves_nikud_key(client: TestClient, monkeypatch) -> None
         called_with.append(kwargs)
 
     monkeypatch.setattr("app.routes.audio.ensure_audio", _capture)
-    monkeypatch.setattr("core.verb_loader.load_entry_by_id", lambda **kw: _make_he_verb_nikud())
+    patch_everywhere(monkeypatch, "core.verb_loader.load_entry_by_id", lambda **kw: _make_he_verb_nikud())
 
     form_key = build_hashed_audio_key("past_2msg", _NIKUD_2MSG)
     resp = client.get(f"/audio/he/he_llkt/female/{form_key}.mp3")
@@ -419,7 +420,7 @@ def test_audio_route_plain_key_returns_404_for_nikud_verb(client: TestClient, mo
         pass
 
     monkeypatch.setattr("app.routes.audio.ensure_audio", _noop)
-    monkeypatch.setattr("core.verb_loader.load_entry_by_id", lambda **kw: _make_he_verb_nikud())
+    patch_everywhere(monkeypatch, "core.verb_loader.load_entry_by_id", lambda **kw: _make_he_verb_nikud())
 
     old_key = build_hashed_audio_key("past_2msg", _PLAIN_2MSG)
     resp = client.get(f"/audio/he/he_llkt/female/{old_key}.mp3")
