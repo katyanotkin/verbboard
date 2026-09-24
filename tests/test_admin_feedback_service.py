@@ -490,3 +490,63 @@ def test_get_device_mix_composes_all_summaries(monkeypatch, fake_db) -> None:
 
     assert result["practice"]["practice_users_total"] == 1
     assert result["practice"]["practice_by_language"] == {"es": 1}
+
+
+# ── engagement flags and search hits ─────────────────────────────────────────
+
+
+def test_read_sessions_summary_counts_engagement_flags(fake_db) -> None:
+    fake_db.seed(
+        "analytics_sessions",
+        {
+            "s1": {"date": _date_str(1), "home_viewed": True, "votd_clicked": True, "practice_started": True},
+            "s2": {"date": _date_str(1), "home_viewed": True, "practice_started": True, "practice_completed": True},
+            "s3": {"date": _date_str(1), "verb_viewed": True},
+        },
+    )
+
+    summary = admin_feedback_service._read_sessions_summary(days=60)
+
+    assert summary["engagement"] == {
+        "home_viewed": 2,
+        "votd_clicked": 1,
+        "practice_started": 2,
+        "practice_completed": 1,
+    }
+
+
+def test_read_search_hits_summary_splits_autogen_verbs(fake_db) -> None:
+    fake_db.seed(
+        "verb_candidates",
+        {
+            "ru_podderzhat": {"source": "autogen", "status": "promoted"},
+            "ru_bezhat": {"source": "autogen", "status": "promoted"},
+            "es_correr": {"source": None, "status": "promoted"},
+            "ru_rejected": {"source": "autogen", "status": "rejected_non_verb"},
+        },
+    )
+    fake_db.seed(
+        "verb_search_hits",
+        {
+            "ru_ru_podderzhat": {"verb_id": "ru_podderzhat", "hits": 4},
+            "es_es_correr": {"verb_id": "es_correr", "hits": 9},
+        },
+    )
+
+    summary = admin_feedback_service._read_search_hits_summary()
+
+    assert summary["autogen_verbs_total"] == 2
+    assert summary["autogen_verbs_searched_again"] == 1
+    assert summary["autogen_hits_total"] == 4
+    assert [row["verb_id"] for row in summary["top"]] == ["es_correr", "ru_podderzhat"]
+    assert summary["top"][1]["autogen"] is True
+    assert summary["top"][0]["autogen"] is False
+
+
+def test_read_search_hits_summary_empty(fake_db) -> None:
+    assert admin_feedback_service._read_search_hits_summary() == {
+        "autogen_verbs_total": 0,
+        "autogen_verbs_searched_again": 0,
+        "autogen_hits_total": 0,
+        "top": [],
+    }

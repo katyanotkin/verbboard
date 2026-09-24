@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from core.polls import ACTIVE_POLL_ID, POLL_OPTIONS, POLL_QUESTIONS
-from core.settings import load_settings
+from core.settings import load_settings, verb_candidates_collection_name
 from core.storage.firestore_db import get_db
 
 
@@ -156,6 +156,43 @@ def _excluded_uids() -> set[str]:
     return {doc.id for doc in docs}
 
 
+# Set-once boolean flags on analytics_sessions. home_viewed only exists on
+# sessions created on/after 2026-09-24, so votd_clicked / home_viewed is only
+# meaningful for that window.
+_ENGAGEMENT_FLAGS = ("home_viewed", "votd_clicked", "practice_started", "practice_completed")
+
+_TOP_SEARCH_HITS = 10
+
+
+def _read_search_hits_summary() -> dict[str, Any]:
+    """Searches that resolved to an existing verb (verb_search_hits), with the
+    verbs generated on the spot by autogen split out: promoted verb_candidates
+    docs with source == "autogen" share the live verb's doc id (autogen also
+    writes rejected/needs_review docs, which never became live verbs)."""
+    db = get_db()
+    autogen_docs = (
+        db.collection(verb_candidates_collection_name())
+        .where("source", "==", "autogen")
+        .where("status", "==", "promoted")
+        .stream()
+    )
+    autogen_ids = {doc.id for doc in autogen_docs}
+
+    rows: list[dict[str, Any]] = []
+    for doc in db.collection("verb_search_hits").stream():
+        data = doc.to_dict() or {}
+        verb_id = str(data.get("verb_id") or "")
+        rows.append({"verb_id": verb_id, "hits": int(data.get("hits") or 0), "autogen": verb_id in autogen_ids})
+
+    autogen_rows = [row for row in rows if row["autogen"]]
+    return {
+        "autogen_verbs_total": len(autogen_ids),
+        "autogen_verbs_searched_again": len(autogen_rows),
+        "autogen_hits_total": sum(row["hits"] for row in autogen_rows),
+        "top": sorted(rows, key=lambda row: row["hits"], reverse=True)[:_TOP_SEARCH_HITS],
+    }
+
+
 def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = None) -> dict[str, Any]:
     excluded_uids = excluded_uids or set()
     db = get_db()
@@ -168,6 +205,7 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
     total = 0
     logged_in = 0
     verb_viewed = 0
+    flag_counts: Counter[str] = Counter()
 
     for doc in docs:
         data = doc.to_dict() or {}
@@ -181,11 +219,15 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
             logged_in += 1
         if data.get("verb_viewed"):
             verb_viewed += 1
+        for flag in _ENGAGEMENT_FLAGS:
+            if data.get(flag):
+                flag_counts[flag] += 1
 
     return {
         "total_sessions": total,
         "logged_in_sessions": logged_in,
         "verb_viewed_sessions": verb_viewed,
+        "engagement": {flag: flag_counts[flag] for flag in _ENGAGEMENT_FLAGS},
         "by_device": dict(by_device),
         "by_language": dict(by_language),
         "by_ui_lang": dict(by_ui_lang),
@@ -263,6 +305,8 @@ def get_device_mix(*, days: int = 60) -> dict[str, Any]:
         "total_sessions": sessions["total_sessions"],
         "logged_in_sessions": sessions["logged_in_sessions"],
         "verb_viewed_sessions": sessions["verb_viewed_sessions"],
+        "engagement": sessions["engagement"],
+        "search_hits": _read_search_hits_summary(),
         "by_device": sessions["by_device"],
         "by_language": sessions["by_language"],
         "by_ui_lang": sessions["by_ui_lang"],

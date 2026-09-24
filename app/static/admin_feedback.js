@@ -205,6 +205,32 @@
       </div>
     ` : "";
 
+    const eng = deviceMix?.engagement || {};
+    const sh = deviceMix?.search_hits || {};
+    const votdRate = eng.home_viewed ? Math.round(((eng.votd_clicked || 0) / eng.home_viewed) * 100) : "—";
+    const topHits = (sh.top || []).map(row =>
+      statRow(escapeHtml(row.verb_id) + (row.autogen ? " (generated)" : ""), row.hits)
+    ).join("");
+    const engagementSection = `
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Engagement</div>
+        <table style="border-collapse:collapse;font-size:12px;">
+          ${statRow("Home viewed*", eng.home_viewed ?? "—")}
+          ${statRow("Verb of the Day clicked*", `${eng.votd_clicked ?? "—"} (${votdRate}%)`)}
+          ${statRow("Practice started**", eng.practice_started ?? "—")}
+          ${statRow("Practice completed**", eng.practice_completed ?? "—")}
+          ${statRow("Generated verbs", sh.autogen_verbs_total ?? "—")}
+          ${statRow("Generated, searched again", sh.autogen_verbs_searched_again ?? "—")}
+          ${statRow("Repeat searches (generated)", sh.autogen_hits_total ?? "—")}
+        </table>
+        <div style="font-size:11px;color:#6b7280;margin-top:4px;">* since 2026-09-24 &nbsp; ** since 2026-09-16 &nbsp; generated/search counts: all time</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Top searched verbs</div>
+        <table style="border-collapse:collapse;font-size:12px;">${topHits || statRow("none yet", "")}</table>
+      </div>
+    `;
+
     const sections = dims.map(({ label, data }) => `
       <div>
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">${label}</div>
@@ -224,6 +250,7 @@
           </div>
           ${sections}
           ${practiceSection}
+          ${engagementSection}
         </div>
       </div>
     `;
