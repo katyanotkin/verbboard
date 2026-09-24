@@ -33,9 +33,15 @@ def upsert_verb(
 
     existing = doc_ref.get()
 
+    # Copy so the caller's dict isn't mutated. An existing doc's created_at
+    # wins (re-importing a verb must not reset when it was first added); if the
+    # existing doc predates the field, keep the caller-supplied value rather
+    # than overwriting it with None.
+    payload = dict(payload)
     if existing.exists:
-        existing_data = existing.to_dict()
-        payload["created_at"] = existing_data.get("created_at")
+        original_created_at = (existing.to_dict() or {}).get("created_at")
+        if original_created_at is not None:
+            payload["created_at"] = original_created_at
 
     doc_ref.set(payload)
 
