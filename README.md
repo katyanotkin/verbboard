@@ -75,6 +75,7 @@ Visual indicators:
 ## Guided learning experience
 
 - Practice sessions of 3, 6, or 9 verbs; configurable audio listens per verb (3 / 5 / All)
+- Verbs you've seen but haven't marked as learned keep coming back: up to a third of each practice session is reserved for them, longest-waiting first, so a verb you're stuck on can't go many sessions without resurfacing
 - Audio listening required before advancing to the next verb
 - Skip & mark as learned — for verbs you already know
 - Complete a session to earn a badge

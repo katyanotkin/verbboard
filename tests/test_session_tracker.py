@@ -3,19 +3,22 @@
 Covers:
 - get_fingerprint_sid: deterministic SHA256(ip|ua|date)[:32]; stable across
   calls, varies by IP / UA / date; uses X-Forwarded-For when present
-- delete_sessions_for_uid: query-and-delete-by-uid, used by account deletion
-- _create_session: referrer captured on create, truncated at 500 chars, and
-  never touched by the AlreadyExists enrich path (set-once, like device_type)
-- _record_sign_in_tap: valid-branch allowlist, set-once-per-day behavior
-- _record_practice_started / _record_practice_completed (issue #48):
-  set-once-per-day writes, independent of each other
+- Everything below the fingerprint tests asserts on final Firestore state via
+  the shared `fake_db` fixture (issue #8), not on call counts:
+  - delete_sessions_for_uid: removes only the given uid's docs
+  - _create_session: referrer captured on create, truncated, never touched by
+    the AlreadyExists enrich path (set-once, like device_type); flags only
+    flip false -> true
+  - _enrich_lang / _attach_uid: merge semantics leave other fields alone
+  - _record_sign_in_tap / _record_practice_* / _record_votd_clicked:
+    validation and set-once-per-day behavior
 """
 
 from __future__ import annotations
 
 import asyncio
 import concurrent.futures
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from starlette.requests import Request
 
@@ -119,6 +122,17 @@ def test_fingerprint_falls_back_to_client_host() -> None:
     assert len(sid) == 32
 
 
+COLLECTION = session_tracker.COLLECTION
+DATE = "2026-09-16"
+DOC = f"{COLLECTION}/{DATE}_fp1"
+
+
+def _seed(fake_db, fingerprint: str = "fp1", **fields) -> str:
+    path = f"{COLLECTION}/{DATE}_{fingerprint}"
+    fake_db._docs[path] = dict(fields)
+    return path
+
+
 # ── delete_sessions_for_uid ─────────────────────────────────────────────────────
 #
 # Sessions are keyed by (ip, ua, date) fingerprint, not uid, so this is a
@@ -126,30 +140,21 @@ def test_fingerprint_falls_back_to_client_host() -> None:
 # account_deletion.delete_account()).
 
 
-def test_delete_sessions_for_uid_queries_by_uid_and_deletes_matches() -> None:
-    doc1 = MagicMock()
-    doc2 = MagicMock()
-    db = MagicMock()
-    db.collection.return_value.where.return_value.stream.return_value = iter([doc1, doc2])
+def test_delete_sessions_for_uid_removes_only_that_users_sessions(fake_db) -> None:
+    a1 = _seed(fake_db, "a1", uid="A")
+    a2 = _seed(fake_db, "a2", uid="A")
+    b1 = _seed(fake_db, "b1", uid="B")
+    anon = _seed(fake_db, "anon", uid=None)
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker.delete_sessions_for_uid("u1")
+    session_tracker.delete_sessions_for_uid("A")
 
-    db.collection.assert_called_with(session_tracker.COLLECTION)
-    db.collection.return_value.where.assert_called_with("uid", "==", "u1")
-    doc1.reference.delete.assert_called_once()
-    doc2.reference.delete.assert_called_once()
-
-
-def test_delete_sessions_for_uid_no_matches_is_a_noop() -> None:
-    db = MagicMock()
-    db.collection.return_value.where.return_value.stream.return_value = iter([])
-
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker.delete_sessions_for_uid("u1")  # must not raise
+    assert a1 not in fake_db._docs
+    assert a2 not in fake_db._docs
+    assert b1 in fake_db._docs
+    assert anon in fake_db._docs
 
 
-# ── _create_session: referrer capture ───────────────────────────────────────
+# ── _create_session ─────────────────────────────────────────────────────────
 #
 # referrer is set-once at session creation, mirroring device_type: it
 # identifies the traffic source of the *first* hit that opened the session,
@@ -157,126 +162,117 @@ def test_delete_sessions_for_uid_no_matches_is_a_noop() -> None:
 # overwrite it.
 
 
-def test_create_session_writes_referrer_on_create() -> None:
-    db = MagicMock()
+def test_create_session_writes_initial_document(fake_db) -> None:
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, "https://google.com/search")
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._create_session("fp1", "2026-09-16", "mobile", "es", "en", False, "https://google.com/search")
-
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.create.assert_called_once()
-    written = doc_ref.create.call_args.args[0]
-    assert written["referrer"] == "https://google.com/search"
+    doc = fake_db._docs[DOC]
+    assert doc["referrer"] == "https://google.com/search"
+    assert doc["device_type"] == "mobile"
+    assert doc["uid"] is None
+    assert doc["verb_viewed"] is False
 
 
-def test_create_session_truncates_long_referrer() -> None:
-    db = MagicMock()
+def test_create_session_truncates_long_referrer(fake_db) -> None:
     long_referrer = "https://example.com/?q=" + ("a" * 600)
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._create_session("fp1", "2026-09-16", "mobile", "es", "en", False, long_referrer)
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, long_referrer)
 
-    doc_ref = db.collection.return_value.document.return_value
-    written = doc_ref.create.call_args.args[0]
-    assert len(written["referrer"]) == session_tracker._MAX_REFERRER_LEN
-    assert written["referrer"] == long_referrer[: session_tracker._MAX_REFERRER_LEN]
+    assert fake_db._docs[DOC]["referrer"] == long_referrer[: session_tracker._MAX_REFERRER_LEN]
 
 
-def test_create_session_blank_referrer_stored_as_empty_string() -> None:
-    db = MagicMock()
+def test_create_session_blank_referrer_stored_as_empty_string(fake_db) -> None:
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, "")
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._create_session("fp1", "2026-09-16", "mobile", "es", "en", False, "")
-
-    doc_ref = db.collection.return_value.document.return_value
-    written = doc_ref.create.call_args.args[0]
-    assert written["referrer"] == ""
+    assert fake_db._docs[DOC]["referrer"] == ""
 
 
-def test_create_session_already_exists_does_not_write_referrer() -> None:
-    """Second call for the same fingerprint/day (AlreadyExists) enriches
-    language/ui_lang/verb_viewed only -- referrer must never appear in the
-    enrich payload, regardless of what referrer the second call carried, so
-    the originally captured value can never be clobbered."""
-    from google.api_core.exceptions import AlreadyExists
+def test_second_hit_enriches_but_never_overwrites_set_once_fields(fake_db) -> None:
+    """A second hit for the same fingerprint/day enriches language/ui_lang and
+    flips verb_viewed, but must not clobber referrer, device_type or uid."""
+    session_tracker._create_session("fp1", DATE, "mobile", "", "", False, "https://first.example.com")
+    fake_db._docs[DOC]["uid"] = "u1"
 
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.create.side_effect = AlreadyExists("already exists")
+    session_tracker._create_session("fp1", DATE, "desktop", "es", "en", True, "https://second.example.com")
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._create_session(
-            "fp1", "2026-09-16", "mobile", "es", "en", True, "https://second-referrer.example.com"
-        )
-
-    doc_ref.set.assert_called_once()
-    update_payload = doc_ref.set.call_args.args[0]
-    assert "referrer" not in update_payload
-    assert update_payload["language"] == "es"
-    assert update_payload["ui_lang"] == "en"
-    assert update_payload["verb_viewed"] is True
+    doc = fake_db._docs[DOC]
+    assert doc["referrer"] == "https://first.example.com"
+    assert doc["device_type"] == "mobile"
+    assert doc["uid"] == "u1"
+    assert (doc["language"], doc["ui_lang"], doc["verb_viewed"]) == ("es", "en", True)
 
 
-# ── _record_sign_in_tap / record_sign_in_tap ────────────────────────────────
+def test_verb_viewed_never_flips_back_to_false(fake_db) -> None:
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", True, "")
+
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, "")
+
+    assert fake_db._docs[DOC]["verb_viewed"] is True
 
 
-def test_record_sign_in_tap_writes_valid_branch() -> None:
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.get.return_value.exists = False
+def test_second_hit_with_blank_language_keeps_existing_language(fake_db) -> None:
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, "")
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._record_sign_in_tap("fp1", "2026-09-16", "mobile")
+    session_tracker._create_session("fp1", DATE, "mobile", "", "", False, "")
 
-    doc_ref.set.assert_called_once()
-    payload = doc_ref.set.call_args.args[0]
-    assert payload["sign_in_tapped_branch"] == "mobile"
-    assert "sign_in_tapped_at" in payload
+    assert (fake_db._docs[DOC]["language"], fake_db._docs[DOC]["ui_lang"]) == ("es", "en")
 
 
-def test_record_sign_in_tap_rejects_invalid_branch() -> None:
-    db = MagicMock()
-
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._record_sign_in_tap("fp1", "2026-09-16", "tablet")
-
-    db.collection.assert_not_called()
+def test_create_session_swallows_firestore_errors() -> None:
+    with patch("core.storage.firestore_db.get_db", side_effect=RuntimeError("boom")):
+        session_tracker._create_session("fp1", DATE, "mobile", "es", "en")  # must not raise
 
 
-def test_record_sign_in_tap_is_set_once_per_day() -> None:
+# ── _enrich_lang / _attach_uid: merge semantics ─────────────────────────────
+
+
+def test_enrich_lang_merges_without_dropping_other_fields(fake_db) -> None:
+    _seed(fake_db, uid="u1", referrer="r", verb_viewed=True)
+
+    session_tracker._enrich_lang("fp1", DATE, "he", "ru")
+
+    doc = fake_db._docs[DOC]
+    assert (doc["language"], doc["ui_lang"]) == ("he", "ru")
+    assert (doc["uid"], doc["referrer"], doc["verb_viewed"]) == ("u1", "r", True)
+
+
+def test_attach_uid_sets_uid_and_keeps_other_fields(fake_db) -> None:
+    _seed(fake_db, uid=None, language="es", referrer="r")
+
+    session_tracker._attach_uid("fp1", DATE, "u1")
+
+    doc = fake_db._docs[DOC]
+    assert doc["uid"] == "u1"
+    assert (doc["language"], doc["referrer"]) == ("es", "r")
+
+
+# ── _record_sign_in_tap ─────────────────────────────────────────────────────
+
+
+def test_record_sign_in_tap_writes_valid_branch(fake_db) -> None:
+    _seed(fake_db, device_type="mobile")
+
+    session_tracker._record_sign_in_tap("fp1", DATE, "mobile")
+
+    doc = fake_db._docs[DOC]
+    assert doc["sign_in_tapped_branch"] == "mobile"
+    assert "sign_in_tapped_at" in doc
+    assert doc["device_type"] == "mobile"
+
+
+def test_record_sign_in_tap_rejects_invalid_branch(fake_db) -> None:
+    session_tracker._record_sign_in_tap("fp1", DATE, "tablet")
+
+    assert fake_db._docs == {}
+
+
+def test_record_sign_in_tap_is_set_once_per_day(fake_db) -> None:
     """A second tap (e.g. after dismissing the account chooser) must not
     overwrite the branch recorded by the first tap of the day."""
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.get.return_value.exists = True
-    doc_ref.get.return_value.to_dict.return_value = {"sign_in_tapped_branch": "mobile"}
+    session_tracker._record_sign_in_tap("fp1", DATE, "mobile")
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._record_sign_in_tap("fp1", "2026-09-16", "desktop")
+    session_tracker._record_sign_in_tap("fp1", DATE, "desktop")
 
-    doc_ref.set.assert_not_called()
-
-
-def test_record_sign_in_tap_async_wrapper_schedules_and_awaits() -> None:
-    """record_sign_in_tap() is the fire-and-forget async wrapper the route
-    handler calls; confirm it actually runs the sync helper (not just
-    schedules a task that's never awaited by the test)."""
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.get.return_value.exists = False
-
-    async def _scenario() -> None:
-        await session_tracker.record_sign_in_tap("fp1", "2026-09-16", "standalone")
-        # Wait for the fire-and-forget task to actually finish running.
-        for task in list(session_tracker._pending):
-            await task
-
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        _run_async(_scenario())
-
-    doc_ref.set.assert_called_once()
-    payload = doc_ref.set.call_args.args[0]
-    assert payload["sign_in_tapped_branch"] == "standalone"
+    assert fake_db._docs[DOC]["sign_in_tapped_branch"] == "mobile"
 
 
 # ── _record_practice_started / _record_practice_completed (issue #48) ──────
@@ -287,93 +283,85 @@ def test_record_sign_in_tap_async_wrapper_schedules_and_awaits() -> None:
 # already restricts to _VALID_PRACTICE_EVENTS before calling these).
 
 
-def test_record_practice_started_writes_when_unset() -> None:
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.get.return_value.exists = False
+def test_record_practice_started_sets_flag_and_is_idempotent(fake_db) -> None:
+    _seed(fake_db, device_type="mobile")
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._record_practice_started("fp1", "2026-09-16")
+    session_tracker._record_practice_started("fp1", DATE)
+    session_tracker._record_practice_started("fp1", DATE)
 
-    doc_ref.set.assert_called_once()
-    payload = doc_ref.set.call_args.args[0]
-    assert payload == {"practice_started": True}
+    assert fake_db._docs[DOC] == {"device_type": "mobile", "practice_started": True}
 
 
-def test_record_practice_started_is_set_once_per_day() -> None:
-    """A second practice start the same session-day must not re-write the field."""
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.get.return_value.exists = True
-    doc_ref.get.return_value.to_dict.return_value = {"practice_started": True}
+def test_record_practice_completed_sets_flag_and_is_idempotent(fake_db) -> None:
+    _seed(fake_db, device_type="mobile")
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._record_practice_started("fp1", "2026-09-16")
+    session_tracker._record_practice_completed("fp1", DATE)
+    session_tracker._record_practice_completed("fp1", DATE)
 
-    doc_ref.set.assert_not_called()
+    assert fake_db._docs[DOC] == {"device_type": "mobile", "practice_completed": True}
 
 
-def test_record_practice_completed_writes_when_unset() -> None:
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.get.return_value.exists = False
-
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._record_practice_completed("fp1", "2026-09-16")
-
-    doc_ref.set.assert_called_once()
-    payload = doc_ref.set.call_args.args[0]
-    assert payload == {"practice_completed": True}
-
-
-def test_record_practice_completed_is_set_once_per_day() -> None:
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.get.return_value.exists = True
-    doc_ref.get.return_value.to_dict.return_value = {"practice_completed": True}
-
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._record_practice_completed("fp1", "2026-09-16")
-
-    doc_ref.set.assert_not_called()
-
-
-def test_record_practice_completed_does_not_require_practice_started() -> None:
+def test_record_practice_completed_does_not_require_practice_started(fake_db) -> None:
     """practice_completed is independently gated on its own field only --
     it must write fine even when practice_started was never set for this
     session-day (e.g. the started beacon was lost to a flaky network)."""
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.get.return_value.exists = True
-    doc_ref.get.return_value.to_dict.return_value = {}  # no practice_started, no practice_completed
+    _seed(fake_db)
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        session_tracker._record_practice_completed("fp1", "2026-09-16")
+    session_tracker._record_practice_completed("fp1", DATE)
 
-    doc_ref.set.assert_called_once()
-    payload = doc_ref.set.call_args.args[0]
-    assert payload == {"practice_completed": True}
+    assert fake_db._docs[DOC] == {"practice_completed": True}
 
 
-def test_record_practice_started_and_completed_async_wrappers_schedule_and_await() -> None:
-    """record_practice_started()/record_practice_completed() are the
-    fire-and-forget async wrappers the route handler calls; confirm each
-    actually runs its sync helper (not just schedules a task that's never
-    awaited by the test)."""
-    db = MagicMock()
-    doc_ref = db.collection.return_value.document.return_value
-    doc_ref.get.return_value.exists = False
+def test_practice_started_and_completed_do_not_affect_each_other(fake_db) -> None:
+    _seed(fake_db, practice_completed=True)
+
+    session_tracker._record_practice_started("fp1", DATE)
+
+    assert fake_db._docs[DOC] == {"practice_completed": True, "practice_started": True}
+
+
+# ── _record_votd_clicked ────────────────────────────────────────────────────
+
+
+def test_record_votd_clicked_sets_flag_on_existing_session(fake_db) -> None:
+    _seed(fake_db, home_viewed=True)
+
+    session_tracker._record_votd_clicked("fp1", DATE)
+
+    assert fake_db._docs[DOC] == {"home_viewed": True, "votd_clicked": True}
+
+
+def test_record_votd_clicked_without_session_creates_no_stub_doc(fake_db) -> None:
+    """A click landing after a UTC date rollover has no session doc; writing
+    would create a stub without device_type/language that skews usage stats."""
+    session_tracker._record_votd_clicked("fp1", DATE)
+
+    assert fake_db._docs == {}
+
+
+# ── async fire-and-forget wrappers ──────────────────────────────────────────
+
+
+def test_async_wrappers_actually_run_their_sync_helpers(fake_db) -> None:
+    """The route handlers call the async wrappers; confirm each schedules and
+    completes its sync helper (a task never awaited would leave no state)."""
+    _seed(fake_db, home_viewed=True)
 
     async def _scenario() -> None:
-        await session_tracker.record_practice_started("fp1", "2026-09-16")
-        await session_tracker.record_practice_completed("fp1", "2026-09-16")
+        await session_tracker.record_sign_in_tap("fp1", DATE, "standalone")
+        await session_tracker.record_practice_started("fp1", DATE)
+        await session_tracker.record_practice_completed("fp1", DATE)
+        await session_tracker.record_votd_clicked("fp1", DATE)
+        await session_tracker.enrich_lang("fp1", DATE, "es", "en")
+        await session_tracker.attach_uid("fp1", DATE, "u1")
         for task in list(session_tracker._pending):
             await task
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        _run_async(_scenario())
+    _run_async(_scenario())
 
-    assert doc_ref.set.call_count == 2
-    written_payloads = [call.args[0] for call in doc_ref.set.call_args_list]
-    assert {"practice_started": True} in written_payloads
-    assert {"practice_completed": True} in written_payloads
+    doc = fake_db._docs[DOC]
+    assert doc["sign_in_tapped_branch"] == "standalone"
+    assert doc["practice_started"] is True
+    assert doc["practice_completed"] is True
+    assert doc["votd_clicked"] is True
+    assert (doc["language"], doc["ui_lang"], doc["uid"]) == ("es", "en", "u1")

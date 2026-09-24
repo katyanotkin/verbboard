@@ -11,6 +11,8 @@ from urllib.parse import quote
 
 from fastapi.testclient import TestClient
 
+from tests.conftest import seed_spanish_verb
+
 # ── home ───────────────────────────────────────────────────────────────────
 
 
@@ -26,7 +28,8 @@ def test_home_has_verbs_browse_link(client: TestClient) -> None:
     assert "/verbs" in client.get("/?language=en").text
 
 
-def test_home_verb_of_the_day_links_to_learn(client: TestClient) -> None:
+def test_home_verb_of_the_day_links_to_learn(client: TestClient, fake_db) -> None:
+    seed_spanish_verb(fake_db)
     html = client.get("/?language=es&ui_language=en").text
     assert 'class="votd-hero"' in html
     match = re.search(r'href="(/learn\?language=es&verb_id=es_[^"&]+&ui_language=en)"', html)

@@ -1,6 +1,25 @@
 'use strict';
 
 (function () {
+  // Verbs seen but never marked known, longest-waiting first, capped at ~1/3
+  // of the session (same cap as SRS review; the two pools never overlap since
+  // SRS only covers known verbs). Ordering is by when a verb last occupied a
+  // repeat slot (missing = never = 0, sorts first), so every struggling verb
+  // is guaranteed to resurface in turn instead of relying on the random
+  // shuffle. Ties (e.g. all never-repeated) are broken randomly.
+  // Pure function: exported below for the Node unit test.
+  function pickRepeatCandidates(verbs, seenSet, knownSet, excludeIds, lastRepeatedMap, size) {
+    const cap = Math.max(1, Math.floor(size / 3));
+    const candidates = verbs.filter(function (v) {
+      return seenSet.has(v.id) && !knownSet.has(v.id) && !excludeIds.has(v.id);
+    });
+    const shuffled = candidates.sort(function () { return Math.random() - 0.5; });
+    shuffled.sort(function (a, b) {
+      return (lastRepeatedMap[a.id] || 0) - (lastRepeatedMap[b.id] || 0);
+    });
+    return shuffled.slice(0, cap);
+  }
+
   function createPracticeLoop(config) {
     const {
       lang,
@@ -45,6 +64,7 @@
     const practiceSizeKey = `practice_size:${lang}`;
     const practiceBadgesKey = `practice_badges:${lang}`;
     const practiceWrapupKey = `practice_wrapup:${lang}`;
+    const practiceLastRepeatedKey = `practice_last_repeated:${lang}`;
     const practiceMinPlaysKey = 'practice_min_plays';
     const LISTENS_MIN = 1;
     const LISTENS_MAX = 12;
@@ -224,6 +244,17 @@
       const cap = Math.max(1, Math.floor(size / 3));
       const shuffled = [...dueVerbs].sort(function () { return Math.random() - 0.5; });
       return shuffled.slice(0, cap);
+    }
+
+    // readJson can hand back null/an array if the stored value is corrupt;
+    // a bad map must degrade to "nothing repeated yet", not abort startPractice.
+    function readLastRepeated() {
+      const map = storage.readJson(practiceLastRepeatedKey, {});
+      return map && typeof map === 'object' && !Array.isArray(map) ? map : {};
+    }
+
+    function repeatCandidates(size, excludeIds) {
+      return pickRepeatCandidates(verbs, seen(), known(), excludeIds, readLastRepeated(), size);
     }
 
     function needsMixIn(size) {
@@ -442,10 +473,15 @@
       const reviewPicked = dueReviewCandidates(activePracticeSize);
       const reviewIds = new Set(reviewPicked.map(v => v.id));
 
-      const pool = buildPool(activePracticeSize).filter(v => !reviewIds.has(v.id));
+      // Seen-but-not-known verbs get a guaranteed slice too (issue #19), so a
+      // verb you're stuck on can't go sessions without coming back.
+      const repeatPicked = repeatCandidates(activePracticeSize, reviewIds);
+      const repeatIds = new Set(repeatPicked.map(v => v.id));
 
-      // Guard: nothing to practice (no new verbs and no due reviews).
-      if (pool.length === 0 && reviewPicked.length === 0) {
+      const pool = buildPool(activePracticeSize).filter(v => !reviewIds.has(v.id) && !repeatIds.has(v.id));
+
+      // Guard: nothing to practice (no new verbs, no repeats, no due reviews).
+      if (pool.length === 0 && reviewPicked.length === 0 && repeatPicked.length === 0) {
         return;
       }
 
@@ -455,10 +491,17 @@
         return Math.random() - 0.5;
       });
 
-      const remainingSlots = Math.max(0, activePracticeSize - reviewPicked.length);
+      const remainingSlots = Math.max(0, activePracticeSize - reviewPicked.length - repeatPicked.length);
       const newPicked = shuffled.slice(0, remainingSlots);
 
-      const picked = [...reviewPicked, ...newPicked].sort(function () {
+      if (repeatPicked.length > 0) {
+        const lastRepeated = readLastRepeated();
+        const now = Date.now();
+        repeatPicked.forEach(function (verb) { lastRepeated[verb.id] = now; });
+        storage.writeJson(practiceLastRepeatedKey, lastRepeated);
+      }
+
+      const picked = [...reviewPicked, ...repeatPicked, ...newPicked].sort(function () {
         return Math.random() - 0.5;
       });
 
@@ -685,5 +728,6 @@
 
   window.VerbBoardPracticeLoop = {
     createPracticeLoop,
+    pickRepeatCandidates,
   };
 })();

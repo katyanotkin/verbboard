@@ -9,44 +9,55 @@ os.environ.setdefault("ENVIRONMENT", "local")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "test-project")
 os.environ.setdefault("AUDIO_BUCKET", "test-bucket")
 
-import sys  # noqa: E402
-
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 import core.storage.firestore_db as firestore_db  # noqa: E402
+import core.verb_loader as verb_loader  # noqa: E402
 from app.main import app  # noqa: E402
 from core.audio_backend.base import AudioBackend  # noqa: E402
 from core.models import Example, VerbEntry  # noqa: E402
 from tests.fake_firestore import FakeFirestore  # noqa: E402
 
 
-@pytest.fixture()
-def fake_db(monkeypatch):
-    """Opt-in in-memory Firestore fake (issue #8) -- request this explicitly
-    in a test's signature to get a FakeFirestore instance with get_db()
-    patched to return it.
+@pytest.fixture(autouse=True)
+def _no_real_firestore(request, monkeypatch):
+    """Guard: no unit test may reach the real Firestore project (issue #8).
 
-    Patches both core.storage.firestore_db.get_db (the deferred-import call
-    site used by e.g. session_tracker.py) and, by identity, every
-    already-imported module's own `get_db` name if it's the same function
-    object -- several modules (verb_repository.py, admin_feedback_service.py,
-    and others) do `from core.storage.firestore_db import get_db` at module
-    scope, so patching only the factory module misses them.
+    .env points GOOGLE_CLOUD_PROJECT at the live project and valid ADC
+    credentials exist on dev machines, so a test that forgot to mock
+    Firestore used to read/write live data (search tests once incremented
+    real verb_search_hits counters), with every writer's `except Exception`
+    hiding it.
 
-    NOT autouse: roughly 150 existing tests implicitly rely on a real (but
-    doomed-to-fail against the test-only GOOGLE_CLOUD_PROJECT) Firestore call
-    silently producing empty/not-found results, rather than mocking Firestore
-    at all -- making this autouse broke all of them (see issue #8). New tests
-    should opt in via this fixture instead of adding another one-off fake.
+    core.storage.firestore_db.get_db() lazily builds a singleton client in
+    the module global `_db`. Pre-seeding that global with an in-memory
+    FakeFirestore covers every import style (deferred or module-level
+    `from ... import get_db`, present or future) with no identity walk, and
+    unlike raising, lets code that expects "empty / not found" keep working.
+    Tests that need to inspect state request `fake_db`, which returns this
+    same instance. Tests that patch get_db themselves still win.
+
+    tests/e2e runs a real in-process server against the live project on
+    purpose, so it is exempt; tests/integration talks HTTP only.
     """
     fake = FakeFirestore()
-    real_get_db = firestore_db.get_db
-    monkeypatch.setattr(firestore_db, "get_db", lambda: fake)
-    for mod in list(sys.modules.values()):
-        if mod is not None and getattr(mod, "get_db", None) is real_get_db:
-            monkeypatch.setattr(mod, "get_db", lambda: fake)
-    return fake
+    request.node._vb_fake_db = fake
+    if "/tests/e2e/" in str(request.node.fspath).replace("\\", "/"):
+        return
+    monkeypatch.setattr(firestore_db, "_db", fake)
+    # The process-wide verb list cache would otherwise carry one test's
+    # (fake) catalog into the next.
+    monkeypatch.setattr(verb_loader, "_ENTRIES_CACHE", {})
+
+
+@pytest.fixture()
+def fake_db(request, _no_real_firestore):
+    """The per-test in-memory Firestore fake (issue #8) that the autouse
+    `_no_real_firestore` guard already installed as the process client.
+    Request it to seed or inspect state.
+    """
+    return request.node._vb_fake_db
 
 
 @pytest.fixture(autouse=True)
@@ -102,3 +113,18 @@ def mock_verb() -> VerbEntry:
 async def noop_ensure_audio(**kwargs):  # type: ignore[return]
     """Async no-op replacement for ensure_audio to avoid real TTS/GCS calls."""
     return None
+
+
+def seed_spanish_verb(fake) -> None:
+    """Put one minimal Spanish verb into a FakeFirestore `verbs` collection."""
+    fake.collection("verbs").document("es_hablar").set(
+        {
+            "language": "es",
+            "verb_id": "es_hablar",
+            "lemma": "hablar",
+            "rank": 1,
+            "forms": {"infinitive": "hablar"},
+            "examples": [{"dst": "Yo hablo con ella."}],
+            "lemma_translations": {"en": "to speak"},
+        }
+    )

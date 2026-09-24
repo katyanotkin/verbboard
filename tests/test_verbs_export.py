@@ -8,18 +8,21 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from tests.conftest import seed_spanish_verb
 
-def test_api_verbs_omits_translation_by_default(client: TestClient) -> None:
+
+def test_api_verbs_omits_translation_by_default(client: TestClient, fake_db) -> None:
+    seed_spanish_verb(fake_db)
     data = client.get("/api/verbs?language=es&offset=0&limit=5").json()
     assert data["verbs"]
     assert all("translation" not in v for v in data["verbs"])
 
 
-def test_api_verbs_includes_translation_when_requested(client: TestClient) -> None:
+def test_api_verbs_includes_translation_when_requested(client: TestClient, fake_db) -> None:
+    seed_spanish_verb(fake_db)
     data = client.get("/api/verbs?language=es&offset=0&limit=5&include_translations=1&ui_language=en").json()
     assert data["verbs"]
     assert all("translation" in v for v in data["verbs"])
-    # At least one known Spanish verb should have a non-empty English translation.
     assert any(v["translation"] for v in data["verbs"])
 
 
