@@ -49,6 +49,17 @@ def fake_db(monkeypatch):
     return fake
 
 
+@pytest.fixture(autouse=True)
+def _no_search_hit_writes(monkeypatch):
+    """Keep search-route tests from incrementing real verb_search_hits counters.
+
+    Many tests hit /search_verb for a real verb (e.g. "go") without mocking
+    Firestore; the hit recorder would otherwise write to whatever project
+    .env points at. Tests that assert on recording re-patch this name.
+    """
+    monkeypatch.setattr("app.routes.home.record_search_hit", lambda **kwargs: None)
+
+
 class _StubAudioBackend(AudioBackend):
     def exists(self, key: str) -> bool:
         return False
