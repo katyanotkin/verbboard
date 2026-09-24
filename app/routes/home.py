@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 
 from core.admin_auth import get_session_uid
 from core.admin_logging import log_missing_verb_search
+from core.analytics.search_hits import record_search_hit
 from core.editions import active_study_plugins, resolve_study_language, study_language_label
 from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
@@ -166,6 +167,7 @@ async def search_verb_by_lang(
 
         if doc:
             matched_verb_id = doc.get("verb_id")
+            record_search_hit(language=language, verb_id=matched_verb_id, source="search_by_lang")
             _rt_suffix = f"&return_to={quote(return_to, safe='/')}" if return_to else ""
             return RedirectResponse(
                 url=(
@@ -264,12 +266,14 @@ async def search_verb(
 
     if doc:
         matched_verb_id = doc.get("verb_id")
+        record_search_hit(language=language, verb_id=matched_verb_id, source="search")
         return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}{_rt_suffix}")
 
     entries = _load_entries(language)
     matched_entry = find_best_entry(entries, query)
 
     if matched_entry:
+        record_search_hit(language=language, verb_id=matched_entry.id, source="search")
         return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_entry.id}{_ui_suffix}{_rt_suffix}")
 
     log_missing_verb_search(

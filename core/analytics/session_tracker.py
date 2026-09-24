@@ -47,6 +47,7 @@ def _create_session(
     ui_lang: str,
     verb_viewed: bool = False,
     referrer: str = "",
+    home_viewed: bool = False,
 ) -> None:
     from google.api_core.exceptions import AlreadyExists
 
@@ -66,6 +67,7 @@ def _create_session(
                 "ui_lang": clean_ui_lang,
                 "uid": None,
                 "verb_viewed": verb_viewed,
+                "home_viewed": home_viewed,
                 "referrer": clean_referrer,
                 "created_at": datetime.now(UTC),
             }
@@ -73,7 +75,7 @@ def _create_session(
     except AlreadyExists:
         # Session already exists for this day. Enrich language/ui_lang if the
         # session was created on a paramless first hit and now we have values;
-        # verb_viewed only ever flips false -> true, never back. referrer is
+        # verb_viewed and home_viewed only ever flip false -> true, never back. referrer is
         # only meaningful for the very first hit that started the session (it
         # identifies the traffic source), so it is deliberately not re-set here
         # -- same set-once-on-create treatment as device_type.
@@ -84,6 +86,8 @@ def _create_session(
             update["ui_lang"] = clean_ui_lang
         if verb_viewed:
             update["verb_viewed"] = True
+        if home_viewed:
+            update["home_viewed"] = True
         if update:
             try:
                 get_db().collection(COLLECTION).document(doc_id).set(update, merge=True)
@@ -101,9 +105,12 @@ async def start_session(
     ui_lang: str,
     verb_viewed: bool = False,
     referrer: str = "",
+    home_viewed: bool = False,
 ) -> None:
     task = asyncio.create_task(
-        asyncio.to_thread(_create_session, fingerprint, date, device_type, language, ui_lang, verb_viewed, referrer)
+        asyncio.to_thread(
+            _create_session, fingerprint, date, device_type, language, ui_lang, verb_viewed, referrer, home_viewed
+        )
     )
     _pending.add(task)
     task.add_done_callback(_pending.discard)
@@ -239,6 +246,34 @@ def _record_practice_completed(fingerprint: str, date: str) -> None:
 
 async def record_practice_completed(fingerprint: str, date: str) -> None:
     task = asyncio.create_task(asyncio.to_thread(_record_practice_completed, fingerprint, date))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
+def _record_votd_clicked(fingerprint: str, date: str) -> None:
+    """Record that the Verb of the Day hero on the home page was clicked this
+    session-day (issue #33 follow-up: the hero was the dominant above-the-fold
+    element but nothing measured whether anyone used it). Set-once like
+    practice_started. Pair with `home_viewed` for a click-through rate.
+    """
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        # No session doc means the click can't be paired with a home view (e.g.
+        # it landed after a UTC date rollover); writing would create a stub
+        # doc with no device_type/language that skews get_device_mix().
+        if not snapshot.exists or snapshot.to_dict().get("votd_clicked"):
+            return
+        doc_ref.set({"votd_clicked": True}, merge=True)
+    except Exception:
+        logger.exception("Failed to record VOTD click")
+
+
+async def record_votd_clicked(fingerprint: str, date: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_votd_clicked, fingerprint, date))
     _pending.add(task)
     task.add_done_callback(_pending.discard)
 

@@ -14,6 +14,7 @@ from core.analytics.session_tracker import (
     record_practice_completed,
     record_practice_started,
     record_sign_in_tap,
+    record_votd_clicked,
 )
 from core.auth.firebase_auth import get_optional_auth_user
 
@@ -92,6 +93,17 @@ async def record_practice_event(request: Request) -> JSONResponse:
         await record_practice_started(fingerprint, date)
     else:
         await record_practice_completed(fingerprint, date)
+    return JSONResponse({"ok": True})
+
+
+@router.post("/api/analytics/votd_clicked")
+async def record_votd_click(request: Request) -> JSONResponse:
+    """Diagnostic-only: the visitor clicked the Verb of the Day hero on the home
+    page. No auth and no body -- same unauthenticated, fail-open shape as
+    /practice_event; the click is attributed to the day's fingerprint session."""
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
+    fingerprint = get_fingerprint_sid(request, date)
+    await record_votd_clicked(fingerprint, date)
     return JSONResponse({"ok": True})
 
 

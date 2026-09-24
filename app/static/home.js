@@ -28,6 +28,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   })();
 
+  // Fire-and-forget Verb of the Day click beacon. keepalive: the click
+  // navigates away immediately, and a plain in-flight fetch can be cancelled
+  // by the unload. Must never block or fail the navigation itself.
+  const votdHero = document.querySelector(".votd-hero");
+  if (votdHero) {
+    votdHero.addEventListener("click", function () {
+      try {
+        fetch("/api/analytics/votd_clicked", { method: "POST", keepalive: true }).catch(function () {});
+      } catch (_) {}
+    });
+  }
+
   const searchInput = document.getElementById("search-input");
   const searchButton = document.getElementById("search-btn");
   const suggestionsBox = document.getElementById("search-suggestions");
