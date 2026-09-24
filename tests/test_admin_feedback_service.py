@@ -550,3 +550,23 @@ def test_read_search_hits_summary_empty(fake_db) -> None:
         "autogen_hits_total": 0,
         "top": [],
     }
+
+
+def test_read_sessions_summary_counts_bots_separately(fake_db) -> None:
+    fake_db.seed(
+        "analytics_sessions",
+        {
+            "s1": {"date": _date_str(1), "device_type": "bot", "language": "es", "verb_viewed": True},
+            "s2": {"date": _date_str(1), "device_type": "bot", "home_viewed": True},
+            "s3": {"date": _date_str(1), "device_type": "mobile", "language": "ru", "home_viewed": True},
+        },
+    )
+
+    summary = admin_feedback_service._read_sessions_summary(days=60)
+
+    assert summary["bot_sessions"] == 2
+    assert summary["total_sessions"] == 1
+    assert summary["by_device"] == {"mobile": 1}
+    assert summary["by_language"] == {"ru": 1}
+    assert summary["verb_viewed_sessions"] == 0
+    assert summary["engagement"]["home_viewed"] == 1

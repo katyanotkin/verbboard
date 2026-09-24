@@ -243,6 +243,9 @@
         <div style="font-weight:700;margin-bottom:10px;">
           Usage summary · last ${escapeHtml(String(deviceMix.days || 60))} days · ${escapeHtml(String(totalSessions))} sessions
         </div>
+        <div style="font-size:11px;color:#6b7280;margin:-6px 0 10px;">
+          ${escapeHtml(String(deviceMix.bot_sessions ?? 0))} bot sessions (self-identified crawlers/scanners) counted separately, not included below; classified from 2026-09-24 on, earlier sessions are not split out
+        </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,auto));gap:16px 24px;align-items:start;">
           <div>
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Users</div>

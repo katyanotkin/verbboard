@@ -203,6 +203,7 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
     by_language: Counter[str] = Counter()
     by_ui_lang: Counter[str] = Counter()
     total = 0
+    bot_sessions = 0
     logged_in = 0
     verb_viewed = 0
     flag_counts: Counter[str] = Counter()
@@ -211,7 +212,13 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
         data = doc.to_dict() or {}
         if data.get("uid") in excluded_uids:
             continue
-        by_device[str(data.get("device_type") or "unknown").lower()] += 1
+        device_type = str(data.get("device_type") or "unknown").lower()
+        if device_type == "bot":
+            # Self-identified crawlers/scanners: counted apart, kept out of
+            # every other figure. Sessions before 2026-09-24 are unclassified.
+            bot_sessions += 1
+            continue
+        by_device[device_type] += 1
         by_language[str(data.get("language") or "none")] += 1
         by_ui_lang[str(data.get("ui_lang") or "none")] += 1
         total += 1
@@ -225,6 +232,7 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
 
     return {
         "total_sessions": total,
+        "bot_sessions": bot_sessions,
         "logged_in_sessions": logged_in,
         "verb_viewed_sessions": verb_viewed,
         "engagement": {flag: flag_counts[flag] for flag in _ENGAGEMENT_FLAGS},
@@ -303,6 +311,7 @@ def get_device_mix(*, days: int = 60) -> dict[str, Any]:
     return {
         "days": days,
         "total_sessions": sessions["total_sessions"],
+        "bot_sessions": sessions["bot_sessions"],
         "logged_in_sessions": sessions["logged_in_sessions"],
         "verb_viewed_sessions": sessions["verb_viewed_sessions"],
         "engagement": sessions["engagement"],
