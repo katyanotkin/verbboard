@@ -35,10 +35,6 @@
           <span class="ui-lang-current">{{ lang | upper }}</span>
           <svg class="ui-lang-chevron" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <div class="ui-lang-hint">
-          <span>{{ ui['home.ui_lang_label'] }}</span>
-          <button class="ui-lang-hint-close" id="ui-lang-hint-close" aria-label="Dismiss">×</button>
-        </div>
         <div class="ui-lang-dropdown" id="ui-lang-dropdown" role="menu" hidden>
           {% for code in ui_lang_codes %}
           <a class="ui-lang-option{% if code == lang %} active{% endif %}"
@@ -55,6 +51,10 @@
         </div>
       </div>
       </div><!-- /page-title-row -->
+      <div class="ui-lang-hint">
+        <span>{{ ui['home.ui_lang_label'] }}</span>
+        <button class="ui-lang-hint-close" id="ui-lang-hint-close" aria-label="Dismiss">×</button>
+      </div>
       <p class="page-tagline">Every language runs on verbs.</p>
     </div><!-- /page-header -->
 

@@ -469,11 +469,9 @@ input[type="text"]:focus {
 
 .ui-lang-hint {
   display: none;
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  margin-top: 8px;
   min-width: 160px;
-  max-width: 220px;
+  max-width: 280px;
   padding: 8px 12px;
   background: #eff6ff;
   border: 1px solid #93c5fd;
@@ -482,7 +480,6 @@ input[type="text"]:focus {
   font-weight: 500;
   color: var(--color-navy);
   line-height: 1.4;
-  z-index: 199;
   align-items: flex-start;
   gap: 8px;
 }
@@ -504,30 +501,7 @@ input[type="text"]:focus {
   opacity: 1;
 }
 
-.ui-lang-hint::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  right: 16px;
-  width: 8px;
-  height: 8px;
-  background: #eff6ff;
-  border-top: 1px solid #93c5fd;
-  border-left: 1px solid #93c5fd;
-  transform: rotate(45deg);
-}
-
-[dir="rtl"] .ui-lang-hint {
-  right: auto;
-  left: 0;
-}
-
-[dir="rtl"] .ui-lang-hint::before {
-  right: auto;
-  left: 16px;
-}
-
-.ui-lang-trigger--highlight + .ui-lang-hint {
+.page-header:has(.ui-lang-trigger--highlight) .ui-lang-hint {
   display: flex;
 }
 
