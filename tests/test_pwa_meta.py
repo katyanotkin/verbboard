@@ -77,3 +77,12 @@ def test_manifest_has_scope_root() -> None:
 
     manifest = json.loads(pathlib.Path("app/static/manifest.json").read_text())
     assert manifest.get("scope") == "/"
+
+
+def test_manifest_json_alias_serves_the_static_manifest(client: TestClient) -> None:
+    """/manifest.json used to 404; it must serve the same document as the
+    /static/manifest.json the pages link to."""
+    response = client.get("/manifest.json")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/manifest+json")
+    assert response.json() == client.get("/static/manifest.json").json()
