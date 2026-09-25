@@ -62,10 +62,11 @@
     return /Mobi|Android|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
   }
 
-  // Opt-in, default-OFF signInWithRedirect path for the mobile browser branch
-  // (issue #55). Enabled per device via localStorage `vb_signin_redirect`=1,
-  // which is set by visiting any page with ?signin=redirect and cleared with
-  // ?signin=popup. Absent flag => the legacy /auth/signin two-tap flow.
+  // signInWithRedirect path for the mobile browser branch (issue #55): one tap
+  // instead of the legacy /auth/signin two-tap flow. Per-device override in
+  // localStorage `vb_signin_redirect`: ?signin=redirect sets '1' (force on),
+  // ?signin=popup sets '0' (force off, the legacy flow), ?signin=default removes
+  // it. With no override the platform default applies (see useRedirectSignIn).
   var REDIRECT_FLAG_KEY = 'vb_signin_redirect';
 
   function syncRedirectFlagFromUrl() {
@@ -74,17 +75,30 @@
       if (mode === 'redirect') {
         localStorage.setItem(REDIRECT_FLAG_KEY, '1');
       } else if (mode === 'popup') {
+        localStorage.setItem(REDIRECT_FLAG_KEY, '0');
+      } else if (mode === 'default') {
         localStorage.removeItem(REDIRECT_FLAG_KEY);
       }
     } catch (_) {}
   }
 
+  // Android browsers (not embedded WebViews, which carry "; wv)" in the UA):
+  // the redirect flow is verified working on a real Android device.
+  function isAndroidBrowser() {
+    var ua = navigator.userAgent;
+    return /Android/i.test(ua) && !/; wv\)/.test(ua);
+  }
+
+  // '1' forces the redirect flow on, '0' forces it off (the escape hatch);
+  // unset means the platform default: ON for Android browsers, OFF everywhere
+  // else (iOS Safari is not yet verified on a real device).
   function useRedirectSignIn() {
     try {
-      return localStorage.getItem(REDIRECT_FLAG_KEY) === '1';
-    } catch (_) {
-      return false;
-    }
+      var stored = localStorage.getItem(REDIRECT_FLAG_KEY);
+      if (stored === '1') return true;
+      if (stored === '0') return false;
+    } catch (_) {}
+    return isAndroidBrowser();
   }
 
   // Fire-and-forget diagnostic ping for issue #28 (is sign-in friction
