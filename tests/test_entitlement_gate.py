@@ -418,3 +418,21 @@ def test_plus_notice_page_clears_stored_plus_language(client):
 def test_free_language_with_stale_plus_required_keeps_normal_home_link(client):
     html = client.get("/verbs?language=es&plus_required=1&ui_language=en").text
     assert 'href="/?language=es&amp;ui_language=en"' in html
+
+
+def test_set_language_and_empty_search_skip_home_for_plus_language(client: TestClient) -> None:
+    """Home would only redirect these to the /verbs notice, so go there directly."""
+    expected = "/verbs?language=fr&plus_required=1&ui_language=en"
+    for url in (
+        "/set_language?language=fr&ui_language=en",
+        "/search_verb?language=fr&q=&ui_language=en",
+        "/search_verb_by_lang?language=fr&q=&ui_language=en",
+    ):
+        resp = client.get(url, follow_redirects=False)
+        assert resp.headers["location"] == expected, url
+
+
+def test_set_language_and_empty_search_still_go_home_for_free_language(client: TestClient) -> None:
+    for url in ("/set_language?language=es&ui_language=en", "/search_verb?language=es&q=&ui_language=en"):
+        resp = client.get(url, follow_redirects=False)
+        assert resp.headers["location"] == "/?language=es&ui_language=en", url

@@ -107,12 +107,22 @@ def _load_entries(language: str) -> list[_HomeVerb]:
     return [_doc_to_home_verb(d) for d in docs]
 
 
-@router.get("/set_language", response_model=None)
-def set_language(language: str, ui_language: str = ""):
+def _home_redirect(request: Request, language: str, ui_language: str = "") -> RedirectResponse:
+    """Redirect to the home page for `language`, or straight to the /verbs Plus
+    notice when home would only bounce the visitor there (saves a hop, and keeps
+    Back from looping through home)."""
+    if not can_study(language, get_session_uid(request)):
+        ui_lang = ui_language or resolve_ui_language(request)
+        return RedirectResponse(url=f"/verbs?language={language}&plus_required=1&ui_language={ui_lang}")
     url = f"/?language={language}"
     if ui_language:
         url += f"&ui_language={ui_language}"
     return RedirectResponse(url=url)
+
+
+@router.get("/set_language", response_model=None)
+def set_language(request: Request, language: str, ui_language: str = ""):
+    return _home_redirect(request, language, ui_language)
 
 
 @router.get("/search_verb_by_lang", response_model=None)
@@ -127,7 +137,7 @@ async def search_verb_by_lang(
     query = (q or "").strip()
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
-        return RedirectResponse(url=f"/?language={language}{_ui_suffix}")
+        return _home_redirect(request, language, ui_language)
 
     session_uid = get_session_uid(request)
     if not can_study(language, session_uid):
@@ -243,7 +253,7 @@ async def search_verb(
     query = (q or "").strip()
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
-        return RedirectResponse(url=f"/?language={language}{_ui_suffix}")
+        return _home_redirect(request, language, ui_language)
 
     session_uid = get_session_uid(request)
     if not can_study(language, session_uid):
