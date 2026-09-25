@@ -142,14 +142,16 @@
           ? ' is-seen'
           : '';
 
-      const uiLang = window.VB_UI_LANG || '';
-      const uiParam = uiLang ? ('&ui_language=' + encodeURIComponent(uiLang)) : '';
-      const returnTo = encodeURIComponent('/verbs?language=' + lang + uiParam);
+      const nav = window.VerbBoardNav;
+      if (!nav) {
+        throw new Error('nav_urls.js must be loaded before verbs_filters.js');
+      }
+      const href = nav.learnUrl(lang, verb.id, { returnTo: nav.verbsUrl(lang) });
 
       return `
         <a
           class="vb-item${className}"
-          href="/learn?language=${encodeURIComponent(lang)}&verb_id=${encodeURIComponent(verb.id)}&return_to=${returnTo}${uiParam}"
+          href="${href}"
         >
           <span class="vb-lemma">${esc(verb.lemma)}</span>${badge}
         </a>

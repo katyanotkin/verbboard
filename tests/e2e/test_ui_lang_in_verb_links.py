@@ -13,14 +13,11 @@ All tests skip gracefully when Firestore returns no verb data (CI without creden
 
 from __future__ import annotations
 
-from urllib.parse import parse_qs, unquote, urlparse
-
 import pytest
 
 pytestmark = pytest.mark.e2e
 
 _VERBS_RU_UI = "/verbs?language=en&ui_language=ru"
-_VERBS_HE_UI = "/verbs?language=en&ui_language=he"
 
 
 def _wait_for_verb_items(page, timeout: int = 5_000):
@@ -38,8 +35,8 @@ def _wait_for_verb_items(page, timeout: int = 5_000):
 def test_js_verb_links_carry_ui_language(page, live_server_url):
     """After JS renders, each verb list item <a> href must include ui_language=ru.
 
-    verbs_filters.js reads window.VB_UI_LANG and appends &ui_language=… to every
-    learn href. This guards against VB_UI_LANG being dropped from the built URL.
+    Wiring smoke test only: URL construction itself is unit-tested in
+    tests/test_nav_urls.py; this confirms nav_urls.js is loaded and used.
     """
     page.goto(f"{live_server_url}{_VERBS_RU_UI}")
     page.wait_for_load_state("networkidle")
@@ -51,48 +48,11 @@ def test_js_verb_links_carry_ui_language(page, live_server_url):
     first_href = page.locator("#vb-list a.vb-item").first.get_attribute("href") or ""
     assert "ui_language=ru" in first_href, f"JS-built verb link must contain ui_language=ru. Got href={first_href!r}"
 
+    # The nested return_to (the /verbs URL the Back button returns to) must carry it too.
+    from urllib.parse import parse_qs, urlparse
 
-def test_js_verb_links_carry_ui_language_he(page, live_server_url):
-    """Hebrew ui_language=he survives into JS-built verb list hrefs (RTL locale)."""
-    page.goto(f"{live_server_url}{_VERBS_HE_UI}")
-    page.wait_for_load_state("networkidle")
-
-    count = _wait_for_verb_items(page)
-    if count == 0:
-        pytest.skip("No verb items rendered — Firestore has no verbs for language=en")
-
-    first_href = page.locator("#vb-list a.vb-item").first.get_attribute("href") or ""
-    assert "ui_language=he" in first_href, f"JS-built verb link must contain ui_language=he. Got href={first_href!r}"
-
-
-def test_js_verb_links_return_to_carries_ui_language(page, live_server_url):
-    """The return_to query param inside each verb link href must also encode ui_language.
-
-    When the user opens the learn page and clicks Back, the server uses return_to to
-    redirect them. If ui_language is absent from return_to, the user is dropped back
-    on the verbs page without their locale preference.
-    """
-    page.goto(f"{live_server_url}{_VERBS_RU_UI}")
-    page.wait_for_load_state("networkidle")
-
-    count = _wait_for_verb_items(page)
-    if count == 0:
-        pytest.skip("No verb items rendered — Firestore has no verbs for language=en")
-
-    first_href = page.locator("#vb-list a.vb-item").first.get_attribute("href") or ""
-
-    # Extract return_to param and decode it
-    parsed = urlparse(first_href)
-    qs = parse_qs(parsed.query)
-    return_to_values = qs.get("return_to", [])
-
-    assert return_to_values, f"No return_to param in href={first_href!r}"
-    return_to = unquote(return_to_values[0])
-
-    assert "ui_language=ru" in return_to, (
-        f"return_to inside verb link must contain ui_language=ru. "
-        f"Decoded return_to={return_to!r}, full href={first_href!r}"
-    )
+    return_to = parse_qs(urlparse(first_href).query).get("return_to", [""])[0]
+    assert "ui_language=ru" in return_to, f"return_to must carry ui_language=ru. Got return_to={return_to!r}"
 
 
 # ── Back-nav from learn preserves ui_language in URL ─────────────────────────

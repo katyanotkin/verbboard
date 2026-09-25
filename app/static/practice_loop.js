@@ -32,8 +32,10 @@
 
     const storage = window.VerbBoardStorage;
 
-    const _uiLang = window.VB_UI_LANG || '';
-    const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
+    const nav = window.VerbBoardNav;
+    if (!nav) {
+      throw new Error('nav_urls.js must be loaded before practice_loop.js');
+    }
 
     function escapeHtml(value) {
       return String(value)
@@ -309,13 +311,7 @@
           return !seenSet.has(id);
         }) || session.ids[session.ids.length - 1];
 
-        const verbsUrl = `/verbs?language=${encodeURIComponent(lang)}${_uiSuffix}`;
-
-        const continueUrl =
-          `/learn?language=${encodeURIComponent(lang)}` +
-          `&verb_id=${encodeURIComponent(continueId)}` +
-          `&return_to=${encodeURIComponent(verbsUrl)}` +
-          _uiSuffix;
+        const continueUrl = nav.learnUrl(lang, continueId, { returnTo: nav.verbsUrl(lang) });
 
         practiceEl.innerHTML = `
           <div class="practice-panel-card">
@@ -526,13 +522,7 @@
         size: activePracticeSize,
       });
 
-      const verbsUrl = `/verbs?language=${encodeURIComponent(lang)}${_uiSuffix}`;
-
-      window.location.href =
-        `/learn?language=${encodeURIComponent(lang)}` +
-        `&verb_id=${encodeURIComponent(ids[0])}` +
-        `&return_to=${encodeURIComponent(verbsUrl)}` +
-        _uiSuffix;
+      window.location.href = nav.learnUrl(lang, ids[0], { returnTo: nav.verbsUrl(lang) });
     }
 
     function maybeShowWrapUp() {
