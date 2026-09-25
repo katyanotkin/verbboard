@@ -147,6 +147,6 @@
   "privacy.delete_account_button": "Delete my account and data",
   "privacy.delete_account_confirm": "This will permanently delete your account and all data (progress, practice history). This cannot be undone. Continue?",
   "privacy.delete_account_success": "Your account and data have been deleted.",
-  "privacy.delete_account_error": "Something went wrong. Please try again, or email us.",
+  "privacy.delete_account_error": "Something went wrong. Please try again in a few minutes, or use the feedback form.",
   "privacy.delete_account_disabled_title": "Sign in with Google to delete your account"
 }

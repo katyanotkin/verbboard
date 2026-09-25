@@ -147,6 +147,6 @@
   "privacy.delete_account_button": "מחק את החשבון והנתונים שלי",
   "privacy.delete_account_confirm": "פעולה זו תמחק לצמיתות את החשבון שלך ואת כל הנתונים (התקדמות, היסטוריית תרגול). לא ניתן לבטל פעולה זו. להמשיך?",
   "privacy.delete_account_success": "החשבון והנתונים שלך נמחקו.",
-  "privacy.delete_account_error": "משהו השתבש. נסה שוב או שלח לנו מייל.",
+  "privacy.delete_account_error": "משהו השתבש. נסה שוב בעוד כמה דקות או השתמש בטופס המשוב.",
   "privacy.delete_account_disabled_title": "יש להתחבר עם Google כדי למחוק את החשבון"
 }

@@ -36,7 +36,8 @@ def privacy_page(request: Request) -> HTMLResponse:
                 "privacy.delete_account_success", "Your account and data have been deleted."
             ),
             "delete_account_error": ui.get(
-                "privacy.delete_account_error", "Something went wrong. Please try again, or email us."
+                "privacy.delete_account_error",
+                "Something went wrong. Please try again in a few minutes, or use the feedback form.",
             ),
             "delete_account_disabled_title": ui.get(
                 "privacy.delete_account_disabled_title", "Sign in with Google to delete your account"

@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
       alert(UI["privacy.delete_account_success"] || "Your account and data have been deleted.");
       window.location.href = "/";
     } catch (err) {
-      alert(UI["privacy.delete_account_error"] || "Something went wrong. Please try again, or email us.");
+      alert(UI["privacy.delete_account_error"] || "Something went wrong. Please try again in a few minutes, or use the feedback form.");
       btn.disabled = false;
     }
   });
