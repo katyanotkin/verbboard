@@ -688,3 +688,25 @@ input[type="text"]:focus {
 .search-notice--skip .search-notice-text {
   font-weight: 400;
 }
+
+/* Privacy / Terms links on the home page (Google OAuth branding verification
+   requires the homepage to link to the privacy policy). */
+.home-legal-links {
+  margin: 16px 0 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+}
+
+.home-legal-links a {
+  color: inherit;
+  text-decoration: underline;
+  padding: 0 6px;
+}
+
+/* Installed-app view: the bottom nav is position: fixed, keep the links clear of it. */
+@media (display-mode: standalone) and (max-width: 639px) {
+  .home-legal-links {
+    margin-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+}

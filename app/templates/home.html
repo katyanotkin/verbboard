@@ -156,6 +156,12 @@
     </div>
   </div>
 
+  <p class="home-legal-links">
+    <a href="/privacy?ui_language={{ lang | urlencode }}">{{ ui['about.privacy'] }}</a>
+    <span aria-hidden="true">&middot;</span>
+    <a href="/terms?ui_language={{ lang | urlencode }}">{{ ui['about.terms'] }}</a>
+  </p>
+
   {% set bnav_lang = learning_lang %}{% set bnav_ui_lang = lang %}{% set bnav_active = 'home' %}{% set bnav_back_href = '' %}{% include '_bottom_nav.html' %}
 
   <script src="/static/home.js"></script>
