@@ -13,7 +13,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-from google.cloud import firestore
 
 from core.analytics import search_hits, session_tracker
 
@@ -98,8 +97,8 @@ def test_record_search_hit_writes_counter_doc(fake_db) -> None:
     doc = fake_db._docs["verb_search_hits/it_it_parlare"]
     assert doc["language"] == "it"
     assert doc["verb_id"] == "it_parlare"
-    assert isinstance(doc["hits"], firestore.Increment)
-    assert isinstance(doc["hits_search"], firestore.Increment)
+    assert doc["hits"] == 1
+    assert doc["hits_search"] == 1
     assert "hits_search_by_lang" not in doc
     assert doc["last_hit_at"] is not None
 
@@ -107,7 +106,7 @@ def test_record_search_hit_writes_counter_doc(fake_db) -> None:
 def test_record_search_hit_tracks_source_separately(fake_db) -> None:
     search_hits._record_search_hit("ru", "ru_idti", "search_by_lang")
     doc = fake_db._docs["verb_search_hits/ru_ru_idti"]
-    assert isinstance(doc["hits_search_by_lang"], firestore.Increment)
+    assert doc["hits_search_by_lang"] == 1
     assert "hits_search" not in doc
 
 
@@ -190,3 +189,11 @@ def test_ui_lang_selected_endpoint_tolerates_a_bad_body(client: TestClient) -> N
     assert resp.status_code == 200
     assert mock_record.await_args is not None
     assert mock_record.await_args.args[2] == ""
+
+
+def test_record_search_hit_accumulates_across_searches(fake_db) -> None:
+    for _ in range(3):
+        search_hits._record_search_hit("it", "it_parlare", "search")
+    search_hits._record_search_hit("it", "it_parlare", "search_by_lang")
+    doc = fake_db._docs["verb_search_hits/it_it_parlare"]
+    assert (doc["hits"], doc["hits_search"], doc["hits_search_by_lang"]) == (4, 3, 1)

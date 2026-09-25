@@ -17,8 +17,10 @@ real caller needs it): transactions, array_contains_any, !=, not-in, cursors
 (start_after/end_before), offset, select/projections, nested dotted field
 paths in update(), composite-index-requirement errors, ordering semantics for
 docs missing the order_by field, snapshot listeners, the async client.
-Sentinels (SERVER_TIMESTAMP, Increment, ArrayUnion) are stored opaquely,
-unresolved -- store a real value in tests that need one.
+`firestore.Increment` is resolved on set/create/update (added to the existing
+numeric field, or used as the value when the field is missing) so counter tests
+can assert real totals. Other sentinels (SERVER_TIMESTAMP, ArrayUnion) are stored
+opaquely, unresolved -- store a real value in tests that need one.
 """
 
 from __future__ import annotations
@@ -27,8 +29,20 @@ import copy
 from typing import Any, Iterable, cast
 
 from google.api_core.exceptions import AlreadyExists, NotFound
+from google.cloud import firestore
 
 _UNSET = object()
+
+
+def _resolve_increments(existing: dict[str, Any] | None, data: dict[str, Any]) -> dict[str, Any]:
+    """Copy `data`, replacing each firestore.Increment with a number: the existing
+    value plus the increment, or just the increment when the field is missing."""
+    resolved = copy.deepcopy(data)
+    for key, value in data.items():
+        if isinstance(value, firestore.Increment):
+            base = (existing or {}).get(key)
+            resolved[key] = (base if isinstance(base, (int, float)) else 0) + value.value
+    return resolved
 
 
 class FakeSnapshot:
@@ -57,18 +71,20 @@ class FakeDocRef:
     def create(self, data: dict[str, Any]) -> None:
         if self.path in self._store._docs:
             raise AlreadyExists(f"Document already exists: {self.path}")
-        self._store._docs[self.path] = copy.deepcopy(data)
+        self._store._docs[self.path] = _resolve_increments(None, data)
 
     def set(self, data: dict[str, Any], merge: bool = False) -> None:
         if merge and self.path in self._store._docs:
-            self._store._docs[self.path].update(copy.deepcopy(data))
+            existing = self._store._docs[self.path]
+            existing.update(_resolve_increments(existing, data))
         else:
-            self._store._docs[self.path] = copy.deepcopy(data)
+            self._store._docs[self.path] = _resolve_increments(None, data)
 
     def update(self, data: dict[str, Any]) -> None:
         if self.path not in self._store._docs:
             raise NotFound(f"No document to update: {self.path}")
-        self._store._docs[self.path].update(copy.deepcopy(data))
+        existing = self._store._docs[self.path]
+        existing.update(_resolve_increments(existing, data))
 
     def delete(self) -> None:
         self._store._docs.pop(self.path, None)
