@@ -88,6 +88,6 @@ Articles are longer-form than posts and use richer formatting:
 
 ## VerbBoard product context
 
-VerbBoard is a verb conjugation and language practice app. Stack: FastAPI + vanilla JS + Firestore + GCS + Firebase Auth. Users study Russian, Hebrew, Spanish, and English verbs through conjugation tables, audio, and practice loops. Unknown searches become demand signals that drive future content.
+VerbBoard is a verb conjugation and language practice app. Stack: FastAPI + vanilla JS + Firestore + GCS + Firebase Auth. Users study verbs in several languages (Spanish, Russian, Hebrew, English, etc.; the authoritative list is `core/languages/config.py`, and tiers differ, so do not claim a language is available to everyone without checking) through conjugation tables, audio, and practice loops. Unknown searches become demand signals that drive future content.
 
 When writing about the product, ground it in what a learner experiences, not what the engineer built.

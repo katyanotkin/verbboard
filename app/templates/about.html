@@ -21,7 +21,7 @@
   <div class="content"{% if lang == "he" %} dir="rtl"{% endif %}>
     {% if lang == "ru" %}
     <p><b>Что такое VerbBoard?</b><br/>
-    Инструмент для изучения глаголов на английском, испанском, иврите и русском.
+    Инструмент для изучения глаголов. Языки: {{ study_languages }}.
     Каждый глагол — полное спряжение с TTS-аудио для каждой формы и примера.</p>
 
     <p><b>Как это работает</b><br/>
@@ -39,7 +39,7 @@
 
     <p><b>Поиск</b><br/>
     По умолчанию выбран изучаемый язык. Или выберите английский и введите глагол по-английски — VerbBoard найдёт соответствующий глагол на изучаемом языке.
-    Для английского и испанского недостающие глаголы генерируются автоматически — обычно за несколько секунд. Для иврита и русского запросы фиксируются и учитываются в будущих обновлениях.</p>
+    Недостающие глаголы обычно генерируются автоматически за несколько секунд. Если для языка это пока недоступно, запросы фиксируются и учитываются в будущих обновлениях.</p>
 
     <p><b>Установка на Android</b><br/>
     На главной странице нажмите «Установить», чтобы добавить VerbBoard на главный экран.</p>
@@ -49,7 +49,7 @@
 
     {% elif lang == "es" %}
     <p><b>¿Qué es VerbBoard?</b><br/>
-    Una herramienta para aprender verbos en inglés, español, hebreo y ruso.
+    Una herramienta para aprender verbos. Idiomas: {{ study_languages }}.
     Cada verbo incluye conjugación completa con audio TTS para cada forma y ejemplo.</p>
 
     <p><b>Cómo funciona</b><br/>
@@ -67,7 +67,7 @@
 
     <p><b>Búsqueda</b><br/>
     Tu idioma de estudio está seleccionado por defecto. O selecciona inglés y escribe un verbo en inglés para buscarlo en tu idioma de estudio.
-    Para inglés y español, los verbos que faltan se generan automáticamente — normalmente en segundos. Para hebreo y ruso, las búsquedas sin resultado se registran para futuras actualizaciones.</p>
+    Los verbos que faltan normalmente se generan automáticamente en segundos. Si un idioma aún no lo admite, las búsquedas sin resultado se registran para futuras actualizaciones.</p>
 
     <p><b>Instalar en Android</b><br/>
     En la página principal, pulsa «Instalar» para añadir VerbBoard a tu pantalla de inicio.</p>
@@ -77,7 +77,7 @@
 
     {% elif lang == "he" %}
     <p><b>מה זה VerbBoard?</b><br/>
-    כלי ללימוד פעלים באנגלית, ספרדית, עברית ורוסית.
+    כלי ללימוד פעלים. שפות: {{ study_languages }}.
     כל פועל מגיע עם נטייה מלאה ואודיו TTS לכל צורה ומשפט לדוגמה.</p>
 
     <p><b>איך זה עובד</b><br/>
@@ -95,7 +95,7 @@
 
     <p><b>חיפוש</b><br/>
     שפת הלימוד נבחרת כברירת מחדל. או בחרו אנגלית וכתבו פועל באנגלית כדי לחפש בשפת הלימוד.
-    באנגלית ובספרדית, פעלים חסרים נוצרים אוטומטית -- בדרך כלל תוך שניות. בעברית וברוסית, חיפושים חסרים נרשמים ומכוסים בעדכונים עתידיים.</p>
+    פעלים חסרים נוצרים בדרך כלל אוטומטית תוך שניות. אם השפה עדיין לא תומכת בכך, חיפושים חסרים נרשמים ומכוסים בעדכונים עתידיים.</p>
 
     <p><b>התקנה באנדרואיד</b><br/>
     בדף הבית, לחצו על ״התקן״ כדי להוסיף את VerbBoard למסך הבית.</p>
@@ -105,7 +105,7 @@
 
     {% else %}
     <p><b>What is VerbBoard?</b><br/>
-    A focused tool for learning verbs in English, Spanish, Hebrew, and Russian.
+    A focused tool for learning verbs. Languages: {{ study_languages }}.
     Each verb shows full conjugation with TTS audio for every form and example sentence.</p>
 
     <p><b>How it works</b><br/>
@@ -123,7 +123,7 @@
 
     <p><b>Search</b><br/>
     Your studied language is selected by default. Or select English and type a verb in English to cross-search in your studied language.
-    For English and Spanish, missing verbs are generated automatically — usually within seconds. For Hebrew and Russian, missing searches are tracked and covered in future updates.</p>
+    Missing verbs are usually generated automatically within seconds. If a language doesn't support that yet, missing searches are tracked and covered in future updates.</p>
 
     <p><b>Install on Android</b><br/>
     On the home page, tap Install to add VerbBoard to your home screen.</p>

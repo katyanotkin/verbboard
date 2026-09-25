@@ -19,11 +19,13 @@ import anthropic
 import vertexai
 from vertexai.generative_models import GenerationConfig, GenerativeModel
 
+from core.languages.config import UI_LANGUAGES
+
 logger = logging.getLogger(__name__)
 
 _GCP_LOCATION = os.getenv("GCP_REGION", "us-east1")
 
-SUPPORTED_LANGUAGES = ["en", "ru", "he", "es"]
+SUPPORTED_LANGUAGES = list(UI_LANGUAGES)  # translation targets = the UI languages
 HEBREW = "he"
 GEMINI_MODEL = "gemini-2.5-flash-lite"
 CLAUDE_MODEL = "claude-sonnet-4-6"

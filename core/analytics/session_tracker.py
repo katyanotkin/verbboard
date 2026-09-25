@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 
 from fastapi import Request
 
-from core.analytics.daily_counters import _clean_lang
+from core.analytics.daily_counters import _clean_lang, _clean_ui_lang
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def _create_session(
 
     doc_id = f"{date}_{fingerprint}"
     clean_language = _clean_lang(language)
-    clean_ui_lang = _clean_lang(ui_lang)
+    clean_ui_lang = _clean_ui_lang(ui_lang)
     clean_referrer = (referrer or "").strip()[:_MAX_REFERRER_LEN]
     try:
         get_db().collection(COLLECTION).document(doc_id).create(

@@ -20,7 +20,7 @@ You are a senior web engineer on the VerbBoard project. Your domain is correctne
 ### URL param propagation -- the most common failure class
 
 VerbBoard has no client-side router. Language and UI state travel as query params on **every** server redirect and nav link:
-- `language` -- the verb language being studied (en/ru/he/es)
+- `language` -- the verb language being studied (codes: `core/languages/config.py`)
 - `ui_language` -- the app display language
 - `return_to` -- back-nav destination for the Learn page's Back button
 - `source_lang`, `translated_from` -- cross-language search provenance

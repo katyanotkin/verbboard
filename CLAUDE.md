@@ -69,7 +69,7 @@ core/
   verb_loader.py        # loads verbs from Firestore (60s TTL cache)
   audio_service.py      # ensure_audio(), build_hashed_audio_key()
   audio_backend/        # base, factory, local, gcs
-  languages/            # en, ru, he, es -- each plugin self-registers
+  languages/            # one plugin per study language (list: config.py) -- each self-registers
   storage/              # firestore_db, verb_repository, verb_document
   progress/             # models.py, progress_repository.py, progress_service.py
   tts.py                # VOICES dict, TTS integration
@@ -165,7 +165,7 @@ Use the **Explore** agent for detailed file navigation.
 
 **Help hints (tap-to-reveal micro explanations):** reusable pattern for controls that explain themselves poorly -- `<span class="help-hint"><button class="help-hint-trigger" aria-expanded="false" aria-label="...">?</button><span class="help-hint-panel" role="note" hidden>...</span></span>`, driven entirely by `app/static/help_hint.js` (page-agnostic, delegated click/Escape handling, no page-specific wiring). Adding a new spot needs only this markup plus one `help.<spot>` i18n key -- no new CSS/JS. Panel is centered via physical `left:50%; transform:translateX(-50%)`, not logical `inset-inline-end`, so it doesn't clip off-screen in RTL when the trigger sits near the end of a mirrored row. Currently wired on: the learned-star button (`help.known`), the translation toggle (`help.translations`), the practice-panel session-size pills and listens-per-verb stepper (`help.session_size`, `help.listens`), and the Anki CSV export button on `/verbs` (`help.export_known` -- explains it's an Anki-importable CSV of verbs known in the current language). The SRS due-for-review counter in the practice panel briefly had one too (`help.due_review`) but it was removed 2026-09-15: unlike the other spots, the due-count line has no adjacent choice control for a tap-to-reveal explainer to sit next to (there's nothing for the student to pick). The counter itself (the `"{N} due for review today"` line, `practice.due_today`) was removed entirely on 2026-09-16, not just its help-hint -- surfacing that number was itself in tension with the practice loop's "there's nothing to choose yourself; it just happens" design (see Spaced repetition below); the mechanism is still explained in the About page's Practice section, just never narrated at the point of use.
 
-**Localization:** UI in EN / RU / HE / ES. Language travels as a `?language=` URL query param on every nav link and redirect. `ui_language` travels as `?ui_language=`. Neither uses cookies -- Firebase Hosting (Fastly CDN) strips all cookies except `__session` before forwarding to Cloud Run. Hebrew RTL supported.
+**Localization:** UI languages are `UI_LANGUAGES` in `core/languages/config.py` (a smaller set than the study languages). Language travels as a `?language=` URL query param on every nav link and redirect. `ui_language` travels as `?ui_language=`. Neither uses cookies -- Firebase Hosting (Fastly CDN) strips all cookies except `__session` before forwarding to Cloud Run. Hebrew RTL supported.
 
 **Lexicon JSON:** As of 2026-04-30, retained for local development and Firestore import/backfill only. Runtime (stage/prod) reads exclusively from Firestore.
 

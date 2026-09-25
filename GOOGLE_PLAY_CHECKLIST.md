@@ -82,7 +82,7 @@ Play Console > Store presence > Main store listing
 
 Short description (80 chars max):
 ```
-Verb conjugation tables, audio, and practice. Spanish, Russian, Hebrew, English.
+Verb conjugation tables, audio, and practice. Spanish, Russian, Hebrew, etc.
 ```
 
 Full description:
@@ -92,7 +92,7 @@ a full conjugation table, native-speaker audio for every form, and real
 usage examples. Practice sessions drill the verbs you have seen and mark
 them as known when you are ready. Works offline after first load.
 
-Supports Spanish, Russian, Hebrew, and English.
+Supports Spanish, Russian, Hebrew, English, etc.
 Clean interface, no ads, no pressure to log in daily.
 ```
 

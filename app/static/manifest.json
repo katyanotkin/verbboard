@@ -2,7 +2,7 @@
   "id": "/",
   "name": "VerbBoard",
   "short_name": "VerbBoard",
-  "description": "Verb conjugation tables, audio, and practice for Spanish, Russian, Hebrew, and English learners",
+  "description": "Verb conjugation tables, audio, and practice in Spanish, Russian, Hebrew, English, etc.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

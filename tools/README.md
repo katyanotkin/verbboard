@@ -16,7 +16,7 @@ python -m tools.check_nikud
 python -m tools.check_nikud --missing   # only verbs missing nikud
 ```
 
-`check_plugins.py` — Verify all four language plugins (en/ru/he/es) register
+`check_plugins.py` — Verify every language plugin registers
 correctly against `core/registry`.
 ```
 python -m tools.check_plugins

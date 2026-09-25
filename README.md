@@ -1,8 +1,8 @@
 # VerbBoard
 
-Verb-focused language learning app: conjugation tables, TTS audio, guided practice, and AI-assisted content expansion. Free tier supports English, Russian, Hebrew, and Spanish -- these are also the four UI languages. Plus tier adds Italian and French as study-only languages (no UI translation for them).
+Verb-focused language learning app: conjugation tables, TTS audio, guided practice, and AI-assisted content expansion. Which study languages each tier includes is defined in one place, `core/languages/config.py` (`FREE_STUDY_LANGUAGES`, `PLUS_EXTRA_STUDY_LANGUAGES`); the UI is offered in a smaller set (`UI_LANGUAGES`, same file), so some study languages are study-only with no UI translation.
 
-For English and Spanish, missing verbs are generated on the spot via AI. For Hebrew, Russian, Italian, and French, unknown searches become demand signals that drive future verb coverage through a human-reviewed pipeline.
+For the languages in `AUTOGEN_LANGUAGES` (`core/verb_autogen.py`), missing verbs are generated on the spot via AI. For the others, unknown searches become demand signals that drive future verb coverage through a human-reviewed pipeline.
 
 ---
 
@@ -66,8 +66,8 @@ Visual indicators:
 
 - Search across infinitives, conjugated forms, and partial matches
 - Cross-language: type an English word, select English — Gemini translates and finds the matching verb in your studied language
-- For English, Spanish, Italian, and French: missing verbs are generated automatically via Gemini (VertexAI), no admin review, added directly to the live verb set within ~30 seconds
-- For Hebrew and Russian: unknown searches are logged as demand signals for human-reviewed AI generation
+- For the languages in `AUTOGEN_LANGUAGES` (`core/verb_autogen.py`): missing verbs are generated automatically (Gemini via VertexAI; Claude for Russian), no admin review, added directly to the live verb set within ~30 seconds
+- For languages outside `AUTOGEN_LANGUAGES`: unknown searches are logged as demand signals for human-reviewed AI generation
 - Human-reviewed workflow: admin reviews signals, Claude + Gemini generate candidate, human promotes to live verbs
 
 ---
@@ -133,14 +133,14 @@ See `ARCHITECTURE.md` for the full request lifecycle, data flows, and consistenc
 One Docker image, config-only difference between free and Plus -- no code fork, no second deployment stage. Stage runs `EDITION=plus` to exercise both code paths; prod runs `EDITION=free` explicitly.
 
 - `EDITION` -- `free` (default) or `plus`
-- `STUDY_LANGUAGES` -- CSV of language codes; defaults to today's four (`en,ru,he,es`) on free, adds Italian/French on Plus
+- `STUDY_LANGUAGES` -- CSV of language codes; defaults to `FREE_STUDY_LANGUAGES` on free and `ALL_STUDY_LANGUAGES` on Plus (both in `core/languages/config.py`)
 - `APP_NAME` / `APP_SHORT_NAME` -- default `VerbBoard`
 - `ANDROID_PACKAGE_NAME` / `ANDROID_CERT_FINGERPRINTS` -- drive `/.well-known/assetlinks.json`, so a future Plus Android listing can serve its own package + signing fingerprint from the same codebase
 - `ON_DEMAND_EXAMPLES_ENABLED` -- defaults to `edition == "plus"`, independently overridable as a cost kill switch
 
 `core/editions.py` filters the language-plugin registry (`core/registry.py`, unchanged, edition-agnostic) down to what the active edition allows via `active_study_plugins()` / `is_study_language()`. With zero env vars set, this is a no-op: free-edition behavior is unchanged.
 
-Italian and French plugins are live (`core/languages/it/`, `core/languages/fr/`) with real verb catalogs, audio, and translations, gated Plus-only via `core/entitlements.py`: `can_study(language, uid)` checks `user_entitlements/{uid}` in Firestore and is enforced on `/learn`, `/verbs`, `/audio`, both search endpoints, and `/api/preferences`. Entitlement grants are manual today -- an admin sets a record via `/admin/entitlements` (`user_entitlements/{uid}.status == "active"`, checked with a 60s TTL cache, fails open on a Firestore read error since this gates content, not sensitive data). No billing integration yet; the record schema reserves fields (`product_id`, `purchase_token`, `expires_at`) for when one exists.
+Study languages outside `FREE_STUDY_LANGUAGES` (i.e. `PLUS_EXTRA_STUDY_LANGUAGES`) are gated Plus-only via `core/entitlements.py`: `can_study(language, uid)` checks `user_entitlements/{uid}` in Firestore and is enforced on `/learn`, `/verbs`, `/audio`, both search endpoints, and `/api/preferences`. Entitlement grants are manual today -- an admin sets a record via `/admin/entitlements` (`user_entitlements/{uid}.status == "active"`, checked with a 60s TTL cache, fails open on a Firestore read error since this gates content, not sensitive data). No billing integration yet; the record schema reserves fields (`product_id`, `purchase_token`, `expires_at`) for when one exists.
 
 ---
 

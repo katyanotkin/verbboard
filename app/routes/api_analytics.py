@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from core.admin_auth import update_session_claims
-from core.analytics.daily_counters import _clean_lang
+from core.analytics.daily_counters import _clean_lang, _clean_ui_lang
 from core.analytics.session_tracker import (
     attach_uid,
     enrich_lang,
@@ -116,7 +116,7 @@ async def enrich_session(request: Request) -> JSONResponse:
     if not isinstance(body, dict):
         return JSONResponse({"ok": False}, status_code=400)
     language = _clean_lang(str(body.get("language") or ""))
-    ui_lang = _clean_lang(str(body.get("ui_lang") or ""))
+    ui_lang = _clean_ui_lang(str(body.get("ui_lang") or ""))
     if not language and not ui_lang:
         return JSONResponse({"ok": False})
     date = datetime.now(UTC).strftime("%Y-%m-%d")
