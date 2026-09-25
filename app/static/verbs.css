@@ -640,6 +640,8 @@
 }
 
 .practice-wrapup-card {
+  /* The overlay is attached to <body>, outside .vb-page which sets the page font. */
+  font-family: system-ui, sans-serif;
   background: white;
   border-radius: 16px;
   padding: 28px 28px 22px;

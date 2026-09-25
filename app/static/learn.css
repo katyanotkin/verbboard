@@ -866,3 +866,23 @@ button {
     flex: 1 1 0;
   }
 }
+
+@media (max-width: 374px) {
+  .topbar-body {
+    flex-wrap: wrap;
+  }
+
+  .conj-table th,
+  .conj-table td {
+    padding: 8px;
+  }
+
+  .conj-form {
+    gap: 8px;
+  }
+
+  .conj-form > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}

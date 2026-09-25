@@ -682,3 +682,35 @@ body {
   border-left: 1px solid #93c5fd;
   transform: translateX(-50%) rotate(45deg);
 }
+
+/* Long ES/RU labels: wrap the right group under Back instead of overflowing. */
+@media (max-width: 374px) {
+  .topbar-nav {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+}
+
+/* 360px Android: the nav row (Back + Send feedback + Login) needs ~372px at full padding. */
+@media (max-width: 374px) {
+  .topbar-nav {
+    gap: 6px;
+  }
+
+  .topbar-nav-right {
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .topbar-nav .nav-btn,
+  .topbar-nav-right .feedback-link,
+  .topbar-nav-right .auth-btn {
+    padding: 10px 9px;
+    gap: 4px;
+    font-size: 14px;
+  }
+
+  .topbar-nav-right .auth-btn {
+    margin-left: 0;
+  }
+}
