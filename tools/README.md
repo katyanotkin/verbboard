@@ -130,8 +130,9 @@ python -m tools.regen_forms_bulk --input missing-nikud.csv \
 ```
 
 `backfill_translations.py` — Fill missing `Example.translations` keys for all
-verbs in Firestore. Safe to re-run (only writes missing keys). Requires
-`ANTHROPIC_API_KEY`.
+verbs in Firestore, for every study language (`--language all`) and both fields
+(`--field examples|lemma|both`, Hebrew targets via Claude). Safe to re-run (only
+writes missing keys). Requires `ANTHROPIC_API_KEY`.
 ```
 python -m tools.backfill_translations --language ru
 python -m tools.backfill_translations --language all --dry-run

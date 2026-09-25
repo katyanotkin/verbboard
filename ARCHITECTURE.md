@@ -65,6 +65,8 @@ Cloud Run  (Docker container, app.main:app)
 | Progress | `progress.js` -- `VerbBoardProgress`; localStorage + server sync on login |
 | Practice | `practice_loop.js` -- session state in localStorage; badge sync on `vb:progress-hydrated`; mixes due spaced-repetition verbs into the session |
 | Spaced repetition | `srs.js` -- `nextBox()` (Leitner box-transition rule, mirrors `leitner_next_box()` in `core/progress/models.py`), `getDueVerbIds()`, `mergeFromServer()` (last-write-wins, not union-merge) |
+| Navigation URLs | JS builds `/learn` and `/verbs` links only through `nav_urls.js` (`VerbBoardNav.verbsUrl/learnUrl`), which encodes every value and appends `ui_language` |
+| Sign-in | `auth.js`: desktop popup; mobile browsers use `signInWithRedirect` (default on Android, per-device override `vb_signin_redirect` via `?signin=redirect\|popup\|default`); standalone PWA and iOS use the `/auth/signin` page. Practice needs a signed-in user (`requestStartPractice()` gate in `practice_loop.js`) |
 | PWA | `sw.js` (cache version -- check the `CACHE` constant at the top of the file directly; it changes on every deploy that touches a precached asset, so a number recorded here would just go stale), `manifest.json`, `pwa.js` install prompt |
 | i18n | 4 locales (EN/RU/HE/ES); all 4 locale files must be updated together; Italian/French are study-only and have no UI locale of their own |
 
@@ -149,6 +151,9 @@ Middleware: `_PageViewMiddleware` in `app/main.py` intercepts GET requests to tr
 - Session ID = `SHA256(forwarded_ip | user_agent | date)[:32]` -- deterministic, no cookie needed
 - One Firestore doc per `(IP, UA, day)` in `analytics_sessions`; `create()` is a no-op for returning visitors
 - UID attached to session doc on user login via `POST /api/analytics/session` (auth.js fires this after Firebase sign-in; server derives fingerprint from the same request headers)
+
+- Self-identified crawlers/scanners are stored with `device_type == "bot"` and counted separately in the admin usage summary (classified from 2026-09-24)
+- Set-once diagnostic flags on the session: `votd_clicked`, `home_viewed`, `practice_started`, `practice_completed`, `practice_gate_shown`, `sign_in_tapped_branch`, `ui_lang_selected` (latest deliberate UI-language pick); `verb_search_hits/{lang}_{verb_id}` counts searches that found an existing verb
 
 **Page view counting:** `analytics_daily` was dropped 2026-06-14 -- nothing writes to it anymore. `core/analytics/daily_counters.py` now holds only `_clean_lang()`, a language-code sanitizer reused by `session_tracker.py` and `api_analytics.py`. Usage stats are derived entirely from `analytics_sessions` via `get_device_mix()` in `core/admin_feedback_service.py`.
 

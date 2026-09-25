@@ -92,6 +92,7 @@ Visual indicators:
 - By default, progress stays on the current device only
 - Sign in to sync seen verbs, known verbs, practice badges, and spaced-repetition state across devices
 - Words learned and badges earned before signing in are preserved on first login
+- On Android browsers, sign-in is a single tap straight to Google; iPhone and the installed app use a short sign-in page
 
 ---
 
@@ -155,7 +156,7 @@ Anki-style, Leitner box ladder, built directly into the practice loop -- no sepa
 
 Two tracks depending on language.
 
-**EN/ES (automatic):** Search miss triggers Gemini (VertexAI) generation inline. Verb is promoted directly to the live set. Available within ~30 seconds. No Anthropic calls, no admin review.
+**Automatic (`AUTOGEN_LANGUAGES`):** a search miss triggers generation inline (Gemini via VertexAI; Claude for Russian) and the verb is promoted directly to the live set within ~30 seconds, with examples and the verb itself translated into the other UI languages (Hebrew translations use Claude). No admin review.
 
 **HE/RU/IT/FR (human-reviewed):**
 
@@ -175,7 +176,7 @@ AI model routing: Haiku (`claude-haiku-4-5-20251001`) for English, Sonnet (`clau
 - Smoke tests and Playwright E2E validation gates
 - Audio cache audit tooling
 - Deterministic verb ID validation and collision audits
-- Production telemetry and usage analytics
+- Production telemetry and usage analytics; the admin Feedback page shows a usage summary (bots counted separately), engagement (Verb of the Day clicks, practice, sign-in gate), UI-language picks and top searched verbs
 
 ---
 

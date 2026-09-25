@@ -118,6 +118,12 @@ Used in the `gcp-promote-stage-to-prod` pipeline to validate stage before promot
 
 ---
 
+## Firestore and patching in tests
+
+- **No unit test can reach the real project.** An autouse fixture (`_no_real_firestore`, `tests/conftest.py`) gives every test a fresh in-memory `FakeFirestore` (`tests/fake_firestore.py`); `tests/e2e` is exempt because its in-process server reads the live project. Request the `fake_db` fixture to seed or inspect state; `firestore.Increment` is resolved, so counters can be asserted.
+- **Patching a name several modules import:** use `patch_everywhere(monkeypatch, "core.x.name", replacement)` (from `tests/conftest.py`), not a plain `monkeypatch.setattr` on the defining module, which silently stops applying if a consumer imports the name at module scope. `tests/test_patch_targets.py` fails on any such patch.
+- **Frontend behavior:** vanilla-JS logic that can be extracted is unit-tested from Node (`tests/test_nav_urls.py`, `tests/test_practice_repeat.py`); Firebase-dependent flows use Playwright with a stubbed `window.firebase` (`tests/e2e/test_signin_redirect.py`, `tests/e2e/test_practice_gate.py`).
+
 ## Parallelization
 
 | Layer | Tool | Safe to parallelize? | Command |
