@@ -119,3 +119,20 @@ def test_feedback_submit_redirects_to_return_to(client: TestClient, monkeypatch)
     )
     assert response.status_code == 303
     assert "/learn" in response.headers["location"]
+
+
+def test_plus_access_request_requires_a_contact_email(client: TestClient, monkeypatch) -> None:
+    """A Plus access request needs a reply address (like privacy/terms), a plain comment does not."""
+    saved: list[dict] = []
+    monkeypatch.setattr("app.routes.feedback.save_feedback", lambda **kw: saved.append(kw))
+
+    missing = client.post("/feedback", data={"comment": "Please give me Plus", "page": "plus"}, follow_redirects=False)
+    assert saved == []
+    assert missing.status_code in (200, 303, 400, 422)
+
+    client.post(
+        "/feedback",
+        data={"comment": "Please give me Plus", "page": "plus", "contact_email": "me@example.com"},
+        follow_redirects=False,
+    )
+    assert len(saved) == 1 and saved[0]["page"] == "plus"

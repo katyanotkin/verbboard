@@ -19,6 +19,9 @@ from core.safe_return import safe_return_to
 from core.settings import load_settings
 
 router = APIRouter()
+
+# Pages whose feedback needs a reply address: policy questions and Plus access requests.
+_CONTACT_REQUIRED_PAGES = {"privacy", "terms", "plus"}
 templates = Jinja2Templates(directory="app/templates")
 
 
@@ -41,7 +44,7 @@ def feedback_form(
     # here specifically to reach the owner -- an unreachable submission
     # defeats the purpose, so the email is required on that path only.
     # General feedback (from every other page's 💬 link) stays anonymous-first.
-    contact_email_required = page in {"privacy", "terms"}
+    contact_email_required = page in _CONTACT_REQUIRED_PAGES
 
     return templates.TemplateResponse(
         request,
@@ -97,7 +100,7 @@ def submit_feedback(
     clean_comment = comment.strip()
     clean_contact_email = contact_email.strip()
 
-    if page in {"privacy", "terms"} and not clean_contact_email:
+    if page in _CONTACT_REQUIRED_PAGES and not clean_contact_email:
         params = urlencode(
             {
                 "page": page,
