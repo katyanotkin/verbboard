@@ -703,6 +703,43 @@
   line-height: 1;
 }
 
+/* Sign-in gate for starting practice: reuses the wrap-up overlay/card. */
+.practice-gate-card {
+  /* The overlay is attached to <body>, outside .vb-page which sets the page font. */
+  font-family: system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: start;
+}
+
+.practice-gate-card h3,
+.practice-gate-card p {
+  margin: 0;
+}
+
+.practice-gate-cta {
+  width: 100%;
+  min-height: 48px;
+}
+
+.practice-gate-card .practice-gate-note {
+  font-size: 13px;
+  text-align: center;
+}
+
+.practice-gate-dismiss {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+  background: none;
+  border: 0;
+  color: var(--text-muted, #6b7280);
+  font-size: 15px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* ── login nudge (anonymous-only) ────────────────────────────────────────── */
 /* Shared card, built by login_nudge.js's buildCta() and used in two places:
    - inside the practice-wrapup-card above, as the badge-earned CTA row

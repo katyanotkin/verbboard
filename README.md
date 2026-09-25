@@ -78,6 +78,7 @@ Visual indicators:
 - Verbs you've seen but haven't marked as learned keep coming back: up to a third of each practice session is reserved for them, longest-waiting first, so a verb you're stuck on can't go many sessions without resurfacing
 - Audio listening required before advancing to the next verb
 - Skip & mark as learned — for verbs you already know
+- A free Google sign-in is required to start a practice session (browsing verbs, audio, search and the Verb of the Day stay open without an account); a session already in progress can always be finished
 - Complete a session to earn a badge
 - Anonymous users earning a badge see a one-tap sign-in prompt in the completion screen, so progress isn't lost if the device changes
 - Learning badges and persistent progress tracking

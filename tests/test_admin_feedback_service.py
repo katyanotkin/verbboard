@@ -512,6 +512,8 @@ def test_read_sessions_summary_counts_engagement_flags(fake_db) -> None:
         "votd_clicked": 1,
         "practice_started": 2,
         "practice_completed": 1,
+        "practice_gate_shown": 0,
+        "practice_gate_then_signed_in": 0,
     }
 
 

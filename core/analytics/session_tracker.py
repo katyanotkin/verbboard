@@ -306,6 +306,31 @@ async def record_ui_lang_selected(fingerprint: str, date: str, ui_lang: str) -> 
     task.add_done_callback(_pending.discard)
 
 
+def _record_practice_gate_shown(fingerprint: str, date: str) -> None:
+    """Record that this session-day was shown the sign-in gate when tapping Start
+    on the practice panel (anonymous visitors must sign in to start practice).
+    Set-once like practice_started. Pair with `uid` (attached when the same
+    session later signs in) to read the gate's conversion. A gate shown with no
+    existing session doc is dropped rather than creating a stub doc."""
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        if not snapshot.exists or snapshot.to_dict().get("practice_gate_shown"):
+            return
+        doc_ref.set({"practice_gate_shown": True}, merge=True)
+    except Exception:
+        logger.exception("Failed to record practice gate shown")
+
+
+async def record_practice_gate_shown(fingerprint: str, date: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_practice_gate_shown, fingerprint, date))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
 def delete_sessions_for_uid(uid: str) -> None:
     """Delete every analytics_sessions doc attached to this uid.
 

@@ -448,7 +448,7 @@
 
       document
         .getElementById('practice-start')
-        .addEventListener('click', startPractice);
+        .addEventListener('click', requestStartPractice);
     }
 
     // Fire-and-forget, auth-independent practice engagement beacon (issue
@@ -463,6 +463,164 @@
           keepalive: true,
         }).catch(function () {});
       } catch (_) {}
+    }
+
+    // ---- Sign-in gate (owner decision 2026-09-25) -------------------------
+    // Anonymous visitors must sign in to START a session. Soft, client-side
+    // product gate only: finishing a practice is enforced server-side
+    // (/api/progress/practice). Fails OPEN whenever Firebase auth is not
+    // usable (no web config, SDK blocked/failed, ready-timeout) so local dev,
+    // the e2e harness and outages never block practice.
+    const GATE_AUTH_TIMEOUT_MS = 1500;
+    let startRequestInFlight = false;
+    let gateOverlay = null;
+
+    function _authAvailable() {
+      const cfg = window.FIREBASE_WEB_CONFIG;
+      return !!(
+        cfg && cfg.apiKey &&
+        typeof window.firebase !== 'undefined' &&
+        window.VerbBoardAuth &&
+        typeof window.VerbBoardAuth.currentUser === 'function'
+      );
+    }
+
+    // Google blocks OAuth inside embedded in-app browsers (Instagram, Facebook,
+    // LinkedIn, Android WebViews...), so gating there would be a pure dead end:
+    // those visitors fail open and can practice.
+    function _inEmbeddedBrowser() {
+      return /; wv\)|FBAN|FBAV|FB_IAB|Instagram|LinkedInApp|Snapchat|MicroMessenger|\bLine\//i.test(
+        navigator.userAgent || ''
+      );
+    }
+
+    // Resolves true when the visitor is known to be anonymous (gate applies).
+    function _isAnonymousForGate() {
+      if (!_authAvailable() || _inEmbeddedBrowser()) return Promise.resolve(false);
+      const auth = window.VerbBoardAuth;
+      if (auth.currentUser()) return Promise.resolve(false);
+      let settled = false;
+      const ready = auth.ready().then(function () { settled = true; });
+      const timeout = new Promise(function (resolve) {
+        setTimeout(resolve, GATE_AUTH_TIMEOUT_MS);
+      });
+      return Promise.race([ready, timeout]).then(function () {
+        // Timed out before auth resolved and still no user: fail open.
+        return settled && !auth.currentUser();
+      }).catch(function () { return false; });
+    }
+
+    function requestStartPractice() {
+      if (startRequestInFlight || gateOverlay) return;
+      startRequestInFlight = true;
+      _isAnonymousForGate().then(function (anonymous) {
+        startRequestInFlight = false;
+        if (anonymous) {
+          showSignInGate();
+        } else {
+          startPractice();
+        }
+      });
+    }
+
+    function showSignInGate() {
+      if (gateOverlay) return;
+      _trackPracticeEvent('gate_shown');
+
+      const previouslyFocused = document.activeElement;
+      const overlay = document.createElement('div');
+      overlay.className = 'practice-wrapup-overlay';
+
+      const card = document.createElement('div');
+      card.className = 'practice-wrapup-card practice-gate-card';
+      card.setAttribute('role', 'dialog');
+      card.setAttribute('aria-modal', 'true');
+      card.setAttribute('aria-labelledby', 'practice-gate-title');
+
+      const title = document.createElement('h3');
+      title.id = 'practice-gate-title';
+      title.textContent = ui['practice.gate_title'] || 'Sign in to start practice';
+
+      const body = document.createElement('p');
+      body.textContent =
+        ui['practice.gate_body'] ||
+        'A free account saves your progress across devices and schedules your reviews.';
+
+      const cta = document.createElement('button');
+      cta.type = 'button';
+      cta.className = 'btn-pill-navy practice-gate-cta';
+      cta.textContent = ui['practice.gate_cta'] || 'Continue with Google';
+
+      const note = document.createElement('p');
+      note.className = 'practice-gate-note';
+      note.textContent =
+        ui['practice.gate_note'] ||
+        'Free. We only use your name and email to save your progress.';
+
+      const dismiss = document.createElement('button');
+      dismiss.type = 'button';
+      dismiss.className = 'practice-gate-dismiss';
+      dismiss.textContent = ui['practice.gate_dismiss'] || 'Keep browsing';
+
+      card.append(title, body, cta, note, dismiss);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+      gateOverlay = overlay;
+
+      function close() {
+        document.removeEventListener('keydown', onKeydown, true);
+        window.removeEventListener('vb:progress-hydrated', onSignedIn);
+        overlay.remove();
+        gateOverlay = null;
+        if (previouslyFocused && previouslyFocused.isConnected && previouslyFocused.focus) {
+          previouslyFocused.focus();
+        }
+      }
+
+      // Popup sign-in (desktop) completes without a page load: when auth hydrates
+      // while the gate is open, close it and start the practice the visitor asked
+      // for. Redirect sign-in reloads the page instead, so they tap Start again.
+      function onSignedIn() {
+        close();
+        startPractice();
+      }
+
+      function onKeydown(event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          close();
+        } else if (event.key === 'Tab') {
+          // Minimal focus trap across the two buttons.
+          const first = cta;
+          const last = dismiss;
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          } else if (!card.contains(document.activeElement)) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      }
+
+      document.addEventListener('keydown', onKeydown, true);
+      window.addEventListener('vb:progress-hydrated', onSignedIn);
+      overlay.addEventListener('click', function (event) {
+        if (event.target === overlay) close();
+      });
+      dismiss.addEventListener('click', close);
+      cta.addEventListener('click', function () {
+        if (window.VerbBoardAuth && window.VerbBoardAuth.signIn) {
+          window.VerbBoardAuth.signIn().catch(function (err) {
+            console.warn('VB: practice gate sign-in failed', (err && err.code) || err);
+          });
+        }
+      });
+
+      cta.focus();
     }
 
     function startPractice() {

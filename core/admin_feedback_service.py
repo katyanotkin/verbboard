@@ -159,7 +159,7 @@ def _excluded_uids() -> set[str]:
 # Set-once boolean flags on analytics_sessions. home_viewed only exists on
 # sessions created on/after 2026-09-24, so votd_clicked / home_viewed is only
 # meaningful for that window.
-_ENGAGEMENT_FLAGS = ("home_viewed", "votd_clicked", "practice_started", "practice_completed")
+_ENGAGEMENT_FLAGS = ("home_viewed", "votd_clicked", "practice_started", "practice_completed", "practice_gate_shown")
 
 _TOP_SEARCH_HITS = 10
 
@@ -229,6 +229,8 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
             verb_viewed += 1
         if data.get("ui_lang_selected"):
             ui_lang_selected[str(data["ui_lang_selected"])] += 1
+        if data.get("practice_gate_shown") and data.get("uid"):
+            flag_counts["practice_gate_then_signed_in"] += 1
         for flag in _ENGAGEMENT_FLAGS:
             if data.get(flag):
                 flag_counts[flag] += 1
@@ -238,7 +240,10 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
         "bot_sessions": bot_sessions,
         "logged_in_sessions": logged_in,
         "verb_viewed_sessions": verb_viewed,
-        "engagement": {flag: flag_counts[flag] for flag in _ENGAGEMENT_FLAGS},
+        "engagement": {
+            **{flag: flag_counts[flag] for flag in _ENGAGEMENT_FLAGS},
+            "practice_gate_then_signed_in": flag_counts["practice_gate_then_signed_in"],
+        },
         "ui_lang_selected": dict(ui_lang_selected),
         "by_device": dict(by_device),
         "by_language": dict(by_language),

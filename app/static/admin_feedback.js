@@ -219,12 +219,14 @@
           ${statRow("Verb of the Day clicked*", `${eng.votd_clicked ?? "—"} (${votdRate}%)`)}
           ${statRow("Practice started**", eng.practice_started ?? "—")}
           ${statRow("Practice completed**", eng.practice_completed ?? "—")}
+          ${statRow("Practice gate shown****", eng.practice_gate_shown ?? "—")}
+          ${statRow("...then signed in****", eng.practice_gate_then_signed_in ?? "—")}
           ${statRow("UI language picked***", Object.entries(deviceMix?.ui_lang_selected || {}).map(([k, n]) => `${escapeHtml(k)} ${n}`).join(", ") || "—")}
           ${statRow("Generated verbs", sh.autogen_verbs_total ?? "—")}
           ${statRow("Generated, searched again", sh.autogen_verbs_searched_again ?? "—")}
           ${statRow("Repeat searches (generated)", sh.autogen_hits_total ?? "—")}
         </table>
-        <div style="font-size:11px;color:#6b7280;margin-top:4px;">* since 2026-09-24 &nbsp; ** since 2026-09-16 &nbsp; generated/search counts: all time &nbsp; *** deliberate picks in the dropdown (since 2026-09-25)</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:4px;">* since 2026-09-24 &nbsp; ** since 2026-09-16 &nbsp; practice gate counts (****) since the gate ships; generated/search counts: all time &nbsp; *** deliberate picks in the dropdown (since 2026-09-25)</div>
       </div>
       <div>
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Top searched verbs</div>

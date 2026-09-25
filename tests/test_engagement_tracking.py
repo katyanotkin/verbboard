@@ -197,3 +197,43 @@ def test_record_search_hit_accumulates_across_searches(fake_db) -> None:
     search_hits._record_search_hit("it", "it_parlare", "search_by_lang")
     doc = fake_db._docs["verb_search_hits/it_it_parlare"]
     assert (doc["hits"], doc["hits_search"], doc["hits_search_by_lang"]) == (4, 3, 1)
+
+
+# ── practice_gate_shown (anonymous visitors must sign in to start practice) ──
+
+
+def test_practice_gate_shown_is_set_once_and_never_creates_a_stub_session(fake_db) -> None:
+    session_tracker._record_practice_gate_shown("nobody", DATE)
+    assert f"analytics_sessions/{DATE}_nobody" not in fake_db._docs
+
+    fake_db._docs[SESSION_PATH] = {"sid": "fp1"}
+    session_tracker._record_practice_gate_shown("fp1", DATE)
+    session_tracker._record_practice_gate_shown("fp1", DATE)
+    assert fake_db._docs[SESSION_PATH] == {"sid": "fp1", "practice_gate_shown": True}
+
+
+def test_practice_event_endpoint_accepts_gate_shown(client: TestClient) -> None:
+    with patch("app.routes.api_analytics.record_practice_gate_shown", new_callable=AsyncMock) as mock_record:
+        resp = client.post("/api/analytics/practice_event", json={"event": "gate_shown"})
+    assert resp.status_code == 200 and resp.json() == {"ok": True}
+    mock_record.assert_awaited_once()
+
+
+def test_admin_summary_counts_gate_impressions_and_the_ones_that_signed_in(fake_db) -> None:
+    from datetime import UTC, datetime
+
+    from core import admin_feedback_service
+
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    fake_db.seed(
+        "analytics_sessions",
+        {
+            "a": {"date": today, "device_type": "mobile", "practice_gate_shown": True},
+            "b": {"date": today, "device_type": "mobile", "practice_gate_shown": True, "uid": "u1"},
+            "c": {"date": today, "device_type": "desktop", "uid": "u2"},
+            "d": {"date": today, "device_type": "bot", "practice_gate_shown": True, "uid": "u3"},
+        },
+    )
+    engagement = admin_feedback_service._read_sessions_summary(days=60)["engagement"]
+    assert engagement["practice_gate_shown"] == 2
+    assert engagement["practice_gate_then_signed_in"] == 1
