@@ -6,8 +6,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const verbId = pageRoot.dataset.verbId;
   if (!language || !verbId) return;
 
-  const _uiLang = window.VB_UI_LANG || '';
-  const _uiSuffix = _uiLang ? '&ui_language=' + encodeURIComponent(_uiLang) : '';
+  // Resolved lazily so a missing helper fails loudly where URLs are built,
+  // not at script load.
+  function _nav() {
+    const nav = window.VerbBoardNav;
+    if (!nav) {
+      throw new Error('nav_urls.js must be loaded before learn_practice.js');
+    }
+    return nav;
+  }
 
   const progress = window.VerbBoardProgress;
   if (!progress) return;
@@ -60,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function _mountPracticeBar(session, idx) {
     const UI = window.UI || {};
-    const verbsUrl = `/verbs?language=${encodeURIComponent(language)}${_uiSuffix}`;
+    const verbsUrl = _nav().verbsUrl(language);
     const sessionTotal = session.size || session.ids.length;
     const skippedSoFar = sessionTotal - session.ids.length;
     const total = session.ids.length;
@@ -148,11 +155,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function navTo(targetId) {
-      window.location.href =
-        `/learn?language=${encodeURIComponent(language)}` +
-        `&verb_id=${encodeURIComponent(targetId)}` +
-        `&return_to=${encodeURIComponent(verbsUrl)}` +
-        _uiSuffix;
+      window.location.href = _nav().learnUrl(language, targetId, { returnTo: verbsUrl });
     }
 
     function hasListened() {
@@ -350,6 +353,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     localStorage.removeItem(sessionKey);
-    window.location.href = `/verbs?language=${encodeURIComponent(language)}${_uiSuffix}`;
+    window.location.href = _nav().verbsUrl(language);
   }
 });

@@ -21,6 +21,7 @@ Tests that overlap with existing files are omitted to avoid duplication:
 from __future__ import annotations
 
 import json
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -106,6 +107,23 @@ def test_practice_session_carries_ui_language(page, live_server_url):
     assert practice_bar.is_visible(), "TC-P1: Practice bar must be visible when session exists"
 
 
+def _assert_learn_url(url, expected_verb_id, label):
+    """Exact param check: practice nav must carry language, verb_id, return_to and ui_language."""
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+    assert parsed.path == "/learn", f"{label}: path {parsed.path!r} in {url!r}"
+    assert query.get("language") == ["ru"], f"{label}: {url!r}"
+    assert query.get("verb_id") == [expected_verb_id], f"{label}: {url!r}"
+    assert query.get("ui_language") == ["en"], f"{label}: {url!r}"
+    assert query.get("return_to") == ["/verbs?language=ru&ui_language=en"], f"{label}: {url!r}"
+
+
+def _assert_verbs_url(url, label):
+    parsed = urlparse(url)
+    assert parsed.path == "/verbs", f"{label}: path {parsed.path!r} in {url!r}"
+    assert parse_qs(parsed.query) == {"language": ["ru"], "ui_language": ["en"]}, f"{label}: {url!r}"
+
+
 # ---------------------------------------------------------------------------
 # TC-P2  Next button carries ui_language (audio plays injected)
 # ---------------------------------------------------------------------------
@@ -131,8 +149,7 @@ def test_practice_next_carries_ui_language(page, live_server_url):
         next_btn.click()
     page.wait_for_load_state("networkidle")
 
-    assert "ui_language=en" in page.url, f"TC-P2: ui_language=en missing after Next. URL: {page.url!r}"
-    assert ids[1] in page.url, f"TC-P2: Expected verb {ids[1]} in URL. Got: {page.url!r}"
+    _assert_learn_url(page.url, ids[1], "TC-P2 Next")
 
 
 # ---------------------------------------------------------------------------
@@ -160,8 +177,7 @@ def test_practice_prev_carries_ui_language(page, live_server_url):
         prev_btn.click()
     page.wait_for_load_state("networkidle")
 
-    assert "ui_language=en" in page.url, f"TC-P3: ui_language=en missing after Prev. URL: {page.url!r}"
-    assert ids[0] in page.url, f"TC-P3: Expected verb {ids[0]} in URL. Got: {page.url!r}"
+    _assert_learn_url(page.url, ids[0], "TC-P3 Prev")
 
 
 # ---------------------------------------------------------------------------
@@ -187,8 +203,7 @@ def test_practice_abandon_returns_with_ui_language(page, live_server_url):
         abandon_btn.click()
     page.wait_for_load_state("networkidle")
 
-    assert "/verbs" in page.url, f"TC-P4: Expected /verbs after Abandon. Got: {page.url!r}"
-    assert "ui_language=en" in page.url, f"TC-P4: ui_language=en missing after Abandon. URL: {page.url!r}"
+    _assert_verbs_url(page.url, "TC-P4 Abandon")
 
 
 # ---------------------------------------------------------------------------
@@ -220,8 +235,7 @@ def test_practice_finish_returns_with_ui_language(page, live_server_url):
         next_btn.click()
     page.wait_for_load_state("networkidle")
 
-    assert "/verbs" in page.url, f"TC-P5: Expected /verbs after Finish. Got: {page.url!r}"
-    assert "ui_language=en" in page.url, f"TC-P5: ui_language=en missing after Finish. URL: {page.url!r}"
+    _assert_verbs_url(page.url, "TC-P5 Finish")
 
 
 # ---------------------------------------------------------------------------
