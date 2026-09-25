@@ -62,6 +62,31 @@
     return /Mobi|Android|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
   }
 
+  // Opt-in, default-OFF signInWithRedirect path for the mobile browser branch
+  // (issue #55). Enabled per device via localStorage `vb_signin_redirect`=1,
+  // which is set by visiting any page with ?signin=redirect and cleared with
+  // ?signin=popup. Absent flag => the legacy /auth/signin two-tap flow.
+  var REDIRECT_FLAG_KEY = 'vb_signin_redirect';
+
+  function syncRedirectFlagFromUrl() {
+    try {
+      var mode = new URLSearchParams(window.location.search).get('signin');
+      if (mode === 'redirect') {
+        localStorage.setItem(REDIRECT_FLAG_KEY, '1');
+      } else if (mode === 'popup') {
+        localStorage.removeItem(REDIRECT_FLAG_KEY);
+      }
+    } catch (_) {}
+  }
+
+  function useRedirectSignIn() {
+    try {
+      return localStorage.getItem(REDIRECT_FLAG_KEY) === '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   // Fire-and-forget diagnostic ping for issue #28 (is sign-in friction
   // losing people): tags which signIn() branch was taken so conversion can
   // be compared across standalone/mobile/desktop. Must never block or fail
@@ -90,6 +115,11 @@
         // boundary and focuses the new tab. Firebase syncs auth state back
         // to the PWA shell via IndexedDB once sign-in completes.
         window.open('/auth/signin', '_blank');
+      } else if (isMobile() && useRedirectSignIn()) {
+        // Opt-in: full-page redirect to Google and back to the current URL.
+        // The result is consumed by getRedirectResult() in
+        // initializeFirebase(); onAuthStateChanged does the post-sign-in work.
+        await firebase.auth().signInWithRedirect(provider);
       } else if (isMobile()) {
         // Mobile browser: window.open(_blank) opens in the background on
         // Chrome Android (no focus switch). Navigate the current page to the
@@ -439,6 +469,23 @@
 
     firebase.initializeApp(config());
 
+    // Complete a pending signInWithRedirect (no-op when none is pending).
+    // Deliberately does nothing with the result: Firebase resolves the
+    // redirect before its first onAuthStateChanged callback, so that handler
+    // already performs the session POST / hydration / events exactly once.
+    // Errors (e.g. auth/account-exists-with-different-credential) are logged
+    // only.
+    try {
+      var redirectResult = firebase.auth().getRedirectResult();
+      if (redirectResult && redirectResult.catch) {
+        redirectResult.catch(function (err) {
+          console.warn('VB: getRedirectResult failed', (err && err.code) || err);
+        });
+      }
+    } catch (err) {
+      console.warn('VB: getRedirectResult failed', (err && err.code) || err);
+    }
+
     setInterval(refreshSessionCookie, SESSION_COOKIE_REFRESH_INTERVAL_MS);
 
     firebase.auth().onAuthStateChanged(async function (user) {
@@ -539,5 +586,6 @@
     },
   };
 
+  syncRedirectFlagFromUrl();
   initializeFirebase();
 })();

@@ -43,7 +43,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	test-qatp-stage \
 	smoke-nav-local smoke-nav-stage validate-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
-	firebase-deploy-hosting gcp-grant-firebase-hosting-admin \
+	firebase-deploy-hosting firestore-drift gcp-grant-firebase-hosting-admin \
 	gcp-update-secrets-stage gcp-update-secrets-prod \
 	cache-audio-stage cache-audio-prod \
 	audit-audio-stage audit-audio-prod \
@@ -219,6 +219,9 @@ gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branc
 	$(MAKE) firebase-deploy-hosting
 
 ## Firebase: deploy Hosting static files (public/) to both prod + stage sites
+firestore-drift: ## Firestore: read-only check that live rules + composite indexes match firestore.rules / firestore.indexes.json (exit 1 on drift)
+	PYTHONPATH=. $(PYTHON) -m tools.check_firestore_drift --project $(GCP_PROJECT)
+
 firebase-deploy-hosting: ## Firebase: push public/ to Firebase Hosting (both verbboard.com + stage.verbboard.com)
 	firebase deploy --only hosting --project $(GCP_PROJECT)
 

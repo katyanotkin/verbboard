@@ -16,6 +16,11 @@ python -m tools.check_nikud
 python -m tools.check_nikud --missing   # only verbs missing nikud
 ```
 
+`check_firestore_drift.py` — Read-only. Compares the live Firestore ruleset and composite indexes with `firestore.rules` / `firestore.indexes.json` and exits 1 on drift (2 if it can't check). Also `make firestore-drift`. Issue #39/#51.
+```
+python -m tools.check_firestore_drift
+```
+
 `check_plugins.py` — Verify every language plugin registers
 correctly against `core/registry`.
 ```
