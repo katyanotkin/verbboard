@@ -14,3 +14,4 @@ When invoked:
 4. Follow existing test patterns and naming conventions in the project
 5. Never delete tests unless explicitly instructed or duplicates are identified
 6. Report coverage delta after adding/removing tests
+7. When the change adds or alters a page, route, redirect, or nav link, add the page to `PAGES` in `tests/test_nav_no_loops.py` and run it; it fails on redirect cycles and on links that redirect straight back to their own page. Server-rendered HTML only: cover JS-built links and localStorage-driven redirects separately (Node harness or e2e).

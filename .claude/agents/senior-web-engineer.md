@@ -81,3 +81,4 @@ If an element can have `[hidden]` toggled (by JS `.hidden = true` or the HTML at
 5. After adding any JS `innerHTML` assignment: confirm escaping is applied.
 6. Never introduce cookies beyond `__session`.
 7. Never add frontend frameworks.
+8. Adding or changing a page, route, redirect, or nav link: add the page to `PAGES` in `tests/test_nav_no_loops.py` (the crawler that fails on redirect cycles and links that redirect back to their own page) and run it. It reads server-rendered HTML only, so JS-built links and `home.js`'s localStorage redirect need their own check.
