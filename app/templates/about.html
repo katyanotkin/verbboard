@@ -41,7 +41,7 @@
     На главной странице нажмите «Установить», чтобы добавить VerbBoard на главный экран.</p>
 
     <p><b>Отзывы</b><br/>
-    Нажмите 💬 на любой странице: идеи, баги, опросы. Французский есть только в версии Plus. Запросите доступ <a href="/feedback?page=plus&amp;language=fr&amp;ui_language={{ lang | urlencode }}" class="about-page-link">здесь</a>.</p>
+    Нажмите 💬 на любой странице: идеи, баги, опросы. Французский есть только в версии Plus. Запросите доступ <a href="/feedback?page=plus&amp;language=fr&amp;return_to={{ ('/about?ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}" class="about-page-link">здесь</a>.</p>
 
     {% elif lang == "es" %}
     <p><b>¿Qué es VerbBoard?</b><br/>
@@ -65,7 +65,7 @@
     En la página principal, pulsa «Instalar» para añadir VerbBoard a tu pantalla de inicio.</p>
 
     <p><b>Comentarios</b><br/>
-    Usa el botón 💬 en cualquier página: ideas, errores y encuestas. El francés solo está en la versión Plus. Pide acceso <a href="/feedback?page=plus&amp;language=fr&amp;ui_language={{ lang | urlencode }}" class="about-page-link">aquí</a>.</p>
+    Usa el botón 💬 en cualquier página: ideas, errores y encuestas. El francés solo está en la versión Plus. Pide acceso <a href="/feedback?page=plus&amp;language=fr&amp;return_to={{ ('/about?ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}" class="about-page-link">aquí</a>.</p>
 
     {% elif lang == "he" %}
     <p><b>מה זה VerbBoard?</b><br/>
@@ -89,7 +89,7 @@
     בדף הבית לחצו על ״התקן״ כדי להוסיף את VerbBoard למסך הבית.</p>
 
     <p><b>משוב</b><br/>
-    לחצו על 💬 בכל דף: רעיונות, תקלות ושאלות סקר. צרפתית זמינה רק בגרסת Plus. בקשו גישה <a href="/feedback?page=plus&amp;language=fr&amp;ui_language={{ lang | urlencode }}" class="about-page-link">כאן</a>.</p>
+    לחצו על 💬 בכל דף: רעיונות, תקלות ושאלות סקר. צרפתית זמינה רק בגרסת Plus. בקשו גישה <a href="/feedback?page=plus&amp;language=fr&amp;return_to={{ ('/about?ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}" class="about-page-link">כאן</a>.</p>
 
     {% else %}
     <p><b>What is VerbBoard?</b><br/>
@@ -113,7 +113,7 @@
     On the home page, tap Install to add VerbBoard to your home screen.</p>
 
     <p><b>Feedback</b><br/>
-    Use the 💬 button on any page for ideas, bugs and poll questions. French is in the Plus version only. Ask for access <a href="/feedback?page=plus&amp;language=fr&amp;ui_language={{ lang | urlencode }}" class="about-page-link">here</a>.</p>
+    Use the 💬 button on any page for ideas, bugs and poll questions. French is in the Plus version only. Ask for access <a href="/feedback?page=plus&amp;language=fr&amp;return_to={{ ('/about?ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}" class="about-page-link">here</a>.</p>
     {% endif %}
   </div>
 

@@ -436,3 +436,9 @@ def test_set_language_and_empty_search_still_go_home_for_free_language(client: T
     for url in ("/set_language?language=es&ui_language=en", "/search_verb?language=es&q=&ui_language=en"):
         resp = client.get(url, follow_redirects=False)
         assert resp.headers["location"] == "/?language=es&ui_language=en", url
+
+
+def test_about_plus_request_link_returns_to_about(client: TestClient) -> None:
+    """Back from the feedback page must land on About, not home."""
+    html = client.get("/about?ui_language=en").text
+    assert "page=plus&amp;language=fr&amp;return_to=/about%3Fui_language%3Den" in html
