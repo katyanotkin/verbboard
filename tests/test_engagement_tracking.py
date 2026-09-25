@@ -153,3 +153,40 @@ def test_cross_language_search_hit_records_search_hit(client: TestClient, monkey
     monkeypatch.setattr("app.routes.home.record_search_hit", lambda **kw: calls.append(kw))
     client.get("/search_verb_by_lang?language=es&q=run&source_lang=en", follow_redirects=False)
     assert calls == [{"language": "es", "verb_id": "es_correr", "source": "search_by_lang"}]
+
+
+# ── ui_lang_selected (Hebrew UI review, issue #60) ──────────────────────────
+
+
+def test_record_ui_lang_selected_sets_latest_pick(fake_db) -> None:
+    fake_db._docs[SESSION_PATH] = {"sid": "fp1", "ui_lang": "en"}
+    session_tracker._record_ui_lang_selected("fp1", DATE, "he")
+    session_tracker._record_ui_lang_selected("fp1", DATE, "es")
+    assert fake_db._docs[SESSION_PATH] == {"sid": "fp1", "ui_lang": "en", "ui_lang_selected": "es"}
+
+
+def test_record_ui_lang_selected_rejects_non_ui_languages_and_missing_sessions(fake_db) -> None:
+    fake_db._docs[SESSION_PATH] = {"sid": "fp1"}
+    session_tracker._record_ui_lang_selected("fp1", DATE, "it")  # study-only, not a UI language
+    session_tracker._record_ui_lang_selected("fp1", DATE, "")
+    assert "ui_lang_selected" not in fake_db._docs[SESSION_PATH]
+
+    session_tracker._record_ui_lang_selected("nobody", DATE, "he")
+    assert f"analytics_sessions/{DATE}_nobody" not in fake_db._docs
+
+
+def test_ui_lang_selected_endpoint_passes_the_choice(client: TestClient) -> None:
+    with patch("app.routes.api_analytics.record_ui_lang_selected", new_callable=AsyncMock) as mock_record:
+        resp = client.post("/api/analytics/ui_lang_selected", json={"ui_lang": "he"})
+    assert resp.status_code == 200
+    mock_record.assert_awaited_once()
+    assert mock_record.await_args is not None
+    assert mock_record.await_args.args[2] == "he"
+
+
+def test_ui_lang_selected_endpoint_tolerates_a_bad_body(client: TestClient) -> None:
+    with patch("app.routes.api_analytics.record_ui_lang_selected", new_callable=AsyncMock) as mock_record:
+        resp = client.post("/api/analytics/ui_lang_selected", content="not json")
+    assert resp.status_code == 200
+    assert mock_record.await_args is not None
+    assert mock_record.await_args.args[2] == ""

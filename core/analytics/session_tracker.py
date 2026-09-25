@@ -278,6 +278,34 @@ async def record_votd_clicked(fingerprint: str, date: str) -> None:
     task.add_done_callback(_pending.discard)
 
 
+def _record_ui_lang_selected(fingerprint: str, date: str, ui_lang: str) -> None:
+    """Record that the visitor deliberately picked `ui_lang` in the UI-language
+    dropdown (as opposed to getting it from the browser's Accept-Language or a
+    saved preference). Lets the Hebrew UI review (issue #60) count real
+    selections. The latest pick wins; a pick with no session doc is dropped
+    rather than creating a stub doc."""
+    clean = _clean_ui_lang(ui_lang)
+    if not clean:
+        return
+
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        if not doc_ref.get().exists:
+            return
+        doc_ref.set({"ui_lang_selected": clean}, merge=True)
+    except Exception:
+        logger.exception("Failed to record UI language selection")
+
+
+async def record_ui_lang_selected(fingerprint: str, date: str, ui_lang: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_ui_lang_selected, fingerprint, date, ui_lang))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
 def delete_sessions_for_uid(uid: str) -> None:
     """Delete every analytics_sessions doc attached to this uid.
 

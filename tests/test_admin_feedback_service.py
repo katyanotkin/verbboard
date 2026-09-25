@@ -570,3 +570,19 @@ def test_read_sessions_summary_counts_bots_separately(fake_db) -> None:
     assert summary["by_language"] == {"ru": 1}
     assert summary["verb_viewed_sessions"] == 0
     assert summary["engagement"]["home_viewed"] == 1
+
+
+def test_read_sessions_summary_counts_ui_language_picks_excluding_bots(fake_db) -> None:
+    fake_db.seed(
+        "analytics_sessions",
+        {
+            "s1": {"date": _date_str(1), "device_type": "desktop", "ui_lang": "he", "ui_lang_selected": "he"},
+            "s2": {"date": _date_str(1), "device_type": "mobile", "ui_lang": "he"},
+            "s3": {"date": _date_str(1), "device_type": "mobile", "ui_lang": "es", "ui_lang_selected": "es"},
+            "s4": {"date": _date_str(1), "device_type": "bot", "ui_lang": "he", "ui_lang_selected": "he"},
+        },
+    )
+
+    summary = admin_feedback_service._read_sessions_summary(days=60)
+
+    assert summary["ui_lang_selected"] == {"he": 1, "es": 1}

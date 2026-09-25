@@ -14,6 +14,7 @@ from core.analytics.session_tracker import (
     record_practice_completed,
     record_practice_started,
     record_sign_in_tap,
+    record_ui_lang_selected,
     record_votd_clicked,
 )
 from core.auth.firebase_auth import get_optional_auth_user
@@ -104,6 +105,23 @@ async def record_votd_click(request: Request) -> JSONResponse:
     date = datetime.now(UTC).strftime("%Y-%m-%d")
     fingerprint = get_fingerprint_sid(request, date)
     await record_votd_clicked(fingerprint, date)
+    return JSONResponse({"ok": True})
+
+
+@router.post("/api/analytics/ui_lang_selected")
+async def record_ui_lang_selection(request: Request) -> JSONResponse:
+    """Diagnostic-only: the visitor picked a UI language in the dropdown. No auth,
+    fail-open, same shape as /votd_clicked; the value is validated against the
+    UI-language allowlist server-side."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
+    fingerprint = get_fingerprint_sid(request, date)
+    await record_ui_lang_selected(fingerprint, date, str(body.get("ui_lang") or ""))
     return JSONResponse({"ok": True})
 
 

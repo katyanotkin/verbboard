@@ -207,6 +207,7 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
     logged_in = 0
     verb_viewed = 0
     flag_counts: Counter[str] = Counter()
+    ui_lang_selected: Counter[str] = Counter()
 
     for doc in docs:
         data = doc.to_dict() or {}
@@ -226,6 +227,8 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
             logged_in += 1
         if data.get("verb_viewed"):
             verb_viewed += 1
+        if data.get("ui_lang_selected"):
+            ui_lang_selected[str(data["ui_lang_selected"])] += 1
         for flag in _ENGAGEMENT_FLAGS:
             if data.get(flag):
                 flag_counts[flag] += 1
@@ -236,6 +239,7 @@ def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = N
         "logged_in_sessions": logged_in,
         "verb_viewed_sessions": verb_viewed,
         "engagement": {flag: flag_counts[flag] for flag in _ENGAGEMENT_FLAGS},
+        "ui_lang_selected": dict(ui_lang_selected),
         "by_device": dict(by_device),
         "by_language": dict(by_language),
         "by_ui_lang": dict(by_ui_lang),
@@ -315,6 +319,7 @@ def get_device_mix(*, days: int = 60) -> dict[str, Any]:
         "logged_in_sessions": sessions["logged_in_sessions"],
         "verb_viewed_sessions": sessions["verb_viewed_sessions"],
         "engagement": sessions["engagement"],
+        "ui_lang_selected": sessions["ui_lang_selected"],
         "search_hits": _read_search_hits_summary(),
         "by_device": sessions["by_device"],
         "by_language": sessions["by_language"],
