@@ -24,7 +24,7 @@ from vertexai.generative_models import GenerationConfig, GenerativeModel
 from core.languages.config import STUDY_LANGUAGE_SCRIPTS
 from core.languages.ru.validation import validate_ru_payload
 from core.rate_limit import SlidingWindowRateLimiter
-from core.settings import load_settings, verb_candidates_collection_name, verbs_collection_name
+from core.settings import _load_anthropic_api_key, load_settings, verb_candidates_collection_name, verbs_collection_name
 from core.settings_ai import (
     _LANG_PROMPTS,
     _MAX_TOKENS,
@@ -37,7 +37,7 @@ from core.settings_ai import (
 from core.storage.firestore_db import get_db
 from core.storage.verb_document import build_search_extract_from_entry, build_storage_verb_id
 from core.storage.verb_repository import find_verb_by_search_extract
-from core.translation_service import translate_examples
+from core.translation_service import translate_examples, translate_lemma
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,9 @@ _GEMINI_VERB_MODEL = "gemini-2.5-flash"
 _GCP_LOCATION = load_settings().gcp_region
 _GCP_PROJECT = load_settings().google_cloud_project
 
+# Upper bound on translating a new verb before publishing it anyway.
+_TRANSLATION_TIMEOUT_SECONDS = 15.0
+
 # In-process dedup: prevents redundant concurrent tasks for the same query
 _GENERATING: set[str] = set()
 
@@ -70,20 +73,6 @@ _AUTOGEN_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=5, window_seconds=600
 def autogen_rate_limited(client_ip: str) -> bool:
     """Return True if this client should NOT be allowed to trigger another autogen call."""
     return not _AUTOGEN_RATE_LIMITER.allow(client_ip)
-
-
-# Translation targets per source language, for translate_examples(). Hebrew is
-# intentionally excluded as a *source* -- it routes through Anthropic, which
-# translate_examples() only takes for a Hebrew source. Russian as a source
-# still resolves entirely through the Gemini branch of translate_examples()
-# even though Russian *generation* itself uses Claude (a separate concern).
-_TRANSLATION_TARGETS: dict[str, list[str]] = {
-    "en": ["ru", "es"],
-    "es": ["en", "ru"],
-    "it": ["en", "ru", "es"],
-    "fr": ["en", "ru", "es"],
-    "ru": ["en", "es"],
-}
 
 
 class _VerbGenResponse(BaseModel):
@@ -295,6 +284,52 @@ def check_verb_rejected(language: str, query: str) -> bool:
     return data.get("status") == "rejected_non_verb" and data.get("query", "").strip().lower() == query.strip().lower()
 
 
+async def _translate_new_verb(language: str, lemma: str, examples: list[Any]) -> tuple[list[Any], dict[str, str]]:
+    """Translate a freshly generated verb into every other UI language.
+
+    Same completeness as the admin generate/promote flow: example sentences AND
+    the lemma, into every UI language except the verb's own (Hebrew included,
+    which routes through Claude). The targets come from translation_service's
+    defaults (derived from UI_LANGUAGES), not a hand-kept per-language table,
+    which had silently left out Hebrew and never translated the lemma at all.
+    Non-fatal: a failure leaves that part untranslated, never blocks the write
+    (tools/backfill_translations.py can fill gaps later).
+    """
+    try:
+        api_key = _load_anthropic_api_key()
+    except Exception:
+        logger.warning("autogen: no Anthropic key; Hebrew translations for %s/%s will be skipped", language, lemma)
+        api_key = ""
+
+    async def _examples() -> list[Any]:
+        if not examples:
+            return examples
+        try:
+            return await asyncio.to_thread(
+                translate_examples,
+                verb_lang=language,
+                lemma=lemma,
+                examples=examples,
+                project=_GCP_PROJECT,
+                api_key=api_key,
+            )
+        except Exception:
+            logger.exception("autogen example translation failed for %s/%s", language, lemma)
+            return examples
+
+    async def _lemma() -> dict[str, str]:
+        try:
+            return await asyncio.to_thread(
+                translate_lemma, verb_lang=language, lemma=lemma, project=_GCP_PROJECT, api_key=api_key
+            )
+        except Exception:
+            logger.exception("autogen lemma translation failed for %s/%s", language, lemma)
+            return {}
+
+    translated_examples, lemma_translations = await asyncio.gather(_examples(), _lemma())
+    return translated_examples, lemma_translations
+
+
 def _write_promoted_verb(
     *,
     language: str,
@@ -307,6 +342,7 @@ def _write_promoted_verb(
     search_extract: list[str],
     pronoun_forms: dict[str, Any] | None,
     query: str,
+    lemma_translations: dict[str, str] | None = None,
 ) -> None:
     db = get_db()
     now = datetime.now(UTC).isoformat()
@@ -325,6 +361,8 @@ def _write_promoted_verb(
     }
     if pronoun_forms:
         base["pronoun_forms"] = pronoun_forms
+    if lemma_translations:
+        base["lemma_translations"] = lemma_translations
 
     # Candidate record: auditable trail; status="promoted" means already live
     candidate_doc = {**base, "query": query, "status": "promoted", "source": "autogen"}
@@ -406,21 +444,15 @@ async def autogenerate_missing_verb(*, language: str, query: str, audio_backend:
 
         examples: list[Any] = [ex for ex in parsed.examples if isinstance(ex, dict) and isinstance(ex.get("dst"), str)]
 
-        target_langs = _TRANSLATION_TARGETS.get(language, [])
-        if target_langs and examples:
-            try:
-                # api_key is unused: target_langs excludes "he" so the Claude path is never taken
-                examples = await asyncio.to_thread(
-                    translate_examples,
-                    verb_lang=language,
-                    lemma=lemma,
-                    examples=examples,
-                    target_langs=target_langs,
-                    project=_GCP_PROJECT,
-                    api_key="",
-                )
-            except Exception:
-                logger.exception("autogen translation failed for %s/%s, saving without translations", language, lemma)
+        try:
+            examples, lemma_translations = await asyncio.wait_for(
+                _translate_new_verb(language, lemma, examples), timeout=_TRANSLATION_TIMEOUT_SECONDS
+            )
+        except TimeoutError:
+            # Publishing must not wait on a hung model call (the home page's retry
+            # countdown is 20 s); tools/backfill_translations.py fills the gap later.
+            logger.warning("autogen: translation timed out for %s/%s, publishing untranslated", language, lemma)
+            lemma_translations = {}
 
         await asyncio.to_thread(
             _write_promoted_verb,
@@ -434,6 +466,7 @@ async def autogenerate_missing_verb(*, language: str, query: str, audio_backend:
             search_extract=search_extract,
             pronoun_forms=parsed.pronoun_forms,
             query=query,
+            lemma_translations=lemma_translations,
         )
 
         # Bust the list cache so the new verb appears on the next /verbs load

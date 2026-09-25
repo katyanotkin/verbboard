@@ -33,6 +33,7 @@ import sys
 from dotenv import load_dotenv
 from google.cloud import firestore
 
+from core.languages.config import ALL_STUDY_LANGUAGES
 from core.translation_service import SUPPORTED_LANGUAGES, translate_examples, translate_lemma
 
 load_dotenv(override=True)
@@ -183,6 +184,13 @@ def process_verb(
     return updated
 
 
+def source_languages(language: str) -> list[str]:
+    """Verb (source) languages to process. "all" means every study language,
+    not just the UI languages that SUPPORTED_LANGUAGES holds: Italian and French
+    verbs are translated INTO the UI languages too (issue #59)."""
+    return list(ALL_STUDY_LANGUAGES) if language == "all" else [language]
+
+
 def run(
     language: str,
     field: str,
@@ -193,7 +201,7 @@ def run(
     force: bool = False,
 ) -> None:
     db = firestore.Client(project=project)
-    verb_langs = list(SUPPORTED_LANGUAGES) if language == "all" else [language]
+    verb_langs = source_languages(language)
 
     for verb_lang in verb_langs:
         logger.info("Processing language: %s", verb_lang)
@@ -214,7 +222,7 @@ def main() -> None:
     parser.add_argument(
         "--language",
         default="all",
-        help="Verb language to process (any source language, or 'all' for SUPPORTED_LANGUAGES). Default: all",
+        help="Verb language to process (any source language, or 'all' for every study language). Default: all",
     )
     parser.add_argument(
         "--field",
