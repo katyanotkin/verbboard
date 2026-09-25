@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from core.languages.config import LANGUAGE
+from core.languages.config import ALL_STUDY_LANGUAGES, LANGUAGE
 from core.registry import LanguagePlugin, all_plugins
 from core.settings import Settings, load_settings
 
@@ -15,6 +15,16 @@ def active_study_plugins(settings: Settings | None = None) -> dict[str, Language
     """
     allowed = set((settings or load_settings()).study_languages)
     return {code: plugin for code, plugin in all_plugins().items() if code in allowed}
+
+
+def picker_study_plugins(settings: Settings | None = None) -> dict[str, LanguagePlugin]:
+    """Plugins to LIST in the language pickers: every registered study language,
+    regardless of edition, so Plus-only languages stay visible (labelled Plus)
+    on the free edition. Listing is not access -- study access is still decided
+    by active_study_plugins()/core.entitlements.can_study().
+    """
+    del settings  # edition-independent by design
+    return {code: plugin for code, plugin in all_plugins().items() if code in ALL_STUDY_LANGUAGES}
 
 
 def is_study_language(language: str, settings: Settings | None = None) -> bool:
@@ -40,3 +50,14 @@ def study_language_label(code: str, plugins: dict[str, LanguagePlugin], ui: dict
     """
     fallback = LANGUAGE[code].display if code in LANGUAGE else plugins[code].display_name
     return ui.get(f"lang.{code}", fallback)
+
+
+def study_language_picker_label(code: str, plugins: dict[str, LanguagePlugin], ui: dict[str, str]) -> str:
+    """Picker label: the localized name, suffixed with the localized Plus marker
+    for Plus-only languages (e.g. "French (Plus)")."""
+    from core.entitlements import requires_entitlement
+
+    label = study_language_label(code, plugins, ui)
+    if requires_entitlement(code):
+        return ui.get("lang.plus_suffix", "{language} (Plus)").format(language=label)
+    return label

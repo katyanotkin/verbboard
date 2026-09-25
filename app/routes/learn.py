@@ -75,18 +75,14 @@ async def learn(
 ) -> HTMLResponse:
     session_uid = get_session_uid(request)
     if not can_study(language, session_uid):
-        if session_uid is None:
-            current_query = request.url.query
-            current_path = f"{request.url.path}?{current_query}" if current_query else request.url.path
-            return RedirectResponse(
-                url=f"/auth/signin?return_to={quote(current_path, safe='')}",
-                status_code=303,
-            )
-        # Signed in but not entitled: send back to the verb picker with a
-        # dedicated, non-search notice (not_available=1 means "search miss" --
-        # repurposing it here would render a misleading "no match: {language}"
-        # banner).
-        return RedirectResponse(url=f"/verbs?language={language}&plus_required=1", status_code=303)
+        # Plus-only language, not entitled (anonymous or signed in): signing in
+        # would not unlock it, so go straight to the /verbs notice. Not
+        # not_available=1 -- that means "search miss" and would render a
+        # misleading "no match" banner.
+        return RedirectResponse(
+            url=f"/verbs?language={quote(language, safe='')}&plus_required=1&ui_language={resolve_ui_language(request)}",
+            status_code=303,
+        )
 
     logger.debug("lookup source %s -> verb %s", source, verb_id)
     if source == "candidate":

@@ -14,7 +14,6 @@ depending on any user actually holding a Plus entitlement.
 from __future__ import annotations
 
 from unittest.mock import patch
-from urllib.parse import unquote
 
 from fastapi.testclient import TestClient
 
@@ -36,7 +35,7 @@ def test_learn_free_language_unaffected_by_gate(client: TestClient, monkeypatch,
     assert resp.status_code == 200
 
 
-def test_learn_gate_anonymous_redirects_to_signin_with_full_return_to(client: TestClient) -> None:
+def test_learn_gate_anonymous_redirects_to_plus_notice_not_signin(client: TestClient) -> None:
     with (
         patch("app.routes.learn.can_study", return_value=False),
         patch("app.routes.learn.get_session_uid", return_value=None),
@@ -47,12 +46,7 @@ def test_learn_gate_anonymous_redirects_to_signin_with_full_return_to(client: Te
         )
 
     assert resp.status_code == 303
-    location = resp.headers["location"]
-    assert location.startswith("/auth/signin?return_to=")
-    target = unquote(location.split("return_to=", 1)[1])
-    # Every in-scope param on the original request must survive the round trip
-    # through sign-in and back.
-    assert target == "/learn?language=fr&verb_id=fr_aller&ui_language=es"
+    assert resp.headers["location"] == "/verbs?language=fr&plus_required=1&ui_language=es"
 
 
 def test_learn_gate_signed_in_unentitled_redirects_to_verbs_plus_required(client: TestClient) -> None:
@@ -63,7 +57,7 @@ def test_learn_gate_signed_in_unentitled_redirects_to_verbs_plus_required(client
         resp = client.get("/learn?language=fr&verb_id=fr_aller", follow_redirects=False)
 
     assert resp.status_code == 303
-    assert resp.headers["location"] == "/verbs?language=fr&plus_required=1"
+    assert resp.headers["location"].startswith("/verbs?language=fr&plus_required=1")
 
 
 def test_learn_gate_entitled_user_passes_through(client: TestClient, monkeypatch, mock_verb) -> None:
@@ -90,15 +84,25 @@ def test_learn_gate_entitled_user_passes_through(client: TestClient, monkeypatch
 
 
 def test_verbs_plus_required_renders_notice(client: TestClient) -> None:
+    resp = client.get("/verbs?language=fr&plus_required=1&ui_language=es")
+    assert resp.status_code == 200
+    assert 'href="/feedback?page=plus&amp;language=fr&amp;ui_language=es"' in resp.text or (
+        'href="/feedback?page=plus&language=fr&ui_language=es"' in resp.text
+    )
+    assert "vb-plus-request-link" in resp.text
+
+
+def test_verbs_plus_required_ignored_for_free_language(client: TestClient) -> None:
+    """A stale plus_required=1 must not put the Plus notice on a free language."""
     resp = client.get("/verbs?language=en&plus_required=1")
     assert resp.status_code == 200
-    assert "VerbBoard Plus" in resp.text
+    assert "vb-plus-request-link" not in resp.text
 
 
 def test_verbs_without_plus_required_has_no_notice(client: TestClient) -> None:
     resp = client.get("/verbs?language=en")
     assert resp.status_code == 200
-    assert "VerbBoard Plus" not in resp.text
+    assert "vb-plus-request-link" not in resp.text
 
 
 def test_verbs_picker_not_entitlement_filtered(client: TestClient) -> None:
@@ -129,7 +133,7 @@ def test_verbs_direct_select_of_gated_language_blocks_content_not_page(client: T
         resp = client.get("/verbs?language=en")
 
     assert resp.status_code == 200
-    assert "VerbBoard Plus" in resp.text
+    assert "vb-plus-request-link" in resp.text
     assert called == []  # no Firestore verb-list load for a gated language
 
 
@@ -143,7 +147,7 @@ def test_verbs_entitled_selection_still_loads_real_content(client: TestClient, m
         resp = client.get("/verbs?language=en")
 
     assert resp.status_code == 200
-    assert "VerbBoard Plus" not in resp.text
+    assert "vb-plus-request-link" not in resp.text
 
 
 def test_verbs_entitled_selection_of_language_without_ui_locale_does_not_500(
@@ -162,7 +166,7 @@ def test_verbs_entitled_selection_of_language_without_ui_locale_does_not_500(
         resp = client.get("/verbs?language=fr&ui_language=ru")
 
     assert resp.status_code == 200
-    assert "VerbBoard Plus" not in resp.text
+    assert "vb-plus-request-link" not in resp.text
 
 
 # ---------------------------------------------------------------------------
@@ -187,14 +191,16 @@ def test_api_verbs_gated_language_returns_403(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_search_verb_by_lang_gate_anonymous_redirects_to_signin(client: TestClient) -> None:
+def test_search_verb_by_lang_gate_anonymous_redirects_to_plus_notice(client: TestClient) -> None:
     with patch("app.routes.home.can_study", return_value=False):
         resp = client.get(
             "/search_verb_by_lang?language=fr&q=run&source_lang=en",
             follow_redirects=False,
         )
     assert resp.status_code in (302, 303, 307, 308)
-    assert resp.headers["location"].startswith("/auth/signin?return_to=")
+    location = resp.headers["location"]
+    assert "/auth/signin" not in location
+    assert location.startswith("/verbs?language=fr") and "plus_required=1" in location
 
 
 def test_search_verb_by_lang_gate_signed_in_redirects_with_plus_required(client: TestClient) -> None:
@@ -227,11 +233,13 @@ def test_search_verb_by_lang_gate_checked_before_translation_call(client: TestCl
     assert called == []
 
 
-def test_search_verb_gate_anonymous_redirects_to_signin(client: TestClient) -> None:
+def test_search_verb_gate_anonymous_redirects_to_plus_notice(client: TestClient) -> None:
     with patch("app.routes.home.can_study", return_value=False):
         resp = client.get("/search_verb?language=fr&q=aller", follow_redirects=False)
     assert resp.status_code in (302, 303, 307, 308)
-    assert resp.headers["location"].startswith("/auth/signin?return_to=")
+    location = resp.headers["location"]
+    assert "/auth/signin" not in location
+    assert location.startswith("/verbs?language=fr") and "plus_required=1" in location
 
 
 def test_search_verb_gate_checked_before_firestore_lookup(client: TestClient) -> None:
@@ -326,3 +334,66 @@ def test_audio_gate_checked_before_backend_read(client: TestClient, monkeypatch)
 
     assert resp.status_code == 403
     assert called == []
+
+
+# ---------------------------------------------------------------------------
+# Free edition: Plus-only language is LISTED but leads to the notice
+# ---------------------------------------------------------------------------
+
+
+def _picker_html(html: str) -> str:
+    start = html.index('id="language-select"')
+    return html[start : html.index("</select>", start)]
+
+
+def test_home_free_edition_lists_french_labelled_plus(client: TestClient) -> None:
+    resp = client.get("/?language=en&ui_language=en")
+    assert resp.status_code == 200
+    picker = _picker_html(resp.text)
+    assert '<option value="fr"' in picker
+    assert "French (Plus)" in picker
+    assert "Spanish (Plus)" not in picker
+
+
+def test_home_french_unentitled_lands_on_plus_notice_no_signin(client: TestClient) -> None:
+    resp = client.get("/?language=fr&ui_language=he", follow_redirects=False)
+    assert resp.status_code in (302, 303, 307)
+    assert resp.headers["location"] == "/verbs?language=fr&plus_required=1&ui_language=he"
+
+
+def test_set_language_fr_end_to_end_shows_notice_with_feedback_link(client: TestClient) -> None:
+    resp = client.get("/set_language?language=fr&ui_language=en", follow_redirects=True)
+    assert resp.status_code == 200
+    assert "/auth/signin" not in str(resp.url)
+    assert "vb-plus-request-link" in resp.text
+    assert "Plus version only" in resp.text
+    assert "/feedback?page=plus&amp;language=fr&amp;ui_language=en" in resp.text or (
+        "/feedback?page=plus&language=fr&ui_language=en" in resp.text
+    )
+
+
+def test_home_french_entitled_uid_gets_home_page(client: TestClient) -> None:
+    with (
+        patch("app.routes.home.get_session_uid", return_value="user-1"),
+        patch("app.routes.home.can_study", return_value=True),
+    ):
+        resp = client.get("/?language=fr&ui_language=en", follow_redirects=False)
+    assert resp.status_code == 200
+    assert '<option value="fr" selected' in resp.text
+
+
+def test_verbs_french_entitled_uid_gets_verb_list_without_notice(client: TestClient, monkeypatch, mock_verb) -> None:
+    monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [mock_verb])
+    with (
+        patch("app.routes.verbs.get_session_uid", return_value="user-1"),
+        patch("app.routes.verbs.can_study", return_value=True),
+    ):
+        resp = client.get("/verbs?language=fr&ui_language=en")
+    assert resp.status_code == 200
+    assert "vb-plus-request-link" not in resp.text
+
+
+def test_home_free_language_unchanged(client: TestClient) -> None:
+    resp = client.get("/?language=es&ui_language=en", follow_redirects=False)
+    assert resp.status_code == 200
+    assert '<option value="es" selected' in resp.text

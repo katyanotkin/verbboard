@@ -37,7 +37,7 @@ The product focuses on:
 ## Current behavior
 
 ### Home page
-- Select language (`en`, `ru`, `he`, `es` free; `it`, `fr` on Plus)
+- Select language (`en`, `ru`, `he`, `es`, `it` free; `fr` Plus-only, listed but shows a request-access notice without entitlement)
 - Verb of the day: one featured verb per language, deep-linked to the learn page — same pick all day, changes daily
 - Search verbs: studied language selected by default; select English to cross-search in your studied language (translated via Gemini)
 - Voice selection (`female`, `male`)
@@ -141,7 +141,7 @@ One Docker image, config-only difference between free and Plus -- no code fork, 
 
 `core/editions.py` filters the language-plugin registry (`core/registry.py`, unchanged, edition-agnostic) down to what the active edition allows via `active_study_plugins()` / `is_study_language()`. With zero env vars set, this is a no-op: free-edition behavior is unchanged.
 
-Study languages outside `FREE_STUDY_LANGUAGES` (i.e. `PLUS_EXTRA_STUDY_LANGUAGES`) are gated Plus-only via `core/entitlements.py`: `can_study(language, uid)` checks `user_entitlements/{uid}` in Firestore and is enforced on `/learn`, `/verbs`, `/audio`, both search endpoints, and `/api/preferences`. Entitlement grants are manual today -- an admin sets a record via `/admin/entitlements` (`user_entitlements/{uid}.status == "active"`, checked with a 60s TTL cache, fails open on a Firestore read error since this gates content, not sensitive data). No billing integration yet; the record schema reserves fields (`product_id`, `purchase_token`, `expires_at`) for when one exists.
+Study languages outside `FREE_STUDY_LANGUAGES` (i.e. `PLUS_EXTRA_STUDY_LANGUAGES`) are gated Plus-only via `core/entitlements.py`: `can_study(language, uid)` checks `user_entitlements/{uid}` in Firestore and is enforced on `/learn`, `/verbs`, `/audio`, both search endpoints, and `/api/preferences`. Plus-only languages are still LISTED in the home language picker on every edition, labelled e.g. "French (Plus)" (`picker_study_plugins()` in `core/editions.py`); choosing one without the entitlement -- anonymous or signed in, never via the sign-in page -- lands on `/verbs?language=fr&plus_required=1` with a "Plus version only, request access via Feedback" notice linking to `/feedback?page=plus`. Entitlement grants are manual today -- an admin sets a record via `/admin/entitlements` (`user_entitlements/{uid}.status == "active"`, checked with a 60s TTL cache, fails open on a Firestore read error since this gates content, not sensitive data). No billing integration yet; the record schema reserves fields (`product_id`, `purchase_token`, `expires_at`) for when one exists.
 
 ---
 

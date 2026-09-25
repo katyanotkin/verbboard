@@ -14,7 +14,7 @@ from fastapi.templating import Jinja2Templates
 from core.admin_auth import get_session_uid
 from core.admin_logging import log_missing_verb_search
 from core.analytics.search_hits import record_search_hit
-from core.editions import active_study_plugins, resolve_study_language, study_language_label
+from core.editions import picker_study_plugins, resolve_study_language, study_language_picker_label
 from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
@@ -42,9 +42,7 @@ _NON_LATIN_LANGUAGES = {"ru", "he"}
 
 
 def _entitlement_redirect(
-    request: Request,
     language: str,
-    session_uid: str | None,
     ui_language: str,
     return_to: str | None,
 ) -> RedirectResponse:
@@ -53,11 +51,8 @@ def _entitlement_redirect(
     otherwise end in a redirect to /learn, which is already gated, but not
     before burning a Vertex Gemini call (and, for autogen-eligible
     languages, a Claude generation + TTS prewarm) first."""
-    if session_uid is None:
-        current_query = request.url.query
-        current_path = f"{request.url.path}?{current_query}" if current_query else request.url.path
-        return RedirectResponse(url=f"/auth/signin?return_to={quote(current_path, safe='')}")
-
+    # Anonymous callers get the same notice as signed-in ones: signing in would
+    # not unlock a Plus-only language, so /auth/signin is never the answer here.
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     base = safe_return_to(return_to or "", fallback="") or f"/verbs?language={language}{_ui_suffix}"
     sep = "&" if "?" in base else "?"
@@ -136,7 +131,7 @@ async def search_verb_by_lang(
 
     session_uid = get_session_uid(request)
     if not can_study(language, session_uid):
-        return _entitlement_redirect(request, language, session_uid, ui_language, return_to)
+        return _entitlement_redirect(language, ui_language, return_to)
 
     translated = await asyncio.to_thread(
         translate_search_query,
@@ -252,7 +247,7 @@ async def search_verb(
 
     session_uid = get_session_uid(request)
     if not can_study(language, session_uid):
-        return _entitlement_redirect(request, language, session_uid, ui_language, return_to)
+        return _entitlement_redirect(language, ui_language, return_to)
 
     if language in _NON_LATIN_LANGUAGES and _looks_english(query):
         _rt = f"&return_to={quote(return_to, safe='')}" if return_to else ""
@@ -306,7 +301,7 @@ async def search_verb(
     return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}")
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse, response_model=None)
 def home(
     request: Request,
     language: str | None = Query(None),
@@ -316,10 +311,10 @@ def home(
     generating: int | None = Query(None),
     garbage: int | None = Query(None),
     not_a_verb: int | None = Query(None),
-) -> HTMLResponse:
+) -> HTMLResponse | RedirectResponse:
     settings = load_settings()
 
-    plugins = active_study_plugins(settings)
+    plugins = picker_study_plugins(settings)
 
     ui_lang = resolve_ui_language(request)
     ui = get_strings(ui_lang)
@@ -327,11 +322,17 @@ def home(
 
     selected_language = resolve_study_language(language, plugins)
 
+    # Plus-only language without the entitlement: no home page / Verb of the Day
+    # for it -- land on the /verbs notice (no sign-in; signing in wouldn't unlock it).
+    if not can_study(selected_language, get_session_uid(request)):
+        return RedirectResponse(url=f"/verbs?language={selected_language}&plus_required=1&ui_language={ui_lang}")
+
     raw_search_value = search or ""
     search_value = "" if str(not_available) == "1" else raw_search_value
 
     lang_options = [
-        (key, study_language_label(key, plugins, ui), key == selected_language) for key, plugin in plugins.items()
+        (key, study_language_picker_label(key, plugins, ui), key == selected_language)
+        for key, plugin in plugins.items()
     ]
 
     notice_text = raw_search_value.strip() if str(not_available) == "1" else None
