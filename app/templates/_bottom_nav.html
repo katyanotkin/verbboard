@@ -46,7 +46,7 @@
     </svg>
   </a>
 
-  <a href="/?language={{ bnav_lang | urlencode }}{{ _ui_suffix }}"
+  <a href="{{ bnav_home_href if bnav_home_href is defined else '/?language=' ~ (bnav_lang | urlencode) ~ _ui_suffix }}"
      class="bnav-tab{% if bnav_active == 'home' %} bnav-tab--active{% endif %}"
      aria-label="Home"
      aria-current="{{ 'page' if bnav_active == 'home' else 'false' }}">

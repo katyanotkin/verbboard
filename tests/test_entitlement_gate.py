@@ -397,3 +397,24 @@ def test_home_free_language_unchanged(client: TestClient) -> None:
     resp = client.get("/?language=es&ui_language=en", follow_redirects=False)
     assert resp.status_code == 200
     assert '<option value="es" selected' in resp.text
+
+
+def test_plus_notice_page_home_links_do_not_loop_back(client):
+    """Home redirects a Plus-only language straight back to /verbs, so Back/Home
+    links on the notice page must not carry that language."""
+    html = client.get("/verbs?language=fr&plus_required=1&ui_language=en").text
+    assert 'href="/?language=fr' not in html
+    assert 'href="/?ui_language=en"' in html
+
+
+def test_plus_notice_page_clears_stored_plus_language(client):
+    """home.js would otherwise re-add a stored vb_language=fr to a bare '/'."""
+    html = client.get("/verbs?language=fr&plus_required=1&ui_language=en").text
+    assert "removeItem('vb_language')" in html
+    free = client.get("/verbs?language=es&ui_language=en").text
+    assert "removeItem('vb_language')" not in free
+
+
+def test_free_language_with_stale_plus_required_keeps_normal_home_link(client):
+    html = client.get("/verbs?language=es&plus_required=1&ui_language=en").text
+    assert 'href="/?language=es&amp;ui_language=en"' in html
