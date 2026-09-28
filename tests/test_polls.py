@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from core.i18n import SUPPORTED_UI_LANGS
 from core.polls import (
     ACTIVE_POLL_ID,
     get_poll_options,
@@ -14,7 +15,7 @@ def test_active_poll_id_is_set() -> None:
     assert ACTIVE_POLL_ID
 
 
-@pytest.mark.parametrize("lang", ["en", "ru", "es", "he"])
+@pytest.mark.parametrize("lang", sorted(SUPPORTED_UI_LANGS))
 def test_poll_question_supported_language(lang: str) -> None:
     q = get_poll_question(ACTIVE_POLL_ID, lang)
     assert len(q) > 5
@@ -34,7 +35,7 @@ def test_poll_question_empty_poll_id_returns_empty() -> None:
     assert get_poll_question("", "en") == ""
 
 
-@pytest.mark.parametrize("lang", ["en", "ru", "es", "he"])
+@pytest.mark.parametrize("lang", sorted(SUPPORTED_UI_LANGS))
 def test_poll_options_all_languages(lang: str) -> None:
     opts = get_poll_options(ACTIVE_POLL_ID, lang)
     assert len(opts) >= 2

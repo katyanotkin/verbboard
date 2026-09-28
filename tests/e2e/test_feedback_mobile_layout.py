@@ -29,13 +29,15 @@ from __future__ import annotations
 
 import pytest
 
+from core.i18n import SUPPORTED_UI_LANGS
+
 pytestmark = pytest.mark.e2e
 
 _VIEWPORT = {"width": 375, "height": 812}
 
 # EN/RU crowded visually; ES was the confirmed real overflow; HE exercises
 # the RTL-mirrored layout (flex-direction: row-reverse).
-_UI_LANGUAGES = ["en", "ru", "es", "he"]
+_UI_LANGUAGES = sorted(SUPPORTED_UI_LANGS)
 
 # Stands in for the real Firebase compat SDK (blocked by conftest.py's
 # gstatic.com abort route) just enough that auth.js's initializeFirebase()
