@@ -119,12 +119,31 @@
     if (signInInProgress) return;
     signInInProgress = true;
     try {
-      _trackSignInTapped(isStandalone() ? 'standalone' : (isMobile() ? 'mobile' : 'desktop'));
+      var isTwa = isStandalone() && isAndroidBrowser();
+      _trackSignInTapped(isTwa ? 'twa' : (isStandalone() ? 'standalone' : (isMobile() ? 'mobile' : 'desktop')));
       const provider = new firebase.auth.GoogleAuthProvider();
       // Always show the account chooser, even when the browser has a cached
       // Google session -- prevents silent single-account auto-sign-in.
       provider.setCustomParameters({ prompt: 'select_account' });
-      if (isStandalone()) {
+      if (isTwa) {
+        // TWA (Trusted Web Activity, e.g. the Play Store install): reports
+        // display-mode: standalone like a desktop-installed PWA, but it's a
+        // Chrome Custom Tab, not the PWA/browser boundary the window.open
+        // branch below assumes. window.open('/auth/signin') pops a second
+        // Custom-Tab-spawned tab whose opener/storage relationship with
+        // accounts.google.com is not preserved the way a normal desktop
+        // popup is -- reproduces Google's "missing initial state" OAuth
+        // error on real devices. isAndroidBrowser() (Android UA, not a
+        // WebView) is what distinguishes this from a genuine desktop-
+        // installed PWA or an iOS "Add to Home Screen" standalone, which
+        // keep the window.open path below -- unverified whether they hit
+        // the same failure, since it's not been reproduced there. Use the
+        // same in-place redirect flow already verified for the
+        // mobile-browser branch instead, unconditionally (there is no
+        // working "legacy" fallback to opt back into here, unlike the
+        // mobile-browser branch's useRedirectSignIn() escape hatch).
+        await firebase.auth().signInWithRedirect(provider);
+      } else if (isStandalone()) {
         // Standalone PWA: opening a browser tab crosses the PWA/browser
         // boundary and focuses the new tab. Firebase syncs auth state back
         // to the PWA shell via IndexedDB once sign-in completes.

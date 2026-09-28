@@ -304,6 +304,8 @@ body {
    reinventing this. */
 .topbar-nav {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 8px;
   align-items: center;
   justify-content: space-between;
   padding-bottom: 12px;
@@ -330,6 +332,7 @@ body {
 
 .topbar-body {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
@@ -683,13 +686,11 @@ body {
   transform: translateX(-50%) rotate(45deg);
 }
 
-/* Long ES/RU labels: wrap the right group under Back instead of overflowing. */
-@media (max-width: 374px) {
-  .topbar-nav {
-    flex-wrap: wrap;
-    row-gap: 8px;
-  }
-}
+/* .topbar-nav wraps unconditionally now (see the base rule above) -- wrapping
+   only ever engages when content doesn't fit a single row, so this is safe at
+   any viewport width instead of just below a hardcoded breakpoint (issue #62:
+   the old <374px-only gate left ES/RU labels overflowing at 375-390px, common
+   real device widths that sat just above the old threshold). */
 
 /* 360px Android: the nav row (Back + Send feedback + Login) needs ~372px at full padding. */
 @media (max-width: 374px) {

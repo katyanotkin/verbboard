@@ -156,7 +156,7 @@ async def attach_uid(fingerprint: str, date: str, uid: str) -> None:
     task.add_done_callback(_pending.discard)
 
 
-_VALID_SIGN_IN_BRANCHES = {"standalone", "mobile", "desktop"}
+_VALID_SIGN_IN_BRANCHES = {"standalone", "mobile", "desktop", "twa"}
 
 
 def _record_sign_in_tap(fingerprint: str, date: str, branch: str) -> None:

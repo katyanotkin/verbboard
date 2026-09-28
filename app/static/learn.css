@@ -867,11 +867,9 @@ button {
   }
 }
 
+/* .topbar-body wraps unconditionally now (see common.css) -- see the matching
+   comment on .topbar-nav there (issue #62). */
 @media (max-width: 374px) {
-  .topbar-body {
-    flex-wrap: wrap;
-  }
-
   .conj-table th,
   .conj-table td {
     padding: 8px;

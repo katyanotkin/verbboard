@@ -259,6 +259,15 @@ def test_record_sign_in_tap_writes_valid_branch(fake_db) -> None:
     assert doc["device_type"] == "mobile"
 
 
+def test_record_sign_in_tap_writes_twa_branch(fake_db) -> None:
+    """Android TWA sign-in (issue #55 follow-up) must not be silently dropped."""
+    _seed(fake_db, device_type="mobile")
+
+    session_tracker._record_sign_in_tap("fp1", DATE, "twa")
+
+    assert fake_db._docs[DOC]["sign_in_tapped_branch"] == "twa"
+
+
 def test_record_sign_in_tap_rejects_invalid_branch(fake_db) -> None:
     session_tracker._record_sign_in_tap("fp1", DATE, "tablet")
 

@@ -26,6 +26,8 @@ _ANDROID_WEBVIEW_UA = (
 
 _FIREBASE_STUB = """
 window.__fbCalls = { redirect: 0, popup: 0, getRedirectResult: 0 };
+window.__windowOpenCalls = [];
+window.open = function (url) { window.__windowOpenCalls.push(url); return null; };
 window.firebase = {
   initializeApp: function () {},
   auth: function () {
@@ -42,14 +44,32 @@ window.firebase.auth.GoogleAuthProvider = function () {
 };
 """
 
+# Simulates a standalone display-mode (installed PWA / TWA) by stubbing
+# matchMedia's '(display-mode: standalone)' query to match. Playwright's
+# default context otherwise always reports browser-tab display mode.
+_STANDALONE_STUB = """
+window.matchMedia = function (query) {
+  return {
+    matches: query === '(display-mode: standalone)',
+    media: query,
+    addListener: function () {},
+    removeListener: function () {},
+    addEventListener: function () {},
+    removeEventListener: function () {},
+  };
+};
+"""
 
-def _page_for(browser, user_agent):
+
+def _page_for(browser, user_agent, standalone=False):
     ctx = browser.new_context(user_agent=user_agent)
     ctx.route("**/api/analytics/**", lambda route: route.fulfill(status=204))
     page = ctx.new_page()
     page.set_default_timeout(60_000)
     page.route("https://www.gstatic.com/firebasejs/**", lambda route: route.abort())
     page.add_init_script(_FIREBASE_STUB)
+    if standalone:
+        page.add_init_script(_STANDALONE_STUB)
     return ctx, page
 
 
@@ -64,6 +84,30 @@ def mobile_page(browser, live_server_url):
 @pytest.fixture
 def android_page(browser, live_server_url):
     ctx, page = _page_for(browser, _ANDROID_UA)
+    yield page
+    ctx.close()
+
+
+@pytest.fixture
+def twa_page(browser, live_server_url):
+    """Android Chrome Custom Tab (TWA) reporting display-mode: standalone."""
+    ctx, page = _page_for(browser, _ANDROID_UA, standalone=True)
+    yield page
+    ctx.close()
+
+
+@pytest.fixture
+def ios_standalone_page(browser, live_server_url):
+    """iOS 'Add to Home Screen' -- standalone but not Android; must be unaffected."""
+    ctx, page = _page_for(browser, _MOBILE_UA, standalone=True)
+    yield page
+    ctx.close()
+
+
+@pytest.fixture
+def desktop_standalone_page(browser, live_server_url):
+    """Desktop-installed PWA -- standalone, non-mobile UA; must be unaffected."""
+    ctx, page = _page_for(browser, None, standalone=True)
     yield page
     ctx.close()
 
@@ -140,3 +184,40 @@ def test_android_webview_keeps_the_legacy_flow(browser, live_server_url):
     with page.expect_navigation(url="**/auth/signin?return_to=*"):
         page.evaluate("window.VerbBoardAuth.signIn()")
     ctx.close()
+
+
+def test_twa_uses_redirect_in_place_not_window_open(twa_page, live_server_url):
+    """TWA install (Android UA + display-mode: standalone) must not hit the
+    window.open('/auth/signin') popup flow, which reproduces Google's
+    "missing initial state" error on real devices."""
+    twa_page.goto(f"{live_server_url}/feedback")
+    twa_page.evaluate("window.VerbBoardAuth.signIn()")
+    calls = twa_page.evaluate("window.__fbCalls")
+    opens = twa_page.evaluate("window.__windowOpenCalls")
+    assert calls["redirect"] == 1
+    assert calls["popup"] == 0
+    assert opens == []
+
+
+def test_ios_standalone_keeps_window_open(ios_standalone_page, live_server_url):
+    """iOS 'Add to Home Screen' is standalone but not Android -- must keep the
+    existing window.open('/auth/signin') path unchanged."""
+    ios_standalone_page.goto(f"{live_server_url}/feedback")
+    ios_standalone_page.evaluate("window.VerbBoardAuth.signIn()")
+    calls = ios_standalone_page.evaluate("window.__fbCalls")
+    opens = ios_standalone_page.evaluate("window.__windowOpenCalls")
+    assert calls["redirect"] == 0
+    assert calls["popup"] == 0
+    assert opens == ["/auth/signin"]
+
+
+def test_desktop_standalone_keeps_window_open(desktop_standalone_page, live_server_url):
+    """Desktop-installed PWA is standalone but not mobile -- must keep the
+    existing window.open('/auth/signin') path unchanged."""
+    desktop_standalone_page.goto(f"{live_server_url}/feedback")
+    desktop_standalone_page.evaluate("window.VerbBoardAuth.signIn()")
+    calls = desktop_standalone_page.evaluate("window.__fbCalls")
+    opens = desktop_standalone_page.evaluate("window.__windowOpenCalls")
+    assert calls["redirect"] == 0
+    assert calls["popup"] == 0
+    assert opens == ["/auth/signin"]
