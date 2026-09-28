@@ -61,7 +61,7 @@
   cursor: pointer;
 }
 
-/* ── inline search row (below merged controls bar) ───────────────────────── */
+/* ── inline search row (below the title, above the filter/sort row) ──────── */
 .vb-heading-search-row {
   padding: 4px 0 2px;
 }
@@ -154,7 +154,7 @@
 }
 
 @media (max-width: 480px) {
-  .vb-controls-row .vb-sort-select {
+  .vb-filter-row .vb-sort-select {
     max-width: none;
     flex: 1 1 100%;
   }
@@ -163,7 +163,7 @@
   }
 }
 
-/* sticky panel: search + controls + title; sits below the topbar */
+/* sticky panel: title, search, filter/sort controls; sits below the topbar */
 .vb-sticky-controls {
   position: sticky;
   top: calc(62px + env(safe-area-inset-top));
@@ -174,26 +174,13 @@
   margin-bottom: 8px;
 }
 
-/* controls row: title label | filter toggle | sort -- single compact bar */
+/* controls row: page title, above the search box */
 .vb-controls-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 6px;
-}
-
-.vb-controls-row .vb-filter-row {
-  flex: 1;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 0;
-  min-width: 0;
-}
-
-.vb-controls-row .vb-sort-select {
-  max-width: 130px;
 }
 
 /* static progress bar: scrolls with content, sits between sticky and list */
