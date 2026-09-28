@@ -153,16 +153,6 @@
   border-right: 1px solid var(--card-border);
 }
 
-@media (max-width: 480px) {
-  .vb-controls-row .vb-sort-select {
-    max-width: none;
-    flex: 1 1 100%;
-  }
-  .vb-ftbtn {
-    flex: 1 1 auto;
-  }
-}
-
 /* sticky panel: search + controls + title; sits below the topbar */
 .vb-sticky-controls {
   position: sticky;
@@ -194,6 +184,21 @@
 
 .vb-controls-row .vb-sort-select {
   max-width: 130px;
+}
+
+/* Must come after the unconditional 130px cap above: same specificity
+   (0,2,0) as that rule, so source order decides the winner at <=480px --
+   this block needs to win there. Placing it earlier was a pre-existing bug
+   (present since before today's /verbs reorders) that silently capped the
+   mobile sort <select> at 130px instead of letting it go full-width. */
+@media (max-width: 480px) {
+  .vb-controls-row .vb-sort-select {
+    max-width: none;
+    flex: 1 1 100%;
+  }
+  .vb-ftbtn {
+    flex: 1 1 auto;
+  }
 }
 
 /* static progress bar: scrolls with content, sits between sticky and list */
