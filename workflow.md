@@ -96,7 +96,9 @@ This phase exists so doc staleness doesn't require the user to notice and ask --
 Trigger: the change closes or is described as a fix/follow-up for a tracked GitHub issue, has been pushed to `main`, and stage has redeployed (`git push` to `main` auto-deploys stage -- no manual command needed; confirm via `gcloud builds list --project knotmem26 --region us-east1 --limit=1` if timing is unclear).
 
 Action:
+- Close proactively, without waiting for the user to ask -- do this in the same turn as stage verification, not as a separate step the user has to request.
 - Once the build succeeds and the change is confirmed working on stage (or, for a backend-only change with no live-behavior surface to click through, once the full test suite is green post-push), close the issue with `gh issue close <n>`, referencing the commit SHA.
+- Also check whether the change incidentally closes an issue not named in the current request (e.g. a CSS fix aimed at one issue can happen to fix another's repro too) -- re-verify against that issue's own repro before closing it.
 - If stage verification finds a problem, do not close the issue -- return to implementation and repeat the review/test/verify cycle.
 - For a multi-issue push (several commits in one push), verify and close each issue independently -- one commit's stage behavior confirms only that commit's issue, not siblings in the same push.
 
