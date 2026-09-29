@@ -823,14 +823,32 @@ button {
 
   /* Practice bar: two-row layout on narrow screens for the normal (new-verb)
      flow -- Row 1: Prev | counter | Next (nav controls stay in thumb zone);
-     Row 2: Abandon pill (full width). Review mode instead gets three rows,
-     since its recall button isn't a nav circle: Row 1 Prev | counter,
-     Row 2 the full-width recall pill (order 2, see .practice-recall-btn--yes
-     below), Row 3 Abandon (order 3). DOM order is Prev / counter / Abandon /
+     Row 2: Abandon pill (fit-content, centered). Review mode instead gets
+     three rows, since its recall button isn't a nav circle: Row 1 Prev |
+     counter, Row 2 the recall pill (order 3, see .practice-recall-btn--yes
+     below), Row 3 Abandon (order 5). DOM order is Prev / counter / Abandon /
      Next-or-recall, so `order` pulls Abandon (and recall, in review mode)
-     onto their own row(s) without touching the HTML. */
+     onto their own row(s) without touching the HTML.
+     Forcing each onto its own row can't be done with width alone: flex-wrap
+     decides line breaks from each item's *hypothetical* (pre-grow) size, and
+     a short enough pill label (e.g. "Recalled it") is sometimes narrow
+     enough to fit the leftover space on row 1 next to Prev/counter even
+     though .practice-progress-wrapper has flex:1 -- confirmed by measuring
+     actual render at 320px. The old `flex-basis: 100%` guaranteed the wrap
+     but, being the pill's own box, also stretched it edge to edge -- the two
+     effects can't be separated on the same element. Instead, an empty
+     ::before/::after on .practice-bar acts as an invisible, zero-height,
+     full-width flex item purely to force the line break; the real button
+     that follows keeps a normal fit-content size and is centered on its own
+     line via `justify-content: center` (flexbox applies justify-content per
+     line, independently -- row 1 is unaffected since its flex:1 wrapper
+     already consumes all the free space there). ::after only forces the
+     recall->abandon break, so it's gated to review mode via :has(); adding
+     it unconditionally would insert a second empty line (extra gap) in the
+     far more common non-review flow. */
   .practice-bar {
     flex-wrap: wrap;
+    justify-content: center;
     gap: 6px 8px;
   }
 
@@ -838,19 +856,37 @@ button {
   .practice-nav-btn { order: 1; }
   .practice-progress-wrapper { order: 1; }
 
-  /* Abandon sits on its own full-width row below the nav row */
+  .practice-bar::before {
+    content: "";
+    order: 2;
+    flex-basis: 100%;
+    width: 0;
+    height: 0;
+  }
+
+  .practice-bar:has(.practice-recall-btn--yes)::after {
+    content: "";
+    order: 4;
+    flex-basis: 100%;
+    width: 0;
+    height: 0;
+  }
+
+  /* Abandon sits on its own row below the nav row, sized to its text */
   .practice-abandon-btn {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
+    max-width: 100%;
     text-align: center;
     /* Allow text to wrap inside the pill if it is still too long */
     white-space: normal;
-    order: 3;
+    order: 5;
   }
 
-  /* Review mode: recall button gets its own full-width row above Abandon. */
+  /* Review mode: recall button gets its own row above Abandon, sized to its text */
   .practice-recall-btn--yes {
-    order: 2;
-    flex: 1 1 100%;
+    order: 3;
+    flex: 0 0 auto;
+    max-width: 100%;
   }
 }
 
