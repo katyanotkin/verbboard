@@ -557,20 +557,16 @@ button {
   transform: scale(1);
 }
 
-/* ── SRS review recall buttons ────────────────────────────────────────────── */
+/* ── SRS review recall button ─────────────────────────────────────────────── */
 /* Takes over nextBtn's slot for a review-mode verb (see learn_practice.js) --
-   filled pills (not the outline style used by skip/abandon) to keep the same
-   visual weight nextBtn had as the bar's one primary action. Colors reuse
-   hex values already present elsewhere in this file/common.css (the green
-   from .practice-progress--done, the red from .practice-abandon-btn) rather
-   than inventing a new palette entry. Distinguished by label text as well as
-   color, not color alone (colorblind-safe). */
-.practice-recall-group {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
+   a filled pill (not the outline style used by skip/abandon) to keep the
+   same visual weight nextBtn had as the bar's one primary action. Single
+   button by design (owner decision 2026-09-28): a second "Show me again"
+   button used to sit next to this one, but it advanced the session exactly
+   like "Knew it" rather than actually re-showing the verb -- a label/
+   behavior mismatch -- so it was removed rather than fixed; there is no
+   in-session down-signal at all now. Color reuses the green hex already
+   present elsewhere in this file (`.practice-progress--done`). */
 .practice-recall-btn {
   display: inline-flex;
   align-items: center;
@@ -586,6 +582,7 @@ button {
   color: white;
   transition: filter 0.12s ease, opacity 0.12s ease;
   touch-action: manipulation;
+  flex-shrink: 0;
 }
 
 .practice-recall-btn:hover:not(:disabled) {
@@ -599,10 +596,6 @@ button {
 
 .practice-recall-btn--yes {
   background: #15803d;
-}
-
-.practice-recall-btn--no {
-  background: #b91c1c;
 }
 
 /* ── audio loading state ──────────────────────────────────────────────────── */
@@ -854,16 +847,11 @@ button {
   .practice-skip-btn { order: 2; }
   .practice-abandon-btn { order: 3; }
 
-  /* Review mode: recall pair takes skip's old row (order 2), full width,
-     split evenly; abandon still falls to its own row below. */
-  .practice-recall-group {
+  /* Review mode: recall button takes skip's old row (order 2), full width;
+     abandon still falls to its own row below. */
+  .practice-recall-btn--yes {
     order: 2;
     flex: 1 1 100%;
-    gap: 8px;
-  }
-
-  .practice-recall-btn {
-    flex: 1 1 0;
   }
 }
 

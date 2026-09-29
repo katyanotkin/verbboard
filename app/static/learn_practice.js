@@ -110,25 +110,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Review verbs: the recall self-report IS the advance action (mirrors
     // skipBtn's existing tap-to-advance pattern, keeps taps to one). This
-    // replaces nextBtn/skipBtn entirely rather than adding two more controls
+    // replaces nextBtn/skipBtn entirely rather than adding another control
     // on top of an already-dense 5-element bar -- skipBtn's "mark as
     // learned" framing is also a poor fit for a verb already in the SRS
     // ladder, so dropping it here isn't just a density fix.
-    let nextBtn, skipBtn, recallYesBtn, recallNoBtn, recallGroup;
+    //
+    // Single button by design (owner decision 2026-09-28): there used to be
+    // a second "Show me again" button, but it advanced the session exactly
+    // like "Mastered it" rather than actually re-showing the verb, which was
+    // a label/behavior mismatch. There is no in-session down-signal at all now
+    // -- a verb that isn't actually known gets addressed elsewhere (unstarring
+    // resets its SRS state; ordinary seen/known repeat-candidate logic
+    // resurfaces it), not via a recall button press here.
+    let nextBtn, skipBtn, recallYesBtn;
 
     if (isReview) {
       recallYesBtn = document.createElement("button");
       recallYesBtn.className = "practice-recall-btn practice-recall-btn--yes";
-      recallYesBtn.textContent = UI["practice.recall_yes"] || "Knew it";
-
-      recallNoBtn = document.createElement("button");
-      recallNoBtn.className = "practice-recall-btn practice-recall-btn--no";
-      recallNoBtn.textContent = UI["practice.recall_no"] || "Show me again";
-
-      recallGroup = document.createElement("div");
-      recallGroup.className = "practice-recall-group";
-      recallGroup.appendChild(recallYesBtn);
-      recallGroup.appendChild(recallNoBtn);
+      recallYesBtn.textContent = UI["practice.recall_yes"] || "Mastered it";
     } else {
       nextBtn = document.createElement("button");
       nextBtn.className = "practice-nav-btn practice-nav-btn--primary";
@@ -144,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (skipBtn) bar.appendChild(skipBtn);
     bar.appendChild(progressWrapper);
     bar.appendChild(abandonBtn);
-    bar.appendChild(isReview ? recallGroup : nextBtn);
+    bar.appendChild(isReview ? recallYesBtn : nextBtn);
     bar.appendChild(warnEl);
 
     const topbar = pageRoot.querySelector(".topbar");
@@ -173,7 +172,6 @@ document.addEventListener("DOMContentLoaded", function () {
       abandonBtn.disabled = true;
       if (isReview) {
         recallYesBtn.disabled = true;
-        recallNoBtn.disabled = true;
       } else {
         nextBtn.disabled = true;
         skipBtn.disabled = true;
@@ -199,22 +197,26 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     if (isReview) {
-      // Deliberately NOT gated behind hasListened(): these buttons are a
+      // Deliberately NOT gated behind hasListened(): this button is a
       // recall self-report on a verb the learner already starred as known,
       // and forcing PRACTICE_MIN_PLAYS audio replays before allowing "Knew
-      // it" / "Show me again" would force-feed the answer right before
-      // asking the learner to self-report whether they already knew it --
-      // backwards for a recall test, unlike the ordinary new-verb Next
-      // button below (nextBtn), where forcing repeated listens up front is
-      // the actual intended first-exposure drill. Audio stays available as
-      // an optional aid (play button unchanged); it just isn't a
-      // prerequisite here. (Was gated behind hasListened() pre-2026-09-28;
-      // removed after this behaved as an invisible dead end in practice --
-      // no Skip fallback in review mode, so a learner short of the listen
-      // count had no way to advance at all except an easy-to-miss warning.)
-      async function _advanceAfterRecall(recalled) {
+      // it" would force-feed the answer right before asking the learner to
+      // self-report whether they already knew it -- backwards for a recall
+      // test, unlike the ordinary new-verb Next button below (nextBtn),
+      // where forcing repeated listens up front is the actual intended
+      // first-exposure drill. Audio stays available as an optional aid
+      // (play button unchanged); it just isn't a prerequisite here. (Was
+      // gated behind hasListened() pre-2026-09-28; removed after this
+      // behaved as an invisible dead end in practice -- no Skip fallback in
+      // review mode, so a learner short of the listen count had no way to
+      // advance at all except an easy-to-miss warning.)
+      //
+      // Always applyReview(..., true): "Mastered it" is the only control here
+      // (owner decision 2026-09-28, see comment above) -- there is no
+      // recalled=false path, by design.
+      async function _advanceAfterKnew() {
         if (window.VerbBoardSRS) {
-          await window.VerbBoardSRS.applyReview(language, verbId, recalled);
+          await window.VerbBoardSRS.applyReview(language, verbId, true);
         }
         if (isLast) {
           _showCompletionAndRedirect(session);
@@ -223,13 +225,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      recallYesBtn.addEventListener("click", function () { _advanceAfterRecall(true); });
-      // "Show me again" (recalled=false) only demotes the verb's SRS box
-      // (applyReview already schedules it due tomorrow) -- it advances the
-      // session exactly like "Knew it" rather than re-inserting the verb
-      // later in this same session; re-showing mid-session is a bigger
-      // behavior change and explicitly out of scope here.
-      recallNoBtn.addEventListener("click", function () { _advanceAfterRecall(false); });
+      recallYesBtn.addEventListener("click", function () { _advanceAfterKnew(); });
     } else {
       nextBtn.addEventListener("click", async function () {
         if (!hasListened()) {
@@ -299,7 +295,7 @@ document.addEventListener("DOMContentLoaded", function () {
       accomplished = session.ids.every(function (id) {
         if (!seenSet.has(id)) return false;
         // Review-mode verbs no longer require PRACTICE_MIN_PLAYS listens to
-        // advance (see _advanceAfterRecall above) -- the recall self-report
+        // advance (see _advanceAfterKnew above) -- the recall self-report
         // itself is the completion signal for those, so don't also demand
         // the listen count here or badge completion would silently regress
         // for any session containing review verbs.
