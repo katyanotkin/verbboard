@@ -1,4 +1,4 @@
-const CACHE = "vb-v61";
+const CACHE = "vb-v62";
 const PRECACHE = [
   "/static/offline.html",
   "/static/common.css",

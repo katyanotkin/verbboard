@@ -324,7 +324,7 @@ body {
 .topbar-nav-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   margin-left: auto;
 }
 
@@ -556,6 +556,15 @@ body {
   .page,
   .vb-page {
     padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  /* The bottom nav's own Back tab takes over here -- hide the topbar Back so
+     standalone/TWA doesn't show two Back controls. Ordinary mobile-browser
+     tabs (not standalone) never match this media query, so they keep the
+     topbar Back as their only way back. CSS-only, not removed from the DOM
+     (matches how .bottom-nav itself is conditionally shown above). */
+  .nav-btn--ghost {
+    display: none;
   }
 }
 

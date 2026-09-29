@@ -242,8 +242,16 @@ def render_board_html(
         )
 
     ui_suffix = f"&ui_language={escape(ui_lang)}" if ui_lang else ""
-    safe_rt = _safe_return_to(return_to) if return_to else None
+    # safe_return_to()'s own default fallback is "/" -- call it with fallback=""
+    # here so an empty result unambiguously means "no valid return_to", instead
+    # of that "/" default masquerading as a real destination below.
+    safe_rt_or_empty = _safe_return_to(return_to, fallback="") if return_to else ""
+    safe_rt = safe_rt_or_empty or None
     resolved_return_to = safe_rt or f"/?language={escape(board.language)}{ui_suffix}"
+    # Bottom-nav Back keeps its own, pre-existing fallback (the verbs list, not
+    # home) when return_to is missing/invalid -- same validated value as the
+    # topbar Back otherwise, so the two controls agree instead of diverging.
+    bnav_back_href = safe_rt or f"/verbs?language={escape(board.language)}{ui_suffix}"
 
     source_suffix = "&source=candidate" if candidate_verb_id else ""
     learn_href = f"/learn?language={escape(board.language)}&verb_id={escape(board.verb.id)}{source_suffix}{ui_suffix}"
@@ -352,6 +360,7 @@ def render_board_html(
         language_display=language_display,
         board_language_label=ui.get("board.language_label", "Language:"),
         return_to=resolved_return_to,
+        bnav_back_href=bnav_back_href,
         board_back=ui.get("board.back", "Back"),
         voice_source_input=voice_source_input,
         female_active=female_active,

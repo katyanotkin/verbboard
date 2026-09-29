@@ -6,6 +6,8 @@ that the rendered board HTML contains correct feedback links and URL encoding.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from core.models import Board, VerbEntry
@@ -226,3 +228,69 @@ def test_pronoun_block_survives_unsupported_ui_language(mock_verb: VerbEntry) ->
     html = render_board_html(_make_board(mock_verb, language="en"), return_to="/?language=en", ui_lang="xx")
     assert "pronoun-block" in html
     assert "class='pronoun-translation' dir='ltr'></td>" in html
+
+
+# ---------------------------------------------------------------------------
+# topbar Back vs bottom-nav Back href parity (bug fix, uncommitted at time of
+# writing: board.html previously hardcoded bnav_back_href to
+# /verbs?language=...&ui_language=..., ignoring return_to entirely, so the
+# two Back controls could point to different places for the same page load).
+# ---------------------------------------------------------------------------
+
+_TOPBAR_BACK_RE = re.compile(r'<a href="([^"]*)" class="nav-btn nav-btn--ghost">')
+_BNAV_BACK_RE = re.compile(r'<a href="([^"]*)" class="bnav-tab bnav-back"')
+
+
+def _topbar_back_href(html: str) -> str:
+    match = _TOPBAR_BACK_RE.search(html)
+    assert match, "topbar Back link not found in rendered board HTML"
+    return match.group(1)
+
+
+def _bnav_back_href(html: str) -> str:
+    match = _BNAV_BACK_RE.search(html)
+    assert match, "bottom-nav Back link not found in rendered board HTML"
+    return match.group(1)
+
+
+def test_topbar_and_bnav_back_hrefs_match_for_valid_return_to(mock_verb: VerbEntry) -> None:
+    """A valid return_to must produce identical Back hrefs for the topbar Back
+    button and the bottom-nav Back tab -- both derive from the same validated
+    return_to, so the two controls must never diverge for real navigation."""
+    from core.render import render_board_html
+
+    html = render_board_html(_make_board(mock_verb), return_to="/verbs?language=en")
+    assert _topbar_back_href(html) == _bnav_back_href(html) == "/verbs?language=en"
+
+
+def test_topbar_and_bnav_back_hrefs_diverge_intentionally_when_return_to_missing(
+    mock_verb: VerbEntry,
+) -> None:
+    """Missing return_to falls back differently per control by design: topbar
+    Back falls back to home, bottom-nav Back falls back to the verbs list --
+    matching each control's own pre-existing standalone fallback."""
+    from core.render import render_board_html
+
+    html = render_board_html(_make_board(mock_verb), return_to=None)
+    assert _topbar_back_href(html) == "/?language=en&amp;ui_language=en"
+    assert _bnav_back_href(html) == "/verbs?language=en&amp;ui_language=en"
+
+
+@pytest.mark.parametrize(
+    "malicious_return_to",
+    [
+        "https://evil.example",
+        "//evil.example",
+        "/\\evil.example",
+    ],
+)
+def test_malicious_return_to_rejected_falls_back_like_missing(mock_verb: VerbEntry, malicious_return_to: str) -> None:
+    """An invalid/open-redirect return_to must be rejected by safe_return_to()
+    and fall back exactly like a missing return_to for both controls, with no
+    trace of the malicious value anywhere in the rendered page."""
+    from core.render import render_board_html
+
+    html = render_board_html(_make_board(mock_verb), return_to=malicious_return_to)
+    assert "evil.example" not in html
+    assert _topbar_back_href(html) == "/?language=en&amp;ui_language=en"
+    assert _bnav_back_href(html) == "/verbs?language=en&amp;ui_language=en"
