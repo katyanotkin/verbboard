@@ -108,39 +108,34 @@ document.addEventListener("DOMContentLoaded", function () {
     warnEl.className = "practice-listen-warn";
     warnEl.hidden = true;
 
-    // Review verbs: the recall self-report IS the advance action (mirrors
-    // skipBtn's existing tap-to-advance pattern, keeps taps to one). This
-    // replaces nextBtn/skipBtn entirely rather than adding another control
-    // on top of an already-dense 5-element bar -- skipBtn's "mark as
-    // learned" framing is also a poor fit for a verb already in the SRS
-    // ladder, so dropping it here isn't just a density fix.
+    // Review verbs: the recall self-report IS the advance action. There is
+    // no in-session down-signal at all -- a verb that isn't actually known
+    // gets addressed elsewhere (unstarring resets its SRS state; ordinary
+    // seen/known repeat-candidate logic resurfaces it), not via a recall
+    // button press here.
     //
-    // Single button by design (owner decision 2026-09-28): there used to be
-    // a second "Show me again" button, but it advanced the session exactly
-    // like "Mastered it" rather than actually re-showing the verb, which was
-    // a label/behavior mismatch. There is no in-session down-signal at all now
-    // -- a verb that isn't actually known gets addressed elsewhere (unstarring
-    // resets its SRS state; ordinary seen/known repeat-candidate logic
-    // resurfaces it), not via a recall button press here.
-    let nextBtn, skipBtn, recallYesBtn;
+    // New-mode verbs: nextBtn is the only advance control. There used to
+    // also be a "Skip & mark as learned" button that bypassed the listen
+    // gate and removed the verb from the session immediately; it was
+    // removed entirely (owner decision 2026-09-28) because its wording was
+    // confusing next to the star's "known" language and the bypass wasn't
+    // worth a dedicated control. Marking a verb known without going through
+    // the practice flow is still possible via the star button on the board
+    // page itself.
+    let nextBtn, recallYesBtn;
 
     if (isReview) {
       recallYesBtn = document.createElement("button");
       recallYesBtn.className = "practice-recall-btn practice-recall-btn--yes";
-      recallYesBtn.textContent = UI["practice.recall_yes"] || "Mastered it";
+      recallYesBtn.textContent = UI["practice.recall_yes"] || "Recalled it";
     } else {
       nextBtn = document.createElement("button");
       nextBtn.className = "practice-nav-btn practice-nav-btn--primary";
       nextBtn.textContent = isRTL ? '<' : '>';
       nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
-
-      skipBtn = document.createElement("button");
-      skipBtn.className = "practice-skip-btn";
-      skipBtn.textContent = UI["practice.skip"] || "Skip & learn";
     }
 
     bar.appendChild(prevBtn);
-    if (skipBtn) bar.appendChild(skipBtn);
     bar.appendChild(progressWrapper);
     bar.appendChild(abandonBtn);
     bar.appendChild(isReview ? recallYesBtn : nextBtn);
@@ -174,7 +169,6 @@ document.addEventListener("DOMContentLoaded", function () {
         recallYesBtn.disabled = true;
       } else {
         nextBtn.disabled = true;
-        skipBtn.disabled = true;
       }
       const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1200;
       setTimeout(function () { _finishPractice(completionSession, progressEl); }, delay);
@@ -211,7 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // review mode, so a learner short of the listen count had no way to
       // advance at all except an easy-to-miss warning.)
       //
-      // Always applyReview(..., true): "Mastered it" is the only control here
+      // Always applyReview(..., true): "Recalled it" is the only control here
       // (owner decision 2026-09-28, see comment above) -- there is no
       // recalled=false path, by design.
       async function _advanceAfterKnew() {
@@ -237,45 +231,6 @@ document.addEventListener("DOMContentLoaded", function () {
           return;
         } else {
           navTo(session.ids[idx + 1]);
-        }
-      });
-
-      skipBtn.addEventListener("click", async function () {
-        await progress.setKnown(language, verbId, true);
-
-        const updatedIds = session.ids.filter(function (id) { return id !== verbId; });
-
-        if (updatedIds.length === 0) {
-          localStorage.removeItem(sessionKey);
-          window.location.href = verbsUrl;
-          return;
-        }
-
-        const updatedLemmas = Object.assign({}, session.lemmas || {});
-        delete updatedLemmas[verbId];
-
-        // Carry `modes` forward -- dropping it here would silently downgrade
-        // every still-pending review-mode verb to 'new' mode on the next
-        // mount (absent key = 'new', see top of this function).
-        const updatedModes = Object.assign({}, session.modes || {});
-        delete updatedModes[verbId];
-
-        const updatedSession = {
-          ids: updatedIds,
-          lemmas: updatedLemmas,
-          modes: updatedModes,
-          size: session.size,
-        };
-        localStorage.setItem(sessionKey, JSON.stringify(updatedSession));
-
-        const navTarget = Math.min(idx, updatedIds.length - 1);
-        // If clamping moved us backwards, every remaining verb was already visited.
-        // Finish the session rather than landing on a verb the user already completed.
-        if (navTarget < idx) {
-          _showCompletionAndRedirect(updatedSession);
-          return;
-        } else {
-          navTo(updatedIds[navTarget]);
         }
       });
     }

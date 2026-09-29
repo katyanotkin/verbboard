@@ -76,14 +76,13 @@ Visual indicators:
 
 - Practice sessions of 3, 6, or 9 verbs; configurable audio listens per verb (3 / 5 / All)
 - Verbs you've seen but haven't marked as learned keep coming back: up to a third of each practice session is reserved for them, longest-waiting first, so a verb you're stuck on can't go many sessions without resurfacing
-- Audio listening required before advancing to the next verb
-- Skip & mark as learned — for verbs you already know
+- Audio listening required before advancing to the next verb, with no bypass
 - A free Google sign-in is required to start a practice session (browsing verbs, audio, search and the Verb of the Day stay open without an account); a session already in progress can always be finished
 - Complete a session to earn a badge
 - Anonymous users earning a badge see a one-tap sign-in prompt in the completion screen, so progress isn't lost if the device changes
 - Learning badges and persistent progress tracking
 - Cross-device sync for authenticated users
-- Spaced repetition on the free tier: marking a verb known (star or "Skip & mark as learned") enters it into a Leitner box ladder (1 / 3 / 7 / 16 / 35 day intervals). Due verbs are quietly mixed back into a normal practice session -- capped at roughly a third of the session -- and resurface with a simple "Knew it" / "Show me again" self-report. There is no separate review screen, no notifications, and no streak pressure to drive it.
+- Spaced repetition on the free tier: marking a verb known (star toggle) enters it into a Leitner box ladder (1 / 3 / 7 / 16 / 35 day intervals). Due verbs are quietly mixed back into a normal practice session -- capped at roughly a third of the session -- and resurface with a simple "Recalled it" self-report -- Next still requires listening to the audio first, and there is no separate down-signal. There is no separate review screen, no notifications, and no streak pressure to drive it.
 
 ---
 

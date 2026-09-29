@@ -559,7 +559,7 @@ button {
 
 /* ── SRS review recall button ─────────────────────────────────────────────── */
 /* Takes over nextBtn's slot for a review-mode verb (see learn_practice.js) --
-   a filled pill (not the outline style used by skip/abandon) to keep the
+   a filled pill (not the outline style used by abandon) to keep the
    same visual weight nextBtn had as the bar's one primary action. Single
    button by design (owner decision 2026-09-28): a second "Show me again"
    button used to sit next to this one, but it advanced the session exactly
@@ -821,12 +821,14 @@ button {
     padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
   }
 
-  /* Practice bar: three-row layout on narrow screens.
-     Row 1: Prev | counter | Next  (nav controls stay in thumb zone)
-     Row 2: Skip pill (full width)
-     Row 3: Abandon pill (full width)
-     DOM order is Prev / Skip / counter / Abandon / Next, so we use
-     `order` to pull Skip and Abandon after Next without touching the HTML. */
+  /* Practice bar: two-row layout on narrow screens for the normal (new-verb)
+     flow -- Row 1: Prev | counter | Next (nav controls stay in thumb zone);
+     Row 2: Abandon pill (full width). Review mode instead gets three rows,
+     since its recall button isn't a nav circle: Row 1 Prev | counter,
+     Row 2 the full-width recall pill (order 2, see .practice-recall-btn--yes
+     below), Row 3 Abandon (order 3). DOM order is Prev / counter / Abandon /
+     Next-or-recall, so `order` pulls Abandon (and recall, in review mode)
+     onto their own row(s) without touching the HTML. */
   .practice-bar {
     flex-wrap: wrap;
     gap: 6px 8px;
@@ -836,19 +838,16 @@ button {
   .practice-nav-btn { order: 1; }
   .practice-progress-wrapper { order: 1; }
 
-  /* Skip sits on its own row directly under the counter; Abandon below it */
-  .practice-skip-btn,
+  /* Abandon sits on its own full-width row below the nav row */
   .practice-abandon-btn {
     flex: 1 1 100%;
     text-align: center;
     /* Allow text to wrap inside the pill if it is still too long */
     white-space: normal;
+    order: 3;
   }
-  .practice-skip-btn { order: 2; }
-  .practice-abandon-btn { order: 3; }
 
-  /* Review mode: recall button takes skip's old row (order 2), full width;
-     abandon still falls to its own row below. */
+  /* Review mode: recall button gets its own full-width row above Abandon. */
   .practice-recall-btn--yes {
     order: 2;
     flex: 1 1 100%;

@@ -595,24 +595,6 @@ body {
   pointer-events: none;
 }
 
-.practice-skip-btn {
-  padding: 6px 12px;
-  border: 1px solid #6ee7b7;
-  border-radius: 999px;
-  background: transparent;
-  color: #065f46;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.1s, opacity 0.1s;
-}
-.practice-skip-btn:hover { background: #d1fae5; }
-.practice-skip-btn:disabled {
-  opacity: 0.25;
-  cursor: default;
-  pointer-events: none;
-}
-
 /* ===== Help hints (shared: learn + verbs) ─────────────────────────────
    Tap-to-reveal micro explanations. Pairs a small "?" trigger with an
    inline-collapsible .help-hint-panel. JS behavior lives in help_hint.js;

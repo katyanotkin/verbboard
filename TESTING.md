@@ -174,11 +174,11 @@ For pre-commit, parallelization is not used — the hook runs `pytest` directly 
 - **Verbs display batch** — `tests/test_verbs_display_batch.py`: 7 unit tests covering
   `window.VB_DISPLAY_BATCH` embed from Settings and show-more wrapper presence.
 
-- **Practice skip audio gate** -- `tests/e2e/test_practice_skip_audio.py`: e2e tests covering
-  the audio gate on both Skip and Next, `practice_min_plays` preference for numeric
-  and `all` modes, and warn-element content. Specifically verify
-  that Skip is blocked without listening and unblocked after enough plays -- enforcing that
-  users must listen or abandon, not skip through an entire session unheard.
+- **Practice audio gate** -- `tests/e2e/test_practice_audio_gate.py`: e2e tests covering
+  the Next button's listen gate, `practice_min_plays` preference, and warn-element
+  content. The "Skip & mark as learned" button (and its bypass of this gate) was
+  removed entirely 2026-09-28; Next is now the only advance control for new-mode
+  verbs and always enforces the listen gate, with no bypass.
 
 - **Spaced repetition (Leitner box)** — `tests/test_srs_merge.py`: unit tests on
   `leitner_next_box()` (promotion/demotion/cap rules) plus `test_srs_js_python_parity`,

@@ -35,7 +35,7 @@
   // VerbBoardProgress.setKnown in auth.js. Callers still await this whole
   // function, so a slow/flaky network does delay the caller's own advance
   // (see learn_practice.js's _advanceAfterRecall) -- same pre-existing
-  // behavior as skipBtn/setKnown, not something this file avoids. If the
+  // behavior as setKnown, not something this file avoids. If the
   // POST fails (offline), the local state still stands; there is no
   // retry/reconciliation of missed offline reviews in this version -- same
   // scope cut as the existing seen/known/badge POSTs, which are also
