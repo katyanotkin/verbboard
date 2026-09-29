@@ -107,7 +107,7 @@
   "board.show_translations": "Con traducción",
   "board.hide_translations": "× Traducción",
   "help.hint_label": "Más información",
-  "help.known": "Marca este verbo como conocido. Toca de nuevo para deshacer.",
+  "help.known": "Marca este verbo como conocido e inicia la repetición espaciada. Las próximas sesiones de práctica mostrarán los botones \"Lo sabía\" / \"Muéstramelo otra vez\". Toca de nuevo para deshacer.",
   "help.translations": "Muestra una traducción debajo de cada ejemplo.",
   "help.practice": "Inicia una práctica con un conjunto de verbos y audio; gana una insignia al terminar.",
   "help.session_size": "Determina cuántos verbos incluye la sesión de práctica.",

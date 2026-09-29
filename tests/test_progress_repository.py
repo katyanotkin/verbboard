@@ -166,8 +166,16 @@ def test_set_known_true_treats_missing_srs_box_field_as_absent() -> None:
 
 
 def test_set_known_true_does_not_reset_existing_srs_box() -> None:
-    """Re-toggling known=True on a verb already in the ladder must not reset
-    its box/due date -- explicit design decision (see repo docstring)."""
+    """Re-marking known=True on a verb that still has a live box left in
+    place must not reset its box/due date.
+
+    In the normal flow this box would already have been cleared by an
+    intervening known=False call (see test_set_known_false_clears_srs_fields
+    below), so this now guards the rarer edge case of a client re-sending
+    known=True while an earlier unmark's clearing write is still in flight
+    or failed outright -- a verb genuinely still on the ladder must not have
+    its progress reset mid-review just because known=True was sent again.
+    """
     db = _make_db()
     verb_doc = _verb_ref(db)
     verb_doc.get.return_value.to_dict.return_value = {
@@ -186,9 +194,15 @@ def test_set_known_true_does_not_reset_existing_srs_box() -> None:
     assert "srs_reviewed_at" not in payload
 
 
-def test_set_known_false_does_not_touch_srs_fields() -> None:
-    """known=False must not read or write any srs_* field, and must not
-    even query existing state (the SRS-init branch is known-only)."""
+def test_set_known_false_clears_srs_fields() -> None:
+    """known=False must exit the SRS ladder: srs_box/srs_due_at/
+    srs_reviewed_at reset to the explicit 0/None "not in ladder" sentinel.
+
+    Fixed 2026-09-28 (owner-reported bug): a verb kept resurfacing with
+    "Knew it"/"Show me again" recall buttons in practice after being
+    unstarred, because this branch used to leave srs_* fields untouched.
+    Also must not read existing state first (the clear is unconditional,
+    unlike the known=True seed-if-absent branch above)."""
     db = _make_db()
     verb_doc = _verb_ref(db)
 
@@ -197,10 +211,53 @@ def test_set_known_false_does_not_touch_srs_fields() -> None:
 
     args, _ = verb_doc.set.call_args
     payload = args[0]
-    assert "srs_box" not in payload
-    assert "srs_due_at" not in payload
-    assert "srs_reviewed_at" not in payload
+    assert payload["srs_box"] == 0
+    assert payload["srs_due_at"] is None
+    assert payload["srs_reviewed_at"] is None
     verb_doc.get.assert_not_called()
+
+
+def test_set_known_false_clears_srs_fields_even_when_never_in_ladder() -> None:
+    """A verb that was never in the ladder (no prior srs_box) must still get
+    the explicit clearing payload on known=False -- the write is
+    unconditional, not conditioned on there being anything to clear."""
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+    verb_doc.get.return_value.to_dict.return_value = {}
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.set_known(user_id="u1", language="en", verb_id="en_go", known=False)
+
+    args, _ = verb_doc.set.call_args
+    payload = args[0]
+    assert payload["srs_box"] == 0
+    assert payload["srs_due_at"] is None
+    assert payload["srs_reviewed_at"] is None
+
+
+def test_set_known_true_after_false_starts_fresh_at_box_one() -> None:
+    """Re-starring a verb after it was previously unstarred (and its SRS
+    state cleared to srs_box=0) must start the ladder fresh at box 1 --
+    a resume, not a reset, is only possible if the clearing write itself
+    never landed."""
+    db = _make_db()
+    verb_doc = _verb_ref(db)
+    # Simulates the Firestore doc's state *after* a prior known=False clear.
+    verb_doc.get.return_value.to_dict.return_value = {
+        "known": False,
+        "srs_box": 0,
+        "srs_due_at": None,
+        "srs_reviewed_at": None,
+    }
+
+    with patch.object(repo, "get_db", return_value=db):
+        repo.set_known(user_id="u1", language="en", verb_id="en_go", known=True)
+
+    args, _ = verb_doc.set.call_args
+    payload = args[0]
+    assert payload["srs_box"] == 1
+    assert isinstance(payload["srs_due_at"], datetime)
+    assert isinstance(payload["srs_reviewed_at"], datetime)
 
 
 # ---------------------------------------------------------------------------

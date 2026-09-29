@@ -291,6 +291,37 @@ def test_get_progress_includes_srs_fields_after_known() -> None:
     assert row["srs_reviewed_at"] is not None
 
 
+def test_get_progress_omits_srs_fields_after_unmarking_known() -> None:
+    """Marking known=True then known=False must exit the SRS ladder: GET
+    must go back to omitting srs_box/srs_due_at/srs_reviewed_at, the same as
+    a verb that was never reviewed.
+
+    Fixed 2026-09-28 (owner-reported bug): a verb kept resurfacing with
+    "Knew it"/"Show me again" recall buttons in practice after being
+    unstarred, because unmarking known never cleared srs_box."""
+    verb_id = "en_srs_cleared_on_unmark"
+
+    client.post(
+        "/api/progress/known",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "known": True},
+    )
+    row_after_known = client.get("/api/progress?language=en", headers=AUTH).json()["verbs"][verb_id]
+    assert row_after_known["srs_box"] == 1
+
+    client.post(
+        "/api/progress/known",
+        headers=AUTH,
+        json={"language": "en", "verb_id": verb_id, "known": False},
+    )
+    row_after_unmark = client.get("/api/progress?language=en", headers=AUTH).json()["verbs"][verb_id]
+
+    assert row_after_unmark["known"] is False
+    assert "srs_box" not in row_after_unmark
+    assert "srs_due_at" not in row_after_unmark
+    assert "srs_reviewed_at" not in row_after_unmark
+
+
 def test_get_progress_includes_srs_fields_after_review() -> None:
     verb_id = _unique_verb_id("en_srs_present_review")
 

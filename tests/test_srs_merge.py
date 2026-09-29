@@ -316,3 +316,85 @@ process.stdout.write(JSON.stringify(due));
     due_ids = json.loads(result.stdout)
 
     assert due_ids == ["v_due", "v_due_exactly_now"]
+
+
+# ---------------------------------------------------------------------------
+# clearVerb -- exits a verb's SRS ladder entirely (called from progress.js's
+# setKnown() on known=false). Fixed 2026-09-28: unstarring previously left
+# the local srs:{lang} map entry in place, so getDueVerbIds() kept
+# surfacing the verb with recall buttons forever. No Python-side mirror
+# exists (this is client-local-storage-only logic, unlike the server-side
+# clear in core/progress/progress_repository.py's set_known()), so this is
+# a JS-only Node harness test, same style as the getDueVerbIds test above.
+# ---------------------------------------------------------------------------
+
+
+def test_clear_verb_removes_only_the_target_entry() -> None:
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node not available in this environment")
+    assert node is not None
+
+    local_state = {
+        "v_target": {"box": 3, "due_at": "2026-01-01T00:00:00.000Z", "reviewed_at": "2025-12-25T00:00:00.000Z"},
+        "v_other": {"box": 2, "due_at": "2026-01-10T00:00:00.000Z", "reviewed_at": "2025-12-25T00:00:00.000Z"},
+    }
+
+    harness = """
+global.window = {
+  VerbBoardStorage: {
+    readJson: function () { return global.__CURRENT_LOCAL__; },
+    writeJson: function (key, value) { global.__WRITTEN__ = value; },
+  },
+};
+require(process.argv[1]);
+global.__CURRENT_LOCAL__ = JSON.parse(process.argv[2]);
+const S = window.VerbBoardSRS;
+S.clearVerb('en', 'v_target');
+process.stdout.write(JSON.stringify(global.__WRITTEN__));
+"""
+
+    result = subprocess.run(
+        [node, "-e", harness, str(SRS_JS), json.dumps(local_state)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, f"node harness failed: {result.stderr}"
+    written = json.loads(result.stdout)
+
+    assert "v_target" not in written
+    assert written["v_other"] == local_state["v_other"]
+
+
+def test_clear_verb_is_a_no_op_when_verb_has_no_srs_entry() -> None:
+    """Clearing a verb that was never in the ladder must not write anything
+    (readSrs/writeSrs is only called when there's actually an entry to
+    remove) -- mirrors the server-side "unconditional but idempotent" write,
+    while keeping the client side from touching localStorage needlessly."""
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node not available in this environment")
+    assert node is not None
+
+    harness = """
+global.window = {
+  VerbBoardStorage: {
+    readJson: function () { return {}; },
+    writeJson: function () { global.__WRITE_CALLED__ = true; },
+  },
+};
+require(process.argv[1]);
+const S = window.VerbBoardSRS;
+S.clearVerb('en', 'v_absent');
+process.stdout.write(JSON.stringify(!!global.__WRITE_CALLED__));
+"""
+
+    result = subprocess.run(
+        [node, "-e", harness, str(SRS_JS)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, f"node harness failed: {result.stderr}"
+    assert json.loads(result.stdout) is False

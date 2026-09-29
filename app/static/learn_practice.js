@@ -199,15 +199,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     if (isReview) {
-      // Recall self-report gated behind the same hasListened() check as the
-      // ordinary Next button, for both "Knew it" and "Show me again" -- one
-      // code path, one mental model ("listen before you advance/self-report"),
-      // rather than a special exemption for the "no" answer.
+      // Deliberately NOT gated behind hasListened(): these buttons are a
+      // recall self-report on a verb the learner already starred as known,
+      // and forcing PRACTICE_MIN_PLAYS audio replays before allowing "Knew
+      // it" / "Show me again" would force-feed the answer right before
+      // asking the learner to self-report whether they already knew it --
+      // backwards for a recall test, unlike the ordinary new-verb Next
+      // button below (nextBtn), where forcing repeated listens up front is
+      // the actual intended first-exposure drill. Audio stays available as
+      // an optional aid (play button unchanged); it just isn't a
+      // prerequisite here. (Was gated behind hasListened() pre-2026-09-28;
+      // removed after this behaved as an invisible dead end in practice --
+      // no Skip fallback in review mode, so a learner short of the listen
+      // count had no way to advance at all except an easy-to-miss warning.)
       async function _advanceAfterRecall(recalled) {
-        if (!hasListened()) {
-          showWarn();
-          return;
-        }
         if (window.VerbBoardSRS) {
           await window.VerbBoardSRS.applyReview(language, verbId, recalled);
         }
@@ -293,6 +298,13 @@ document.addEventListener("DOMContentLoaded", function () {
       try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}"); } catch (_) { plays = {}; }
       accomplished = session.ids.every(function (id) {
         if (!seenSet.has(id)) return false;
+        // Review-mode verbs no longer require PRACTICE_MIN_PLAYS listens to
+        // advance (see _advanceAfterRecall above) -- the recall self-report
+        // itself is the completion signal for those, so don't also demand
+        // the listen count here or badge completion would silently regress
+        // for any session containing review verbs.
+        const mode = (session.modes && session.modes[id]) || 'new';
+        if (mode === 'review') return true;
         return (plays[id] || 0) >= PRACTICE_MIN_PLAYS;
       });
     } catch (_) {}

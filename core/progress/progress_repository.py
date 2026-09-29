@@ -186,11 +186,25 @@ def set_known(
     }
 
     # "known" is the entry point into the spaced-repetition review ladder --
-    # a verb the user marks known starts its review clock. Unmarking known
-    # does not remove it from the ladder (rare edge case, not worth the extra
-    # write-path complexity); only marking known (re-)enters it, and only if
-    # it isn't already in the ladder, so re-toggling known doesn't reset a
-    # verb's box/due date.
+    # a verb the user marks known starts its review clock.
+    #
+    # Unmarking known (known=False) exits the ladder entirely: srs_box/
+    # srs_due_at/srs_reviewed_at reset to the explicit "not in ladder"
+    # sentinel (srs_box: 0 / None), matching how list_progress_for_language()
+    # and get_progress's API layer already treat a missing/zero box.
+    # Fixed 2026-09-28 (owner-reported bug): a verb kept resurfacing with
+    # "Knew it"/"Show me again" recall buttons in practice after being
+    # unstarred, because SRS state was never cleared here -- getDueVerbIds()
+    # (app/static/srs.js) has no concept of "known", so a stale box>0 entry
+    # kept the verb due forever. Re-starring later is therefore a fresh
+    # start, not a resume, since there is no longer any prior box left once
+    # this branch has run.
+    #
+    # Marking known=True (re-)enters the ladder, but only if it isn't
+    # already in the ladder (see test_set_known_true_does_not_reset_existing_srs_box):
+    # this guards the rarer case of a client re-sending known=True while an
+    # earlier unmark's clearing write is still in flight or failed, so a
+    # verb genuinely still on the ladder isn't reset mid-review.
     if known:
         existing_payload: dict[str, Any] = doc_ref.get().to_dict() or {}
         if not existing_payload.get("srs_box"):
@@ -198,6 +212,10 @@ def set_known(
             payload["srs_box"] = 1
             payload["srs_due_at"] = _leitner_due_at(1, from_time=now)
             payload["srs_reviewed_at"] = now
+    else:
+        payload["srs_box"] = 0
+        payload["srs_due_at"] = None
+        payload["srs_reviewed_at"] = None
 
     doc_ref.set(payload, merge=True)
 

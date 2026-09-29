@@ -113,6 +113,22 @@
     return local;
   }
 
+  // Exits a verb's SRS ladder entirely -- called from progress.js's
+  // setKnown() when a verb is unstarred (known=false). Fixed 2026-09-28
+  // (owner-reported bug): unstarring previously left the local srs:{lang}
+  // map entry in place, so getDueVerbIds() (which has no concept of
+  // "known") kept surfacing the verb with recall buttons forever. Mirrors
+  // the server-side clear in core/progress/progress_repository.py's
+  // set_known(known=False) branch -- re-starring later is a fresh box=1
+  // entry, not a resume, since there is no entry left to resume from.
+  function clearVerb(language, verbId) {
+    const map = readSrs(language);
+    if (map[verbId]) {
+      delete map[verbId];
+      writeSrs(language, map);
+    }
+  }
+
   function getDueVerbIds(language, nowMs) {
     const map = readSrs(language);
     const now = nowMs || Date.now();
@@ -129,5 +145,6 @@
     applyReview,
     mergeFromServer,
     getDueVerbIds,
+    clearVerb,
   };
 })();

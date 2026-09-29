@@ -61,6 +61,14 @@
       knownSet.add(verbId);
     } else {
       knownSet.delete(verbId);
+
+      // Unstarring exits the SRS review ladder too (owner-reported bug: a
+      // verb kept resurfacing with "Knew it"/"Show me again" recall buttons
+      // after being unstarred). Mirrors the server-side clear in
+      // core/progress/progress_repository.py's set_known(known=False).
+      if (window.VerbBoardSRS && window.VerbBoardSRS.clearVerb) {
+        window.VerbBoardSRS.clearVerb(language, verbId);
+      }
     }
 
     writeSet(keys.knownKey, knownSet);
