@@ -78,6 +78,10 @@ RUSSIAN (ru)
     m: "он <past_m>", f: "она <past_f>", n: "оно <past_n>", pl: "они <past_pl>"
     Plain text only — no stress marks or diacritics.
 
+  PLAIN TEXT EVERYWHERE: the same rule applies to every Russian string you output (lemma, forms,
+    pronoun_forms, pair, examples). Never write a combining acute accent (U+0301) or any other
+    stress mark, even for words whose stress is hard to predict.
+
   examples:
     paired verb: 5 sentences
     biaspectual or unpaired verb: 6 sentences

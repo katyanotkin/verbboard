@@ -16,6 +16,7 @@ from app.routes.admin_utils import (
     require_admin_api,
 )
 from core.admin_logging import resolve_signal_label
+from core.languages.ru.stress import strip_stress_marks
 from core.search_utils import normalize_text
 from core.settings import (
     _load_anthropic_api_key,
@@ -199,6 +200,8 @@ async def _call_claude_single_example(language: str, lemma: str, existing_exampl
         raise HTTPException(status_code=502, detail="Example generation returned invalid JSON") from exc
     if not isinstance(result.get("src"), str) or not isinstance(result.get("dst"), str):
         raise HTTPException(status_code=502, detail="Example generation returned unexpected format")
+    if language == "ru":
+        return {"src": strip_stress_marks(result["src"]), "dst": result["dst"]}
     return {"src": result["src"], "dst": result["dst"]}
 
 
@@ -224,7 +227,8 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
         raw = re.sub(r"\n?```$", "", raw).strip()
 
     try:
-        return json.loads(raw)
+        generated = json.loads(raw)
+        return strip_stress_marks(generated) if language == "ru" else generated
     except json.JSONDecodeError as exc:
         logger.warning(
             "Claude returned invalid JSON for %s/%s: %s",

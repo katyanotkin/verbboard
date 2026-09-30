@@ -22,6 +22,7 @@ from pydantic import BaseModel, ValidationError
 from vertexai.generative_models import GenerationConfig, GenerativeModel
 
 from core.languages.config import STUDY_LANGUAGE_SCRIPTS
+from core.languages.ru.stress import strip_stress_marks
 from core.languages.ru.validation import validate_ru_payload
 from core.rate_limit import SlidingWindowRateLimiter
 from core.settings import _load_anthropic_api_key, load_settings, verb_candidates_collection_name, verbs_collection_name
@@ -161,7 +162,8 @@ async def _generate_verb_claude(language: str, query: str) -> dict[str, Any] | N
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1] if "\n" in raw else raw
             raw = raw.rsplit("```", 1)[0].strip()
-        return json.loads(raw)
+        generated = json.loads(raw)
+        return strip_stress_marks(generated) if language == "ru" else generated
     except Exception:
         logger.exception("Claude verb generation failed for %s/%s", language, query)
         return None

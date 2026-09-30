@@ -110,7 +110,7 @@ Assets:
 - Phone screenshots (min 2): Chrome DevTools > Pixel 7 (412px wide) > verbboard.com; capture verb list page + learn page (Ctrl+Shift+P > "Capture screenshot")
 - Category: Education
 
-- [ ] Listing complete
+- [ ] Listing complete -- NOT CONFIRMED: verify in Play Console (Store presence > Main store listing) and tick; closed testing being unlocked suggests it is, but nothing in the repo records it
 
 ### Step 5.5: Get real Play App Signing fingerprint [CRITICAL -- TELL CLAUDE]
 
@@ -129,7 +129,7 @@ https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=http
 ```
 Expected: `linked=true`
 
-- [ ] Fingerprint updated and verified
+- [x] Fingerprint updated and verified -- real App Signing fingerprint live in `well_known.py` and `public/.well-known/assetlinks.json`, confirmed `linked` via Google's statements API (2026-07-24)
 
 ### Step 5.6: App content declarations [YOU DO THIS]
 
@@ -140,7 +140,7 @@ Play Console > Policy > App content:
 - Target audience: 13+ or All ages
 - Data safety: see `PLAY_DATA_SAFETY.md` for the full category-by-category worksheet (selections, purposes, and descriptions to paste in)
 
-- [ ] Declarations complete
+- [ ] Declarations complete -- partly recorded 2026-07-29 (ads: none; sign-in: OAuth only; data collected + encrypted in transit; content rating mandatory). Verify every item under Policy > App content shows complete, then tick
 
 ### Step 5.6b: Closed testing gate (REQUIRED, not optional) [YOU DO THIS]
 
@@ -160,11 +160,11 @@ Play Console > Test and release > Testing > Closed testing > Create a track
 fresh) > roll out to the closed track.
 
 - [x] Closed testing track created -- using `closed-testing-1.0.0` (owner decision 2026-07-29; a second auto-created "Alpha" track exists and is being left inactive/unused, not filled in)
-- [ ] AAB uploaded to `closed-testing-1.0.0` specifically (separate release from the Internal testing one)
-- [ ] Recruit >=12 testers (friends/family/community) willing to opt in and keep the app installed
-- [ ] Share the closed-testing opt-in link (Play Console > Testing > Closed testing > your track > "Testers" tab) with all 12+
+- [x] AAB uploaded to `closed-testing-1.0.0` specifically (2026-07-24; 3 testers added by email + public opt-in link)
+- [ ] Recruit >=12 testers (friends/family/community) willing to opt in and keep the app installed -- tell them to keep it installed for the full 14 days and reload once after updates (cache-first service worker)
+- [ ] Share the closed-testing opt-in link (Play Console > Testing > Closed testing > your track > "Testers" tab) with all 12+ -- along with a short test list: sign in, practice session, audio, star a verb, feedback form (`/feedback`)
 - [ ] Confirm all 12+ have opted in (Play Console shows opt-in count) -- the 14-day clock only counts while a tester is opted in, not from AAB upload
-- [ ] Along the way: verify login, audio, progress sync, and navigation from the installed app -- de-risks the eventual public review too
+- [ ] Along the way: verify login, audio, progress sync, and navigation from the installed app -- de-risks the eventual public review too. Own on-device pass (Play-installed build, not Chrome): TWA sign-in (redirect in place), full practice loop incl. the sign-in gate on Start / "Recalled it" / listen gate, standalone-mode Back (bottom nav only), offline page, self-serve account deletion on `/privacy`, 375px RU/ES/HE layouts. Also test `https://verbboard.com/verbs?signin=redirect` on prod (only stage has been verified; iOS is issue #63)
 - [ ] Wait 14 continuous days with >=12 testers opted in
 - [ ] Apply for production access: Play Console > Dashboard > "Apply for production access" (answers questions about the app, testing process, production readiness)
 - [ ] Production access granted (email/dashboard confirmation)

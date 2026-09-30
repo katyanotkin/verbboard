@@ -244,6 +244,10 @@ def run(
             logger.warning("PARSE  %-30s  %s", query, exc)
             errored += 1
             continue
+        if language == "ru":
+            from core.languages.ru.stress import strip_stress_marks
+
+            generated = strip_stress_marks(generated)
 
         # Post-generation duplicate check on the model-resolved lemma -- mirrors
         # generate_candidate which checks by doc ID and by search_extract.

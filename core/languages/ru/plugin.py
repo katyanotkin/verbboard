@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import unicodedata
+from typing import Any, cast
+
 from core.languages.config import LANGUAGE
+from core.languages.ru.stress import strip_stress_marks
 from core.models import Board, VerbEntry
 from core.registry import LanguagePlugin, register
 from core.storage.verb_repository import find_verb_by_lemma
@@ -35,6 +39,26 @@ def _tense_rows(tense_key: str, tense_forms: dict) -> list:
         }
         for slot, label, number in labels
     ]
+
+
+_PAST_ROW_KEYS = {"m": "past_m", "f": "past_f", "n": "past_n", "pl": "past_pl"}
+_IMPERATIVE_ROW_KEYS = {"sg": "imp_sg", "pl": "imp_pl"}
+
+
+def _display_overrides(display_forms: dict) -> dict[str, str]:
+    """Flatten sparse display-only forms (e.g. a stress mark) to row key -> shown text."""
+    overrides: dict[str, str] = {}
+    for tense_key, tense_forms in display_forms.items():
+        for slot, shown in (tense_forms or {}).items():
+            if tense_key == "past":
+                row_key = _PAST_ROW_KEYS.get(slot)
+            elif tense_key == "imperative":
+                row_key = _IMPERATIVE_ROW_KEYS.get(slot)
+            else:
+                row_key = f"{tense_key}_{slot}"
+            if row_key and shown:
+                overrides[row_key] = shown
+    return overrides
 
 
 def _lookup_pair_lemma_and_href(pair_lemma: str) -> tuple[str, str]:
@@ -125,6 +149,19 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
     ]
+
+    # Display-only text (stress marks) is shown on the board, while audio keeps
+    # using the plain form: edge-tts reads marked text worse (issue #46).
+    overrides = _display_overrides(getattr(verb, "display_forms", None) or {})
+    for section in sections:
+        for row in cast(list[dict[str, Any]], section["rows"]):
+            shown = overrides.get(str(row["key"]))
+            plain = str(row["text"] or "")
+            # Only a pure stress-marked copy of the current plain form counts, so a
+            # stale override left over after a regenerate is ignored.
+            if shown and plain and shown != plain and strip_stress_marks(shown) == unicodedata.normalize("NFC", plain):
+                row["tts_text"] = row["text"]
+                row["text"] = shown
 
     return Board(
         language="ru",
