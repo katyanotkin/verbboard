@@ -4,7 +4,7 @@ from core.models import VerbEntry
 
 def _verb(display_forms):
     return VerbEntry(
-        id="ru_platit",
+        id="ru_test_verb",
         rank=1,
         lemma="платить",
         forms={

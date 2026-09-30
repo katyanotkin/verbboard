@@ -907,3 +907,9 @@ button {
     overflow-wrap: anywhere;
   }
 }
+
+.stress-note {
+  margin: 8px 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

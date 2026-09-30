@@ -10,7 +10,7 @@ def active_study_plugins(settings: Settings | None = None) -> dict[str, Language
 
     Iterates all_plugins() (not study_languages) so registry insertion order --
     and therefore picker order -- is preserved. An allowlisted-but-unregistered
-    language (e.g. Plus's it/fr before those plugins exist) is silently absent,
+    language (e.g. a Plus-only language whose plugin does not exist yet) is silently absent,
     not an error: this is what keeps EDITION=plus a no-op before those plugins ship.
     """
     allowed = set((settings or load_settings()).study_languages)
@@ -46,7 +46,7 @@ def study_language_label(code: str, plugins: dict[str, LanguagePlugin], ui: dict
     registered language, not just the original free-edition four); falls back
     to LANGUAGE's English display name, then to the plugin's own display_name
     (always English) if the language isn't in LANGUAGE at all (e.g. Plus-only
-    it/fr before/if a lang.<code> key is ever missing).
+    a language whose lang.<code> key is ever missing).
     """
     fallback = LANGUAGE[code].display if code in LANGUAGE else plugins[code].display_name
     return ui.get(f"lang.{code}", fallback)

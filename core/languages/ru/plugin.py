@@ -4,6 +4,7 @@ import unicodedata
 from typing import Any, cast
 
 from core.languages.config import LANGUAGE
+from core.languages.ru.homographs import mark_word
 from core.languages.ru.stress import strip_stress_marks
 from core.models import Board, VerbEntry
 from core.registry import LanguagePlugin, register
@@ -41,6 +42,7 @@ def _tense_rows(tense_key: str, tense_forms: dict) -> list:
     ]
 
 
+_NON_FORM_ROW_KEYS = {"lemma", "aspect", "pair"}
 _PAST_ROW_KEYS = {"m": "past_m", "f": "past_f", "n": "past_n", "pl": "past_pl"}
 _IMPERATIVE_ROW_KEYS = {"sg": "imp_sg", "pl": "imp_pl"}
 
@@ -155,8 +157,11 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     overrides = _display_overrides(getattr(verb, "display_forms", None) or {})
     for section in sections:
         for row in cast(list[dict[str, Any]], section["rows"]):
-            shown = overrides.get(str(row["key"]))
             plain = str(row["text"] or "")
+            key = str(row["key"])
+            shown = overrides.get(key)
+            if not shown and key not in _NON_FORM_ROW_KEYS:
+                shown = mark_word(verb.id, plain)
             # Only a pure stress-marked copy of the current plain form counts, so a
             # stale override left over after a regenerate is ignored.
             if shown and plain and shown != plain and strip_stress_marks(shown) == unicodedata.normalize("NFC", plain):

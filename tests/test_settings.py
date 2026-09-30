@@ -70,7 +70,7 @@ def test_zero_env_edition_baseline():
     most important property of the env-driven edition config feature."""
     settings = load_settings()
     assert settings.edition == "free"
-    assert settings.study_languages == ("en", "ru", "he", "es", "it")
+    assert settings.study_languages == ("en", "ru", "he", "es", "it", "fr")
     assert settings.android_package_name == "com.verbboard.app"
     assert len(settings.android_cert_fingerprints) == 1
     assert settings.on_demand_examples_enabled is False
@@ -114,9 +114,16 @@ def test_unsupported_edition_raises(monkeypatch):
         load_settings()
 
 
-def test_free_edition_with_plus_only_study_language_raises(monkeypatch):
-    """ "it" moved from Plus-only to free-tier 2026-09-07, so "fr" (the sole
-    remaining Plus-only study language) is the probe here now."""
+def test_free_edition_accepts_french_study_language(monkeypatch):
+    """French became free 2026-09-30."""
+    monkeypatch.setenv("EDITION", "free")
+    monkeypatch.setenv("STUDY_LANGUAGES", "en,ru,he,es,fr")
+    assert "fr" in load_settings().study_languages
+
+
+def test_free_edition_with_plus_only_study_language_raises(monkeypatch, plus_only_french):
+    """No language is Plus-only today; the fixture makes "fr" one so the
+    free-edition guard stays covered."""
     monkeypatch.setenv("EDITION", "free")
     monkeypatch.setenv("STUDY_LANGUAGES", "en,ru,he,es,fr")
     with pytest.raises(ValueError):

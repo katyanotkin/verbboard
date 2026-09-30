@@ -6,10 +6,8 @@ any test module is collected, which triggers the language plugin self-registrati
 order (en, es, fr, he, it, ru) is exactly what these tests rely on for the
 order-preservation guarantee. "it" moved from Plus-only to free-tier
 2026-09-07 -- it is a real, registered plugin and now appears in free-edition
-assertions below. "fr" remains the sole real, registered Plus-only plugin --
-free edition's study_languages excludes it, so it doesn't appear in
-free-edition assertions; only the order-preservation test needs to account
-for its presence in the full registry.
+assertions below. "fr" moved to free 2026-09-30, so all six registered plugins are in the free
+edition and no language is Plus-only.
 """
 
 from __future__ import annotations
@@ -22,10 +20,10 @@ from core.settings import load_settings
 # ── active_study_plugins ──────────────────────────────────────────────────────
 
 
-def test_active_study_plugins_free_edition_returns_registered_five():
+def test_active_study_plugins_free_edition_returns_all_registered_six():
     settings = load_settings()  # zero env vars -> free edition
     plugins = active_study_plugins(settings)
-    assert set(plugins.keys()) == {"en", "es", "he", "it", "ru"}
+    assert set(plugins.keys()) == {"en", "es", "fr", "he", "it", "ru"}
 
 
 def test_active_study_plugins_preserves_registry_order_not_study_languages_order():
@@ -34,11 +32,7 @@ def test_active_study_plugins_preserves_registry_order_not_study_languages_order
 
     This is the property most likely to silently break the home-page language
     picker if it regressed: registry order is (en, es, fr, he, it, ru) while
-    study_languages order is (en, ru, he, es, it) -- they genuinely differ.
-    Free edition also excludes "fr" (the sole remaining Plus-only language),
-    so plugins is a strict subset of the full registry, not an identical set
-    -- assert it's an order-preserving subset, not byte-identical to
-    all_plugins().
+    study_languages order is (en, ru, he, es, it, fr) -- they genuinely differ.
     """
     settings = load_settings()
     plugins = active_study_plugins(settings)

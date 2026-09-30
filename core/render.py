@@ -8,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from core.audio_service import build_hashed_audio_key
 from core.languages.config import LANGUAGE as LANG_CONFIG
+from core.languages.ru.homographs import HOMOGRAPH_MARKS, mark_text
 from core.models import Board
 from core.paths import TEMPLATES_DIR
 from core.pronouns import PRONOUN_PERSONS, PRONOUNS
@@ -203,6 +204,8 @@ def render_board_html(
         base_key = f"example_{index}"
         raw_text = ex.dst
         hashed_key = build_hashed_audio_key(base_key, raw_text)
+        # Russian stress marks are display-only; the audio key above stays on the plain text.
+        display_text = mark_text(board.verb.id, raw_text) if board.language == "ru" else raw_text
 
         audio_src = f"/audio/{board.language}/{board.verb.id}/{board.voice_key}/{hashed_key}.mp3"
         audio_id = f"audio_{board.language}_{board.verb.id}_{board.voice_key}_{hashed_key}"
@@ -224,7 +227,7 @@ def render_board_html(
         examples_rows.append(
             "<tr>"
             f"<td dir='{example_direction}' style='text-align:{example_align}'>"
-            f"<span class='example-src'>{escape(raw_text)}</span>"
+            f"<span class='example-src'>{escape(display_text)}</span>"
             f"{translation_span}"
             f"</td>"
             f"<td>"
@@ -376,6 +379,9 @@ def render_board_html(
         learn_href_urlencode=quote(full_learn_href, safe="/"),
         sections_meta=meta_section_html,
         board_pronouns=board_pronouns,
+        board_stress_note=(
+            ui.get("board.stress_note", "") if board.language == "ru" and board.verb.id in HOMOGRAPH_MARKS else ""
+        ),
         board_examples_heading=ui.get("board.examples_heading", "Examples"),
         board_examples_toggle=examples_toggle,
         board_col_sentence=ui.get("board.col_sentence", "Sentence"),

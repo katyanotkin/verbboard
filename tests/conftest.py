@@ -178,3 +178,26 @@ def patch_everywhere(monkeypatch, dotted_path: str, replacement) -> None:
     monkeypatch.setattr(module, attribute_name, replacement)
     for holder_name, name in modules_holding_same_object(dotted_path):
         monkeypatch.setattr(sys.modules[holder_name], name, replacement)
+
+
+@pytest.fixture()
+def plus_only_french(monkeypatch):
+    """Make "fr" Plus-only for one test, so the entitlement-gate machinery
+    (kept wired for a future Plus-only language) stays covered now that every
+    study language, French included, is free.
+
+    Patches FREE_STUDY_LANGUAGES in its defining module and in every holder
+    (core.entitlements, core.settings, ...) but deliberately leaves
+    ALL_STUDY_LANGUAGES alone: it is the same tuple object, yet it must keep
+    listing "fr" so the picker still shows it (labelled Plus) on the free edition.
+    """
+    import core.languages.config as language_config
+
+    restricted = tuple(code for code in language_config.FREE_STUDY_LANGUAGES if code != "fr")
+    holders = modules_holding_same_object("core.languages.config.FREE_STUDY_LANGUAGES")
+    monkeypatch.setattr(language_config, "FREE_STUDY_LANGUAGES", restricted)
+    for holder_name, name in holders:
+        if name == "ALL_STUDY_LANGUAGES":
+            continue
+        monkeypatch.setattr(sys.modules[holder_name], name, restricted)
+    return restricted

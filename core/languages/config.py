@@ -37,11 +37,13 @@ UI_LANGUAGES: tuple[str, ...] = tuple(LANGUAGE.keys())
 # something, which would have made Italian a UI language too and crashed
 # every page calling get_strings("it") -- there is no app/i18n/it.json.
 #
-# Free ships today's five languages (the original four plus Italian, moved
-# to free 2026-09-07 -- an owner product call, not a content-readiness
-# change); Plus adds French on top.
-FREE_STUDY_LANGUAGES: tuple[str, ...] = ("en", "ru", "he", "es", "it")
-PLUS_EXTRA_STUDY_LANGUAGES: tuple[str, ...] = ("fr",)
+# Free ships all six languages (the original four plus Italian, moved to free
+# 2026-09-07, and French, moved to free 2026-09-30 -- owner product calls to
+# increase engagement, not content-readiness changes). The Plus-only list is
+# deliberately empty for now; the entitlement machinery stays wired so a future
+# Plus-only language is just an entry here.
+FREE_STUDY_LANGUAGES: tuple[str, ...] = ("en", "ru", "he", "es", "it", "fr")
+PLUS_EXTRA_STUDY_LANGUAGES: tuple[str, ...] = ()
 
 # Every study language regardless of tier -- for tooling that must cover all
 # registered study content irrespective of who's entitled to study it (e.g.

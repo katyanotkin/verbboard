@@ -97,6 +97,7 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
     {{ sections_meta | safe }}
   </div>
 
+  {% if board_stress_note %}<p class="stress-note">{{ board_stress_note }}</p>{% endif %}
   {{ board_pronouns | safe }}
 
   <div class="examples-heading-row">

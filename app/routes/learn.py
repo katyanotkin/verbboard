@@ -130,8 +130,8 @@ async def learn(
             if not text:
                 continue
 
-            form_key = build_hashed_audio_key(base_form_key, text)
             tts_text = str(row.get("tts_text") or "").strip() or text
+            form_key = build_hashed_audio_key(base_form_key, tts_text)
 
             tasks.append(
                 ensure_audio(

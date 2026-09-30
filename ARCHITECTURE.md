@@ -83,7 +83,7 @@ Six plugins exist today: `en`, `es`, `fr`, `he`, `it`, `ru` -- all six are impor
 - `core/editions.py`'s `active_study_plugins()` filters the registry down to `Settings.study_languages` for language-picker purposes
 - `core/entitlements.py`'s `can_study()` is the actual enforcement layer, checked per-request on `/learn`, `/verbs`, `/audio`, both search endpoints, and `/api/preferences`
 
-`en`/`ru`/`he`/`es` are free-tier (`FREE_STUDY_LANGUAGES` in `core/languages/config.py`, also the fixed 4-language UI locale set). `it`/`fr` (`PLUS_EXTRA_STUDY_LANGUAGES`) are Plus-only and study-only -- no UI translation exists for them, they only ever appear as the *studied* language, never the *UI* language.
+`en`/`ru`/`he`/`es`/`it`/`fr` are all free-tier (`FREE_STUDY_LANGUAGES` in `core/languages/config.py`; French moved to free 2026-09-30, Italian 2026-09-07). `PLUS_EXTRA_STUDY_LANGUAGES` is empty on purpose and the Plus gating stays wired for a future Plus-only language. `it`/`fr` are study-only -- no UI translation exists for them, they only ever appear as the *studied* language, never the *UI* language (the fixed UI locale set is en/ru/he/es).
 
 ### Editions
 
@@ -95,7 +95,7 @@ Other edition-scoped config: `APP_NAME`/`APP_SHORT_NAME`, `ANDROID_PACKAGE_NAME`
 
 ### Entitlements
 
-`core/entitlements.py`. `requires_entitlement(language)` is true for any language outside `FREE_STUDY_LANGUAGES` (today: `it`, `fr`). `has_plus_entitlement(uid)` reads `user_entitlements/{uid}` in Firestore, true iff `status == "active"` and not expired; 60-second TTL cache (plain dict, not `lru_cache`, because TTL eviction matters -- a revoked grant must not stay cached indefinitely). Fails open on a Firestore read error (a few minutes of free content during a GCP incident is cheaper than locking out a paying user); fails closed only on a definitive negative (no doc, or inactive status). `can_study(language, uid)` is the single call site every route uses: `not requires_entitlement(language) or (uid is not None and has_plus_entitlement(uid))`.
+`core/entitlements.py`. `requires_entitlement(language)` is true for any language outside `FREE_STUDY_LANGUAGES` (today: none). `has_plus_entitlement(uid)` reads `user_entitlements/{uid}` in Firestore, true iff `status == "active"` and not expired; 60-second TTL cache (plain dict, not `lru_cache`, because TTL eviction matters -- a revoked grant must not stay cached indefinitely). Fails open on a Firestore read error (a few minutes of free content during a GCP incident is cheaper than locking out a paying user); fails closed only on a definitive negative (no doc, or inactive status). `can_study(language, uid)` is the single call site every route uses: `not requires_entitlement(language) or (uid is not None and has_plus_entitlement(uid))`.
 
 No billing integration exists yet -- grants are manual via `/admin/entitlements` (`app/routes/admin_entitlements.py`, `set_entitlement()`/`get_entitlement()`/`list_entitlements()`/`lookup_uid_by_email()`). The record schema reserves billing-only fields (`product_id`, `purchase_token`, `order_id`, `expires_at`) seeded to `None` on first write so a future billing-sourced value has somewhere to land without a migration.
 

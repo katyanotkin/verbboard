@@ -1,14 +1,12 @@
 """Tests for the Plus entitlement gate wired into /learn, /verbs, /api/verbs,
 /audio, /search_verb[_by_lang], and /api/preferences.
 
-FREE_STUDY_LANGUAGES currently covers en/ru/he/es/it, so
-core.entitlements.requires_entitlement() is False for all of them and the
-gate has zero behavioral effect for those languages in production today.
-These tests force the gate open with "fr" -- a real, registered plugin
-(core/languages/fr/plugin.py) that remains the sole entry in
-core/languages/config.py's PLUS_EXTRA_STUDY_LANGUAGES -- so the redirect/403
-branches are exercised as an arbitrary Plus-gated probe language, without
-depending on any user actually holding a Plus entitlement.
+French is free (2026-09-30) and PLUS_EXTRA_STUDY_LANGUAGES is empty, so the
+gate has no behavioral effect in production today. The machinery stays wired
+for a future Plus-only language; these tests exercise it by making "fr" a
+Plus-only probe (real registered plugin) via the `plus_only_french` fixture
+(tests/conftest.py) where the real tier check matters, or by forcing
+can_study, without depending on any user holding a Plus entitlement.
 """
 
 from __future__ import annotations
@@ -83,7 +81,7 @@ def test_learn_gate_entitled_user_passes_through(client: TestClient, monkeypatch
 # ---------------------------------------------------------------------------
 
 
-def test_verbs_plus_required_renders_notice(client: TestClient) -> None:
+def test_verbs_plus_required_renders_notice(client: TestClient, plus_only_french) -> None:
     resp = client.get("/verbs?language=fr&plus_required=1&ui_language=es")
     assert resp.status_code == 200
     assert 'href="/feedback?page=plus&amp;language=fr&amp;ui_language=es"' in resp.text or (
@@ -346,7 +344,7 @@ def _picker_html(html: str) -> str:
     return html[start : html.index("</select>", start)]
 
 
-def test_home_free_edition_lists_french_labelled_plus(client: TestClient) -> None:
+def test_home_free_edition_lists_plus_only_language_labelled_plus(client: TestClient, plus_only_french) -> None:
     resp = client.get("/?language=en&ui_language=en")
     assert resp.status_code == 200
     picker = _picker_html(resp.text)
@@ -355,13 +353,13 @@ def test_home_free_edition_lists_french_labelled_plus(client: TestClient) -> Non
     assert "Spanish (Plus)" not in picker
 
 
-def test_home_french_unentitled_lands_on_plus_notice_no_signin(client: TestClient) -> None:
+def test_home_plus_only_language_unentitled_lands_on_notice_no_signin(client: TestClient, plus_only_french) -> None:
     resp = client.get("/?language=fr&ui_language=he", follow_redirects=False)
     assert resp.status_code in (302, 303, 307)
     assert resp.headers["location"] == "/verbs?language=fr&plus_required=1&ui_language=he"
 
 
-def test_set_language_fr_end_to_end_shows_notice_with_feedback_link(client: TestClient) -> None:
+def test_set_language_fr_end_to_end_shows_notice_with_feedback_link(client: TestClient, plus_only_french) -> None:
     resp = client.get("/set_language?language=fr&ui_language=en", follow_redirects=True)
     assert resp.status_code == 200
     assert "/auth/signin" not in str(resp.url)
@@ -399,7 +397,7 @@ def test_home_free_language_unchanged(client: TestClient) -> None:
     assert '<option value="es" selected' in resp.text
 
 
-def test_plus_notice_page_home_links_do_not_loop_back(client):
+def test_plus_notice_page_home_links_do_not_loop_back(client, plus_only_french):
     """Home redirects a Plus-only language straight back to /verbs, so Back/Home
     links on the notice page must not carry that language."""
     html = client.get("/verbs?language=fr&plus_required=1&ui_language=en").text
@@ -407,7 +405,7 @@ def test_plus_notice_page_home_links_do_not_loop_back(client):
     assert 'href="/?ui_language=en"' in html
 
 
-def test_plus_notice_page_clears_stored_plus_language(client):
+def test_plus_notice_page_clears_stored_plus_language(client, plus_only_french):
     """home.js would otherwise re-add a stored vb_language=fr to a bare '/'."""
     html = client.get("/verbs?language=fr&plus_required=1&ui_language=en").text
     assert "removeItem('vb_language')" in html
@@ -420,7 +418,7 @@ def test_free_language_with_stale_plus_required_keeps_normal_home_link(client):
     assert 'href="/?language=es&amp;ui_language=en"' in html
 
 
-def test_set_language_and_empty_search_skip_home_for_plus_language(client: TestClient) -> None:
+def test_set_language_and_empty_search_skip_home_for_plus_language(client: TestClient, plus_only_french) -> None:
     """Home would only redirect these to the /verbs notice, so go there directly."""
     expected = "/verbs?language=fr&plus_required=1&ui_language=en"
     for url in (
@@ -438,7 +436,45 @@ def test_set_language_and_empty_search_still_go_home_for_free_language(client: T
         assert resp.headers["location"] == "/?language=es&ui_language=en", url
 
 
-def test_about_plus_request_link_returns_to_about(client: TestClient) -> None:
-    """Back from the feedback page must land on About, not home."""
+def test_about_no_longer_advertises_plus_only_french(client: TestClient) -> None:
     html = client.get("/about?ui_language=en").text
-    assert "page=plus&amp;language=fr&amp;return_to=/about%3Fui_language%3Den" in html
+    assert "page=plus" not in html
+    assert "Plus version only" not in html
+
+
+# ---------------------------------------------------------------------------
+# French is free (owner decision 2026-09-30): no gate without the fixture
+# ---------------------------------------------------------------------------
+
+
+def test_home_lists_french_without_plus_suffix(client: TestClient) -> None:
+    picker = _picker_html(client.get("/?language=en&ui_language=en").text)
+    assert '<option value="fr"' in picker
+    assert "French (Plus)" not in picker
+
+
+def test_home_french_anonymous_gets_home_page(client: TestClient) -> None:
+    resp = client.get("/?language=fr&ui_language=en", follow_redirects=False)
+    assert resp.status_code == 200
+    assert '<option value="fr" selected' in resp.text
+
+
+def test_verbs_french_anonymous_has_no_plus_notice(client: TestClient, monkeypatch, mock_verb) -> None:
+    monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [mock_verb])
+    resp = client.get("/verbs?language=fr&ui_language=en")
+    assert resp.status_code == 200
+    assert "vb-plus-request-link" not in resp.text
+
+
+def test_learn_french_anonymous_not_gated(client: TestClient, monkeypatch, mock_verb) -> None:
+    monkeypatch.setattr("app.routes.learn.load_entries_for_language", lambda **kw: [mock_verb])
+    monkeypatch.setattr("app.routes.learn.load_entry_by_id", lambda **kw: mock_verb)
+    monkeypatch.setattr("app.routes.learn.ensure_audio", noop_ensure_audio)
+    monkeypatch.setattr("app.routes.learn.render_board_html", lambda **kw: "<html>board</html>")
+    resp = client.get("/learn?language=fr&verb_id=fr_aller", follow_redirects=False)
+    assert resp.status_code == 200
+
+
+def test_set_language_french_goes_home_when_free(client: TestClient) -> None:
+    resp = client.get("/set_language?language=fr&ui_language=en", follow_redirects=False)
+    assert resp.headers["location"] == "/?language=fr&ui_language=en"
