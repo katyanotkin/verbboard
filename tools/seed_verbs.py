@@ -24,6 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import core.languages.fr.plugin  # noqa: E402,F401  -- self-registers "fr"
+import core.languages.it.plugin  # noqa: E402,F401  -- self-registers "it"
 import core.languages.tr.plugin  # noqa: E402,F401  -- self-registers "tr"
 from core import verb_autogen  # noqa: E402
 from core.audio_backend.factory import create_audio_backend  # noqa: E402
@@ -45,6 +46,18 @@ LEMMAS: dict[str, list[str]] = {
         "istemek",  # to want
         "vermek",  # to give
         "almak",  # to take / get
+    ],
+    "it": [
+        "mettere",
+        "aspettare",
+        "piacere",  # indirect-construction verb (mi piace)
+        "chiamarsi",  # reflexive paradigm
+        "alzarsi",
+        "svegliarsi",
+        "rimanere",
+        "dormire",
+        "decidere",
+        "perdere",
     ],
     "fr": [
         "croire",

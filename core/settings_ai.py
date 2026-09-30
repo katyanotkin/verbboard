@@ -136,7 +136,10 @@ ITALIAN (it)
       unless the verb is reflexive, in which case still default masculine singular.
     imperfetto:        { io, tu, lui, noi, voi, loro }
     futuro:            { io, tu, lui, noi, voi, loro }
-    imperativo:        { tu, lei, noi, voi }  ← always include all four slots (no "io" imperative in Italian).
+    imperativo:        { tu, lei, noi, voi }  ← include all four slots (no "io" imperative in Italian).
+      Exception: potere, dovere and other verbs with no natural command form — give only "lei"
+      (the congiuntivo form) and leave tu/noi/voi as empty strings; never pass off the indicative
+      (puoi, devi, possiamo) as an imperative.
       "lei" MUST be derived from the congiuntivo presente 3rd singular, never copied from the presente
       indicativo — this is a common error specifically for modal verbs: e.g. dovere → "debba" (not
       "deve"), potere → "possa" (not "può"), volere → "voglia" (not "vuole").
@@ -149,7 +152,12 @@ ITALIAN (it)
     "si chiami" for lei, "chiamati" for tu with clitic postposed and attached).
     gerundio/participio keep the clitic postposed and attached: "chiamandosi", "chiamatosi".
   examples: 4 to 6 sentences in Italian, each using a distinct grammatical form:
-    at least one presente, one passato prossimo, one imperfetto or futuro, one imperativo."""
+    at least one presente, one passato prossimo, one imperfetto or futuro, one imperativo.
+    Vary the sentence frames: do not open the imperfetto example with "Da bambino"/"Quando ero
+    bambino", the presente with "Ogni mattina", or the futuro with "L'anno prossimo" by default;
+    use different subjects, places and situations for each verb. A gerundio example needs a clear
+    subject (the gerundio's subject must be the main clause's subject). Do not use the reflexive
+    or reciprocal form of a verb (ricordarsi, conoscersi) to illustrate the plain verb's tense."""
 
 _PROMPT_FR = """\
 ────────────────────────────────────────
