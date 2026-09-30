@@ -555,7 +555,7 @@
       note.className = 'practice-gate-note';
       note.textContent =
         ui['practice.gate_note'] ||
-        'Free. We only use your name and email to save your progress.';
+        'Free. We use your name and email only to save your progress.';
 
       const dismiss = document.createElement('button');
       dismiss.type = 'button';
