@@ -6,8 +6,8 @@ any test module is collected, which triggers the language plugin self-registrati
 order (en, es, fr, he, it, ru) is exactly what these tests rely on for the
 order-preservation guarantee. "it" moved from Plus-only to free-tier
 2026-09-07 -- it is a real, registered plugin and now appears in free-edition
-assertions below. "fr" moved to free 2026-09-30, so all six registered plugins are in the free
-edition and no language is Plus-only.
+assertions below. "fr" moved to free 2026-09-30, so all six free-tier plugins are active on the free
+edition; Turkish (added 2026-09-30) is registered but Plus-only, so it is absent.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from core.settings import load_settings
 # ── active_study_plugins ──────────────────────────────────────────────────────
 
 
-def test_active_study_plugins_free_edition_returns_all_registered_six():
+def test_active_study_plugins_free_edition_returns_the_six_free_languages_not_plus_only_tr():
     settings = load_settings()  # zero env vars -> free edition
     plugins = active_study_plugins(settings)
     assert set(plugins.keys()) == {"en", "es", "fr", "he", "it", "ru"}

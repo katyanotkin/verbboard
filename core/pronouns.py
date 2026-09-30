@@ -68,4 +68,12 @@ PRONOUNS: dict[str, dict[str, str]] = {
         "2pl": "vous",
         "3pl": "ils / elles",
     },
+    "tr": {
+        "1sg": "ben",
+        "2sg": "sen",
+        "3sg": "o",
+        "1pl": "biz",
+        "2pl": "siz",
+        "3pl": "onlar",
+    },
 }

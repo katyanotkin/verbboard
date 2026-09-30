@@ -15,6 +15,7 @@ import core.languages.fr.plugin  # noqa: F401
 import core.languages.he.plugin  # noqa: F401
 import core.languages.it.plugin  # noqa: F401
 import core.languages.ru.plugin  # noqa: F401
+import core.languages.tr.plugin  # noqa: F401
 from app.routes.about import router as about_router
 from app.routes.admin import router as admin_router
 from app.routes.api_account import router as api_account_router

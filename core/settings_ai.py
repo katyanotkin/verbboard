@@ -185,6 +185,29 @@ FRENCH (fr)
     it — a contrived, unnatural-sounding "command" teaches the wrong register more actively
     than simply covering a different distinct form there instead."""
 
+_PROMPT_TR = """\
+────────────────────────────────────────
+TURKISH (tr)
+  lemma: infinitive (mastar) ending in -mek / -mak, e.g. "gitmek".
+  morph: {}
+  forms (all nested). Every form is ONE word with the person ending attached (no separate
+    pronoun) and uses the normal Turkish letters (ç, ğ, ı, İ, ö, ş, ü); plain text, no
+    apostrophes or diacritics added:
+    present_continuous: { ben, sen, o, biz, siz, onlar }  ← -iyor tense,
+      e.g. "geliyorum", "geliyorsun", "geliyor", "geliyoruz", "geliyorsunuz", "geliyorlar".
+    aorist:             { ben, sen, o, biz, siz, onlar }  ← geniş zaman,
+      e.g. "gelirim", "gelirsin", "gelir", "geliriz", "gelirsiniz", "gelirler".
+    past:               { ben, sen, o, biz, siz, onlar }  ← -di tense (görülen geçmiş),
+      e.g. "geldim", "geldin", "geldi", "geldik", "geldiniz", "geldiler".
+    future:             { ben, sen, o, biz, siz, onlar }  ← -ecek / -acak tense,
+      e.g. "geleceğim", "geleceksin", "gelecek", "geleceğiz", "geleceksiniz", "gelecekler".
+    imperative:         { sen, siz }  ← e.g. "gel", "gelin".
+  Apply vowel harmony, consonant softening (gitmek → gidiyorum, gidecek; etmek → ediyorum)
+    and the verb's real aorist vowel (almak → alırım, görmek → görürüm, olmak → olurum,
+    vermek → veririm, bilmek → bilirim, yapmak → yaparım). Never invent a form.
+  examples: 4 to 6 sentences in Turkish, each using a distinct grammatical form: at least one
+    present continuous, one aorist, one past, one future, and one imperative where it is natural."""
+
 _LANG_PROMPTS: dict[str, str] = {
     "en": f"{_PROMPT_INTRO}\n\n{_PROMPT_EN}\n",
     "ru": f"{_PROMPT_INTRO}\n\n{_PROMPT_RU}\n",
@@ -192,11 +215,13 @@ _LANG_PROMPTS: dict[str, str] = {
     "he": f"{_PROMPT_INTRO}\n\n{_PROMPT_HE}\n",
     "it": f"{_PROMPT_INTRO}\n\n{_PROMPT_IT}\n",
     "fr": f"{_PROMPT_INTRO}\n\n{_PROMPT_FR}\n",
+    "tr": f"{_PROMPT_INTRO}\n\n{_PROMPT_TR}\n",
 }
 
 # Full prompt — all languages combined. Used by verb_service and as fallback.
 _GENERATION_SYSTEM_PROMPT = (
-    "\n\n".join([_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE, _PROMPT_IT, _PROMPT_FR]) + "\n"
+    "\n\n".join([_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE, _PROMPT_IT, _PROMPT_FR, _PROMPT_TR])
+    + "\n"
 )
 
 # ---------------------------------------------------------------------------

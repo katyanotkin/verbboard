@@ -29,7 +29,8 @@ def _strip_combining(text: str) -> str:
 
 def normalize_text(text: str) -> str:
     """Normalize text for matching. Strips combining marks (e.g. Hebrew nikud)."""
-    return re.sub(r"\s+", " ", _strip_combining(text).strip().casefold())
+    # Turkish dotless i folds to i so "yapıyorum" matches a query typed without the dot.
+    return re.sub(r"\s+", " ", _strip_combining(text).strip().casefold().replace("ı", "i"))
 
 
 def tokenize_text(text: str) -> list[str]:

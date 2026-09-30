@@ -45,6 +45,7 @@ import core.languages.fr.plugin  # noqa: E402, F401
 import core.languages.he.plugin  # noqa: E402, F401
 import core.languages.it.plugin  # noqa: E402, F401
 import core.languages.ru.plugin  # noqa: E402, F401
+import core.languages.tr.plugin  # noqa: E402, F401
 from core.audio_backend.gcs import GCSAudioBackend  # noqa: E402
 from core.audio_service import build_audio_key, build_hashed_audio_key  # noqa: E402
 from core.languages.config import ALL_STUDY_LANGUAGES  # noqa: E402

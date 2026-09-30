@@ -2,7 +2,7 @@
 On-the-spot verb generation for EN/ES/IT/FR/RU when a search finds no match.
 
 Flow: is_plausible_verb_query gate -> provider-dispatched verb gen (Gemini for
-most languages, Claude for Russian -- see _CLAUDE_AUTOGEN_LANGUAGES) ->
+most languages, Claude for Russian and, seed-only, Turkish -- see _CLAUDE_AUTOGEN_LANGUAGES) ->
 pydantic validate (+ Russian-specific aspect/form sanity check) -> dual-write
 (verb_candidates as "promoted" + live verbs) -> cache bust -> audio pre-warm.
 All runs as a fire-and-forget asyncio task; failures are logged and never
@@ -48,7 +48,9 @@ AUTOGEN_LANGUAGES: frozenset[str] = frozenset({"en", "es", "it", "fr", "ru"})
 # non-English languages -- see core/verb_service.py's pair-completion
 # generator, which this path deliberately does not duplicate the pipeline of)
 # instead of Gemini. Everything else in this module stays Gemini-based.
-_CLAUDE_AUTOGEN_LANGUAGES: frozenset[str] = frozenset({"ru"})
+# "tr" is here only so tools/seed_tr_verbs.py generates through Claude; it is NOT in
+# AUTOGEN_LANGUAGES, so the public search-miss path never generates Turkish.
+_CLAUDE_AUTOGEN_LANGUAGES: frozenset[str] = frozenset({"ru", "tr"})
 
 _GEMINI_VERB_MODEL = "gemini-2.5-flash"
 # Routed through Settings (not a bare os.getenv() here) so the value is

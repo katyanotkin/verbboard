@@ -85,7 +85,7 @@ def _transliterate_for_id(value: str) -> str:
     if not value:
         return ""
 
-    value = _strip_combining_marks(value)
+    value = _strip_combining_marks(value.replace("ı", "i"))
 
     result: list[str] = []
     for char in value:

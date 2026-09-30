@@ -65,14 +65,14 @@ def _language_picker_options(html: str) -> list[str]:
 
 def test_home_language_picker_lists_all_study_languages_on_free_edition(client: TestClient) -> None:
     """Picker lists every registered study language (registry order), including
-    Plus-only "fr", so free-edition visitors can see (and be told about) Plus."""
+    Plus-only "tr", so free-edition visitors can see (and be told about) Plus."""
     options = _language_picker_options(client.get("/?language=en").text)
-    assert options == ["en", "es", "fr", "he", "it", "ru"]
+    assert options == ["en", "es", "fr", "he", "it", "ru", "tr"]
 
 
 def test_home_language_picker_same_on_plus_edition(client: TestClient, monkeypatch) -> None:
     monkeypatch.setenv("EDITION", "plus")
-    assert _language_picker_options(client.get("/?language=en").text) == ["en", "es", "fr", "he", "it", "ru"]
+    assert _language_picker_options(client.get("/?language=en").text) == ["en", "es", "fr", "he", "it", "ru", "tr"]
 
 
 # ── verbs ──────────────────────────────────────────────────────────────────

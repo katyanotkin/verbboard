@@ -46,11 +46,11 @@ def _mock_db_with_doc(exists: bool, data: dict | None = None) -> MagicMock:
 # ---------------------------------------------------------------------------
 
 
-def test_requires_entitlement_false_for_every_study_language() -> None:
-    """No study language is Plus-only today (French became free 2026-09-30)."""
-    assert not PLUS_EXTRA_STUDY_LANGUAGES
+def test_only_plus_extra_languages_require_an_entitlement() -> None:
+    """Turkish is the one Plus-only language (added 2026-09-30); everything else is free."""
+    assert PLUS_EXTRA_STUDY_LANGUAGES == ("tr",)
     for lang in ALL_STUDY_LANGUAGES:
-        assert entitlements.requires_entitlement(lang) is False
+        assert entitlements.requires_entitlement(lang) is (lang in PLUS_EXTRA_STUDY_LANGUAGES)
 
 
 def test_french_is_free() -> None:

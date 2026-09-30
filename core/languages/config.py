@@ -39,11 +39,11 @@ UI_LANGUAGES: tuple[str, ...] = tuple(LANGUAGE.keys())
 #
 # Free ships all six languages (the original four plus Italian, moved to free
 # 2026-09-07, and French, moved to free 2026-09-30 -- owner product calls to
-# increase engagement, not content-readiness changes). The Plus-only list is
-# deliberately empty for now; the entitlement machinery stays wired so a future
-# Plus-only language is just an entry here.
+# increase engagement, not content-readiness changes). Turkish (added
+# 2026-09-30) is the one Plus-only language, there to exercise the entitlement
+# machinery end to end; a future Plus-only language is just another entry here.
 FREE_STUDY_LANGUAGES: tuple[str, ...] = ("en", "ru", "he", "es", "it", "fr")
-PLUS_EXTRA_STUDY_LANGUAGES: tuple[str, ...] = ()
+PLUS_EXTRA_STUDY_LANGUAGES: tuple[str, ...] = ("tr",)
 
 # Every study language regardless of tier -- for tooling that must cover all
 # registered study content irrespective of who's entitled to study it (e.g.
@@ -75,6 +75,7 @@ STUDY_LANGUAGE_SCRIPTS: dict[str, ScriptConfig] = {
     "es": ScriptConfig(ascii_ok=True, extra_letters="ñ"),
     "it": ScriptConfig(ascii_ok=True, extra_letters="àèéìíîòóùú"),
     "fr": ScriptConfig(ascii_ok=True, extra_letters="àâäéèêëïîôöùûüÿçœæ"),
+    "tr": ScriptConfig(ascii_ok=True, extra_letters="çğıöşüâîû"),
     "ru": ScriptConfig(ascii_ok=False, extra_letters="абвгдеёжзийклмнопрстуфхцчшщъыьэюя"),
     "he": ScriptConfig(ascii_ok=False, extra_letters="אבגדהוזחטיכלמנסעפצקרשת"),
 }
