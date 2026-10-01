@@ -478,6 +478,26 @@ button {
   filter: brightness(1.12);
 }
 
+.practice-nav-btn--finish {
+  width: auto;
+  min-width: 48px;
+  padding: 0 18px;
+  border-radius: 24px;
+  font-size: 15px;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease, opacity 0.35s ease, transform 0.35s ease;
+}
+
+.practice-nav-btn--pending {
+  opacity: 0.45;
+  cursor: default;
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .practice-nav-btn--finish { transition: none; }
+}
+
 .practice-audio-progress {
   font-size: 12px;
   color: #6b7280;

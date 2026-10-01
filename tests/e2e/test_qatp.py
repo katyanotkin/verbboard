@@ -229,10 +229,10 @@ def test_practice_finish_returns_with_ui_language(page, live_server_url):
     # Re-inject after navigation (localStorage is page-scoped)
     _inject_audio_plays(page, "ru", ids)
 
-    next_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Next"]').first
-    next_btn.wait_for(state="visible")
+    finish_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Finish"]').first
+    finish_btn.wait_for(state="visible")
     with page.expect_navigation():
-        next_btn.click()
+        finish_btn.click()
     page.wait_for_load_state("networkidle")
 
     _assert_verbs_url(page.url, "TC-P5 Finish")

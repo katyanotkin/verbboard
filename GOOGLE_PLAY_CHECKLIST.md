@@ -159,8 +159,8 @@ Play Console > Test and release > Testing > Closed testing > Create a track
 > Create new release (can reuse the AAB already uploaded in 5.3, or upload
 fresh) > roll out to the closed track.
 
-- [x] Closed testing track created -- using `closed-testing-1.0.0` (owner decision 2026-07-29; a second auto-created "Alpha" track exists and is being left inactive/unused, not filled in)
-- [x] AAB uploaded to `closed-testing-1.0.0` specifically (2026-07-24; 3 testers added by email + public opt-in link)
+- [x] Closed testing track created -- using `closed-testing-a` (console name confirmed by owner 2026-09-30; earlier notes called it `closed-testing-1.0.0`; a second auto-created "Alpha" track exists and is being left inactive/unused, not filled in)
+- [x] AAB uploaded to the closed track (2026-07-24, recorded under the old name `closed-testing-1.0.0`; re-verify the release is attached to `closed-testing-a`; 3 testers added by email + public opt-in link)
 - [ ] Recruit >=12 testers (friends/family/community) willing to opt in and keep the app installed -- tell them to keep it installed for the full 14 days and reload once after updates (cache-first service worker)
 - [ ] Share the closed-testing opt-in link (Play Console > Testing > Closed testing > your track > "Testers" tab) with all 12+ -- along with a short test list: sign in, practice session, audio, star a verb, feedback form (`/feedback`)
 - [ ] Confirm all 12+ have opted in (Play Console shows opt-in count) -- the 14-day clock only counts while a tester is opted in, not from AAB upload

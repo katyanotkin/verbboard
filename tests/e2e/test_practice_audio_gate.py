@@ -112,3 +112,61 @@ def test_audio_counter_visible_and_warn_on_next(page, live_server_url):
     warn_el = page.locator(".practice-listen-warn").first
     warn_el.wait_for(state="visible")
     assert ids[0] in page.url, f"TC-A4: URL must stay on {ids[0]} after blocked Next. Got: {page.url!r}"
+
+
+# ---------------------------------------------------------------------------
+# Finish pill on the last verb of a session
+# ---------------------------------------------------------------------------
+
+_LEARN_QS = "&return_to=/verbs?language=ru%26ui_language=en&ui_language=en"
+
+
+def _open_last_verb(page, live_server_url: str):
+    """Seed a 2-verb session with min_plays=1 and open the LAST verb."""
+    ids, lemmas = _ru_verb_ids(page, live_server_url, minimum=2)
+    ids = ids[:2]
+    page.evaluate("() => localStorage.setItem('practice_min_plays', '1')")
+    _seed_practice_session(page, "ru", ids, {i: lemmas[i] for i in ids})
+    page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[1]}{_LEARN_QS}")
+    page.wait_for_load_state("networkidle")
+    return ids
+
+
+def test_finish_pill_enables_after_audio_goal(page, live_server_url):
+    """Last verb shows Finish (aria-disabled until the audio goal is met);
+    mid-session verbs still show Next."""
+    ids = _open_last_verb(page, live_server_url)
+
+    finish_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Finish"]').first
+    finish_btn.wait_for(state="visible")
+    assert finish_btn.get_attribute("aria-disabled") == "true"
+
+    # Same trigger the real audio tracker uses: counts in storage + event
+    _inject_audio_plays(page, "ru", [ids[1]], count=1)
+    page.evaluate("() => window.dispatchEvent(new Event('vb:learn-audio-played'))")
+    assert finish_btn.get_attribute("aria-disabled") == "false"
+
+    # A non-last verb keeps the plain Next button and no Finish pill
+    page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[0]}{_LEARN_QS}")
+    page.wait_for_load_state("networkidle")
+    assert page.locator('.practice-bar .practice-nav-btn[aria-label="Next"]').count() == 1
+    assert page.locator(".practice-bar .practice-nav-btn--finish").count() == 0
+
+
+def test_finish_without_session_awards_nothing(page, live_server_url):
+    """If the session key vanished (e.g. another tab finished it), Finish must
+    not write a wrap-up payload and just returns to /verbs."""
+    ids = _open_last_verb(page, live_server_url)
+    _inject_audio_plays(page, "ru", [ids[1]], count=1)
+    # Playwright treats aria-disabled="true" as not clickable, so let the pill sync first
+    page.evaluate("() => window.dispatchEvent(new Event('vb:learn-audio-played'))")
+    page.evaluate("() => localStorage.removeItem('practice_session:ru')")
+
+    finish_btn = page.locator('.practice-bar .practice-nav-btn[aria-label="Finish"]').first
+    finish_btn.wait_for(state="visible")
+    with page.expect_navigation(url=lambda u: "/verbs" in u, timeout=15000):
+        finish_btn.click()
+    page.wait_for_load_state("networkidle")
+
+    assert "/verbs" in page.url
+    assert page.evaluate("() => localStorage.getItem('practice_wrapup:ru')") is None

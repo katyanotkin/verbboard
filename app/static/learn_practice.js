@@ -131,8 +131,14 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
       nextBtn = document.createElement("button");
       nextBtn.className = "practice-nav-btn practice-nav-btn--primary";
-      nextBtn.textContent = isRTL ? '<' : '>';
-      nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
+      if (isLast) {
+        nextBtn.classList.add("practice-nav-btn--finish");
+        nextBtn.textContent = "\u2713 " + (UI["practice.finish"] || "Finish");
+        nextBtn.setAttribute('aria-label', UI["practice.finish"] || "Finish");
+      } else {
+        nextBtn.textContent = isRTL ? '<' : '>';
+        nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
+      }
     }
 
     bar.appendChild(prevBtn);
@@ -174,8 +180,20 @@ document.addEventListener("DOMContentLoaded", function () {
       setTimeout(function () { _finishPractice(completionSession, progressEl); }, delay);
     }
 
+    // Last new-mode verb: the Finish pill stays dimmed (aria-disabled, not
+    // `disabled`, so a tap still shows the listen warning) until the audio
+    // goal is met, then eases to full emphasis.
+    function syncFinishState() {
+      if (!nextBtn || !isLast) return;
+      const ready = hasListened();
+      nextBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+      nextBtn.classList.toggle('practice-nav-btn--pending', !ready);
+    }
+    syncFinishState();
+
     window.addEventListener('vb:learn-audio-played', function () {
       audioCounterEl.innerHTML = _audioProgressHtml();
+      syncFinishState();
     });
 
     let warnTimer;
@@ -242,6 +260,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function _finishPractice(session, capsuleEl) {
+    if (!localStorage.getItem(sessionKey)) {
+      window.location.href = _nav().verbsUrl(language);
+      return;
+    }
     let accomplished = false;
     try {
       const seenSet = progress.readSet(seenKey);
