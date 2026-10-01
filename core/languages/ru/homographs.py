@@ -28,6 +28,7 @@ def _plain(spec: str) -> str:
 
 _SPECS: dict[str, tuple[str, ...]] = {
     "ru_platit": ("плачу+",),
+    "ru_zaplatit": ("заплачу+",),
     "ru_myt": ("мо+ю", "мо+ем"),
     "ru_nachat": ("начала+", "на+чало", "на+чали"),
     "ru_pognat": ("погоню+", "погони+"),
