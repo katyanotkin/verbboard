@@ -136,3 +136,53 @@ def test_hung_translation_never_delays_publishing(fake_db, monkeypatch) -> None:
     assert verb["forms"] == {"infinitive": "parlare"}
     assert "translations" not in verb["examples"][0]
     assert elapsed < 5
+
+
+def test_translate_examples_falls_back_to_claude_when_gemini_fails(monkeypatch) -> None:
+    from core import translation_service
+
+    def _gemini_bad_json(*_args, **_kwargs):
+        raise ValueError("Expecting value")
+
+    claude_calls: list[list[str]] = []
+
+    def _claude(verb_lang, lemma, targets, sentences, api_key):
+        claude_calls.append(list(targets))
+        return [{"en": f"EN {s}", "ru": f"RU {s}"} for s in sentences]
+
+    monkeypatch.setattr(translation_service, "_call_gemini", _gemini_bad_json)
+    monkeypatch.setattr(translation_service, "_call_claude", _claude)
+
+    result = translation_service.translate_examples(
+        verb_lang="es",
+        lemma="venir",
+        examples=[{"dst": "Ven aquí."}],
+        target_langs=["en", "ru"],
+        project="p",
+        api_key="k",
+    )
+
+    assert claude_calls == [["en", "ru"]]
+    assert result[0]["translations"] == {"en": "EN Ven aquí.", "ru": "RU Ven aquí."}
+
+
+def test_translate_examples_does_not_call_claude_when_gemini_succeeds(monkeypatch) -> None:
+    from core import translation_service
+
+    monkeypatch.setattr(translation_service, "_call_gemini", lambda *a, **k: [{"en": "Come here.", "ru": "Иди сюда."}])
+
+    def _claude(*_a, **_k):
+        raise AssertionError("Claude must not be called")
+
+    monkeypatch.setattr(translation_service, "_call_claude", _claude)
+
+    result = translation_service.translate_examples(
+        verb_lang="es",
+        lemma="venir",
+        examples=[{"dst": "Ven aquí."}],
+        target_langs=["en", "ru"],
+        project="p",
+        api_key="k",
+    )
+
+    assert result[0]["translations"] == {"en": "Come here.", "ru": "Иди сюда."}

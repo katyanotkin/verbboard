@@ -305,6 +305,20 @@ def translate_examples(
         except Exception:
             logger.exception("Gemini translation failed for %s/%s", verb_lang, lemma)
 
+        # Gemini sometimes returns malformed JSON for a particular verb (es/venir, it/chiamarsi
+        # left whole verbs untranslated); fall back to Claude for anything Gemini did not fill.
+        gemini_missing = [t for t in gemini_targets if any(t not in row for row in translations_by_index)]
+        if gemini_missing and api_key:
+            try:
+                results = _call_claude(verb_lang, lemma, gemini_missing, sentences, api_key)
+                for i, row in enumerate(results):
+                    if i < len(translations_by_index):
+                        for key, value in row.items():
+                            if key in gemini_missing and isinstance(value, str) and value.strip():
+                                translations_by_index[i].setdefault(key, value)
+            except Exception:
+                logger.exception("Claude fallback translation failed for %s/%s", verb_lang, lemma)
+
     if claude_targets:
         try:
             results = _call_claude(verb_lang, lemma, claude_targets, sentences, api_key)
