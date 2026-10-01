@@ -34,7 +34,7 @@
   // below is slow or fails) + a POST to the server, same pattern as
   // VerbBoardProgress.setKnown in auth.js. Callers still await this whole
   // function, so a slow/flaky network does delay the caller's own advance
-  // (see learn_practice.js's _advanceAfterRecall) -- same pre-existing
+  // (learn_practice.js's _advanceAfterKnew races it against a 3s timeout) -- same pre-existing
   // behavior as setKnown, not something this file avoids. If the
   // POST fails (offline), the local state still stands; there is no
   // retry/reconciliation of missed offline reviews in this version -- same

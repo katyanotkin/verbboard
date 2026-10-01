@@ -578,14 +578,11 @@ button {
 }
 
 /* ── SRS review recall button ─────────────────────────────────────────────── */
-/* Takes over nextBtn's slot for a review-mode verb (see learn_practice.js) --
-   a filled pill (not the outline style used by abandon) to keep the
-   same visual weight nextBtn had as the bar's one primary action. Single
-   button by design (owner decision 2026-09-28): a second "Show me again"
-   button used to sit next to this one, but it advanced the session exactly
-   like "Knew it" rather than actually re-showing the verb -- a label/
-   behavior mismatch -- so it was removed rather than fixed; there is no
-   in-session down-signal at all now. Color reuses the green hex already
+/* Review-mode verbs only (see learn_practice.js): the filled green pill is
+   the bar's primary action and the only control that promotes the SRS box;
+   the outlined ">" / Finish next to it is the neutral, listen-gated
+   secondary. No "Show me again" demote button exists (removed 2026-09-28,
+   it behaved like "Recalled it"). Color reuses the green hex already
    present elsewhere in this file (`.practice-progress--done`). */
 .practice-recall-btn {
   display: inline-flex;
@@ -841,14 +838,13 @@ button {
     padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
   }
 
-  /* Practice bar: two-row layout on narrow screens for the normal (new-verb)
-     flow -- Row 1: Prev | counter | Next (nav controls stay in thumb zone);
-     Row 2: Abandon pill (fit-content, centered). Review mode instead gets
-     three rows, since its recall button isn't a nav circle: Row 1 Prev |
-     counter, Row 2 the recall pill (order 3, see .practice-recall-btn--yes
-     below), Row 3 Abandon (order 5). DOM order is Prev / counter / Abandon /
-     Next-or-recall, so `order` pulls Abandon (and recall, in review mode)
-     onto their own row(s) without touching the HTML.
+  /* Practice bar on narrow screens. New-verb mode: Row 1 Prev | counter |
+     Next (nav controls stay in thumb zone), Row 2 Abandon pill (fit-content,
+     centered). Review mode: Row 1 Prev | counter | outlined Next (or Finish
+     pill on the last verb), Row 2 the recall pill (order 3, see
+     .practice-recall-btn--yes below), Row 3 Abandon (order 5). DOM order is
+     Prev / counter / Abandon / Next / recall, so `order` pulls Abandon (and
+     recall, in review mode) onto their own row(s) without touching the HTML.
      Forcing each onto its own row can't be done with width alone: flex-wrap
      decides line breaks from each item's *hypothetical* (pre-grow) size, and
      a short enough pill label (e.g. "Recalled it") is sometimes narrow
@@ -872,7 +868,7 @@ button {
     gap: 6px 8px;
   }
 
-  /* Nav circles and counter stay on row 1 */
+  /* Nav circles (incl. the secondary Next on review verbs) and counter stay on row 1 */
   .practice-nav-btn { order: 1; }
   .practice-progress-wrapper { order: 1; }
 

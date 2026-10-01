@@ -108,43 +108,37 @@ document.addEventListener("DOMContentLoaded", function () {
     warnEl.className = "practice-listen-warn";
     warnEl.hidden = true;
 
-    // Review verbs: the recall self-report IS the advance action. There is
-    // no in-session down-signal at all -- a verb that isn't actually known
-    // gets addressed elsewhere (unstarring resets its SRS state; ordinary
-    // seen/known repeat-candidate logic resurfaces it), not via a recall
-    // button press here.
-    //
-    // New-mode verbs: nextBtn is the only advance control. There used to
-    // also be a "Skip & mark as learned" button that bypassed the listen
-    // gate and removed the verb from the session immediately; it was
-    // removed entirely (owner decision 2026-09-28) because its wording was
-    // confusing next to the star's "known" language and the bypass wasn't
-    // worth a dedicated control. Marking a verb known without going through
-    // the practice flow is still possible via the star button on the board
-    // page itself.
-    let nextBtn, recallYesBtn;
+    // Every verb gets nextBtn (listen-gated, no SRS effect). Review-mode
+    // verbs additionally get recallYesBtn, the only control that promotes the
+    // SRS box and the visual primary; there, nextBtn is a secondary
+    // (outlined) "I'm not sure, let me listen and move on" path. This is
+    // deliberately NOT the removed "Show me again" down-signal: it never
+    // touches the box. There is still no demote action in-session (unstar to
+    // leave the ladder). "Skip & mark as learned" stays removed (2026-09-28).
+    let recallYesBtn;
+
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "practice-nav-btn" + (isReview ? "" : " practice-nav-btn--primary");
+    if (isLast) {
+      nextBtn.classList.add("practice-nav-btn--finish");
+      nextBtn.textContent = "\u2713 " + (UI["practice.finish"] || "Finish");
+      nextBtn.setAttribute('aria-label', UI["practice.finish"] || "Finish");
+    } else {
+      nextBtn.textContent = isRTL ? '<' : '>';
+      nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
+    }
 
     if (isReview) {
       recallYesBtn = document.createElement("button");
       recallYesBtn.className = "practice-recall-btn practice-recall-btn--yes";
       recallYesBtn.textContent = UI["practice.recall_yes"] || "Recalled it";
-    } else {
-      nextBtn = document.createElement("button");
-      nextBtn.className = "practice-nav-btn practice-nav-btn--primary";
-      if (isLast) {
-        nextBtn.classList.add("practice-nav-btn--finish");
-        nextBtn.textContent = "\u2713 " + (UI["practice.finish"] || "Finish");
-        nextBtn.setAttribute('aria-label', UI["practice.finish"] || "Finish");
-      } else {
-        nextBtn.textContent = isRTL ? '<' : '>';
-        nextBtn.setAttribute('aria-label', UI["practice.next"] || "Next");
-      }
     }
 
     bar.appendChild(prevBtn);
     bar.appendChild(progressWrapper);
     bar.appendChild(abandonBtn);
-    bar.appendChild(isReview ? recallYesBtn : nextBtn);
+    bar.appendChild(nextBtn);
+    if (isReview) bar.appendChild(recallYesBtn);
     bar.appendChild(warnEl);
 
     const topbar = pageRoot.querySelector(".topbar");
@@ -164,18 +158,39 @@ document.addEventListener("DOMContentLoaded", function () {
       return (plays[verbId] || 0) >= PRACTICE_MIN_PLAYS;
     }
 
+    // Set synchronously at the start of every advancing click, before any
+    // await, so a second tap (recall twice, or recall then Finish while
+    // applyReview is in flight) cannot advance or complete twice.
+    let advancing = false;
+    // Prev and Abandon stay live so a stalled request can never trap the
+    // learner; they are only disabled once completion starts.
+    function lockBar() {
+      advancing = true;
+      nextBtn.disabled = true;
+      if (isReview) recallYesBtn.disabled = true;
+    }
+
+    // Back from the next verb can restore this page from bfcache with the
+    // lock still set; unlock unless a completion is under way.
+    window.addEventListener('pageshow', function (event) {
+      if (!event.persisted || completionStarted) return;
+      advancing = false;
+      nextBtn.disabled = false;
+      if (isReview) recallYesBtn.disabled = false;
+      syncFinishState();
+    });
+
+    let completionStarted = false;
     function _showCompletionAndRedirect(completionSession) {
+      if (completionStarted) return;
+      completionStarted = true;
       const n = completionSession.size || total;
       progressEl.textContent = `${n}/${n}!`;
       progressEl.classList.add('practice-progress--done');
       progressEl.classList.add('practice-progress--done-pulse');
+      lockBar();
       prevBtn.disabled = true;
       abandonBtn.disabled = true;
-      if (isReview) {
-        recallYesBtn.disabled = true;
-      } else {
-        nextBtn.disabled = true;
-      }
       const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1200;
       setTimeout(function () { _finishPractice(completionSession, progressEl); }, delay);
     }
@@ -184,7 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // `disabled`, so a tap still shows the listen warning) until the audio
     // goal is met, then eases to full emphasis.
     function syncFinishState() {
-      if (!nextBtn || !isLast) return;
+      if (!isLast) return;
       const ready = hasListened();
       nextBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
       nextBtn.classList.toggle('practice-nav-btn--pending', !ready);
@@ -209,26 +224,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     if (isReview) {
-      // Deliberately NOT gated behind hasListened(): this button is a
-      // recall self-report on a verb the learner already starred as known,
-      // and forcing PRACTICE_MIN_PLAYS audio replays before allowing "Knew
-      // it" would force-feed the answer right before asking the learner to
-      // self-report whether they already knew it -- backwards for a recall
-      // test, unlike the ordinary new-verb Next button below (nextBtn),
-      // where forcing repeated listens up front is the actual intended
-      // first-exposure drill. Audio stays available as an optional aid
-      // (play button unchanged); it just isn't a prerequisite here. (Was
-      // gated behind hasListened() pre-2026-09-28; removed after this
-      // behaved as an invisible dead end in practice -- no Skip fallback in
-      // review mode, so a learner short of the listen count had no way to
-      // advance at all except an easy-to-miss warning.)
-      //
-      // Always applyReview(..., true): "Recalled it" is the only control here
-      // (owner decision 2026-09-28, see comment above) -- there is no
-      // recalled=false path, by design.
+      // Not gated behind hasListened(): a recall self-report on an already
+      // starred verb; forcing replays first would hand over the answer
+      // right before the test. Always applyReview(..., true) -- the only
+      // path that moves the SRS box. nextBtn below never calls it.
       async function _advanceAfterKnew() {
+        if (advancing) return;
+        lockBar();
         if (window.VerbBoardSRS) {
-          await window.VerbBoardSRS.applyReview(language, verbId, true);
+          // The local SRS write happens before applyReview's network call, so
+          // advancing after a timeout never loses the review.
+          await Promise.race([
+            window.VerbBoardSRS.applyReview(language, verbId, true),
+            new Promise(function (resolve) { setTimeout(resolve, 3000); }),
+          ]);
         }
         if (isLast) {
           _showCompletionAndRedirect(session);
@@ -238,20 +247,20 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       recallYesBtn.addEventListener("click", function () { _advanceAfterKnew(); });
-    } else {
-      nextBtn.addEventListener("click", async function () {
-        if (!hasListened()) {
-          showWarn();
-          return;
-        }
-        if (isLast) {
-          _showCompletionAndRedirect(session);
-          return;
-        } else {
-          navTo(session.ids[idx + 1]);
-        }
-      });
     }
+
+    nextBtn.addEventListener("click", function () {
+      if (advancing) return;
+      if (!hasListened()) {
+        showWarn();
+        return;
+      }
+      if (isLast) {
+        _showCompletionAndRedirect(session);
+      } else {
+        navTo(session.ids[idx + 1]);
+      }
+    });
 
     abandonBtn.addEventListener("click", function () {
       localStorage.removeItem(sessionKey);
@@ -271,11 +280,10 @@ document.addEventListener("DOMContentLoaded", function () {
       try { plays = JSON.parse(localStorage.getItem(audioPlaysKey) || "{}"); } catch (_) { plays = {}; }
       accomplished = session.ids.every(function (id) {
         if (!seenSet.has(id)) return false;
-        // Review-mode verbs no longer require PRACTICE_MIN_PLAYS listens to
-        // advance (see _advanceAfterKnew above) -- the recall self-report
-        // itself is the completion signal for those, so don't also demand
-        // the listen count here or badge completion would silently regress
-        // for any session containing review verbs.
+        // Review-mode verbs don't require PRACTICE_MIN_PLAYS listens: the
+        // recall button is ungated, and the listen-gated Next has no SRS
+        // effect. Demanding the count here would silently cost the badge for
+        // any session containing review verbs.
         const mode = (session.modes && session.modes[id]) || 'new';
         if (mode === 'review') return true;
         return (plays[id] || 0) >= PRACTICE_MIN_PLAYS;

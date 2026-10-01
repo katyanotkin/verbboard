@@ -33,10 +33,14 @@ def _inject_audio_plays(page, language: str, verb_ids: list[str], count: int = 5
     page.evaluate("([k, v]) => localStorage.setItem(k, v)", [key, json.dumps(plays)])
 
 
-def _seed_practice_session(page, language: str, ids: list[str], lemmas: dict[str, str]) -> None:
+def _seed_practice_session(
+    page, language: str, ids: list[str], lemmas: dict[str, str], modes: dict[str, str] | None = None
+) -> None:
     """Write a practice session into localStorage (skips the Start button flow)."""
     key = f"practice_session:{language}"
     session = {"ids": ids, "lemmas": lemmas, "size": len(ids)}
+    if modes:
+        session["modes"] = modes
     page.evaluate("([k, v]) => localStorage.setItem(k, v)", [key, json.dumps(session)])
 
 
@@ -170,3 +174,80 @@ def test_finish_without_session_awards_nothing(page, live_server_url):
 
     assert "/verbs" in page.url
     assert page.evaluate("() => localStorage.getItem('practice_wrapup:ru')") is None
+
+
+# ---------------------------------------------------------------------------
+# Review-mode verbs: ungated recall button plus a listen-gated, SRS-free Next
+# ---------------------------------------------------------------------------
+
+_NEXT = '.practice-bar .practice-nav-btn[aria-label="Next"]'
+_FINISH = '.practice-bar .practice-nav-btn[aria-label="Finish"]'
+_RECALL = ".practice-bar .practice-recall-btn--yes"
+
+
+def _open_review_verb(page, live_server_url: str, index: int, size: int = 2):
+    """Seed a `size`-verb all-review session (min_plays=1) and open verb `index`."""
+    ids, lemmas = _ru_verb_ids(page, live_server_url, minimum=size)
+    ids = ids[:size]
+    page.evaluate("() => localStorage.setItem('practice_min_plays', '1')")
+    _seed_practice_session(page, "ru", ids, {i: lemmas[i] for i in ids}, modes={i: "review" for i in ids})
+    page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[index]}{_LEARN_QS}")
+    page.wait_for_load_state("networkidle")
+    return ids
+
+
+def _srs_map(page) -> dict:
+    return page.evaluate("() => JSON.parse(localStorage.getItem('srs:ru') || '{}')")
+
+
+def test_review_verb_has_recall_and_gated_next(page, live_server_url):
+    """Review verb shows recall AND Next; Next is listen-gated, recall is not."""
+    ids = _open_review_verb(page, live_server_url, 0)
+    assert page.locator(_RECALL).count() == 1
+    next_btn = page.locator(_NEXT).first
+    next_btn.wait_for(state="visible")
+
+    # Before the audio goal: Next must not navigate
+    next_btn.dispatch_event("click")
+    page.locator(".practice-listen-warn").first.wait_for(state="visible")
+    assert ids[0] in page.url
+
+    # Recall navigates with zero listens
+    with page.expect_navigation():
+        page.locator(_RECALL).first.click()
+    page.wait_for_load_state("networkidle")
+    assert ids[1] in page.url
+
+
+def test_review_next_after_goal_writes_no_srs_but_recall_does(page, live_server_url):
+    """Next advances without touching SRS; recall writes a box locally."""
+    ids = _open_review_verb(page, live_server_url, 0)
+    _inject_audio_plays(page, "ru", [ids[0]], count=1)
+    with page.expect_navigation():
+        page.locator(_NEXT).first.click()
+    page.wait_for_load_state("networkidle")
+    assert ids[1] in page.url
+    assert ids[0] not in _srs_map(page)
+
+    # Recall on the first verb: local SRS write happens before navigation
+    page.goto(f"{live_server_url}/learn?language=ru&verb_id={ids[0]}{_LEARN_QS}")
+    page.wait_for_load_state("networkidle")
+    with page.expect_navigation():
+        page.locator(_RECALL).first.click()
+    page.wait_for_load_state("networkidle")
+    assert _srs_map(page).get(ids[0], {}).get("box", 0) >= 1
+
+
+def test_last_review_verb_finish_gated_recall_ungated(page, live_server_url):
+    """Last review verb: Finish pill disabled until the goal; recall always visible."""
+    ids = _open_review_verb(page, live_server_url, 1)
+    finish_btn = page.locator(_FINISH).first
+    finish_btn.wait_for(state="visible")
+    assert finish_btn.get_attribute("aria-disabled") == "true"
+    assert page.locator(_RECALL).first.is_visible()
+    assert page.locator(_RECALL).first.is_enabled()
+
+    _inject_audio_plays(page, "ru", [ids[1]], count=1)
+    page.evaluate("() => window.dispatchEvent(new Event('vb:learn-audio-played'))")
+    assert finish_btn.get_attribute("aria-disabled") == "false"
+    assert page.locator(_RECALL).first.is_enabled()
