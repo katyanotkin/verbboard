@@ -59,6 +59,8 @@ Rules:
 - Prefer to translate the verb "{lemma}" using the same root word across all sentences, inflected naturally for each sentence's tense and person. Use a different word only if the primary translation genuinely doesn't fit — due to meaning, register, or idiom.
 - Preserve the grammatical tense and aspect of the source sentence.
 - Keep translations natural and short — match the register of the source.
+- Keep who is addressed and who speaks: an informal singular "you" (tú / tu / toi) stays informal singular (Russian "ты", Hebrew singular), an informal plural (vosotros / voi / vous-plural) stays an informal plural (Russian "вы"), a formal "you" (usted / Lei / vous) becomes the formal form (Russian "Вы"). Never turn "tú" into "вы".
+- Keep the speaker's gender consistent: a first-person sentence with no gender marker is masculine in Hebrew and Russian past tenses; if the source marks gender (cansada, pequeña, stanca), use that gender in every target. Never use slash forms like "שומע/ת".
 
 Translate each sentence into: {targets}
 

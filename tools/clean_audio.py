@@ -9,10 +9,10 @@ By default this is a dry run — pass --execute to actually delete.
 Run from project root (needs GCP auth):
 
     python -m tools.clean_audio --language he \\
-        --project knotmem26 --bucket verbboard-audio-stage
+        --project knotmem26 --bucket verbboard-audio-prod
 
     python -m tools.clean_audio --language all --execute \\
-        --project knotmem26 --bucket verbboard-audio-stage
+        --project knotmem26 --bucket verbboard-audio-prod
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ def _parse_args() -> argparse.Namespace:
             "Examples:\n"
             "  python -m tools.clean_audio --language he --dry-run\n"
             "  python -m tools.clean_audio --language all --execute \\\n"
-            "      --project knotmem26 --bucket verbboard-audio-stage\n"
+            "      --project knotmem26 --bucket verbboard-audio-prod\n"
         ),
     )
     parser.add_argument(

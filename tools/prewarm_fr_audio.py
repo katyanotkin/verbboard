@@ -2,13 +2,10 @@
 verb currently in Firestore, using the same _warm_verb_audio() pipeline the
 admin candidate flow uses on verb add/regenerate.
 
-Modeled on tools/prewarm_it_audio.py. AUDIO_BUCKET is read from Settings
-(env var / .env) -- run once with AUDIO_BUCKET=verbboard-audio-stage and
-once with AUDIO_BUCKET=verbboard-audio-prod to warm both environments,
-since Firestore verb data is shared but audio buckets are per-environment.
+Modeled on tools/prewarm_it_audio.py. AUDIO_BUCKET is read from Settings (env var / .env); every environment now shares
+verbboard-audio-prod, so one run is enough.
 
 Usage:
-    AUDIO_BUCKET=verbboard-audio-stage .venv/bin/python -m tools.prewarm_fr_audio
     AUDIO_BUCKET=verbboard-audio-prod  .venv/bin/python -m tools.prewarm_fr_audio
 """
 

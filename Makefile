@@ -10,7 +10,7 @@ GCP_STAGE_SERVICE=verbboard-stage
 GCP_REPOSITORY=verbboard
 GCP_PROJECT?=knotmem26
 
-AUDIO_BUCKET_STAGE=verbboard-audio-stage
+# One audio bucket for every environment (stage, prod, local): keys are content-addressed, so sharing is safe.
 AUDIO_BUCKET_PROD=verbboard-audio-prod
 
 PREVIEW_DOMAIN=preview.verbboard.com
@@ -45,9 +45,9 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
 	firebase-deploy-hosting firestore-drift gcp-grant-firebase-hosting-admin \
 	gcp-update-secrets-stage gcp-update-secrets-prod \
-	cache-audio-stage cache-audio-prod \
-	audit-audio-stage audit-audio-prod \
-	clean-audio-stage clean-audio-prod \
+	cache-audio-prod \
+	audit-audio-prod \
+	clean-audio-prod \
 	docker-tag
 
 ## Show available commands
@@ -214,7 +214,7 @@ gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branc
 		--platform=managed \
 		--allow-unauthenticated \
 		--project=$(GCP_PROJECT) \
-		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_STAGE),JUMP_TO_EXAMPLE_ENABLED=false,ALLOW_LOCAL_DEV_AUTH=true \
+		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD),JUMP_TO_EXAMPLE_ENABLED=false,ALLOW_LOCAL_DEV_AUTH=true \
 		--set-secrets=$(STAGE_SECRETS)
 	$(MAKE) firebase-deploy-hosting
 
@@ -274,41 +274,20 @@ gcp-grant-bucket-audio-access: gcp-check
 		--member="serviceAccount:$(SERVICE_ACCOUNT)" \
 		--role="roles/storage.objectAdmin"
 
-## GCP: ensure stage audio bucket exists and grant access
-gcp-setup-stage-audio: gcp-check
-	$(MAKE) gcp-ensure-bucket BUCKET=$(AUDIO_BUCKET_STAGE)
-	$(MAKE) gcp-grant-bucket-audio-access BUCKET=$(AUDIO_BUCKET_STAGE) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
-
 ## GCP: ensure prod audio bucket exists and grant access
 gcp-setup-prod-audio: gcp-check
 	$(MAKE) gcp-ensure-bucket BUCKET=$(AUDIO_BUCKET_PROD)
 	$(MAKE) gcp-grant-bucket-audio-access BUCKET=$(AUDIO_BUCKET_PROD) SERVICE_ACCOUNT=$(GCP_RUNTIME_SERVICE_ACCOUNT)
-
-## GCP: pre-cache audio for AUDIO_LANG (default: all) to stage bucket
-cache-audio-stage: gcp-check ## GCP: cache-audio-stage [AUDIO_LANG=he]
-	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
-		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_STAGE)
 
 ## GCP: pre-cache audio for AUDIO_LANG (default: all) to prod bucket
 cache-audio-prod: gcp-check ## GCP: cache-audio-prod [AUDIO_LANG=he]
 	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
 		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_PROD)
 
-## GCP: dry-run audit — show missing audio for stage bucket
-audit-audio-stage: gcp-check ## GCP: audit-audio-stage [AUDIO_LANG=he]
-	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
-		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_STAGE) --dry-run
-
 ## GCP: dry-run audit — show missing audio for prod bucket
 audit-audio-prod: gcp-check ## GCP: audit-audio-prod [AUDIO_LANG=he]
 	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
 		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_PROD) --dry-run
-
-## GCP: dry-run — show unhashed (old-style) audio blobs to delete from stage
-clean-audio-stage: gcp-check ## GCP: clean-audio-stage [AUDIO_LANG=he] [EXECUTE=1]
-	$(PYTHON) -m tools.clean_audio --language $(or $(AUDIO_LANG),all) \
-		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_STAGE) \
-		$(if $(EXECUTE),--execute,)
 
 ## GCP: dry-run — show unhashed (old-style) audio blobs to delete from prod
 clean-audio-prod: gcp-check ## GCP: clean-audio-prod [AUDIO_LANG=he] [EXECUTE=1]

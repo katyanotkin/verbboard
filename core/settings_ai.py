@@ -99,11 +99,33 @@ SPANISH (es)
     preterite:  { yo, tu, el, nos, vosotros, ellos }
     imperfect:  { yo, tu, el, nos, vosotros, ellos }
     future:     { yo, tu, el, nos, vosotros, ellos }
-    imperative: { tu, vosotros, usted, ustedes }  ← always include all four slots
+    imperative: { tu, vosotros, usted, ustedes }  ← include all four slots, with the real forms
+      (ser → sé / sed / sea / sean; estar → está / estad / esté / estén; ir → ve / id / vaya / vayan).
+      Exception: a verb with no natural command form (poder, haber as auxiliary) gets only the
+      slots that really exist ("usted"/"ustedes" via the subjunctive); leave the others as empty
+      strings and never pass off an indicative (puede) as an imperative.
     gerund: "<gerund>"              (string)
     participle: "<past participle>" (string)
-  examples: 4 to 6 sentences in Spanish, each using a distinct grammatical form:
-    at least one present, one preterite, one imperfect or future, one imperative or subjunctive."""
+  Reflexive verbs (llamarse, levantarse, sentarse): attach the pronoun to every finite form per
+    person (me/te/se/nos/os/se), e.g. present.yo = "me llamo"; imperative.tu = "levántate",
+    vosotros = "levantaos"; gerund "levantándose"; participle plain ("levantado").
+  Verbs used with an indirect object (gustar, parecer): give the forms as they are used
+    (me gusta / me gustan are examples, forms follow the 3rd person), and say so in the examples.
+  examples: 5 to 6 sentences in Spanish (Spain Spanish), each using a distinct grammatical form:
+    at least one present, one preterite, one imperfect or future, one imperative — and no more than
+    two presents. Use real scenes with a complete meaning (a subject, an object where the verb needs
+    one); do NOT use filler frames like "Yo ... cada día", "Él ... ahora", "Ayer nosotros ... juntos"
+    or "Estamos <gerund> hoy". Vary persons (tú, ella, ellos, vosotros, usted) and settings from verb
+    to verb. Use vosotros for informal plural (imperative "Venid aquí", "¿Queréis un café?") and
+    ustedes only for formal plural. Prefer Spain vocabulary (coger, vale, ordenador). A gerund
+    example needs a clear subject and a real ongoing action; skip the gerund for verbs where it is
+    unnatural (saber, poder, querer). Keep the preterite and imperfect senses distinct (supimos =
+    we found out, sabíamos = we knew).
+    Do NOT open examples with "De pequeño/a, mi abuelo/a ..." or reuse stock scenes (bomberos,
+    fontanero, técnico, ordenador that crashes, "Si seguís así", "El año que viene", "cola de una
+    hora", "el mío se ha quedado sin batería"); each sentence needs its own concrete situation.
+    When an example says "when I was little", write "Cuando yo era pequeño/a, ..." so the speaker
+    is clear. Keep addressee and speaker gender consistent within each sentence."""
 
 _PROMPT_HE = """\
 ────────────────────────────────────────

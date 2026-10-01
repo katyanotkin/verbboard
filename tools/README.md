@@ -180,8 +180,7 @@ python tools/migrate_pair_to_lemma.py --apply
 `cache_audio.py` — Pre-warm TTS audio for a language and write to one or more
 GCS buckets in a single TTS pass. Requires GCP auth and `GOOGLE_CLOUD_PROJECT`.
 ```
-python -m tools.cache_audio --language he \
-    --bucket verbboard-audio-stage --bucket verbboard-audio-prod
+python -m tools.cache_audio --language he --bucket verbboard-audio-prod
 GOOGLE_CLOUD_PROJECT=knotmem26 AUDIO_BUCKET=verbboard-audio-prod \
     python -m tools.cache_audio --language all
 python -m tools.cache_audio --language ru --voice female --dry-run
@@ -192,7 +191,7 @@ from GCS, keeping only hashed blobs (`present_1s_abc123def4.mp3`). Dry-run by
 default.
 ```
 python -m tools.clean_audio --language he \
-    --project knotmem26 --bucket verbboard-audio-stage
+    --project knotmem26 --bucket verbboard-audio-prod
 python -m tools.clean_audio --language all --execute \
-    --project knotmem26 --bucket verbboard-audio-stage
+    --project knotmem26 --bucket verbboard-audio-prod
 ```

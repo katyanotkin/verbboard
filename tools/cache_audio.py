@@ -1,25 +1,21 @@
 """
 Pre-cache verb audio to GCS for a given language.
 
-Pass --bucket once for a single target or multiple times to write to several
-buckets with a single TTS call per file (stage + prod in one run), or pass
---both-buckets as shorthand for --bucket verbboard-audio-stage --bucket
-verbboard-audio-prod.
+All environments (stage, prod, local) share one bucket, verbboard-audio-prod, so
+a single run warms everything. Pass --bucket to target a different bucket, or
+repeat it to write several buckets with one TTS call per file.
 
 --language accepts every registered plugin, including study
 languages (it, fr) -- 'all' expands to all of them, free and Plus alike.
 
 Run from project root (needs GCP auth):
 
-    python -m tools.cache_audio --language he \\
-        --bucket verbboard-audio-stage --bucket verbboard-audio-prod
-
-    python -m tools.cache_audio --language fr --both-buckets
+    python -m tools.cache_audio --language fr --bucket verbboard-audio-prod
 
     GOOGLE_CLOUD_PROJECT=knotmem26 AUDIO_BUCKET=verbboard-audio-prod \\
         python -m tools.cache_audio --language all
 
-    python -m tools.cache_audio --language it --both-buckets --dry-run
+    python -m tools.cache_audio --language it --bucket verbboard-audio-prod --dry-run
 
     python -m tools.cache_audio --language ru --voice female --dry-run
 """
@@ -63,8 +59,7 @@ logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
 # (core/demand/gcs_events.py) where a study-only language isn't wanted.
 _ALL_CACHEABLE_LANGUAGES: list[str] = list(ALL_STUDY_LANGUAGES)
 
-# Canonical bucket names, mirrored from the Makefile's AUDIO_BUCKET_STAGE/AUDIO_BUCKET_PROD.
-_STAGE_BUCKET = "verbboard-audio-stage"
+# The one audio bucket every environment uses (Makefile's AUDIO_BUCKET_PROD).
 _PROD_BUCKET = "verbboard-audio-prod"
 
 
@@ -217,8 +212,7 @@ def _parse_args() -> argparse.Namespace:
             "  python -m tools.cache_audio --language he\n"
             "  python -m tools.cache_audio --language all --voice female\n"
             "  python -m tools.cache_audio --language ru --dry-run\n"
-            "  python -m tools.cache_audio --language all \\\n"
-            "      --bucket verbboard-audio-stage --bucket verbboard-audio-prod\n"
+            "  python -m tools.cache_audio --language all --bucket verbboard-audio-prod\n"
         ),
     )
     parser.add_argument(
@@ -246,11 +240,6 @@ def _parse_args() -> argparse.Namespace:
         metavar="BUCKET",
         help=("GCS bucket name; repeat for multiple buckets (default: AUDIO_BUCKET env var)"),
     )
-    bucket_group.add_argument(
-        "--both-buckets",
-        action="store_true",
-        help=f"Shorthand for --bucket {_STAGE_BUCKET} --bucket {_PROD_BUCKET}",
-    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -265,10 +254,7 @@ def main() -> None:
     if not args.project:
         sys.exit("ERROR: --project or GOOGLE_CLOUD_PROJECT is required")
 
-    if args.both_buckets:
-        buckets = [_STAGE_BUCKET, _PROD_BUCKET]
-    else:
-        buckets = args.buckets or ([_ENV_BUCKET] if _ENV_BUCKET else [])
+    buckets = args.buckets or ([_ENV_BUCKET] if _ENV_BUCKET else [_PROD_BUCKET])
     if not buckets:
         sys.exit("ERROR: --bucket or AUDIO_BUCKET is required")
 

@@ -4,14 +4,13 @@ lemma translations -> live `verbs` doc + `verb_candidates` audit doc -> audio
 pre-warm). Claude is used for every language here (the public search-miss path
 uses Gemini for some languages; a hand-picked seed list is worth the better model).
 
-Safe to re-run: a verb that already exists is skipped. AUDIO_BUCKET is read from
-Settings (env var / .env); Firestore is shared across environments but audio
-buckets are per-environment, so the pre-warm only fills the bucket in use (the
-other one fills on first play).
+Safe to re-run: a verb that already exists is skipped. The audio pre-warm writes to the
+AUDIO_BUCKET in use (all environments share verbboard-audio-prod).
 
 Usage:
-    AUDIO_BUCKET=verbboard-audio-stage .venv/bin/python -m tools.seed_verbs --language tr
-    AUDIO_BUCKET=verbboard-audio-stage .venv/bin/python -m tools.seed_verbs --language fr
+    AUDIO_BUCKET=verbboard-audio-prod .venv/bin/python -m tools.seed_verbs --language tr
+    AUDIO_BUCKET=verbboard-audio-prod .venv/bin/python -m tools.seed_verbs --language fr
+    AUDIO_BUCKET=verbboard-audio-prod .venv/bin/python -m tools.seed_verbs --language es
 """
 
 from __future__ import annotations
@@ -23,6 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import core.languages.es.plugin  # noqa: E402,F401  -- self-registers "es"
 import core.languages.fr.plugin  # noqa: E402,F401  -- self-registers "fr"
 import core.languages.it.plugin  # noqa: E402,F401  -- self-registers "it"
 import core.languages.tr.plugin  # noqa: E402,F401  -- self-registers "tr"
@@ -46,6 +46,25 @@ LEMMAS: dict[str, list[str]] = {
         "istemek",  # to want
         "vermek",  # to give
         "almak",  # to take / get
+    ],
+    "es": [
+        "haber",
+        "conocer",
+        "parecer",
+        "creer",
+        "seguir",
+        "volver",
+        "llamarse",  # reflexive paradigm
+        "quedar",
+        "deber",
+        "pedir",
+        "sentir",
+        "entender",
+        "pasar",
+        "recibir",
+        "conseguir",
+        "levantarse",  # reflexive paradigm
+        "gustar",  # indirect-construction verb
     ],
     "it": [
         "mettere",
