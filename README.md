@@ -52,6 +52,7 @@ Visual indicators:
 - Switch between female and male voices
 - Inline translations when UI language differs from the verb's language
 - Focus filter: hide conjugation rows by gender (masculine / feminine) and number (singular / plural) — Hebrew, Russian, Spanish
+- French boards also show the conditionnel présent and subjonctif présent (the subjunctive title carries "que…"; rows hold the pronoun + verb form)
 - Pronoun reference: a collapsible "Pronouns" panel shows I/you/he-she-it/we/you/they in the verb's language, with translations revealed by the same toggle used for example sentences
 - Russian stress marks: for a few verbs whose forms the text-to-speech voice stresses wrongly (e.g. платить, мыть, начать, погнать), the correct stress is marked in the forms and example sentences (audio is unchanged) and a one-line note explains it
 

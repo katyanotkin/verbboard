@@ -46,6 +46,8 @@
   "board.tense_perfect": "Перфект",
   "board.tense_imperfect": "Имперфект",
   "board.tense_imperative": "Повелительное",
+  "board.tense_subjunctive": "Сослагательное (subjonctif, que…)",
+  "board.tense_conditional": "Условное (conditionnel)",
   "board.tense_aorist": "Аорист (обычное действие)",
   "board.tense_others": "Другие формы",
   "verbs.sort_az": "А → Я",

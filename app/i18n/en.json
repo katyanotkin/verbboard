@@ -46,6 +46,8 @@
   "board.tense_perfect": "Perfect",
   "board.tense_imperfect": "Imperfect",
   "board.tense_imperative": "Imperative",
+  "board.tense_subjunctive": "Subjunctive (que…)",
+  "board.tense_conditional": "Conditional",
   "board.tense_aorist": "Aorist (habitual)",
   "board.tense_others": "Other forms",
   "verbs.sort_az": "A → Z",

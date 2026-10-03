@@ -195,6 +195,21 @@ FRENCH (fr)
       unless the verb is reflexive, in which case still default masculine singular.
     imparfait:      { je, tu, il, nous, vous, ils }
     futur:          { je, tu, il, nous, vous, ils }
+    conditionnel_present: { je, tu, il, nous, vous, ils }  ← conditionnel présent, same shape as présent
+      (pronoun with elision, e.g. "j'aurais", "il aurait", "nous aurions"). It is the FUTUR stem plus
+      the imparfait endings (-ais, -ais, -ait, -ions, -iez, -aient), so it must agree with the futur
+      you give: avoir (aurais), être (serais), aller (irais), faire (ferais), pouvoir (pourrais),
+      vouloir (voudrais), savoir (saurais), voir (verrais), venir (viendrais), devoir (devrais).
+      Never copy the imparfait or the futur. Impersonal verbs (falloir: il faudrait) fill only "il"
+      and leave other slots empty strings; if a verb has no conditionnel at all, return {}.
+    subjonctif_present: { je, tu, il, nous, vous, ils }  ← subjonctif présent, same shape as présent
+      (pronoun with elision, e.g. "j'aie", "tu aies", "il ait"), WITHOUT "que". Use the true stems:
+      avoir (aie, aies, ait, ayons, ayez, aient), être (sois, sois, soit, soyons, soyez, soient),
+      aller (aille ... allions, alliez ... aillent), faire (fasse), pouvoir (puisse), savoir (sache),
+      vouloir (veuille ... voulions, vouliez ... veuillent). Stem-changing verbs keep nous/vous on the
+      imparfait stem (boire: boive ... buvions). Never copy the indicative présent. Impersonal verbs
+      (falloir, pleuvoir) fill only "il" and leave other slots empty strings; if a verb has no
+      subjunctive at all, return {}.
     imperatif:      { tu, nous, vous }  ← include all three slots for verbs that have an imperative.
       A small number of verbs (e.g. pouvoir) are grammatically defective in the imperative mood in
       standard French — no genuine command form exists. For these, return imperatif as an empty
@@ -205,8 +220,10 @@ FRENCH (fr)
     participe_passe: "<past participle>"       (string, masculine singular form)
   Elision: use standard French elision (je → j') before a vowel sound, e.g. "j'ai parlé", "j'aime".
   examples: 4 to 6 sentences in French, each using a distinct grammatical form:
-    at least one present, one passé composé, one imparfait or futur, and one impératif —
-    unless the verb has no natural imperative (see above), in which case cover another form instead.
+    at least one present, one passé composé, one imparfait or futur, one conditionnel présent
+    (a polite request, a wish or the result of "si + imparfait"), one subjonctif présent after a
+    real trigger (il faut que, bien que, pour que, je veux que) unless the verb has none, and one
+    impératif — unless the verb has no natural imperative (see above), in which case cover another form instead.
     Some verbs (e.g. devoir) DO have real, grammatically valid imperative forms, but those
     forms are pragmatically near-unusable as genuine commands in natural French (ordering
     someone to "obligate themselves" is semantically redundant as a speech act — native
@@ -261,7 +278,7 @@ _GENERATION_SYSTEM_PROMPT = (
 _MODEL: dict[str, str] = {"en": "claude-haiku-4-5-20251001"}
 _MODEL_DEFAULT = "claude-sonnet-4-6"
 
-_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072}
+_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072, "fr": 3072}
 _MAX_TOKENS_DEFAULT = 2048
 
 # ---------------------------------------------------------------------------
