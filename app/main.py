@@ -85,6 +85,8 @@ class _PageViewMiddleware:
         user_agent = request.headers.get("user-agent")
         # Header name is "Referer" (the historical HTTP spec misspelling), not "Referrer".
         referrer = request.headers.get("referer", "")
+        # A Play Store TWA launch reports an android-app:// package URL as referrer.
+        twa = referrer.lower().startswith("android-app://")
         date = datetime.now(UTC).strftime("%Y-%m-%d")
         verb_viewed = request.url.path == "/learn" and bool(request.query_params.get("verb_id"))
 
@@ -100,6 +102,7 @@ class _PageViewMiddleware:
             verb_viewed,
             referrer,
             home_viewed,
+            twa,
         )
 
         await self._app(scope, receive, send)

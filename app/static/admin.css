@@ -350,3 +350,21 @@ h1 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.3px
   outline-offset: 1px;
   border-color: var(--accent);
 }
+
+/* ── admin report page ── */
+.stats-4        { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.stat-delta     { font-size: 12px; margin-top: 4px; }
+.delta-up       { color: var(--success); }
+.delta-down     { color: var(--danger); }
+.delta-flat     { color: var(--muted); }
+.card-body h2   { font-size: 14px; margin: 0 0 10px; }
+.trend-svg      { width: 100%; height: auto; display: block; }
+.trend-bar-all        { fill: var(--border); }
+.trend-bar-registered { fill: var(--accent); }
+.trend-bar-twa        { fill: var(--success); }
+.trend-axis     { font-size: 9px; fill: var(--muted); }
+.legend-all, .legend-registered, .legend-twa { margin-right: 10px; }
+.legend-all::before, .legend-registered::before, .legend-twa::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 4px; }
+.legend-all::before        { background: var(--border); }
+.legend-registered::before { background: var(--accent); }
+.legend-twa::before        { background: var(--success); }

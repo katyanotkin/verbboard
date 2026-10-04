@@ -348,6 +348,44 @@ def test_record_votd_clicked_without_session_creates_no_stub_doc(fake_db) -> Non
     assert fake_db._docs == {}
 
 
+# ── twa flag (issue #67) ────────────────────────────────────────────────────
+
+
+def test_create_session_writes_twa_flag(fake_db) -> None:
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, "", False, True)
+
+    assert fake_db._docs[DOC]["twa"] is True
+
+
+def test_create_session_twa_defaults_to_false(fake_db) -> None:
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, "")
+
+    assert fake_db._docs[DOC]["twa"] is False
+
+
+def test_twa_flips_false_to_true_on_second_hit_and_never_downgrades(fake_db) -> None:
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, "")
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, "", False, True)
+    assert fake_db._docs[DOC]["twa"] is True
+
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en", False, "", False, False)
+    assert fake_db._docs[DOC]["twa"] is True
+
+
+def test_record_app_launch_sets_flag_on_existing_session(fake_db) -> None:
+    _seed(fake_db, twa=False)
+
+    session_tracker._record_app_launch("fp1", DATE)
+
+    assert fake_db._docs[DOC]["twa"] is True
+
+
+def test_record_app_launch_without_session_creates_no_stub_doc(fake_db) -> None:
+    session_tracker._record_app_launch("fp1", DATE)
+
+    assert fake_db._docs == {}
+
+
 # ── async fire-and-forget wrappers ──────────────────────────────────────────
 
 

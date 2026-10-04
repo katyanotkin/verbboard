@@ -11,6 +11,7 @@ from core.analytics.session_tracker import (
     attach_uid,
     enrich_lang,
     get_fingerprint_sid,
+    record_app_launch,
     record_practice_completed,
     record_practice_gate_shown,
     record_practice_started,
@@ -108,6 +109,16 @@ async def record_votd_click(request: Request) -> JSONResponse:
     date = datetime.now(UTC).strftime("%Y-%m-%d")
     fingerprint = get_fingerprint_sid(request, date)
     await record_votd_clicked(fingerprint, date)
+    return JSONResponse({"ok": True})
+
+
+@router.post("/api/analytics/app_launch")
+async def record_app_launch_beacon(request: Request) -> JSONResponse:
+    """Diagnostic-only: the page was opened in the installed Play (TWA) app.
+    No auth and no body -- same unauthenticated, fail-open shape as /votd_clicked."""
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
+    fingerprint = get_fingerprint_sid(request, date)
+    await record_app_launch(fingerprint, date)
     return JSONResponse({"ok": True})
 
 

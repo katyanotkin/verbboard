@@ -115,6 +115,17 @@
     } catch (_) {}
   }
 
+  // Once per page load: tell the server this session runs in the installed Play
+  // (TWA) app, so the admin report can count Play testers. Android browser UA
+  // plus standalone display mode is the same TWA test signIn() uses.
+  function _trackAppLaunch() {
+    try {
+      if (!(isStandalone() && isAndroidBrowser())) return;
+      fetch('/api/analytics/app_launch', { method: 'POST', keepalive: true }).catch(function () {});
+    } catch (_) {}
+  }
+  _trackAppLaunch();
+
   async function signIn() {
     if (signInInProgress) return;
     signInInProgress = true;

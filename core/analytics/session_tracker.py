@@ -48,6 +48,7 @@ def _create_session(
     verb_viewed: bool = False,
     referrer: str = "",
     home_viewed: bool = False,
+    twa: bool = False,
 ) -> None:
     from google.api_core.exceptions import AlreadyExists
 
@@ -68,6 +69,7 @@ def _create_session(
                 "uid": None,
                 "verb_viewed": verb_viewed,
                 "home_viewed": home_viewed,
+                "twa": twa,
                 "referrer": clean_referrer,
                 "created_at": datetime.now(UTC),
             }
@@ -88,6 +90,8 @@ def _create_session(
             update["verb_viewed"] = True
         if home_viewed:
             update["home_viewed"] = True
+        if twa:
+            update["twa"] = True
         if update:
             try:
                 get_db().collection(COLLECTION).document(doc_id).set(update, merge=True)
@@ -106,10 +110,11 @@ async def start_session(
     verb_viewed: bool = False,
     referrer: str = "",
     home_viewed: bool = False,
+    twa: bool = False,
 ) -> None:
     task = asyncio.create_task(
         asyncio.to_thread(
-            _create_session, fingerprint, date, device_type, language, ui_lang, verb_viewed, referrer, home_viewed
+            _create_session, fingerprint, date, device_type, language, ui_lang, verb_viewed, referrer, home_viewed, twa
         )
     )
     _pending.add(task)
@@ -274,6 +279,30 @@ def _record_votd_clicked(fingerprint: str, date: str) -> None:
 
 async def record_votd_clicked(fingerprint: str, date: str) -> None:
     task = asyncio.create_task(asyncio.to_thread(_record_votd_clicked, fingerprint, date))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
+def _record_app_launch(fingerprint: str, date: str) -> None:
+    """Record that this session-day came from the installed Play (TWA) app.
+    Client-side signal (standalone display mode on an Android browser UA) that
+    complements the server-side `android-app://` Referer check. Set-once; a
+    launch with no existing session doc is dropped rather than creating a stub."""
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        if not snapshot.exists or snapshot.to_dict().get("twa"):
+            return
+        doc_ref.set({"twa": True}, merge=True)
+    except Exception:
+        logger.exception("Failed to record app launch")
+
+
+async def record_app_launch(fingerprint: str, date: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_app_launch, fingerprint, date))
     _pending.add(task)
     task.add_done_callback(_pending.discard)
 
