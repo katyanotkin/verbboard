@@ -226,6 +226,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 2200);
   }
 
+  window.vbShowToast = vbShowToast;
+
   window.vbJumpToExample = function (btn) {
     const tr = btn.closest("tr");
     const formText = tr && tr.dataset.form;

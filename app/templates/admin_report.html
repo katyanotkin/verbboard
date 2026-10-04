@@ -10,6 +10,7 @@
   <div
     id="admin-report-config"
     data-api-url="{{ admin_prefix }}/api/reports"
+    data-audio-reports-url="{{ admin_prefix }}/api/audio-reports"
     data-default-from="{{ default_date_from }}"
     data-default-to="{{ default_date_to }}"
   ></div>
@@ -61,6 +62,12 @@
 
     <div id="report-error" class="error-msg" hidden></div>
     <div id="report-body"></div>
+
+    <div class="card card-body" id="audio-reports">
+      <h2>Audio problems</h2>
+      <p class="cell-meta">Open reports from signed-in learners, most reported first. A new report on a resolved clip reopens it.</p>
+      <div id="audio-reports-body"><p class="text-muted">Loading...</p></div>
+    </div>
   </main>
   <script src="/static/admin_report.js"></script>
 </body>

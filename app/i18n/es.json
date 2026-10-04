@@ -155,5 +155,18 @@
   "privacy.delete_account_confirm": "Esto eliminará permanentemente tu cuenta y todos los datos (progreso, historial de práctica). Esta acción no se puede deshacer. ¿Continuar?",
   "privacy.delete_account_success": "Tu cuenta y tus datos se han eliminado.",
   "privacy.delete_account_error": "Algo salió mal. Inténtalo de nuevo en unos minutos o usa el formulario de comentarios.",
-  "privacy.delete_account_disabled_title": "Inicia sesión con Google para eliminar tu cuenta"
+  "privacy.delete_account_disabled_title": "Inicia sesión con Google para eliminar tu cuenta",
+  "audio_report.trigger": "Informar de un problema con este audio",
+  "audio_report.title": "¿Qué falló?",
+  "audio_report.reason_wrong_form": "Suena como otra forma",
+  "audio_report.reason_stress": "Acento o vocal incorrectos",
+  "audio_report.reason_glitch": "Cortado o con ruido",
+  "audio_report.reason_other": "Otro motivo",
+  "audio_report.add_note": "Añadir una nota",
+  "audio_report.note_placeholder": "Opcional, máx. 200 caracteres",
+  "audio_report.send": "Enviar",
+  "audio_report.thanks": "Gracias, informe enviado.",
+  "audio_report.already": "Ya informado",
+  "audio_report.error": "No se pudo enviar. Inténtalo más tarde.",
+  "audio_report.sign_in": "Inicia sesión para informar de un problema de audio."
 }

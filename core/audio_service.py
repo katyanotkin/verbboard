@@ -26,6 +26,33 @@ def build_hashed_audio_key(base_form_key: str, text: str) -> str:
     return f"{base_form_key}_{text_hash}"
 
 
+_NO_AUDIO_ROW_KEYS = frozenset({"aspect", "pair", "binyan", "root"})
+
+
+def find_clip_text(board, form_key: str) -> tuple[str, str] | None:
+    """Walk a board's conjugation rows, then its example sentences, for the clip
+    whose content-addressed key is `form_key`. Returns (tts_text, row_kind) with
+    row_kind "form" or "example", or None when nothing on the board has that key."""
+    for section in board.sections:
+        for row in section["rows"]:
+            if str(row["key"]) in _NO_AUDIO_ROW_KEYS:
+                continue
+            row_text = str(row["text"] or "").strip()
+            if not row_text:
+                continue
+            tts_key_text = str(row.get("tts_text") or "").strip() or row_text
+            if build_hashed_audio_key(str(row["key"]), tts_key_text) == form_key:
+                return tts_key_text, "form"
+
+    for idx, example in enumerate(board.verb.examples, start=1):
+        ex_text = example.dst.strip()
+        if not ex_text:
+            continue
+        if build_hashed_audio_key(f"example_{idx}", ex_text) == form_key:
+            return ex_text, "example"
+    return None
+
+
 def build_audio_key(
     language: str,
     verb_id: str,

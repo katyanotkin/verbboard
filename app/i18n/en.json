@@ -155,5 +155,18 @@
   "privacy.delete_account_confirm": "This will permanently delete your account and all data (progress, practice history). This cannot be undone. Continue?",
   "privacy.delete_account_success": "Your account and data have been deleted.",
   "privacy.delete_account_error": "Something went wrong. Please try again in a few minutes, or use the feedback form.",
-  "privacy.delete_account_disabled_title": "Sign in with Google to delete your account"
+  "privacy.delete_account_disabled_title": "Sign in with Google to delete your account",
+  "audio_report.trigger": "Report a problem with this audio",
+  "audio_report.title": "What went wrong?",
+  "audio_report.reason_wrong_form": "Sounds like a different form",
+  "audio_report.reason_stress": "Wrong stress or vowel",
+  "audio_report.reason_glitch": "Cut off or noisy",
+  "audio_report.reason_other": "Something else",
+  "audio_report.add_note": "Add a note",
+  "audio_report.note_placeholder": "Optional, max 200 characters",
+  "audio_report.send": "Send",
+  "audio_report.thanks": "Thanks, report sent.",
+  "audio_report.already": "Already reported",
+  "audio_report.error": "Could not send. Try again later.",
+  "audio_report.sign_in": "Sign in to report an audio problem."
 }

@@ -929,3 +929,146 @@ button {
   font-size: 0.85rem;
   color: var(--text-muted);
 }
+
+/* ── audio problem report (issue #71) ─────────────────────────────────────── */
+.audio-report-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  touch-action: manipulation;
+  margin-inline-start: 2px;
+}
+
+.audio-report-btn svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Reported: filled glyph (shape change, not color alone). */
+.audio-report-btn[aria-pressed="true"] svg {
+  fill: currentColor;
+}
+
+.audio-report-btn:hover,
+.audio-report-btn[aria-expanded="true"] {
+  color: var(--color-navy);
+}
+
+/* Dimmed (not hidden, no layout shift) until a clip has been played. */
+#learn-page:not(.audio-played) .audio-report-btn {
+  opacity: 0.45;
+}
+
+/* Examples: the audio cell holds play + slow + flag; let the flag wrap on narrow widths. */
+.examples-table td:last-child {
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .examples-table td:last-child {
+    white-space: normal;
+  }
+  .conj-form {
+    gap: 8px;
+  }
+}
+
+.audio-report-pop {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: max-content;
+  max-width: min(260px, calc(100vw - 24px));
+  padding: 12px;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+  color: var(--color-navy);
+  font-size: 0.85rem;
+}
+
+.audio-report-pop[hidden] {
+  display: none;
+}
+
+.audio-report-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-align: start;
+}
+
+.audio-report-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.audio-report-reason,
+.audio-report-send {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #93c5fd;
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.audio-report-reason[aria-pressed="true"] {
+  background: var(--color-navy);
+  color: #fff;
+}
+
+.audio-report-note-link {
+  margin-top: 8px;
+  padding: 8px 0;
+  min-height: 44px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.audio-report-note {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.audio-report-note[hidden] {
+  display: none;
+}
+
+.audio-report-note-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #93c5fd;
+  border-radius: 10px;
+  font: inherit;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .audio-report-btn {
+    transition: opacity 0.18s ease, color 0.18s ease;
+  }
+}

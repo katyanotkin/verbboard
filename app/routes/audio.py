@@ -9,8 +9,8 @@ from fastapi.responses import PlainTextResponse, Response
 from core.admin_auth import get_session_uid
 from core.audio_service import (
     build_audio_key,
-    build_hashed_audio_key,
     ensure_audio,
+    find_clip_text,
     read_audio_bytes,
 )
 from core.entitlements import can_study
@@ -43,33 +43,10 @@ async def _generate_on_demand(
     plugin = get_plugin(language)
     board = plugin.build_board(verb, voice, voice_meta.label)
 
-    _NO_AUDIO_ROW_KEYS = frozenset({"aspect", "pair", "binyan", "root"})
-    text: str | None = None
-    for section in board.sections:
-        for row in section["rows"]:
-            if str(row["key"]) in _NO_AUDIO_ROW_KEYS:
-                continue
-            row_text = str(row["text"] or "").strip()
-            if not row_text:
-                continue
-            tts_key_text = str(row.get("tts_text") or "").strip() or row_text
-            if build_hashed_audio_key(str(row["key"]), tts_key_text) == form_key:
-                text = tts_key_text
-                break
-        if text is not None:
-            break
-
-    if text is None:
-        for idx, example in enumerate(board.verb.examples, start=1):
-            ex_text = example.dst.strip()
-            if not ex_text:
-                continue
-            if build_hashed_audio_key(f"example_{idx}", ex_text) == form_key:
-                text = ex_text
-                break
-
-    if text is None:
+    clip = find_clip_text(board, form_key)
+    if clip is None:
         return None
+    text = clip[0]
 
     await ensure_audio(
         audio_backend=audio_backend,

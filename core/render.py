@@ -72,6 +72,15 @@ def render_board_html(
     help_hint_label = escape(help_hint_label_raw)
     help_translations_text = escape(help_translations_raw)
 
+    # Audio-problem report trigger (issue #71): one per clip, after the play control.
+    report_trigger_label = escape(ui.get("audio_report.trigger", "Report a problem with this audio"))
+    report_button_html = (
+        f"<button type='button' class='audio-report-btn' aria-haspopup='dialog' aria-expanded='false' "
+        f"aria-pressed='false' aria-label='{report_trigger_label}' title='{report_trigger_label}'>"
+        "<svg viewBox='0 0 24 24' width='16' height='16' aria-hidden='true'>"
+        "<path d='M6 3v18M6 4h12l-2.5 4.5L18 13H6'/></svg></button>"
+    )
+
     sections_html = []
     for section_index, section in enumerate(board.sections, start=1):
         rows = []
@@ -101,6 +110,7 @@ def render_board_html(
                     f"<button class='{button_class}' data-lang='{board.language}' title='Play' "
                     f"onclick=\"const audio=document.getElementById('{audio_id}'); "
                     f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
+                    f"{report_button_html}"
                 )
                 if jump_to_example_enabled and has_examples and is_conjugated_form and key not in LEMMA_ROW_KEYS:
                     audio_html += (
@@ -240,6 +250,7 @@ def render_board_html(
             f'audio.pause(); audio.currentTime=0; audio.playbackRate=0.65; audio.play()">'
             f"<img src='/static/snail.svg' class='slow-icon' />"
             f"</button>"
+            f"{report_button_html}"
             "</td>"
             "</tr>"
         )
@@ -342,6 +353,10 @@ def render_board_html(
             "auth.login": ui.get("auth.login", "Login"),
             "auth.logout": ui.get("auth.logout", "Logout"),
             "board.no_example_for_form": ui.get("board.no_example_for_form", "No example yet for this form"),
+            "audio_report.thanks": ui.get("audio_report.thanks", "Thanks, report sent."),
+            "audio_report.already": ui.get("audio_report.already", "Already reported"),
+            "audio_report.error": ui.get("audio_report.error", "Could not send. Try again later."),
+            "audio_report.sign_in": ui.get("audio_report.sign_in", "Sign in to report an audio problem."),
         },
         ensure_ascii=False,
     )
@@ -373,6 +388,14 @@ def render_board_html(
         board_mark_known=ui.get("board.mark_known", "Mark as learned"),
         board_help_hint_label=help_hint_label_raw,
         board_help_known=help_known_raw,
+        ar_title=ui.get("audio_report.title", "What went wrong?"),
+        ar_reason_wrong_form=ui.get("audio_report.reason_wrong_form", "Sounds like a different form"),
+        ar_reason_stress=ui.get("audio_report.reason_stress", "Wrong stress or vowel"),
+        ar_reason_glitch=ui.get("audio_report.reason_glitch", "Cut off or noisy"),
+        ar_reason_other=ui.get("audio_report.reason_other", "Something else"),
+        ar_add_note=ui.get("audio_report.add_note", "Add a note"),
+        ar_note_placeholder=ui.get("audio_report.note_placeholder", "Optional, max 200 characters"),
+        ar_send=ui.get("audio_report.send", "Send"),
         board_send_feedback=ui.get("board.send_feedback", "Send feedback"),
         language_urlencode=quote(board.language, safe=""),
         verb_id_urlencode=quote(board.verb.id, safe=""),

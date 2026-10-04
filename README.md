@@ -57,6 +57,7 @@ Visual indicators:
 - French boards also show the conditionnel présent and subjonctif présent (the subjunctive title carries "que…"; rows hold the pronoun + verb form)
 - Pronoun reference: a collapsible "Pronouns" panel shows I/you/he-she-it/we/you/they in the verb's language, with translations revealed by the same toggle used for example sentences
 - Russian stress marks: for a few verbs whose forms the text-to-speech voice stresses wrongly (e.g. платить, мыть, начать, погнать), the correct stress is marked in the forms and example sentences (audio is unchanged) and a one-line note explains it
+- Report an audio problem: a small flag next to each play button lets a signed-in learner flag a clip as the wrong form, wrong stress, cut off/noisy, or other (optional 200-character note); reports are counted per clip for the admin Reports page
 
 ### Verbs page
 - Browse with filters: new / seen / known / recent

@@ -1,0 +1,213 @@
+"""Audio problem reports (issue #71): API validation/auth, dedupe, rate limit, reopen, admin view."""
+
+from __future__ import annotations
+
+import pytest
+from fastapi.testclient import TestClient
+
+from core import audio_report_service as service
+from core.admin_auth import ADMIN_SESSION_COOKIE, create_admin_session_token
+from core.audio_service import build_hashed_audio_key
+from core.rate_limit import SlidingWindowRateLimiter
+from tests.conftest import seed_spanish_verb
+
+AUTH = {"Authorization": "Bearer local-dev"}
+EXAMPLE_TEXT = "Yo hablo con ella."
+EXAMPLE_KEY = build_hashed_audio_key("example_1", EXAMPLE_TEXT)
+
+
+@pytest.fixture(autouse=True)
+def _fresh_limiter(monkeypatch):
+    monkeypatch.setattr(service, "_rate_limiter", SlidingWindowRateLimiter(max_calls=20, window_seconds=600))
+
+
+@pytest.fixture
+def seeded(fake_db):
+    seed_spanish_verb(fake_db)
+    return fake_db
+
+
+def _payload(**overrides):
+    body = {
+        "language": "es",
+        "verb_id": "es_hablar",
+        "voice": "female",
+        "form_key": EXAMPLE_KEY,
+        "reason": "stress",
+        "ui_language": "en",
+    }
+    body.update(overrides)
+    return body
+
+
+def _aggregate(db):
+    return db._docs[f"audio_reports/es_es_hablar_female_{EXAMPLE_KEY}"]
+
+
+def test_anonymous_gets_401(client: TestClient, seeded) -> None:
+    assert client.post("/api/audio_report", json=_payload()).status_code == 401
+
+
+def test_report_resolves_text_server_side_and_aggregates(client: TestClient, seeded) -> None:
+    resp = client.post("/api/audio_report", json=_payload(comment="  too   fast\n"), headers=AUTH)
+
+    assert resp.status_code == 200
+    assert resp.json() == {"ok": True, "duplicate": False}
+    doc = _aggregate(seeded)
+    assert doc["text"] == EXAMPLE_TEXT
+    assert doc["row_kind"] == "example"
+    assert doc["count"] == 1
+    assert doc["reasons"] == {"stress": 1}
+    assert doc["ui_langs"] == {"en": 1}
+    assert doc["comments"] == ["too fast"]
+    assert doc["status"] == "open"
+    assert "uid" not in doc
+
+
+def test_same_user_same_clip_is_deduped(client: TestClient, seeded) -> None:
+    client.post("/api/audio_report", json=_payload(), headers=AUTH)
+    resp = client.post("/api/audio_report", json=_payload(reason="glitch"), headers=AUTH)
+
+    assert resp.json() == {"ok": True, "duplicate": True}
+    assert _aggregate(seeded)["count"] == 1
+
+
+def test_unknown_form_key_is_404(client: TestClient, seeded) -> None:
+    resp = client.post("/api/audio_report", json=_payload(form_key="example_1_deadbeef00"), headers=AUTH)
+    assert resp.status_code == 404
+    assert not [p for p in seeded._docs if p.startswith("audio_report")]
+
+
+@pytest.mark.parametrize(
+    "override",
+    [{"language": "xx"}, {"voice": "robot"}, {"reason": "bored"}],
+)
+def test_invalid_fields_are_400(client: TestClient, seeded, override) -> None:
+    assert client.post("/api/audio_report", json=_payload(**override), headers=AUTH).status_code == 400
+
+
+def test_rate_limit_is_429(client: TestClient, seeded, monkeypatch) -> None:
+    monkeypatch.setattr(service, "_rate_limiter", SlidingWindowRateLimiter(max_calls=2, window_seconds=600))
+    codes = [
+        client.post("/api/audio_report", json=_payload(reason="glitch"), headers=AUTH).status_code for _ in range(3)
+    ]
+    assert codes == [200, 200, 429]
+
+
+def test_comments_stop_at_five_and_are_trimmed() -> None:
+    assert len(service.clean_comment("x" * 500)) == service.MAX_COMMENT_LENGTH
+    assert service.clean_comment(None) == ""
+
+
+def test_comment_cap_per_clip(seeded) -> None:
+    for index in range(7):
+        service.submit_audio_report(
+            uid=f"u{index}",
+            language="es",
+            verb_id="es_hablar",
+            voice="female",
+            form_key=EXAMPLE_KEY,
+            reason="other",
+            comment=f"note {index}",
+            ui_language="en",
+        )
+    doc = _aggregate(seeded)
+    assert doc["count"] == 7
+    assert len(doc["comments"]) == service.MAX_COMMENTS_STORED
+
+
+def test_failed_aggregate_write_releases_the_vote_so_a_retry_counts(seeded, monkeypatch) -> None:
+    kwargs = dict(
+        uid="u1",
+        language="es",
+        verb_id="es_hablar",
+        voice="female",
+        form_key=EXAMPLE_KEY,
+        reason="stress",
+        comment="",
+        ui_language="en",
+    )
+    real_set = type(seeded.collection(service.REPORTS_COLLECTION).document("x")).set
+
+    def failing_set(self, *args, **kw):
+        if self.path.startswith(f"{service.REPORTS_COLLECTION}/"):
+            raise RuntimeError("firestore down")
+        return real_set(self, *args, **kw)
+
+    with monkeypatch.context() as patched:
+        patched.setattr(type(seeded.collection("x").document("y")), "set", failing_set)
+        with pytest.raises(RuntimeError):
+            service.submit_audio_report(**kwargs)
+
+    assert not any(key.startswith(service.VOTES_COLLECTION) for key in seeded._docs)
+    assert service.submit_audio_report(**kwargs) == {"ok": True, "duplicate": False}
+    assert _aggregate(seeded)["count"] == 1
+
+
+def _admin() -> dict[str, str]:
+    return {ADMIN_SESSION_COOKIE: create_admin_session_token()}
+
+
+def test_admin_requires_auth(client: TestClient) -> None:
+    assert client.get("/admin/api/audio-reports").status_code == 401
+    assert client.post("/admin/api/audio-reports/x/resolve").status_code == 401
+
+
+def test_admin_lists_by_count_resolves_and_new_report_reopens(client: TestClient, seeded) -> None:
+    for uid in ("a", "b"):
+        service.submit_audio_report(
+            uid=uid,
+            language="es",
+            verb_id="es_hablar",
+            voice="female",
+            form_key=EXAMPLE_KEY,
+            reason="stress",
+            comment=None,
+            ui_language="en",
+        )
+    other_key = build_hashed_audio_key("example_1", EXAMPLE_TEXT)
+    seeded.collection("audio_reports").document("es_es_hablar_male_x").set(
+        {
+            "language": "es",
+            "verb_id": "es_hablar",
+            "voice": "male",
+            "form_key": other_key,
+            "text": "t",
+            "count": 1,
+            "status": "open",
+        }
+    )
+
+    rows = client.get("/admin/api/audio-reports", cookies=_admin()).json()["reports"]
+    assert [row["count"] for row in rows] == [2, 1]
+    assert "uid" not in rows[0] and "verb_id=es_hablar" in rows[0]["learn_url"]
+
+    report_id = rows[0]["id"]
+    assert client.post(f"/admin/api/audio-reports/{report_id}/resolve", cookies=_admin()).status_code == 200
+    assert [r["id"] for r in client.get("/admin/api/audio-reports", cookies=_admin()).json()["reports"]] == [
+        "es_es_hablar_male_x"
+    ]
+    assert client.post("/admin/api/audio-reports/nope/resolve", cookies=_admin()).status_code == 404
+
+    service.submit_audio_report(
+        uid="c",
+        language="es",
+        verb_id="es_hablar",
+        voice="female",
+        form_key=EXAMPLE_KEY,
+        reason="glitch",
+        comment=None,
+        ui_language="en",
+    )
+    reopened = {r["id"]: r for r in client.get("/admin/api/audio-reports", cookies=_admin()).json()["reports"]}
+    assert reopened[report_id]["count"] == 3
+
+
+def test_learn_page_renders_report_buttons_and_popover(client: TestClient, seeded) -> None:
+    html = client.get("/learn?language=es&verb_id=es_hablar&ui_language=ru").text
+
+    assert "audio-report-btn" in html
+    assert html.count("class='audio-report-btn'") >= 2  # a form row and the example row
+    assert 'id="audio-report-pop"' in html
+    assert "Что не так?" in html
+    assert "/static/audio_report.js" in html

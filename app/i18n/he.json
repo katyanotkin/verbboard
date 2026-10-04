@@ -155,5 +155,18 @@
   "privacy.delete_account_confirm": "פעולה זו תמחק לצמיתות את החשבון שלך ואת כל הנתונים (התקדמות, היסטוריית תרגול). לא ניתן לבטל פעולה זו. להמשיך?",
   "privacy.delete_account_success": "החשבון והנתונים שלך נמחקו.",
   "privacy.delete_account_error": "משהו השתבש. נסה שוב בעוד כמה דקות או השתמש בטופס המשוב.",
-  "privacy.delete_account_disabled_title": "יש להתחבר עם Google כדי למחוק את החשבון"
+  "privacy.delete_account_disabled_title": "יש להתחבר עם Google כדי למחוק את החשבון",
+  "audio_report.trigger": "דווח על בעיה באודיו הזה",
+  "audio_report.title": "מה השתבש?",
+  "audio_report.reason_wrong_form": "נשמע כמו צורה אחרת",
+  "audio_report.reason_stress": "הטעמה או תנועה שגויה",
+  "audio_report.reason_glitch": "נחתך או רועש",
+  "audio_report.reason_other": "אחר",
+  "audio_report.add_note": "הוסף הערה",
+  "audio_report.note_placeholder": "אופציונלי, עד 200 תווים",
+  "audio_report.send": "שלח",
+  "audio_report.thanks": "תודה, הדיווח נשלח.",
+  "audio_report.already": "כבר דווח",
+  "audio_report.error": "השליחה נכשלה. נסו שוב מאוחר יותר.",
+  "audio_report.sign_in": "התחברו כדי לדווח על בעיה באודיו."
 }

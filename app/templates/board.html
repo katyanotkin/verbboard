@@ -20,6 +20,7 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
 <script defer src="/static/srs.js"></script>
 <script defer src="/static/progress.js"></script>
 <script defer src="/static/help_hint.js"></script>
+<script defer src="/static/audio_report.js"></script>
 <script defer src="/static/login_nudge.js"></script>
 <script defer src="/static/learn.js"></script>
 <script defer src="/static/nav_urls.js"></script>
@@ -136,6 +137,21 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
   {% endif %}
   <div class="section-block">
     {{ sections_conj | safe }}
+  </div>
+
+  <div id="audio-report-pop" class="audio-report-pop" aria-labelledby="audio-report-title" hidden>
+    <div id="audio-report-title" class="audio-report-title">{{ ar_title }}</div>
+    <div class="audio-report-reasons">
+      <button type="button" class="audio-report-reason" data-reason="wrong_form">{{ ar_reason_wrong_form }}</button>
+      <button type="button" class="audio-report-reason" data-reason="stress">{{ ar_reason_stress }}</button>
+      <button type="button" class="audio-report-reason" data-reason="glitch">{{ ar_reason_glitch }}</button>
+      <button type="button" class="audio-report-reason" data-reason="other">{{ ar_reason_other }}</button>
+    </div>
+    <button type="button" class="audio-report-note-link" aria-expanded="false">{{ ar_add_note }}</button>
+    <div class="audio-report-note" hidden>
+      <input type="text" class="audio-report-note-input" maxlength="200" dir="auto" placeholder="{{ ar_note_placeholder }}" aria-label="{{ ar_add_note }}">
+      <button type="button" class="audio-report-send">{{ ar_send }}</button>
+    </div>
   </div>
 </div>
 

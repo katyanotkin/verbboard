@@ -155,5 +155,18 @@
   "privacy.delete_account_confirm": "Это навсегда удалит ваш аккаунт и все данные (прогресс, история тренировок). Это действие нельзя отменить. Продолжить?",
   "privacy.delete_account_success": "Ваш аккаунт и данные удалены.",
   "privacy.delete_account_error": "Что-то пошло не так. Попробуйте снова через несколько минут или воспользуйтесь формой обратной связи.",
-  "privacy.delete_account_disabled_title": "Войдите через Google, чтобы удалить свой аккаунт"
+  "privacy.delete_account_disabled_title": "Войдите через Google, чтобы удалить свой аккаунт",
+  "audio_report.trigger": "Сообщить о проблеме с этим аудио",
+  "audio_report.title": "Что не так?",
+  "audio_report.reason_wrong_form": "Звучит другая форма",
+  "audio_report.reason_stress": "Неверное ударение или гласная",
+  "audio_report.reason_glitch": "Обрезано или с шумом",
+  "audio_report.reason_other": "Другое",
+  "audio_report.add_note": "Добавить комментарий",
+  "audio_report.note_placeholder": "Необязательно, до 200 символов",
+  "audio_report.send": "Отправить",
+  "audio_report.thanks": "Спасибо, сообщение отправлено.",
+  "audio_report.already": "Вы уже сообщили",
+  "audio_report.error": "Не удалось отправить. Попробуйте позже.",
+  "audio_report.sign_in": "Войдите, чтобы сообщить о проблеме с аудио."
 }

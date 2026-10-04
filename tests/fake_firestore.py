@@ -17,9 +17,10 @@ real caller needs it): transactions, array_contains_any, !=, not-in, cursors
 (start_after/end_before), offset, select/projections, nested dotted field
 paths in update(), composite-index-requirement errors, ordering semantics for
 docs missing the order_by field, snapshot listeners, the async client.
-`firestore.Increment` is resolved on set/create/update (added to the existing
+`firestore.Increment` is resolved, also inside nested dicts, on set/create/update (added to the existing
 numeric field, or used as the value when the field is missing) so counter tests
-can assert real totals. Other sentinels (SERVER_TIMESTAMP, ArrayUnion) are stored
+can assert real totals. `firestore.ArrayUnion` is unioned and nested dicts are deep-merged (as
+set(merge=True) does). Other sentinels (SERVER_TIMESTAMP) are stored
 opaquely, unresolved -- store a real value in tests that need one.
 """
 
@@ -35,13 +36,22 @@ _UNSET = object()
 
 
 def _resolve_increments(existing: dict[str, Any] | None, data: dict[str, Any]) -> dict[str, Any]:
-    """Copy `data`, replacing each firestore.Increment with a number: the existing
-    value plus the increment, or just the increment when the field is missing."""
+    """Copy `data`, resolving sentinels: each firestore.Increment becomes the existing
+    value plus the increment (or just the increment when missing), each ArrayUnion
+    is unioned into the existing list. Nested dicts are resolved recursively and
+    merged into the matching existing nested dict, as set(merge=True) does."""
     resolved = copy.deepcopy(data)
     for key, value in data.items():
+        base = (existing or {}).get(key)
         if isinstance(value, firestore.Increment):
-            base = (existing or {}).get(key)
             resolved[key] = (base if isinstance(base, (int, float)) else 0) + value.value
+        elif isinstance(value, firestore.ArrayUnion):
+            merged = list(base) if isinstance(base, list) else []
+            merged.extend(item for item in value.values if item not in merged)
+            resolved[key] = merged
+        elif isinstance(value, dict):
+            base_dict = base if isinstance(base, dict) else {}
+            resolved[key] = {**base_dict, **_resolve_increments(base_dict, value)}
     return resolved
 
 

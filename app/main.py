@@ -20,6 +20,7 @@ from app.routes.about import router as about_router
 from app.routes.admin import router as admin_router
 from app.routes.api_account import router as api_account_router
 from app.routes.api_analytics import router as api_analytics_router
+from app.routes.api_audio_report import router as api_audio_report_router
 from app.routes.api_preferences import router as api_preferences_router
 from app.routes.api_progress import router as api_progress_router
 from app.routes.audio import router as audio_router
@@ -121,6 +122,7 @@ app.include_router(admin_router)
 app.include_router(api_account_router)
 app.include_router(api_analytics_router)
 app.include_router(audio_router)
+app.include_router(api_audio_report_router)
 app.include_router(feedback_router)
 app.include_router(health_router)
 app.include_router(home_router)
