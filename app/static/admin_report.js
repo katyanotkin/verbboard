@@ -5,6 +5,7 @@
   if (!config) return;
   var apiUrl = config.dataset.apiUrl;
   var SINCE_KEY = "admin_report_invite_date";
+  var DEFAULT_SINCE = "2026-10-01"; // first closed-testing invite
 
   var fromInput = document.getElementById("report-from");
   var toInput = document.getElementById("report-to");
@@ -28,7 +29,7 @@
   }
 
   function readSince() {
-    try { return localStorage.getItem(SINCE_KEY) || ""; } catch (_) { return ""; }
+    try { return localStorage.getItem(SINCE_KEY) || DEFAULT_SINCE; } catch (_) { return DEFAULT_SINCE; }
   }
 
   function saveSince(value) {
