@@ -48,6 +48,8 @@
   "board.tense_imperative": "Imperativo",
   "board.tense_subjunctive": "Subjuntivo (que…)",
   "board.tense_conditional": "Condicional",
+  "board.tense_subjunctive_present": "Subjuntivo presente",
+  "board.tense_subjunctive_imperfect": "Subjuntivo imperfecto",
   "board.tense_aorist": "Aoristo (habitual)",
   "board.tense_others": "Otros",
   "verbs.sort_az": "A → Z",

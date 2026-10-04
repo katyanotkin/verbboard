@@ -99,6 +99,23 @@ SPANISH (es)
     preterite:  { yo, tu, el, nos, vosotros, ellos }
     imperfect:  { yo, tu, el, nos, vosotros, ellos }
     future:     { yo, tu, el, nos, vosotros, ellos }
+    conditional:           { yo, tu, el, nos, vosotros, ellos }  ← condicional simple: the FUTURE stem plus
+      -ía, -ías, -ía, -íamos, -íais, -ían, so it must agree with the future you give (tener → tendría,
+      hacer → haría, poder → podría, querer → querría, saber → sabría, venir → vendría, decir → diría,
+      poner → pondría, salir → saldría, haber → habría, ir → iría, ser → sería). Never copy the imperfect.
+    subjunctive_present:   { yo, tu, el, nos, vosotros, ellos }  ← presente de subjuntivo, bare forms WITHOUT
+      "que" (comprar → compre, compres, compre, compremos, compréis, compren). Derive from the yo form of the
+      present (tengo → tenga), keep stem changes (poder → pueda ... podamos, podáis ... puedan; pedir → pida
+      ... pidamos), and use the true irregulars: ser (sea, seas, sea, seamos, seáis, sean), estar (esté, estés,
+      esté, estemos, estéis, estén), ir (vaya ...), saber (sepa ...), haber (haya ...), dar (dé, des, dé,
+      demos, deis, den). Never copy the indicative present.
+    subjunctive_imperfect: { yo, tu, el, nos, vosotros, ellos }  ← imperfecto de subjuntivo in the -ra form
+      (comprar → comprara, compraras, comprara, compráramos, comprarais, compraran), built from the ellos
+      form of the preterite (hacer → hicieran → hiciera; ser/ir → fuera, fueras, fuera, fuéramos, fuerais,
+      fueran; tener → tuviera; poder → pudiera). Write the accent on nosotros (compráramos, comiéramos).
+      Never copy the preterite or the imperfect.
+    For the three tenses above, reflexive verbs keep the pronoun per person (me/te/se/nos/os/se), a verb
+      with no natural form of a tense returns {} for it, and impersonal verbs fill only the "el" slot.
     imperative: { tu, vosotros, usted, ustedes }  ← include all four slots, with the real forms
       (ser → sé / sed / sea / sean; estar → está / estad / esté / estén; ir → ve / id / vaya / vayan).
       Exception: a verb with no natural command form (poder, haber as auxiliary) gets only the
@@ -112,8 +129,10 @@ SPANISH (es)
   Verbs used with an indirect object (gustar, parecer): give the forms as they are used
     (me gusta / me gustan are examples, forms follow the 3rd person), and say so in the examples.
   examples: 5 to 6 sentences in Spanish (Spain Spanish), each using a distinct grammatical form:
-    at least one present, one preterite, one imperfect or future, one imperative — and no more than
-    two presents. Use real scenes with a complete meaning (a subject, an object where the verb needs
+    at least one present, one preterite, one imperfect or future, one conditional (a polite request, a
+    wish or the result of "si + imperfecto de subjuntivo"), one subjunctive (presente after a trigger like
+    "quiero que", "es importante que", "para que", or imperfecto in "Si fuera barato, lo compraría")
+    unless the verb has none, one imperative — and no more than two presents. Use real scenes with a complete meaning (a subject, an object where the verb needs
     one); do NOT use filler frames like "Yo ... cada día", "Él ... ahora", "Ayer nosotros ... juntos"
     or "Estamos <gerund> hoy". Vary persons (tú, ella, ellos, vosotros, usted) and settings from verb
     to verb. Use vosotros for informal plural (imperative "Venid aquí", "¿Queréis un café?") and
@@ -278,7 +297,7 @@ _GENERATION_SYSTEM_PROMPT = (
 _MODEL: dict[str, str] = {"en": "claude-haiku-4-5-20251001"}
 _MODEL_DEFAULT = "claude-sonnet-4-6"
 
-_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072, "fr": 3072}
+_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072, "fr": 3072, "es": 3072}
 _MAX_TOKENS_DEFAULT = 2048
 
 # ---------------------------------------------------------------------------
