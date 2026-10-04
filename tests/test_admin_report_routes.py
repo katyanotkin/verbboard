@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from datetime import UTC, datetime
 
 from fastapi.testclient import TestClient
@@ -69,4 +70,9 @@ def test_app_launch_beacon_flips_flag_on_existing_session(client: TestClient, fa
     resp = client.post("/api/analytics/app_launch")
 
     assert resp.status_code == 200
+    # The handler fires the Firestore write as a background task (asyncio.to_thread)
+    # and returns before it runs, so wait for it instead of asserting immediately.
+    deadline = time.monotonic() + 5
+    while "twa" not in fake_db._docs[path] and time.monotonic() < deadline:
+        time.sleep(0.01)
     assert fake_db._docs[path]["twa"] is True
