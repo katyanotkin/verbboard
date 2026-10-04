@@ -36,6 +36,8 @@ _MAX_ID_LENGTH = 80
 
 # Per-uid soft limit (per Cloud Run instance, like core/rate_limit.py's other users).
 _rate_limiter = SlidingWindowRateLimiter(max_calls=20, window_seconds=600)
+# Reads are cheap and happen once per /learn page load, so the cap is far more generous.
+_mine_rate_limiter = SlidingWindowRateLimiter(max_calls=120, window_seconds=600)
 
 
 class AudioReportError(Exception):
@@ -107,7 +109,9 @@ def submit_audio_report(
     vote_ref = db.collection(VOTES_COLLECTION).document(_vote_doc_id(uid, language, verb_id, voice, form_key))
     now = datetime.now(UTC)
     try:
-        vote_ref.create({"language": language, "verb_id": verb_id, "voice": voice, "form_key": form_key, "at": now})
+        vote_ref.create(
+            {"uid": uid, "language": language, "verb_id": verb_id, "voice": voice, "form_key": form_key, "at": now}
+        )
     except AlreadyExists:
         return {"ok": True, "duplicate": True}
 
@@ -143,6 +147,41 @@ def submit_audio_report(
 
 async def submit_audio_report_async(**kwargs: Any) -> dict[str, Any]:
     return await asyncio.to_thread(submit_audio_report, **kwargs)
+
+
+def mine_for_verb(uid: str, language: str, verb_id: str) -> list[dict[str, str]]:
+    """Clips on this verb that `uid` has already reported (both voices).
+
+    One equality query on the vote docs (uid, language, verb_id): it reads only real votes, needs no
+    composite index, and can only return this uid's own rows. Votes written before the `uid` field
+    existed are not returned.
+    """
+    if language not in ALL_STUDY_LANGUAGES or language not in VOICES:
+        raise AudioReportError(400, "Unknown language")
+    if not (1 <= len(verb_id) <= _MAX_ID_LENGTH) or "/" in verb_id:
+        raise AudioReportError(400, "Invalid verb")
+    if not _mine_rate_limiter.allow(uid):
+        raise AudioReportError(429, "Too many requests")
+
+    votes = (
+        get_db()
+        .collection(VOTES_COLLECTION)
+        .where("uid", "==", uid)
+        .where("language", "==", language)
+        .where("verb_id", "==", verb_id)
+        .stream()
+    )
+    reported: list[dict[str, str]] = []
+    for snapshot in votes:
+        data = snapshot.to_dict() or {}
+        voice, form_key = str(data.get("voice", "")), str(data.get("form_key", ""))
+        if voice in VALID_VOICES and form_key:
+            reported.append({"voice": voice, "form_key": form_key})
+    return reported
+
+
+async def mine_for_verb_async(**kwargs: Any) -> list[dict[str, str]]:
+    return await asyncio.to_thread(mine_for_verb, **kwargs)
 
 
 # ── admin view ────────────────────────────────────────────────────────────────

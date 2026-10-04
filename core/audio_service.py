@@ -29,10 +29,9 @@ def build_hashed_audio_key(base_form_key: str, text: str) -> str:
 _NO_AUDIO_ROW_KEYS = frozenset({"aspect", "pair", "binyan", "root"})
 
 
-def find_clip_text(board, form_key: str) -> tuple[str, str] | None:
-    """Walk a board's conjugation rows, then its example sentences, for the clip
-    whose content-addressed key is `form_key`. Returns (tts_text, row_kind) with
-    row_kind "form" or "example", or None when nothing on the board has that key."""
+def iter_board_clips(board):
+    """Yield (form_key, tts_text, row_kind) for every audio clip a board exposes:
+    conjugation rows first, then example sentences. row_kind is "form" or "example"."""
     for section in board.sections:
         for row in section["rows"]:
             if str(row["key"]) in _NO_AUDIO_ROW_KEYS:
@@ -41,15 +40,21 @@ def find_clip_text(board, form_key: str) -> tuple[str, str] | None:
             if not row_text:
                 continue
             tts_key_text = str(row.get("tts_text") or "").strip() or row_text
-            if build_hashed_audio_key(str(row["key"]), tts_key_text) == form_key:
-                return tts_key_text, "form"
+            yield build_hashed_audio_key(str(row["key"]), tts_key_text), tts_key_text, "form"
 
     for idx, example in enumerate(board.verb.examples, start=1):
         ex_text = example.dst.strip()
         if not ex_text:
             continue
-        if build_hashed_audio_key(f"example_{idx}", ex_text) == form_key:
-            return ex_text, "example"
+        yield build_hashed_audio_key(f"example_{idx}", ex_text), ex_text, "example"
+
+
+def find_clip_text(board, form_key: str) -> tuple[str, str] | None:
+    """Find the clip whose content-addressed key is `form_key`. Returns
+    (tts_text, row_kind), or None when nothing on the board has that key."""
+    for key, text, row_kind in iter_board_clips(board):
+        if key == form_key:
+            return text, row_kind
     return None
 
 

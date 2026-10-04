@@ -213,6 +213,39 @@
     audio.addEventListener("play", markPlayed);
   });
 
+  // Cross-device state: union the server's reported clips for this verb into localStorage
+  // (never deleting local entries), then repaint. Once per page load; fails silently.
+  var mineInFlight = false;
+  var mineFetched = false;
+  function syncMine() {
+    if (mineFetched || mineInFlight || !window.VerbBoardStorage) return;
+    var verbId = page.dataset.verbId || (new URLSearchParams(location.search)).get("verb_id");
+    if (!verbId) return;
+    mineInFlight = true;
+    signedInUser().then(function (user) {
+      if (!user || mineFetched) return null;
+      return window.VerbBoardAuth.getIdToken().then(function (token) {
+        if (!token) return null;
+        mineFetched = true;
+        var url = "/api/audio_report/mine?language=" + encodeURIComponent(language) +
+          "&verb_id=" + encodeURIComponent(verbId);
+        return fetch(url, { headers: { "Authorization": "Bearer " + token } }).then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        }).then(function (data) {
+          var set = reportedSet();
+          ((data && data.reported) || []).forEach(function (c) {
+            set.add(verbId + ":" + c.voice + ":" + c.form_key);
+          });
+          try { window.VerbBoardStorage.writeSet(storageKey, set); } catch (_) {}
+          paintReported();
+        });
+      });
+    }).catch(function () { mineFetched = false; }).then(function () { mineInFlight = false; });
+  }
+
   paintReported();
+  syncMine();
+  window.addEventListener("vb:progress-hydrated", syncMine);
   window.addEventListener("pageshow", paintReported);
 })();

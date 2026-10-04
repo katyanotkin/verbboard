@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from core.audio_report_service import AudioReportError, submit_audio_report_async
+from core.audio_report_service import AudioReportError, mine_for_verb_async, submit_audio_report_async
 from core.auth.firebase_auth import get_optional_auth_user
 
 router = APIRouter()
@@ -30,3 +30,15 @@ async def post_audio_report(request: Request, body: AudioReportRequest) -> JSONR
     except AudioReportError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
     return JSONResponse(result)
+
+
+@router.get("/api/audio_report/mine")
+async def get_my_audio_reports(request: Request, language: str, verb_id: str) -> JSONResponse:
+    user = get_optional_auth_user(request)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        reported = await mine_for_verb_async(uid=user.uid, language=language, verb_id=verb_id)
+    except AudioReportError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return JSONResponse({"reported": reported})

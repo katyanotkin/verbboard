@@ -211,3 +211,75 @@ def test_learn_page_renders_report_buttons_and_popover(client: TestClient, seede
     assert 'id="audio-report-pop"' in html
     assert "Что не так?" in html
     assert "/static/audio_report.js" in html
+
+
+# ── cross-device "already reported" state: GET /api/audio_report/mine ─────────
+
+
+def _mine(client, **params):
+    query = {"language": "es", "verb_id": "es_hablar", **params}
+    return client.get("/api/audio_report/mine", params=query, headers=AUTH)
+
+
+def test_mine_anonymous_gets_401(client: TestClient, seeded) -> None:
+    resp = client.get("/api/audio_report/mine", params={"language": "es", "verb_id": "es_hablar"})
+    assert resp.status_code == 401
+
+
+def test_mine_empty_when_nothing_reported(client: TestClient, seeded) -> None:
+    resp = _mine(client)
+    assert resp.status_code == 200
+    assert resp.json() == {"reported": []}
+
+
+def test_mine_includes_a_report_just_submitted_for_both_voices(client: TestClient, seeded) -> None:
+    for voice in ("female", "male"):
+        assert client.post("/api/audio_report", json=_payload(voice=voice), headers=AUTH).status_code == 200
+
+    reported = _mine(client).json()["reported"]
+
+    assert sorted(reported, key=lambda c: c["voice"]) == [
+        {"voice": "female", "form_key": EXAMPLE_KEY},
+        {"voice": "male", "form_key": EXAMPLE_KEY},
+    ]
+
+
+def test_mine_does_not_return_another_users_vote(client: TestClient, seeded) -> None:
+    from core.audio_report_service import _vote_doc_id
+
+    other_id = _vote_doc_id("someone-else", "es", "es_hablar", "female", EXAMPLE_KEY)
+    seeded.seed("audio_report_votes", {other_id: {"language": "es", "verb_id": "es_hablar"}})
+
+    resp = _mine(client)
+
+    assert resp.json() == {"reported": []}
+    assert "someone-else" not in resp.text
+
+
+def test_mine_rejects_bad_language(client: TestClient, seeded) -> None:
+    assert _mine(client, language="zz").status_code == 400
+
+
+def test_mine_reads_only_this_users_votes_for_this_verb(client: TestClient, seeded) -> None:
+    other_verb = {
+        "uid": "local-dev-user",
+        "language": "es",
+        "verb_id": "es_comer",
+        "voice": "female",
+        "form_key": "x_0",
+    }
+    seeded._docs["audio_report_votes/other_verb_vote"] = other_verb
+    client.post("/api/audio_report", json=_payload(), headers=AUTH)
+
+    reported = _mine(client).json()["reported"]
+
+    assert reported == [{"voice": "female", "form_key": EXAMPLE_KEY}]
+    assert all("uid" not in clip for clip in reported)
+
+
+def test_vote_doc_stores_uid_but_aggregate_does_not(client: TestClient, seeded) -> None:
+    client.post("/api/audio_report", json=_payload(), headers=AUTH)
+
+    votes = [doc for path, doc in seeded._docs.items() if path.startswith("audio_report_votes/")]
+    assert len(votes) == 1 and votes[0]["uid"]
+    assert "uid" not in str(_aggregate(seeded)).lower()
