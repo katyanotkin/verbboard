@@ -9,6 +9,7 @@ the spot (verb_search_hits).
 
 from __future__ import annotations
 
+from datetime import date
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -220,11 +221,9 @@ def test_practice_event_endpoint_accepts_gate_shown(client: TestClient) -> None:
 
 
 def test_admin_summary_counts_gate_impressions_and_the_ones_that_signed_in(fake_db) -> None:
-    from datetime import UTC, datetime
+    from core import admin_report_service
 
-    from core import admin_feedback_service
-
-    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    today = "2026-10-03"
     fake_db.seed(
         "analytics_sessions",
         {
@@ -234,6 +233,6 @@ def test_admin_summary_counts_gate_impressions_and_the_ones_that_signed_in(fake_
             "d": {"date": today, "device_type": "bot", "practice_gate_shown": True, "uid": "u3"},
         },
     )
-    engagement = admin_feedback_service._read_sessions_summary(days=60)["engagement"]
+    engagement = admin_report_service._read_window(date(2026, 10, 3), date(2026, 10, 3), set())["engagement"]
     assert engagement["practice_gate_shown"] == 2
     assert engagement["practice_gate_then_signed_in"] == 1

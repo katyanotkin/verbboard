@@ -178,7 +178,7 @@ AI model routing: Haiku (`claude-haiku-4-5-20251001`) for English, Sonnet (`clau
 - Smoke tests and Playwright E2E validation gates
 - Audio cache audit tooling
 - Deterministic verb ID validation and collision audits
-- Production telemetry and usage analytics; the admin Feedback page shows a usage summary (bots counted separately), engagement (Verb of the Day clicks, practice, sign-in gate), UI-language picks and top searched verbs
+- Production telemetry and usage analytics; the admin Reports page (`/admin/reports`, date-ranged) shows a usage summary (bots counted separately), engagement (Verb of the Day clicks, practice, sign-in gate), UI-language picks and top searched verbs
 - Admin Reports page (`/admin/reports`): pick a from/to date range (or "since invite"), see registered-user and Google Play app (TWA) session counts and percentages, a daily trend, and compare against the previous period
 
 ---

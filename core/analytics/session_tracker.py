@@ -269,7 +269,7 @@ def _record_votd_clicked(fingerprint: str, date: str) -> None:
         snapshot = doc_ref.get()
         # No session doc means the click can't be paired with a home view (e.g.
         # it landed after a UTC date rollover); writing would create a stub
-        # doc with no device_type/language that skews get_device_mix().
+        # doc with no device_type/language that skews the admin report.
         if not snapshot.exists or snapshot.to_dict().get("votd_clicked"):
             return
         doc_ref.set({"votd_clicked": True}, merge=True)

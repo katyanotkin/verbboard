@@ -11,15 +11,11 @@ Covers:
 - list_feedback_facets: sorted/deduped/empty-excluded pages/languages/sources
 - _excluded_uids: short-circuits Firestore when no emails configured; queries
   `users` by email otherwise
-- _read_sessions_summary: excluded uids dropped from every counter; date
-  cutoff filtering; logged_in/verb_viewed truthiness gating
 - _read_practice_summary: collection_group("languages") path filtering,
   empty-badges skip, per-uid dedup across language subcollections
-- _read_users_summary: new/active-60d/active-7d cutoffs from real datetimes;
-  excluded uids dropped from total
 - get_active_poll_meta: current real core.polls config, plus the unset-poll
   short-circuit
-- get_device_mix: composed integration shape across all three summaries
+- _read_search_hits_summary: autogen split (usage stats themselves live in core/admin_report_service.py)
 """
 
 from __future__ import annotations
@@ -265,74 +261,6 @@ def test_excluded_uids_queries_users_by_email(monkeypatch, fake_db) -> None:
     assert admin_feedback_service._excluded_uids() == {"uid_owner", "uid_tester"}
 
 
-# ── _read_sessions_summary ───────────────────────────────────────────────────
-
-
-def test_read_sessions_summary_drops_excluded_uids_from_every_counter(fake_db) -> None:
-    fake_db.seed(
-        "analytics_sessions",
-        {
-            "s1": {
-                "date": _date_str(5),
-                "uid": "excluded_uid",
-                "device_type": "mobile",
-                "language": "es",
-                "ui_lang": "en",
-                "verb_viewed": True,
-            },
-            "s2": {
-                "date": _date_str(5),
-                "uid": "kept_uid",
-                "device_type": "desktop",
-                "language": "ru",
-                "ui_lang": "ru",
-                "verb_viewed": True,
-            },
-        },
-    )
-
-    summary = admin_feedback_service._read_sessions_summary(days=60, excluded_uids={"excluded_uid"})
-
-    assert summary["total_sessions"] == 1
-    assert summary["logged_in_sessions"] == 1
-    assert summary["verb_viewed_sessions"] == 1
-    assert summary["by_device"] == {"desktop": 1}
-    assert summary["by_language"] == {"ru": 1}
-    assert summary["by_ui_lang"] == {"ru": 1}
-
-
-def test_read_sessions_summary_excludes_sessions_before_cutoff(fake_db) -> None:
-    fake_db.seed(
-        "analytics_sessions",
-        {
-            "in_window": {"date": _date_str(5), "device_type": "mobile", "language": "en", "ui_lang": "en"},
-            "out_of_window": {"date": _date_str(90), "device_type": "mobile", "language": "en", "ui_lang": "en"},
-        },
-    )
-
-    summary = admin_feedback_service._read_sessions_summary(days=60)
-
-    assert summary["total_sessions"] == 1
-    assert summary["by_device"] == {"mobile": 1}
-
-
-def test_read_sessions_summary_logged_in_and_verb_viewed_require_truthy_fields(fake_db) -> None:
-    fake_db.seed(
-        "analytics_sessions",
-        {
-            "anon_no_view": {"date": _date_str(1), "uid": "", "verb_viewed": False},
-            "anon_with_view": {"date": _date_str(1), "uid": "", "verb_viewed": True},
-            "logged_in": {"date": _date_str(1), "uid": "u1", "verb_viewed": False},
-        },
-    )
-
-    summary = admin_feedback_service._read_sessions_summary(days=60)
-
-    assert summary["total_sessions"] == 3
-    assert summary["logged_in_sessions"] == 1
-    assert summary["verb_viewed_sessions"] == 1
-
-
 # ── _read_practice_summary ───────────────────────────────────────────────────
 
 
@@ -375,47 +303,6 @@ def test_read_practice_summary_drops_excluded_uids(fake_db) -> None:
     assert summary["practice_by_language"] == {"en": 1}
 
 
-# ── _read_users_summary ──────────────────────────────────────────────────────
-
-
-def test_read_users_summary_computes_cutoffs_from_real_datetimes(fake_db) -> None:
-    fake_db.seed(
-        "users",
-        {
-            # new (created 5d ago), active in both windows (updated 2d ago)
-            "u_new_active": {"created_at": _dt(5), "updated_at": _dt(2)},
-            # not new (created 100d ago), active in 60d window only (updated 10d ago)
-            "u_old_active60": {"created_at": _dt(100), "updated_at": _dt(10)},
-            # not new, not active in either window
-            "u_dormant": {"created_at": _dt(200), "updated_at": _dt(200)},
-        },
-    )
-
-    summary = admin_feedback_service._read_users_summary(days=60)
-
-    assert summary["total"] == 3
-    assert summary["new_last_60d"] == 1
-    assert summary["active_last_60d"] == 2
-    assert summary["active_last_7d"] == 1
-
-
-def test_read_users_summary_drops_excluded_uids_from_total(fake_db) -> None:
-    fake_db.seed(
-        "users",
-        {
-            "kept": {"created_at": _dt(1), "updated_at": _dt(1)},
-            "excluded": {"created_at": _dt(1), "updated_at": _dt(1)},
-        },
-    )
-
-    summary = admin_feedback_service._read_users_summary(days=60, excluded_uids={"excluded"})
-
-    assert summary["total"] == 1
-    assert summary["new_last_60d"] == 1
-    assert summary["active_last_60d"] == 1
-    assert summary["active_last_7d"] == 1
-
-
 # ── get_active_poll_meta ──────────────────────────────────────────────────────
 
 
@@ -443,78 +330,7 @@ def test_get_active_poll_meta_reflects_current_polls_config() -> None:
     assert "mobile_ux" in {option["value"] for option in meta["options"]}
 
 
-# ── get_device_mix (integration) ─────────────────────────────────────────────
-
-
-def test_get_device_mix_composes_all_summaries(monkeypatch, fake_db) -> None:
-    monkeypatch.setattr(admin_feedback_service, "load_settings", lambda: SimpleNamespace(analytics_excluded_emails=()))
-
-    fake_db.seed(
-        "analytics_sessions",
-        {
-            "s1": {
-                "date": _date_str(1),
-                "uid": "u1",
-                "device_type": "mobile",
-                "language": "es",
-                "ui_lang": "en",
-                "verb_viewed": True,
-            },
-            "s2": {
-                "date": _date_str(1),
-                "uid": "",
-                "device_type": "desktop",
-                "language": "ru",
-                "ui_lang": "ru",
-                "verb_viewed": False,
-            },
-        },
-    )
-    fake_db.seed("users", {"u1": {"created_at": _dt(5), "updated_at": _dt(10)}})
-    fake_db.seed_path("user_practice/u1/languages/es", {"badges": [3], "language": "es"})
-
-    result = admin_feedback_service.get_device_mix(days=60)
-
-    assert result["days"] == 60
-    assert result["total_sessions"] == 2
-    assert result["logged_in_sessions"] == 1
-    assert result["verb_viewed_sessions"] == 1
-    assert result["by_device"] == {"mobile": 1, "desktop": 1}
-    assert result["by_language"] == {"es": 1, "ru": 1}
-    assert result["by_ui_lang"] == {"en": 1, "ru": 1}
-
-    assert result["users"]["total"] == 1
-    assert result["users"]["new_last_60d"] == 1
-    assert result["users"]["active_last_60d"] == 1
-    assert result["users"]["active_last_7d"] == 0
-
-    assert result["practice"]["practice_users_total"] == 1
-    assert result["practice"]["practice_by_language"] == {"es": 1}
-
-
-# ── engagement flags and search hits ─────────────────────────────────────────
-
-
-def test_read_sessions_summary_counts_engagement_flags(fake_db) -> None:
-    fake_db.seed(
-        "analytics_sessions",
-        {
-            "s1": {"date": _date_str(1), "home_viewed": True, "votd_clicked": True, "practice_started": True},
-            "s2": {"date": _date_str(1), "home_viewed": True, "practice_started": True, "practice_completed": True},
-            "s3": {"date": _date_str(1), "verb_viewed": True},
-        },
-    )
-
-    summary = admin_feedback_service._read_sessions_summary(days=60)
-
-    assert summary["engagement"] == {
-        "home_viewed": 2,
-        "votd_clicked": 1,
-        "practice_started": 2,
-        "practice_completed": 1,
-        "practice_gate_shown": 0,
-        "practice_gate_then_signed_in": 0,
-    }
+# ── search hits ─────────────────────────────────────────
 
 
 def test_read_search_hits_summary_splits_autogen_verbs(fake_db) -> None:
@@ -552,39 +368,3 @@ def test_read_search_hits_summary_empty(fake_db) -> None:
         "autogen_hits_total": 0,
         "top": [],
     }
-
-
-def test_read_sessions_summary_counts_bots_separately(fake_db) -> None:
-    fake_db.seed(
-        "analytics_sessions",
-        {
-            "s1": {"date": _date_str(1), "device_type": "bot", "language": "es", "verb_viewed": True},
-            "s2": {"date": _date_str(1), "device_type": "bot", "home_viewed": True},
-            "s3": {"date": _date_str(1), "device_type": "mobile", "language": "ru", "home_viewed": True},
-        },
-    )
-
-    summary = admin_feedback_service._read_sessions_summary(days=60)
-
-    assert summary["bot_sessions"] == 2
-    assert summary["total_sessions"] == 1
-    assert summary["by_device"] == {"mobile": 1}
-    assert summary["by_language"] == {"ru": 1}
-    assert summary["verb_viewed_sessions"] == 0
-    assert summary["engagement"]["home_viewed"] == 1
-
-
-def test_read_sessions_summary_counts_ui_language_picks_excluding_bots(fake_db) -> None:
-    fake_db.seed(
-        "analytics_sessions",
-        {
-            "s1": {"date": _date_str(1), "device_type": "desktop", "ui_lang": "he", "ui_lang_selected": "he"},
-            "s2": {"date": _date_str(1), "device_type": "mobile", "ui_lang": "he"},
-            "s3": {"date": _date_str(1), "device_type": "mobile", "ui_lang": "es", "ui_lang_selected": "es"},
-            "s4": {"date": _date_str(1), "device_type": "bot", "ui_lang": "he", "ui_lang_selected": "he"},
-        },
-    )
-
-    summary = admin_feedback_service._read_sessions_summary(days=60)
-
-    assert summary["ui_lang_selected"] == {"he": 1, "es": 1}

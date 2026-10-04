@@ -145,124 +145,7 @@
     `;
   }
 
-  function renderUsageSummary(deviceMix) {
-    const dims = [
-      { label: "Devices",          data: deviceMix?.by_device   || {} },
-      { label: "Language studied", data: deviceMix?.by_language || {} },
-      { label: "UI language",      data: deviceMix?.by_ui_lang  || {} },
-    ];
-
-    const totalSessions = deviceMix?.total_sessions ?? 0;
-    if (!totalSessions) return "";
-
-    const u = deviceMix?.users || {};
-    const pr = deviceMix?.practice || {};
-    const loggedIn = deviceMix?.logged_in_sessions ?? null;
-    const anon = loggedIn != null ? totalSessions - loggedIn : null;
-    const loginPct = totalSessions && loggedIn != null ? Math.round((loggedIn / totalSessions) * 100) : "—";
-    const verbViewed = deviceMix?.verb_viewed_sessions ?? null;
-    const engagedPct = totalSessions && verbViewed != null ? Math.round((verbViewed / totalSessions) * 100) : "—";
-
-    function dimTable(data) {
-      const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
-      const total = sorted.reduce((s, [, n]) => s + n, 0);
-      const rows = sorted.map(([key, n]) => {
-        const pct = total ? Math.round((n / total) * 100) : 0;
-        return `<tr>
-          <td style="padding:1px 8px 1px 0;color:#374151;">${escapeHtml(key)}</td>
-          <td style="padding:1px 8px 1px 0;text-align:right;color:#374151;">${n}</td>
-          <td style="padding:1px 0;color:#6b7280;">${pct}%</td>
-        </tr>`;
-      }).join("");
-      return `<table style="border-collapse:collapse;font-size:12px;">${rows}</table>`;
-    }
-
-    function statRow(label, value) {
-      return `<tr>
-        <td style="padding:1px 8px 1px 0;color:#374151;">${label}</td>
-        <td style="padding:1px 0;text-align:right;color:#374151;">${value}</td>
-      </tr>`;
-    }
-
-    const usersTable = `<table style="border-collapse:collapse;font-size:12px;">
-      ${statRow("Total registered", u.total ?? "—")}
-      ${statRow("New (60d)", u.new_last_60d ?? "—")}
-      ${statRow("Active (7d)", u.active_last_7d ?? "—")}
-      ${statRow("Active (60d)", u.active_last_60d ?? "—")}
-      ${statRow("Sessions logged-in", loggedIn != null ? `${loggedIn} (${loginPct}%)` : "—")}
-      ${statRow("Sessions anon", anon != null ? anon : "—")}
-      ${statRow("Viewed a verb", verbViewed != null ? `${verbViewed} (${engagedPct}%)` : "—")}
-      ${statRow("No engagement", verbViewed != null ? `${totalSessions - verbViewed} (${100 - engagedPct}%)` : "—")}
-    </table>`;
-
-    const practiceSection = pr.practice_users_total != null ? `
-      <div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Practice users</div>
-        <table style="border-collapse:collapse;font-size:12px;">
-          ${statRow("Total ever", pr.practice_users_total ?? "—")}
-          ${Object.entries(pr.practice_by_language || {}).sort((a, b) => b[1] - a[1]).map(([lang, n]) => statRow(lang, n)).join("")}
-        </table>
-      </div>
-    ` : "";
-
-    const eng = deviceMix?.engagement || {};
-    const sh = deviceMix?.search_hits || {};
-    const votdRate = eng.home_viewed ? Math.round(((eng.votd_clicked || 0) / eng.home_viewed) * 100) : "—";
-    const topHits = (sh.top || []).map(row =>
-      statRow(escapeHtml(row.verb_id) + (row.autogen ? " (generated)" : ""), row.hits)
-    ).join("");
-    const engagementSection = `
-      <div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Engagement</div>
-        <table style="border-collapse:collapse;font-size:12px;">
-          ${statRow("Home viewed*", eng.home_viewed ?? "—")}
-          ${statRow("Verb of the Day clicked*", `${eng.votd_clicked ?? "—"} (${votdRate}%)`)}
-          ${statRow("Practice started**", eng.practice_started ?? "—")}
-          ${statRow("Practice completed**", eng.practice_completed ?? "—")}
-          ${statRow("Practice gate shown****", eng.practice_gate_shown ?? "—")}
-          ${statRow("...then signed in****", eng.practice_gate_then_signed_in ?? "—")}
-          ${statRow("UI language picked***", Object.entries(deviceMix?.ui_lang_selected || {}).map(([k, n]) => `${escapeHtml(k)} ${n}`).join(", ") || "—")}
-          ${statRow("Generated verbs", sh.autogen_verbs_total ?? "—")}
-          ${statRow("Generated, searched again", sh.autogen_verbs_searched_again ?? "—")}
-          ${statRow("Repeat searches (generated)", sh.autogen_hits_total ?? "—")}
-        </table>
-        <div style="font-size:11px;color:#6b7280;margin-top:4px;">* since 2026-09-24 &nbsp; ** since 2026-09-16 &nbsp; practice gate counts (****) since the gate ships; generated/search counts: all time &nbsp; *** deliberate picks in the dropdown (since 2026-09-25)</div>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Top searched verbs</div>
-        <table style="border-collapse:collapse;font-size:12px;">${topHits || statRow("none yet", "")}</table>
-      </div>
-    `;
-
-    const sections = dims.map(({ label, data }) => `
-      <div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">${label}</div>
-        ${dimTable(data)}
-      </div>
-    `).join("");
-
-    return `
-      <div class="card" style="padding:14px 16px;margin-bottom:12px;background:#f1f5f9;">
-        <div style="font-weight:700;margin-bottom:10px;">
-          Usage summary · last ${escapeHtml(String(deviceMix.days || 60))} days · ${escapeHtml(String(totalSessions))} sessions
-        </div>
-        <div style="font-size:11px;color:#6b7280;margin:-6px 0 10px;">
-          ${escapeHtml(String(deviceMix.bot_sessions ?? 0))} bot sessions (self-identified crawlers/scanners) counted separately, not included below; classified from 2026-09-24 on, earlier sessions are not split out
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,auto));gap:16px 24px;align-items:start;">
-          <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">Users</div>
-            ${usersTable}
-          </div>
-          ${sections}
-          ${practiceSection}
-          ${engagementSection}
-        </div>
-      </div>
-    `;
-  }
-
-  function renderFeedback(rows, pollRows, pollMeta, deviceMix) {
+  function renderFeedback(rows, pollRows, pollMeta) {
     const feedbackList = document.getElementById("feedback-list");
     if (!feedbackList) return;
 
@@ -276,10 +159,8 @@
     }
 
     const pollSummary = renderPollSummary(pollRows, pollMeta);
-    const deviceSummary = renderUsageSummary(deviceMix);
 
     feedbackList.innerHTML =
-      deviceSummary +
       pollSummary +
       rows.map(row => {
         const hiddenBadge = row.hidden
@@ -350,8 +231,7 @@
     renderFeedback(
       payload.feedback || [],
       payload.poll_feedback || [],
-      payload.poll_meta || {},
-      payload.device_mix || {}
+      payload.poll_meta || {}
     );
   }
 

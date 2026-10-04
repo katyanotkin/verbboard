@@ -87,12 +87,56 @@
       }).join("") + "</tbody></table>";
   }
 
+  var ENGAGEMENT_LABELS = {
+    verb_viewed: "Viewed a verb",
+    home_viewed: "Home viewed (since 2026-09-24)",
+    votd_clicked: "Verb of the Day clicked (since 2026-09-24)",
+    practice_started: "Practice started",
+    practice_completed: "Practice completed",
+    practice_gate_shown: "Practice gate shown",
+    practice_gate_then_signed_in: "Gate shown, then signed in"
+  };
+
   function engagementLabel(flag) {
-    return flag.replace(/_/g, " ");
+    return ENGAGEMENT_LABELS[flag] || flag.replace(/_/g, " ");
+  }
+
+  function pctOf(part, whole) {
+    return whole ? (Math.round(1000 * part / whole) / 10) + "%" : "-";
+  }
+
+  function breakdownRows(counts, total) {
+    return Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).map(function (key) {
+      return [key, counts[key], pctOf(counts[key], total)];
+    });
+  }
+
+  function allTimeHtml(allTime) {
+    var practice = allTime.practice || {};
+    var hits = allTime.search_hits || {};
+    var practiceRows = [["Practice users (total ever)", practice.practice_users_total]];
+    var byLang = practice.practice_by_language || {};
+    Object.keys(byLang).sort(function (a, b) { return byLang[b] - byLang[a]; }).forEach(function (lang) {
+      practiceRows.push(["Practice users: " + lang, byLang[lang]]);
+    });
+    var generatedRows = [
+      ["Generated verbs", hits.autogen_verbs_total],
+      ["Generated, searched again", hits.autogen_verbs_searched_again],
+      ["Repeat searches (generated)", hits.autogen_hits_total]
+    ];
+    var topRows = (hits.top || []).map(function (row) {
+      return [row.verb_id + (row.autogen ? " (generated)" : ""), row.hits];
+    });
+    return '<div class="card card-body"><h2>All time</h2>' +
+      '<p class="cell-meta">Whole-collection numbers; they ignore the date range above.</p>' +
+      table(["Practice", "Count"], practiceRows) +
+      table(["Generated verbs", "Count"], generatedRows) +
+      table(["Top searched verbs", "Hits"], topRows) + "</div>";
   }
 
   function render(report) {
-    var reg = report.registered, twa = report.twa;
+    var reg = report.registered, twa = report.twa, users = report.users, eng = report.engagement;
+    var total = report.non_bot_sessions;
     var html = '<div class="card card-body"><div class="cell-meta">' +
       escapeHtml(report.range.date_from + " to " + report.range.date_to + " (" + report.range.days + " days)") +
       " &middot; " + escapeHtml(report.non_bot_sessions) + " non-bot sessions, " + escapeHtml(report.bot_sessions) +
@@ -111,6 +155,17 @@
         deltaHtml(report, "non_bot_sessions", false)) +
       "</div>";
 
+    html += '<div class="stats stats-4">' +
+      tile("Registered users", String(users.total_registered), "all time, excluding own accounts", "") +
+      tile("Active users", String(users.active_in_range), "profile updated in range",
+        deltaHtml(report, "users.active_in_range", false)) +
+      tile("Verb of the Day click rate", pctOf(eng.votd_clicked, eng.home_viewed),
+        eng.votd_clicked + " clicks / " + eng.home_viewed + " home views",
+        deltaHtml(report, "engagement.votd_rate", true)) +
+      tile("Practice completed", String(eng.practice_completed), eng.practice_started + " started",
+        deltaHtml(report, "engagement.practice_completed", false)) +
+      "</div>";
+
     html += '<div class="card card-body"><p class="cell-meta">' + escapeHtml(twa.note) +
       " Tracking since " + escapeHtml(twa.tracking_since) + ".</p></div>";
 
@@ -124,6 +179,14 @@
     });
     html += '<div class="card card-body"><h2>Engagement (sessions)</h2>' + table(["Signal", "Sessions"], engagementRows) + "</div>";
     html += '<div class="card card-body"><h2>Devices</h2>' + table(["Device", "Sessions"], deviceRows) + "</div>";
+    html += '<div class="card card-body"><h2>Language studied</h2>' +
+      table(["Language", "Sessions", "% of non-bot"], breakdownRows(report.by_language, total)) + "</div>";
+    html += '<div class="card card-body"><h2>UI language</h2>' +
+      table(["UI language", "Sessions", "% of non-bot"], breakdownRows(report.by_ui_lang, total)) +
+      '<p class="cell-meta">Deliberate picks in the home page dropdown (since 2026-09-25): ' +
+      escapeHtml(Object.keys(report.ui_lang_selected).map(function (k) { return k + " " + report.ui_lang_selected[k]; }).join(", ") || "none") +
+      "</p></div>";
+    html += allTimeHtml(report.all_time || {});
     body.innerHTML = html;
   }
 

@@ -155,3 +155,73 @@ def test_range_of_exactly_366_days_is_allowed(fake_db) -> None:
     report = build_report("2025-10-03", "2026-10-03")  # 366 days inclusive
 
     assert report["range"]["days"] == 366
+
+
+def test_language_breakdowns_ui_picks_and_engagement_flags(fake_db) -> None:
+    _session(
+        fake_db,
+        "a",
+        "2026-10-02",
+        language="es",
+        ui_lang="en",
+        home_viewed=True,
+        votd_clicked=True,
+        practice_started=True,
+    )
+    _session(
+        fake_db,
+        "b",
+        "2026-10-02",
+        language="ru",
+        ui_lang="ru",
+        ui_lang_selected="ru",
+        home_viewed=True,
+        practice_started=True,
+        practice_completed=True,
+        verb_viewed=True,
+    )
+    _session(fake_db, "c", "2026-10-02", device_type="bot", language="es", home_viewed=True, ui_lang_selected="he")
+
+    report = build_report("2026-10-02", "2026-10-02")
+
+    assert report["by_language"] == {"es": 1, "ru": 1}
+    assert report["by_ui_lang"] == {"en": 1, "ru": 1}
+    assert report["ui_lang_selected"] == {"ru": 1}
+    assert report["engagement"] == {
+        "verb_viewed": 1,
+        "home_viewed": 2,
+        "votd_clicked": 1,
+        "practice_started": 2,
+        "practice_completed": 1,
+        "practice_gate_shown": 0,
+        "practice_gate_then_signed_in": 0,
+    }
+
+
+def test_users_block_counts_total_new_and_active(fake_db, monkeypatch) -> None:
+    monkeypatch.setattr(admin_report_service, "_excluded_uids", lambda: {"me"})
+    in_range = datetime(2026, 10, 2, 12, tzinfo=UTC)
+    old = datetime(2026, 1, 1, tzinfo=UTC)
+    fake_db._docs["users/new_active"] = {"created_at": in_range, "updated_at": in_range}
+    fake_db._docs["users/old_active"] = {"created_at": old, "updated_at": in_range}
+    fake_db._docs["users/dormant"] = {"created_at": old, "updated_at": old}
+    fake_db._docs["users/me"] = {"created_at": in_range, "updated_at": in_range}
+
+    report = build_report("2026-10-01", "2026-10-03", compare=True)
+
+    assert report["users"] == {"total_registered": 3, "active_in_range": 2}
+    assert report["registered"]["new_registrations"] == 1
+    assert "users.total_registered" not in report["deltas"]
+    assert report["deltas"]["users.active_in_range"]["current"] == 2
+
+
+def test_all_time_section_ignores_range_and_excluded_uids(fake_db, monkeypatch) -> None:
+    monkeypatch.setattr(admin_report_service, "_excluded_uids", lambda: {"me"})
+    fake_db.seed_path("user_practice/u1/languages/es", {"badges": [3], "language": "es"})
+    fake_db.seed_path("user_practice/me/languages/ru", {"badges": [3], "language": "ru"})
+    fake_db.seed("verb_search_hits", {"es_es_correr": {"verb_id": "es_correr", "hits": 9}})
+
+    report = build_report("2000-01-01", "2000-01-02")
+
+    assert report["all_time"]["practice"] == {"practice_users_total": 1, "practice_by_language": {"es": 1}}
+    assert report["all_time"]["search_hits"]["top"][0]["verb_id"] == "es_correr"

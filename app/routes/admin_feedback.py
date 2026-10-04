@@ -7,7 +7,6 @@ from fastapi.templating import Jinja2Templates
 from app.routes.admin_utils import ADMIN_PREFIX, require_admin_api, require_admin_page
 from core.admin_feedback_service import (
     get_active_poll_meta,
-    get_device_mix,
     hide_feedback_by_id,
     list_feedback_facets,
     list_feedback_rows,
@@ -74,7 +73,6 @@ async def list_feedback(
             "feedback": feedback_rows,
             "poll_feedback": poll_feedback_rows,
             "poll_meta": get_active_poll_meta(),
-            "device_mix": get_device_mix(days=60),
         }
     )
 

@@ -12,7 +12,12 @@ from collections import Counter
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from core.admin_feedback_service import _ENGAGEMENT_FLAGS, _excluded_uids
+from core.admin_feedback_service import (
+    _ENGAGEMENT_FLAGS,
+    _excluded_uids,
+    _read_practice_summary,
+    _read_search_hits_summary,
+)
 from core.storage.firestore_db import get_db
 
 MAX_RANGE_DAYS = 366
@@ -21,9 +26,8 @@ MAX_RANGE_DAYS = 366
 # date; earlier sessions are covered by the legacy approximation below.
 TWA_TRACKING_SINCE = "2026-10-03"
 
-_REPORT_FLAGS = ("verb_viewed",) + tuple(
-    f for f in _ENGAGEMENT_FLAGS if f.startswith("practice_") and f != "practice_gate_shown"
-)
+_REPORT_FLAGS = ("verb_viewed",) + tuple(_ENGAGEMENT_FLAGS)
+_GATE_SIGNED_IN = "practice_gate_then_signed_in"
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _ANDROID_APP_REFERRER = "android-app://"
 
@@ -63,6 +67,9 @@ def _read_window(start: date, end: date, excluded_uids: set[str]) -> dict[str, A
     twa_users: set[str] = set()
     flags: Counter[str] = Counter()
     by_device: Counter[str] = Counter()
+    by_language: Counter[str] = Counter()
+    by_ui_lang: Counter[str] = Counter()
+    ui_lang_selected: Counter[str] = Counter()
     daily: dict[str, dict[str, int]] = {}
     day = start
     while day <= end:
@@ -80,6 +87,10 @@ def _read_window(start: date, end: date, excluded_uids: set[str]) -> dict[str, A
             continue
         non_bot += 1
         by_device[device_type] += 1
+        by_language[str(data.get("language") or "none")] += 1
+        by_ui_lang[str(data.get("ui_lang") or "none")] += 1
+        if data.get("ui_lang_selected"):
+            ui_lang_selected[str(data["ui_lang_selected"])] += 1
         row = daily.get(str(data.get("date") or ""))
         if row is not None:
             row["sessions"] += 1
@@ -100,16 +111,25 @@ def _read_window(start: date, end: date, excluded_uids: set[str]) -> dict[str, A
         for flag in _REPORT_FLAGS:
             if data.get(flag):
                 flags[flag] += 1
+        if data.get("practice_gate_shown") and uid:
+            flags[_GATE_SIGNED_IN] += 1
 
     new_registrations = 0
+    total_registered = 0
+    active_in_range = 0
     range_start = datetime.combine(start, datetime.min.time(), tzinfo=UTC)
     range_end = datetime.combine(end, datetime.max.time(), tzinfo=UTC)
-    user_docs = (
-        db.collection("users").where("created_at", ">=", range_start).where("created_at", "<=", range_end).stream()
-    )
-    for user_doc in user_docs:
-        if user_doc.id not in excluded_uids:
+    for user_doc in db.collection("users").stream():
+        if user_doc.id in excluded_uids:
+            continue
+        total_registered += 1
+        user_data = user_doc.to_dict() or {}
+        created_at = user_data.get("created_at")
+        updated_at = user_data.get("updated_at")
+        if created_at and range_start <= created_at <= range_end:
             new_registrations += 1
+        if updated_at and range_start <= updated_at <= range_end:
+            active_in_range += 1
 
     return {
         "range": {"date_from": start.isoformat(), "date_to": end.isoformat(), "days": (end - start).days + 1},
@@ -133,7 +153,11 @@ def _read_window(start: date, end: date, excluded_uids: set[str]) -> dict[str, A
                 "(android-app:// referrer or a TWA sign-in tap)."
             ),
         },
-        "engagement": {flag: flags[flag] for flag in _REPORT_FLAGS},
+        "users": {"total_registered": total_registered, "active_in_range": active_in_range},
+        "engagement": {flag: flags[flag] for flag in (*_REPORT_FLAGS, _GATE_SIGNED_IN)},
+        "ui_lang_selected": dict(ui_lang_selected),
+        "by_language": dict(by_language),
+        "by_ui_lang": dict(by_ui_lang),
         "daily": [{"date": day_key, **counts} for day_key, counts in daily.items()],
         "by_device": dict(by_device),
     }
@@ -148,8 +172,14 @@ def _flat_metrics(report: dict[str, Any]) -> dict[str, float]:
         metrics[f"registered.{key}"] = value
     for key in ("sessions", "pct", "signed_in_users", "legacy_approximate_sessions"):
         metrics[f"twa.{key}"] = report["twa"][key]
+    # total_registered is all-time, so its window-over-window delta is always 0.
+    metrics["users.active_in_range"] = report["users"]["active_in_range"]
     for key, value in report["engagement"].items():
         metrics[f"engagement.{key}"] = value
+    home_viewed = report["engagement"].get("home_viewed", 0)
+    metrics["engagement.votd_rate"] = (
+        round(report["engagement"].get("votd_clicked", 0) / home_viewed * 100, 1) if home_viewed else 0.0
+    )
     return metrics
 
 
@@ -163,6 +193,11 @@ def build_report(date_from: str, date_to: str, compare: bool = False) -> dict[st
 
     excluded_uids = _excluded_uids()
     report = _read_window(start, end, excluded_uids)
+    # Whole-collection figures that cannot be date-ranged.
+    report["all_time"] = {
+        "practice": _read_practice_summary(excluded_uids=excluded_uids),
+        "search_hits": _read_search_hits_summary(),
+    }
 
     if compare:
         length = (end - start).days + 1

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from core.polls import ACTIVE_POLL_ID, POLL_OPTIONS, POLL_QUESTIONS
@@ -193,64 +192,6 @@ def _read_search_hits_summary() -> dict[str, Any]:
     }
 
 
-def _read_sessions_summary(*, days: int = 60, excluded_uids: set[str] | None = None) -> dict[str, Any]:
-    excluded_uids = excluded_uids or set()
-    db = get_db()
-    cutoff_date = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%d")
-    docs = db.collection("analytics_sessions").where("date", ">=", cutoff_date).stream()
-
-    by_device: Counter[str] = Counter()
-    by_language: Counter[str] = Counter()
-    by_ui_lang: Counter[str] = Counter()
-    total = 0
-    bot_sessions = 0
-    logged_in = 0
-    verb_viewed = 0
-    flag_counts: Counter[str] = Counter()
-    ui_lang_selected: Counter[str] = Counter()
-
-    for doc in docs:
-        data = doc.to_dict() or {}
-        if data.get("uid") in excluded_uids:
-            continue
-        device_type = str(data.get("device_type") or "unknown").lower()
-        if device_type == "bot":
-            # Self-identified crawlers/scanners: counted apart, kept out of
-            # every other figure. Sessions before 2026-09-24 are unclassified.
-            bot_sessions += 1
-            continue
-        by_device[device_type] += 1
-        by_language[str(data.get("language") or "none")] += 1
-        by_ui_lang[str(data.get("ui_lang") or "none")] += 1
-        total += 1
-        if data.get("uid"):
-            logged_in += 1
-        if data.get("verb_viewed"):
-            verb_viewed += 1
-        if data.get("ui_lang_selected"):
-            ui_lang_selected[str(data["ui_lang_selected"])] += 1
-        if data.get("practice_gate_shown") and data.get("uid"):
-            flag_counts["practice_gate_then_signed_in"] += 1
-        for flag in _ENGAGEMENT_FLAGS:
-            if data.get(flag):
-                flag_counts[flag] += 1
-
-    return {
-        "total_sessions": total,
-        "bot_sessions": bot_sessions,
-        "logged_in_sessions": logged_in,
-        "verb_viewed_sessions": verb_viewed,
-        "engagement": {
-            **{flag: flag_counts[flag] for flag in _ENGAGEMENT_FLAGS},
-            "practice_gate_then_signed_in": flag_counts["practice_gate_then_signed_in"],
-        },
-        "ui_lang_selected": dict(ui_lang_selected),
-        "by_device": dict(by_device),
-        "by_language": dict(by_language),
-        "by_ui_lang": dict(by_ui_lang),
-    }
-
-
 def _read_practice_summary(*, excluded_uids: set[str] | None = None) -> dict[str, Any]:
     excluded_uids = excluded_uids or set()
     db = get_db()
@@ -276,59 +217,4 @@ def _read_practice_summary(*, excluded_uids: set[str] | None = None) -> dict[str
     return {
         "practice_users_total": len(users_with_practice),
         "practice_by_language": dict(by_language),
-    }
-
-
-def _read_users_summary(*, days: int = 60, excluded_uids: set[str] | None = None) -> dict[str, Any]:
-    excluded_uids = excluded_uids or set()
-    db = get_db()
-    now = datetime.now(UTC)
-    cutoff = now - timedelta(days=days)
-    cutoff_7 = now - timedelta(days=7)
-
-    docs = [doc for doc in db.collection("users").stream() if doc.id not in excluded_uids]
-    total = len(docs)
-    new_users = 0
-    active_60 = 0
-    active_7 = 0
-
-    for doc in docs:
-        data = doc.to_dict() or {}
-        created_at = data.get("created_at")
-        updated_at = data.get("updated_at")
-        if created_at and created_at >= cutoff:
-            new_users += 1
-        if updated_at and updated_at >= cutoff:
-            active_60 += 1
-        if updated_at and updated_at >= cutoff_7:
-            active_7 += 1
-
-    return {
-        "total": total,
-        "new_last_60d": new_users,
-        "active_last_7d": active_7,
-        "active_last_60d": active_60,
-    }
-
-
-def get_device_mix(*, days: int = 60) -> dict[str, Any]:
-    excluded_uids = _excluded_uids()
-    sessions = _read_sessions_summary(days=days, excluded_uids=excluded_uids)
-    users = _read_users_summary(days=days, excluded_uids=excluded_uids)
-    practice = _read_practice_summary(excluded_uids=excluded_uids)
-
-    return {
-        "days": days,
-        "total_sessions": sessions["total_sessions"],
-        "bot_sessions": sessions["bot_sessions"],
-        "logged_in_sessions": sessions["logged_in_sessions"],
-        "verb_viewed_sessions": sessions["verb_viewed_sessions"],
-        "engagement": sessions["engagement"],
-        "ui_lang_selected": sessions["ui_lang_selected"],
-        "search_hits": _read_search_hits_summary(),
-        "by_device": sessions["by_device"],
-        "by_language": sessions["by_language"],
-        "by_ui_lang": sessions["by_ui_lang"],
-        "users": users,
-        "practice": practice,
     }

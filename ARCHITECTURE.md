@@ -155,7 +155,7 @@ Middleware: `_PageViewMiddleware` in `app/main.py` intercepts GET requests to tr
 - Self-identified crawlers/scanners are stored with `device_type == "bot"` and counted separately in the admin usage summary (classified from 2026-09-24)
 - Set-once diagnostic flags on the session: `votd_clicked`, `home_viewed`, `practice_started`, `practice_completed`, `practice_gate_shown`, `sign_in_tapped_branch`, `ui_lang_selected` (latest deliberate UI-language pick); `verb_search_hits/{lang}_{verb_id}` counts searches that found an existing verb
 
-**Page view counting:** `analytics_daily` was dropped 2026-06-14 -- nothing writes to it anymore. `core/analytics/daily_counters.py` now holds only `_clean_lang()`, a language-code sanitizer reused by `session_tracker.py` and `api_analytics.py`. Usage stats are derived entirely from `analytics_sessions` via `get_device_mix()` in `core/admin_feedback_service.py`.
+**Page view counting:** `analytics_daily` was dropped 2026-06-14 -- nothing writes to it anymore. `core/analytics/daily_counters.py` now holds only `_clean_lang()`, a language-code sanitizer reused by `session_tracker.py` and `api_analytics.py`. Usage stats are derived entirely from `analytics_sessions` via `build_report()` in `core/admin_report_service.py`.
 
 ### Key data flows
 
