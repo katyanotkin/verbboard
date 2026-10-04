@@ -16,6 +16,7 @@ from app.routes.admin_utils import (
     require_admin_api,
 )
 from core.admin_logging import resolve_signal_label
+from core.languages.fr.forms import normalize_subjonctif
 from core.languages.ru.stress import strip_stress_marks
 from core.search_utils import normalize_text
 from core.settings import (
@@ -228,7 +229,9 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
 
     try:
         generated = json.loads(raw)
-        return strip_stress_marks(generated) if language == "ru" else generated
+        if language == "ru":
+            return strip_stress_marks(generated)
+        return normalize_subjonctif(generated) if language == "fr" else generated
     except json.JSONDecodeError as exc:
         logger.warning(
             "Claude returned invalid JSON for %s/%s: %s",

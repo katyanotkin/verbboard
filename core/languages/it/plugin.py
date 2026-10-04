@@ -24,6 +24,9 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     imperfetto = forms.get("imperfetto", {}) or {}
     futuro = forms.get("futuro", {}) or {}
     imperativo = forms.get("imperativo", {}) or {}
+    condizionale = forms.get("condizionale_presente", {}) or {}
+    congiuntivo_presente = forms.get("congiuntivo_presente", {}) or {}
+    congiuntivo_imperfetto = forms.get("congiuntivo_imperfetto", {}) or {}
 
     sections: list[dict[str, object]] = [
         {
@@ -40,6 +43,15 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
 
     if futuro:
         sections.append({"title": "board.tense_future", "rows": _tense_rows("fut", futuro)})
+
+    optional_tenses = (
+        (condizionale, "board.tense_conditional", "cond"),
+        (congiuntivo_presente, "board.tense_subjunctive_present", "congpres"),
+        (congiuntivo_imperfetto, "board.tense_subjunctive_imperfect", "congimp"),
+    )
+    for tense, title, prefix in optional_tenses:
+        if any(tense.get(slot) for slot in ("io", "tu", "lui", "noi", "voi", "loro")):
+            sections.append({"title": title, "rows": _tense_rows(prefix, tense)})
 
     if imperativo:
         imp_slots = [

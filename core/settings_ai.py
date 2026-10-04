@@ -177,6 +177,24 @@ ITALIAN (it)
       unless the verb is reflexive, in which case still default masculine singular.
     imperfetto:        { io, tu, lui, noi, voi, loro }
     futuro:            { io, tu, lui, noi, voi, loro }
+    condizionale_presente: { io, tu, lui, noi, voi, loro }  ← condizionale presente, same shape as presente,
+      bare forms. It is the FUTURO stem plus -ei, -esti, -ebbe, -emmo, -este, -ebbero, so it must agree
+      with the futuro you give: essere (sarei), avere (avrei), andare (andrei), fare (farei), potere
+      (potrei), volere (vorrei), sapere (saprei), dare (darei), stare (starei), dire (direi). Never copy
+      the imperfetto or the futuro. Reflexives keep the clitic ("mi chiamerei").
+    congiuntivo_presente: { io, tu, lui, noi, voi, loro }  ← congiuntivo presente, WITHOUT "che". Use the
+      true forms; io, tu and lui are identical: essere (sia, sia, sia, siamo, siate, siano), avere (abbia
+      ... abbiamo, abbiate, abbiano), andare (vada ... andiamo, andiate, vadano), fare (faccia ...
+      facciamo, facciate, facciano), potere (possa ... possiamo, possiate, possano), volere (voglia ...
+      vogliamo, vogliate, vogliano), sapere (sappia), dare (dia ... diamo, diate, diano), stare (stia),
+      dire (dica ... diciamo, diciate, dicano). Never copy the indicativo presente. Its lui form must
+      equal imperativo.lei.
+    congiuntivo_imperfetto: { io, tu, lui, noi, voi, loro }  ← congiuntivo imperfetto, WITHOUT "se"/"che".
+      io and tu are identical: essere (fossi, fossi, fosse, fossimo, foste, fossero), avere (avessi ...
+      aveste), andare (andassi ... andaste), fare (facessi ... faceste), dire (dicessi ... diceste), dare
+      (dessi ... deste), stare (stessi ... steste). Never copy the indicativo imperfetto.
+    Impersonal verbs (piovere, bisognare) fill only "lui" for the three tenses above, other slots empty
+      strings; a verb with no natural form of a tense returns {} for it.
     imperativo:        { tu, lei, noi, voi }  ← include all four slots (no "io" imperative in Italian).
       Exception: potere, dovere and other verbs with no natural command form — give only "lei"
       (the congiuntivo form) and leave tu/noi/voi as empty strings; never pass off the indicative
@@ -193,7 +211,9 @@ ITALIAN (it)
     "si chiami" for lei, "chiamati" for tu with clitic postposed and attached).
     gerundio/participio keep the clitic postposed and attached: "chiamandosi", "chiamatosi".
   examples: 4 to 6 sentences in Italian, each using a distinct grammatical form:
-    at least one presente, one passato prossimo, one imperfetto or futuro, one imperativo.
+    at least one presente, one passato prossimo, one imperfetto or futuro, one imperativo, one
+    condizionale (a polite request or a wish) and one congiuntivo (presente after "penso che" or
+    "voglio che", or imperfetto in "Se fossi ricco, comprerei ...") unless the verb has none.
     Vary the sentence frames: do not open the imperfetto example with "Da bambino"/"Quando ero
     bambino", the presente with "Ogni mattina", or the futuro with "L'anno prossimo" by default;
     use different subjects, places and situations for each verb. A gerundio example needs a clear
@@ -222,7 +242,8 @@ FRENCH (fr)
       Never copy the imparfait or the futur. Impersonal verbs (falloir: il faudrait) fill only "il"
       and leave other slots empty strings; if a verb has no conditionnel at all, return {}.
     subjonctif_present: { je, tu, il, nous, vous, ils }  ← subjonctif présent, same shape as présent
-      (pronoun with elision, e.g. "j'aie", "tu aies", "il ait"), WITHOUT "que". Use the true stems:
+      (pronoun with elision, e.g. "j'aie", "tu aies", "il ait"), WITHOUT "que" or "qu'" (write "il ait",
+      never "qu'il ait"; the board title already says "que…"). Use the true stems:
       avoir (aie, aies, ait, ayons, ayez, aient), être (sois, sois, soit, soyons, soyez, soient),
       aller (aille ... allions, alliez ... aillent), faire (fasse), pouvoir (puisse), savoir (sache),
       vouloir (veuille ... voulions, vouliez ... veuillent). Stem-changing verbs keep nous/vous on the
@@ -297,7 +318,7 @@ _GENERATION_SYSTEM_PROMPT = (
 _MODEL: dict[str, str] = {"en": "claude-haiku-4-5-20251001"}
 _MODEL_DEFAULT = "claude-sonnet-4-6"
 
-_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072, "fr": 3072, "es": 3072}
+_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072, "fr": 3072, "es": 3072, "it": 3072}
 _MAX_TOKENS_DEFAULT = 2048
 
 # ---------------------------------------------------------------------------

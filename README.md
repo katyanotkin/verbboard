@@ -52,6 +52,7 @@ Visual indicators:
 - Switch between female and male voices
 - Inline translations when UI language differs from the verb's language
 - Focus filter: hide conjugation rows by gender (masculine / feminine) and number (singular / plural) — Hebrew, Russian, Spanish
+- Italian boards also show the condizionale presente, congiuntivo presente and congiuntivo imperfetto, as bare forms like the other tenses
 - Spanish boards also show the conditional, present subjunctive and imperfect subjunctive (-ra form), as bare forms like the other tenses
 - French boards also show the conditionnel présent and subjonctif présent (the subjunctive title carries "que…"; rows hold the pronoun + verb form)
 - Pronoun reference: a collapsible "Pronouns" panel shows I/you/he-she-it/we/you/they in the verb's language, with translations revealed by the same toggle used for example sentences

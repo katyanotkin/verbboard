@@ -22,6 +22,7 @@ from pydantic import BaseModel, ValidationError
 from vertexai.generative_models import GenerationConfig, GenerativeModel
 
 from core.languages.config import STUDY_LANGUAGE_SCRIPTS
+from core.languages.fr.forms import normalize_subjonctif
 from core.languages.ru.stress import strip_stress_marks
 from core.languages.ru.validation import validate_ru_payload
 from core.rate_limit import SlidingWindowRateLimiter
@@ -129,6 +130,15 @@ def _build_verb_prompt(language: str, query: str) -> str:
     return f"{base}\nlanguage: {language}\nraw query (may be any inflected form): {query}"
 
 
+def _normalize_generated(language: str, generated: Any) -> Any:
+    """Language-specific cleanup of a generated payload, applied to both providers."""
+    if language == "ru":
+        return strip_stress_marks(generated)
+    if language == "fr":
+        return normalize_subjonctif(generated)
+    return generated
+
+
 def _generate_verb_gemini(language: str, query: str) -> dict[str, Any] | None:
     try:
         vertexai.init(project=_GCP_PROJECT, location=_GCP_LOCATION)
@@ -137,7 +147,7 @@ def _generate_verb_gemini(language: str, query: str) -> dict[str, Any] | None:
             _build_verb_prompt(language, query),
             generation_config=GenerationConfig(response_mime_type="application/json", temperature=0),
         )
-        return json.loads(response.text)
+        return _normalize_generated(language, json.loads(response.text))
     except Exception:
         logger.exception("Gemini verb generation failed for %s/%s", language, query)
         return None
@@ -165,7 +175,7 @@ async def _generate_verb_claude(language: str, query: str) -> dict[str, Any] | N
             raw = raw.split("\n", 1)[1] if "\n" in raw else raw
             raw = raw.rsplit("```", 1)[0].strip()
         generated = json.loads(raw)
-        return strip_stress_marks(generated) if language == "ru" else generated
+        return _normalize_generated(language, generated)
     except Exception:
         logger.exception("Claude verb generation failed for %s/%s", language, query)
         return None
