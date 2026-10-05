@@ -18,6 +18,8 @@ from app.routes.admin_utils import (
 from core.admin_logging import resolve_signal_label
 from core.languages.fr.forms import normalize_subjonctif
 from core.languages.ru.stress import strip_stress_marks
+from core.provider_health import ACTION_HINT, ProviderUnavailable
+from core.provider_health import ANTHROPIC as ANTHROPIC_BREAKER
 from core.search_utils import normalize_text
 from core.settings import (
     _load_anthropic_api_key,
@@ -40,7 +42,7 @@ from core.storage.verb_document import (
 )
 from core.storage.verb_repository import find_verb_by_search_extract
 from core.task_tracking import track
-from core.translation_service import translate_examples, translate_lemma
+from core.translation_service import missing_translation_targets, translate_examples, translate_lemma
 from core.utils import json_safe
 from core.verb_loader import invalidate_entries_cache
 
@@ -147,6 +149,66 @@ async def _warm_verb_audio(audio_backend, language: str, verb_data: dict) -> Non
 router = APIRouter()
 
 
+async def _translate_verb(
+    language: str, lemma: str, examples: list, existing_lemma_translations: dict | None = None
+) -> tuple[list, dict, bool]:
+    """Translate examples + lemma. Returns (examples, lemma_translations, incomplete).
+
+    A Claude outage (ProviderUnavailable, e.g. Hebrew) skips translation instead
+    of failing a generation that already succeeded; other errors still raise.
+    """
+    api_key = _load_anthropic_api_key()
+    results = await asyncio.gather(
+        asyncio.to_thread(
+            translate_examples,
+            verb_lang=language,
+            lemma=lemma,
+            examples=examples,
+            project=_GCP_PROJECT,
+            api_key=api_key,
+        ),
+        asyncio.to_thread(
+            translate_lemma,
+            verb_lang=language,
+            lemma=lemma,
+            existing_translations=existing_lemma_translations,
+            project=_GCP_PROJECT,
+            api_key=api_key,
+        ),
+        return_exceptions=True,
+    )
+    for result in results:
+        if isinstance(result, BaseException) and not isinstance(result, ProviderUnavailable):
+            raise result
+    translated_examples = examples if isinstance(results[0], BaseException) else results[0]
+    lemma_translations = (
+        dict(existing_lemma_translations or {}) if isinstance(results[1], BaseException) else results[1]
+    )
+    incomplete = bool(missing_translation_targets(language, translated_examples, lemma_translations))
+    return translated_examples, lemma_translations, incomplete
+
+
+async def _translate_examples_only(language: str, lemma: str, examples: list) -> tuple[list, bool]:
+    try:
+        translated = await asyncio.to_thread(
+            translate_examples,
+            verb_lang=language,
+            lemma=lemma,
+            examples=examples,
+            project=_GCP_PROJECT,
+            api_key=_load_anthropic_api_key(),
+        )
+    except ProviderUnavailable:
+        return examples, True
+    return translated, False
+
+
+def _claude_unavailable(exc: ProviderUnavailable) -> HTTPException:
+    return HTTPException(
+        status_code=503, detail=f"Claude unavailable ({exc.reason}): {ACTION_HINT.get(exc.reason, 'see logs')}"
+    )
+
+
 def _get_max_rank(language: str) -> int:
     # Concurrent generations can both read the same max before either writes,
     # so duplicate ranks are possible. Rank is a loose ordering hint, not a unique key.
@@ -184,13 +246,17 @@ async def _call_claude_single_example(language: str, lemma: str, existing_exampl
         "Return ONLY a JSON object:\n"
         '{"src": "<sentence in target language>", "dst": "<English translation>"}'
     )
-    message = await client.messages.create(
-        model=_MODEL.get(language, _MODEL_DEFAULT),
-        max_tokens=512,
-        temperature=0,
-        system=get_cached_system(language),
-        messages=[{"role": "user", "content": prompt}],
-    )
+    try:
+        with ANTHROPIC_BREAKER.guard():
+            message = await client.messages.create(
+                model=_MODEL.get(language, _MODEL_DEFAULT),
+                max_tokens=512,
+                temperature=0,
+                system=get_cached_system(language),
+                messages=[{"role": "user", "content": prompt}],
+            )
+    except ProviderUnavailable as exc:
+        raise _claude_unavailable(exc) from exc
     raw = message.content[0].text.strip()
     if raw.startswith("```"):
         raw = re.sub(r"^```[a-z]*\n?", "", raw)
@@ -209,18 +275,22 @@ async def _call_claude_single_example(language: str, lemma: str, existing_exampl
 async def _call_claude(language: str, query: str) -> dict[str, Any]:
     client = get_anthropic_client()
 
-    message = await client.messages.create(
-        model=_MODEL.get(language, _MODEL_DEFAULT),
-        max_tokens=_MAX_TOKENS.get(language, _MAX_TOKENS_DEFAULT),
-        temperature=0,
-        system=get_cached_system(language),
-        messages=[
-            {
-                "role": "user",
-                "content": (f"language: {language}\nraw query (may be any inflected form): {query}"),
-            },
-        ],
-    )
+    try:
+        with ANTHROPIC_BREAKER.guard():
+            message = await client.messages.create(
+                model=_MODEL.get(language, _MODEL_DEFAULT),
+                max_tokens=_MAX_TOKENS.get(language, _MAX_TOKENS_DEFAULT),
+                temperature=0,
+                system=get_cached_system(language),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (f"language: {language}\nraw query (may be any inflected form): {query}"),
+                    },
+                ],
+            )
+    except ProviderUnavailable as exc:
+        raise _claude_unavailable(exc) from exc
     raw = message.content[0].text.strip()
     # Strip markdown fences if present (e.g. ```json ... ```)
     if raw.startswith("```"):
@@ -360,23 +430,8 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
     else:
         ref.set(updated)
 
-    api_key = _load_anthropic_api_key()
-    translated_examples, lemma_translations = await asyncio.gather(
-        asyncio.to_thread(
-            translate_examples,
-            verb_lang=language,
-            lemma=lemma,
-            examples=updated["examples"],
-            project=_GCP_PROJECT,
-            api_key=api_key,
-        ),
-        asyncio.to_thread(
-            translate_lemma,
-            verb_lang=language,
-            lemma=lemma,
-            project=_GCP_PROJECT,
-            api_key=api_key,
-        ),
+    translated_examples, lemma_translations, translations_incomplete = await _translate_verb(
+        language, lemma, updated["examples"], None
     )
     translation_update: dict[str, Any] = {}
     if translated_examples is not updated["examples"]:
@@ -399,7 +454,7 @@ async def generate_candidate(request: Request, verb_id: str) -> JSONResponse:
         )
     )
 
-    return JSONResponse({"old_id": verb_id, **updated})
+    return JSONResponse({"old_id": verb_id, **updated, "translations_incomplete": translations_incomplete})
 
 
 @router.patch("/api/candidates/{verb_id}/status")
@@ -458,24 +513,8 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
     # complete, so this is safe/cheap to run on every promote.
     language = data.get("language", "")
     lemma = data.get("lemma", "")
-    api_key = _load_anthropic_api_key()
-    translated_examples, lemma_translations = await asyncio.gather(
-        asyncio.to_thread(
-            translate_examples,
-            verb_lang=language,
-            lemma=lemma,
-            examples=data.get("examples", []),
-            project=_GCP_PROJECT,
-            api_key=api_key,
-        ),
-        asyncio.to_thread(
-            translate_lemma,
-            verb_lang=language,
-            lemma=lemma,
-            existing_translations=data.get("lemma_translations"),
-            project=_GCP_PROJECT,
-            api_key=api_key,
-        ),
+    translated_examples, lemma_translations, translations_incomplete = await _translate_verb(
+        language, lemma, data.get("examples", []), data.get("lemma_translations")
     )
     data["examples"] = translated_examples
     if lemma_translations:
@@ -498,7 +537,14 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
     resolve_signal_label(language=data.get("language", ""), query=data.get("query", ""))
     invalidate_entries_cache(language)
 
-    return JSONResponse({"verb_id": verb_id, "promoted": True, "rank": data.get("rank")})
+    return JSONResponse(
+        {
+            "verb_id": verb_id,
+            "promoted": True,
+            "rank": data.get("rank"),
+            "translations_incomplete": translations_incomplete,
+        }
+    )
 
 
 @router.get("/api/verbs")
@@ -573,24 +619,8 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
 
     doc_ref.set(payload)
 
-    api_key = _load_anthropic_api_key()
-    translated_examples, lemma_translations = await asyncio.gather(
-        asyncio.to_thread(
-            translate_examples,
-            verb_lang=language,
-            lemma=lemma,
-            examples=payload["examples"],
-            project=_GCP_PROJECT,
-            api_key=api_key,
-        ),
-        asyncio.to_thread(
-            translate_lemma,
-            verb_lang=language,
-            lemma=lemma,
-            existing_translations=existing.get("lemma_translations"),
-            project=_GCP_PROJECT,
-            api_key=api_key,
-        ),
+    translated_examples, lemma_translations, translations_incomplete = await _translate_verb(
+        language, lemma, payload["examples"], existing.get("lemma_translations")
     )
     translation_update: dict[str, Any] = {}
     if translated_examples is not payload["examples"]:
@@ -614,7 +644,15 @@ async def regenerate_verb(request: Request, verb_id: str) -> JSONResponse:
     )
     invalidate_entries_cache(language)
 
-    return JSONResponse({"verb_id": verb_id, "regenerated": True, "lemma": lemma, "updated_at": now})
+    return JSONResponse(
+        {
+            "verb_id": verb_id,
+            "regenerated": True,
+            "lemma": lemma,
+            "updated_at": now,
+            "translations_incomplete": translations_incomplete,
+        }
+    )
 
 
 @router.post("/api/verbs/{verb_id}/regen_examples")
@@ -635,20 +673,20 @@ async def regen_verb_examples(request: Request, verb_id: str) -> JSONResponse:
     generated = await _call_claude(language, lemma)
     new_examples = generated.get("examples", [])
 
-    translated = await asyncio.to_thread(
-        translate_examples,
-        verb_lang=language,
-        lemma=lemma,
-        examples=new_examples,
-        project=_GCP_PROJECT,
-        api_key=_load_anthropic_api_key(),
-    )
+    translated, translations_incomplete = await _translate_examples_only(language, lemma, new_examples)
 
     now = datetime.now(UTC).isoformat()
     doc_ref.update({"examples": translated, "updated_at": now})
     invalidate_entries_cache(language)
 
-    return JSONResponse({"verb_id": verb_id, "examples_count": len(translated), "updated_at": now})
+    return JSONResponse(
+        {
+            "verb_id": verb_id,
+            "examples_count": len(translated),
+            "updated_at": now,
+            "translations_incomplete": translations_incomplete,
+        }
+    )
 
 
 @router.post("/api/verbs/{verb_id}/regen_forms")
@@ -730,14 +768,7 @@ async def regen_candidate_example(request: Request, verb_id: str, index: int) ->
 
     # translate_examples expects dst = native sentence; use src when present (regen format)
     native_sentence = new_example.get("src") or new_example.get("dst", "")
-    translated = await asyncio.to_thread(
-        translate_examples,
-        verb_lang=language,
-        lemma=lemma,
-        examples=[{"dst": native_sentence}],
-        project=_GCP_PROJECT,
-        api_key=_load_anthropic_api_key(),
-    )
+    translated, translations_incomplete = await _translate_examples_only(language, lemma, [{"dst": native_sentence}])
     if translated:
         translations = translated[0].get("translations")
         if translations:
@@ -747,7 +778,9 @@ async def regen_candidate_example(request: Request, verb_id: str, index: int) ->
     now = datetime.now(UTC).isoformat()
     ref.update({"examples": examples, "updated_at": now})
 
-    return JSONResponse({"index": index, "example": new_example, "updated_at": now})
+    return JSONResponse(
+        {"index": index, "example": new_example, "updated_at": now, "translations_incomplete": translations_incomplete}
+    )
 
 
 @router.delete("/api/candidates/{verb_id}")

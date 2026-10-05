@@ -28,6 +28,8 @@ import anthropic
 from dotenv import load_dotenv
 from google.cloud import firestore
 
+from core.provider_health import classify
+
 load_dotenv(override=True)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -206,7 +208,14 @@ def run(
     client = anthropic.Anthropic(api_key=api_key)
     id_to_query = {f"{language}_{i}": q for i, q in enumerate(to_generate)}
     requests = [_build_request(language, q, i) for i, q in enumerate(to_generate)]
-    batch = client.messages.batches.create(requests=requests)
+    try:
+        batch = client.messages.batches.create(requests=requests)
+    except anthropic.APIError as exc:
+        reason = classify(exc)
+        if reason is None:
+            raise
+        logger.error("Aborting: Anthropic unavailable (%s). Top up credit and re-run. %s", reason, str(exc)[:200])
+        return
     logger.info("Batch submitted: %s  (%d requests)", batch.id, len(requests))
 
     # --- Poll until ended ---

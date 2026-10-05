@@ -14,6 +14,7 @@ from core.audio_report_service import (
     transition_audio_report,
 )
 from core.languages.config import ALL_STUDY_LANGUAGES
+from core.provider_health import admin_banner_text
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -29,7 +30,7 @@ async def audio_reports_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "admin_audio_reports.html",
-        {"admin_prefix": ADMIN_PREFIX, "languages": list(ALL_STUDY_LANGUAGES)},
+        {"admin_prefix": ADMIN_PREFIX, "provider_banner": admin_banner_text(), "languages": list(ALL_STUDY_LANGUAGES)},
     )
 
 

@@ -25,6 +25,8 @@ from core.languages.config import STUDY_LANGUAGE_SCRIPTS
 from core.languages.fr.forms import normalize_subjonctif
 from core.languages.ru.stress import strip_stress_marks
 from core.languages.ru.validation import validate_ru_payload
+from core.provider_health import ANTHROPIC as ANTHROPIC_BREAKER
+from core.provider_health import ProviderUnavailable
 from core.rate_limit import SlidingWindowRateLimiter
 from core.settings import _load_anthropic_api_key, load_settings, verb_candidates_collection_name, verbs_collection_name
 from core.settings_ai import (
@@ -158,24 +160,28 @@ async def _generate_verb_claude(language: str, query: str) -> dict[str, Any] | N
     this runs inside a fire-and-forget task, not a request handler."""
     try:
         client = get_anthropic_client()
-        message = await client.messages.create(
-            model=_MODEL.get(language, _MODEL_DEFAULT),
-            max_tokens=_MAX_TOKENS.get(language, _MAX_TOKENS_DEFAULT),
-            temperature=0,
-            system=get_cached_system(language),
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"language: {language}\nraw query (may be any inflected form): {query}",
-                }
-            ],
-        )
+        with ANTHROPIC_BREAKER.guard():
+            message = await client.messages.create(
+                model=_MODEL.get(language, _MODEL_DEFAULT),
+                max_tokens=_MAX_TOKENS.get(language, _MAX_TOKENS_DEFAULT),
+                temperature=0,
+                system=get_cached_system(language),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"language: {language}\nraw query (may be any inflected form): {query}",
+                    }
+                ],
+            )
         raw = message.content[0].text.strip()
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1] if "\n" in raw else raw
             raw = raw.rsplit("```", 1)[0].strip()
         generated = json.loads(raw)
         return _normalize_generated(language, generated)
+    except ProviderUnavailable as exc:
+        logger.warning("Claude unavailable (%s), skipping generation for %s/%s", exc.reason, language, query)
+        return None
     except Exception:
         logger.exception("Claude verb generation failed for %s/%s", language, query)
         return None

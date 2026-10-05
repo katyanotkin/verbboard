@@ -58,23 +58,26 @@
       <p class="page-tagline">Every language runs on verbs.</p>
     </div><!-- /page-header -->
 
-{% if generating_verb or garbage_query or not_a_verb_query or notice_text %}
+{% if generating_verb or garbage_query or not_a_verb_query or queued_query or notice_text %}
     <div class="search-notice{% if garbage_query or not_a_verb_query %} search-notice--skip{% endif %}"
       {% if generating_verb %}data-retry-url="/search_verb?language={{ learning_lang | urlencode }}&amp;q={{ generating_verb | urlencode }}&amp;ui_language={{ lang | urlencode }}"{% endif %}>
       {% if generating_verb %}
         <span class="search-notice-icon" aria-hidden="true">⏳</span>
-        <span class="search-notice-text">&ldquo;{{ generating_verb }}&rdquo; is being added&hellip;</span>
+        <span class="search-notice-text">{{ ui['home.search_generating'] | replace('{verb}', generating_verb) }}</span>
         <a class="search-notice-retry" id="search-notice-retry"
-           href="/search_verb?language={{ learning_lang | urlencode }}&amp;q={{ generating_verb | urlencode }}&amp;ui_language={{ lang | urlencode }}">Try again in <span id="search-notice-countdown">20</span>s</a>
+           href="/search_verb?language={{ learning_lang | urlencode }}&amp;q={{ generating_verb | urlencode }}&amp;ui_language={{ lang | urlencode }}">{{ ui['home.generating_retry'] | replace('{seconds}', '<span id="search-notice-countdown">20</span>' | safe) }}</a>
       {% elif garbage_query %}
         <span class="search-notice-icon" aria-hidden="true">&#x2715;</span>
         <span class="search-notice-text">{{ ui['home.not_a_verb'] }}</span>
       {% elif not_a_verb_query %}
         <span class="search-notice-icon" aria-hidden="true">&#x2715;</span>
         <span class="search-notice-text">{{ ui['home.not_a_verb_confirmed'] }}</span>
+      {% elif queued_query %}
+        <span class="search-notice-icon" aria-hidden="true">&#x1F4DD;</span>
+        <span class="search-notice-text">{{ ui['home.search_queued'] | replace('{verb}', queued_query) }}</span>
       {% else %}
         <span class="search-notice-icon" aria-hidden="true">🔍</span>
-        <span class="search-notice-text">&ldquo;{{ notice_text }}&rdquo; was not found</span>
+        <span class="search-notice-text">{{ ui['home.search_not_found'] | replace('{verb}', notice_text) }}</span>
       {% endif %}
     </div>
     {% if generating_verb %}

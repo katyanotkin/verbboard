@@ -56,6 +56,16 @@ def _no_real_firestore(request, monkeypatch):
     monkeypatch.setattr(audio_report_service, "_CONFIRMED_CACHE", {})
 
 
+@pytest.fixture(autouse=True)
+def _reset_provider_breaker():
+    """The Anthropic breaker is process-global; never let one test's outage leak."""
+    from core.provider_health import ANTHROPIC
+
+    ANTHROPIC.reset()
+    yield
+    ANTHROPIC.reset()
+
+
 @pytest.fixture()
 def fake_db(request, _no_real_firestore):
     """The per-test in-memory Firestore fake (issue #8) that the autouse

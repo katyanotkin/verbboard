@@ -12,6 +12,7 @@ from core.admin_feedback_service import (
     list_feedback_rows,
     unhide_feedback_by_id,
 )
+from core.provider_health import admin_banner_text
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -28,6 +29,7 @@ async def feedback_admin_page(request: Request) -> HTMLResponse:
         "admin_feedback.html",
         {
             "admin_prefix": ADMIN_PREFIX,
+            "provider_banner": admin_banner_text(),
             "feedback_api_base": f"{ADMIN_PREFIX}/api/feedback",
         },
     )

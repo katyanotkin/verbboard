@@ -18,6 +18,7 @@ from core.editions import picker_study_plugins, resolve_study_language, study_la
 from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
+from core.provider_health import provider_unavailable_reason
 from core.safe_return import safe_return_to
 from core.search_utils import find_best_entry, tokenize_text
 from core.settings import load_settings
@@ -25,6 +26,7 @@ from core.storage.verb_repository import find_verb_by_search_extract, list_verbs
 from core.task_tracking import track
 from core.translation_service import translate_search_query
 from core.verb_autogen import (
+    _CLAUDE_AUTOGEN_LANGUAGES,
     AUTOGEN_LANGUAGES,
     autogen_rate_limited,
     autogenerate_missing_verb,
@@ -77,6 +79,11 @@ def _client_ip(request: Request) -> str:
         if hops:
             return hops[-1]
     return (request.client.host if request.client else "") or "unknown"
+
+
+def _autogen_paused(language: str) -> bool:
+    """True while the Claude breaker is open and this language generates via Claude."""
+    return language in _CLAUDE_AUTOGEN_LANGUAGES and provider_unavailable_reason() is not None
 
 
 def _looks_english(query: str) -> bool:
@@ -203,6 +210,7 @@ async def search_verb_by_lang(
         query=translated,
         page="home",
         source="search_by_lang",
+        provider_unavailable=_autogen_paused(language),
     )
     if language in AUTOGEN_LANGUAGES:
         autogen_query = translated
@@ -218,6 +226,12 @@ async def search_verb_by_lang(
             if await asyncio.to_thread(check_verb_rejected, language, autogen_query):
                 return RedirectResponse(
                     url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native&not_a_verb=1"
+                )
+            if _autogen_paused(language):
+                # Checked before the rate limiter so no slot is spent, and with no
+                # generating=1 so the home page's 20 s reload loop never starts.
+                return RedirectResponse(
+                    url=f"{base}{sep}not_available=1&search={quote(translated, safe='')}&search_mode=native&queued=1"
                 )
             if autogen_rate_limited(_client_ip(request)):
                 logger.warning("autogen rate-limited client for %s/%s", language, autogen_query)
@@ -286,6 +300,7 @@ async def search_verb(
         query=query,
         page="home",
         source="search",
+        provider_unavailable=_autogen_paused(language),
     )
 
     base = safe_return_to(return_to or "", fallback="") or f"/?language={language}{_ui_suffix}"
@@ -294,6 +309,8 @@ async def search_verb(
         if is_plausible_verb_query(query, language):
             if await asyncio.to_thread(check_verb_rejected, language, query):
                 return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&not_a_verb=1")
+            if _autogen_paused(language):
+                return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}&queued=1")
             if autogen_rate_limited(_client_ip(request)):
                 logger.warning("autogen rate-limited client for %s/%s", language, query)
                 return RedirectResponse(url=f"{base}{sep}not_available=1&search={quote(query, safe='')}")
@@ -321,6 +338,7 @@ def home(
     generating: int | None = Query(None),
     garbage: int | None = Query(None),
     not_a_verb: int | None = Query(None),
+    queued: int | None = Query(None),
 ) -> HTMLResponse | RedirectResponse:
     settings = load_settings()
 
@@ -349,6 +367,8 @@ def home(
     generating_verb = notice_text if (notice_text and generating == 1) else None
     garbage_query = notice_text if (notice_text and garbage == 1 and not generating_verb) else None
     not_a_verb_query = notice_text if (notice_text and not_a_verb == 1 and not generating_verb) else None
+
+    queued_query = notice_text if (notice_text and queued == 1 and not generating_verb) else None
 
     votd: dict[str, str] | None = None
     try:
@@ -383,6 +403,7 @@ def home(
             "generating_verb": generating_verb,
             "garbage_query": garbage_query,
             "not_a_verb_query": not_a_verb_query,
+            "queued_query": queued_query,
             "firebase_web_config_json": settings.firebase_web_config_json,
             "votd": votd,
         },

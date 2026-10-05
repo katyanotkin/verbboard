@@ -14,6 +14,7 @@ from app.routes.admin_feedback import router as admin_feedback_router
 from app.routes.admin_report import router as admin_report_router
 from app.routes.admin_signals import router as admin_signals_router
 from app.routes.admin_utils import ADMIN_PREFIX, require_admin_page
+from core.provider_health import admin_banner_text
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -29,7 +30,9 @@ async def admin_page(request: Request) -> HTMLResponse:
     if redirect_response is not None:
         return redirect_response
 
-    return templates.TemplateResponse(request, "admin.html", {"admin_prefix": ADMIN_PREFIX})
+    return templates.TemplateResponse(
+        request, "admin.html", {"admin_prefix": ADMIN_PREFIX, "provider_banner": admin_banner_text()}
+    )
 
 
 router.include_router(admin_auth_router)

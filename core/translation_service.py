@@ -20,6 +20,8 @@ import vertexai
 from vertexai.generative_models import GenerationConfig, GenerativeModel
 
 from core.languages.config import UI_LANGUAGES
+from core.provider_health import ANTHROPIC as ANTHROPIC_BREAKER
+from core.provider_health import ProviderUnavailable
 
 logger = logging.getLogger(__name__)
 
@@ -104,12 +106,13 @@ def _call_claude(
 ) -> list[dict[str, str]]:
     client = anthropic.Anthropic(api_key=api_key)
     prompt = _translation_prompt(verb_lang, lemma, target_langs, sentences)
-    message = client.messages.create(
-        model=CLAUDE_MODEL,
-        max_tokens=2048,
-        temperature=0,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    with ANTHROPIC_BREAKER.guard():
+        message = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=2048,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}],
+        )
     return json.loads(message.content[0].text.strip())
 
 
@@ -159,12 +162,13 @@ def _call_claude_lemma(
 ) -> dict[str, str]:
     client = anthropic.Anthropic(api_key=api_key)
     prompt = _lemma_prompt(verb_lang, lemma, target_langs)
-    message = client.messages.create(
-        model=CLAUDE_MODEL,
-        max_tokens=512,
-        temperature=0,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    with ANTHROPIC_BREAKER.guard():
+        message = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=512,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}],
+        )
     raw = message.content[0].text.strip()
     # Claude occasionally prepends commentary or second-guesses itself before
     # settling on an answer despite instructions -- pull out the last {...}
@@ -217,13 +221,12 @@ def translate_lemma(
         try:
             row = _call_claude_lemma(verb_lang, lemma, claude_targets, api_key)
             result.update({k: v for k, v in row.items() if isinstance(v, str) and v.strip()})
-        except anthropic.APIStatusError as exc:
-            if exc.status_code != 529:
-                logger.exception("Claude lemma translation failed for %s/%s", verb_lang, lemma)
-            elif verb_lang == HEBREW:
+        except ProviderUnavailable as exc:
+            if verb_lang == HEBREW:
                 raise
-            else:
-                logger.warning("Claude overloaded (529), skipping Hebrew lemma translation for %s/%s", verb_lang, lemma)
+            logger.warning(
+                "Claude unavailable (%s), skipping Hebrew lemma translation for %s/%s", exc.reason, verb_lang, lemma
+            )
         except Exception:
             logger.exception("Claude lemma translation failed for %s/%s", verb_lang, lemma)
 
@@ -316,6 +319,10 @@ def translate_examples(
                         for key, value in row.items():
                             if key in gemini_missing and isinstance(value, str) and value.strip():
                                 translations_by_index[i].setdefault(key, value)
+            except ProviderUnavailable as exc:
+                logger.warning(
+                    "Claude unavailable (%s), skipping fallback translation for %s/%s", exc.reason, verb_lang, lemma
+                )
             except Exception:
                 logger.exception("Claude fallback translation failed for %s/%s", verb_lang, lemma)
 
@@ -325,16 +332,13 @@ def translate_examples(
             for i, row in enumerate(results):
                 if i < len(translations_by_index):
                     translations_by_index[i].update({k: v for k, v in row.items() if isinstance(v, str) and v.strip()})
-        except anthropic.APIStatusError as exc:
-            if exc.status_code != 529:
-                logger.exception("Claude translation failed for %s/%s", verb_lang, lemma)
-            elif verb_lang == HEBREW:
+        except ProviderUnavailable as exc:
+            if verb_lang == HEBREW:
                 # Hebrew source: Claude is the only backend; no translations at all is a hard failure.
                 raise
-            else:
-                logger.warning(
-                    "Claude overloaded (529), skipping Hebrew target translation for %s/%s", verb_lang, lemma
-                )
+            logger.warning(
+                "Claude unavailable (%s), skipping Hebrew target translation for %s/%s", exc.reason, verb_lang, lemma
+            )
         except Exception:
             logger.exception("Claude translation failed for %s/%s", verb_lang, lemma)
 
@@ -348,3 +352,19 @@ def translate_examples(
         updated.append({**ex, "translations": merged} if merged else ex)
 
     return updated
+
+
+def missing_translation_targets(verb_lang: str, examples: list, lemma_translations: dict[str, str] | None) -> list[str]:
+    """UI languages for which the lemma or any example still lacks a translation."""
+    missing: list[str] = []
+    for lang in SUPPORTED_LANGUAGES:
+        if lang == verb_lang:
+            continue
+        lemma_gap = not (lemma_translations or {}).get(lang)
+        example_gap = any(
+            isinstance(ex, dict) and isinstance(ex.get("dst"), str) and not (ex.get("translations") or {}).get(lang)
+            for ex in examples
+        )
+        if lemma_gap or example_gap:
+            missing.append(lang)
+    return missing

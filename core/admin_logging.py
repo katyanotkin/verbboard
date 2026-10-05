@@ -13,6 +13,7 @@ def log_missing_verb_search(
     page: str = "",
     source: str = "search",
     verb_id: str = "",
+    provider_unavailable: bool = False,
 ) -> None:
     normalized_query = query.strip().casefold()
     if not normalized_query:
@@ -27,6 +28,7 @@ def log_missing_verb_search(
         "page": page or "",
         "source": source or "",
         "verb_id": verb_id or "",
+        "provider_unavailable": provider_unavailable,
     }
 
     _write_firestore_signal(record)

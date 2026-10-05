@@ -316,6 +316,9 @@ async function regenSingle(verbId, button) {
 
     updateCandidateStats();
     renderCandidates();
+    if (doc.translations_incomplete) {
+      alert('Generated, but some translations are missing (Claude may be unavailable). Run tools/backfill_translations.py later.');
+    }
   } catch (error) {
     button.disabled = false;
     button.textContent = originalText;
@@ -365,6 +368,7 @@ async function promoteCandidate(verbId, button) {
       throw new Error(errorPayload.detail ?? response.statusText);
     }
 
+    const promoted = await response.json().catch(() => ({}));
     const candidate = candidatesData.find((item) => item.verb_id === verbId);
     if (candidate) {
       candidate.status = 'promoted';
@@ -372,6 +376,9 @@ async function promoteCandidate(verbId, button) {
 
     updateCandidateStats();
     renderCandidates();
+    if (promoted.translations_incomplete) {
+      alert('Promoted, but some translations are missing (Claude may be unavailable). Run tools/backfill_translations.py later.');
+    }
   } catch (error) {
     button.disabled = false;
     alert('Promote failed: ' + error.message);

@@ -8,6 +8,8 @@ from typing import Any
 import anthropic
 
 from core.languages.ru.stress import strip_stress_marks
+from core.provider_health import ANTHROPIC as ANTHROPIC_BREAKER
+from core.provider_health import ProviderUnavailable
 from core.settings import _load_anthropic_api_key, verbs_collection_name
 from core.settings_ai import get_cached_system
 from core.storage.firestore_db import get_db
@@ -124,21 +126,27 @@ def generate_and_promote_verb(language: str, lemma: str) -> dict[str, Any] | Non
         try:
             api_key = _load_anthropic_api_key()
             client = anthropic.Anthropic(api_key=api_key)
-            message = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=4096,
-                system=get_cached_system(language),
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"language: {language}\nraw query (may be any inflected form): {lemma}",
-                    }
-                ],
-            )
+            with ANTHROPIC_BREAKER.guard():
+                message = client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=4096,
+                    system=get_cached_system(language),
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": f"language: {language}\nraw query (may be any inflected form): {lemma}",
+                        }
+                    ],
+                )
             raw = message.content[0].text.strip()
             generated = json.loads(raw)
             if language == "ru":
                 generated = strip_stress_marks(generated)
+        except ProviderUnavailable as exc:
+            # An outage is not a property of this lemma: no marker, so it is
+            # retried as soon as Claude is back instead of after 24 h.
+            logger.warning("Claude unavailable (%s), skipping pair generation for %s/%s", exc.reason, language, lemma)
+            return None
         except Exception:
             logger.exception("Failed to generate verb for %s/%s", language, lemma)
             _write_pair_attempt(verb_id, language=language, lemma=lemma, reason="generation_failed")

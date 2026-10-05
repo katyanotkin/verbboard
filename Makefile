@@ -47,6 +47,8 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	gcp-update-secrets-stage gcp-update-secrets-prod \
 	cache-audio-prod \
 	audit-audio-prod \
+	check-anthropic-credit \
+	replay-failed-demand \
 	clean-audio-prod \
 	docker-tag
 
@@ -288,6 +290,14 @@ cache-audio-prod: gcp-check ## GCP: cache-audio-prod [AUDIO_LANG=he]
 audit-audio-prod: gcp-check ## GCP: audit-audio-prod [AUDIO_LANG=he]
 	$(PYTHON) -m tools.cache_audio --language $(or $(AUDIO_LANG),all) \
 		--project $(GCP_PROJECT) --bucket $(AUDIO_BUCKET_PROD) --dry-run
+
+## QA: check the Anthropic API key works and has credit (one 1-token call); SOURCE=secret tests the prod/stage key
+check-anthropic-credit: ## QA: check-anthropic-credit [SOURCE=secret]
+	$(PYTHON) -m tools.check_anthropic_credit $(if $(filter secret,$(SOURCE)),--secret --project $(GCP_PROJECT),)
+
+## QA: replay search demand that failed during an Anthropic outage (dry run; EXECUTE=1 generates)
+replay-failed-demand: ## QA: replay-failed-demand [EXECUTE=1]
+	$(PYTHON) -m tools.replay_failed_demand $(if $(EXECUTE),--apply,)
 
 ## GCP: dry-run — show unhashed (old-style) audio blobs to delete from prod
 clean-audio-prod: gcp-check ## GCP: clean-audio-prod [AUDIO_LANG=he] [EXECUTE=1]

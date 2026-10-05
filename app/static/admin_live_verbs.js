@@ -74,7 +74,7 @@ async function _liveRegenCall(verbId, path, label) {
       if (statusEl) statusEl.textContent = `Error ${resp.status}: ${data.detail || resp.statusText}`;
       return;
     }
-    if (statusEl) statusEl.textContent = `Done ${(data.updated_at || '').slice(0, 16)}`;
+    if (statusEl) statusEl.textContent = `Done ${(data.updated_at || '').slice(0, 16)}` + (data.translations_incomplete ? ' (translations incomplete, run backfill)' : '');
     refreshLiveVerbRow(verbId);
   } catch (err) {
     if (statusEl) statusEl.textContent = `Error: ${err.message}`;
