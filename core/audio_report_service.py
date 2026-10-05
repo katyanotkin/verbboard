@@ -224,11 +224,39 @@ def list_open_audio_reports() -> list[dict[str, Any]]:
 
 
 def resolve_audio_report(report_id: str) -> bool:
-    """Mark a report resolved. A later report on the same clip sets it back to open."""
+    """Mark a report resolved and release the users' votes for that clip.
+
+    Releasing the votes lets a user report the clip again if it is still wrong (a new report reopens it)
+    and clears their "reported" flag on their next page load. The counters restart from zero so the admin
+    ranking reflects only reports made after the fix; the old total is kept as `resolved_count`.
+    """
     if not report_id or "/" in report_id:
         return False
-    ref = get_db().collection(REPORTS_COLLECTION).document(report_id)
-    if not ref.get().exists:
+    db = get_db()
+    ref = db.collection(REPORTS_COLLECTION).document(report_id)
+    snapshot = ref.get()
+    if not snapshot.exists:
         return False
-    ref.set({"status": "resolved", "resolved_at": datetime.now(UTC)}, merge=True)
+    data = snapshot.to_dict() or {}
+    votes = (
+        db.collection(VOTES_COLLECTION)
+        .where("language", "==", data.get("language"))
+        .where("verb_id", "==", data.get("verb_id"))
+        .where("voice", "==", data.get("voice"))
+        .where("form_key", "==", data.get("form_key"))
+        .stream()
+    )
+    for vote in votes:
+        vote.reference.delete()
+    ref.update(
+        {
+            "status": "resolved",
+            "resolved_at": datetime.now(UTC),
+            "resolved_count": int(data.get("count", 0) or 0),
+            "count": 0,
+            "reasons": {},
+            "ui_langs": {},
+            "comments": [],
+        }
+    )
     return True

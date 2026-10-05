@@ -200,7 +200,8 @@ def test_admin_lists_by_count_resolves_and_new_report_reopens(client: TestClient
         ui_language="en",
     )
     reopened = {r["id"]: r for r in client.get("/admin/api/audio-reports", cookies=_admin()).json()["reports"]}
-    assert reopened[report_id]["count"] == 3
+    # Resolving restarts the counters, so the reopened row counts only reports made after the fix.
+    assert reopened[report_id]["count"] == 1
 
 
 def test_learn_page_renders_report_buttons_and_popover(client: TestClient, seeded) -> None:
@@ -283,3 +284,27 @@ def test_vote_doc_stores_uid_but_aggregate_does_not(client: TestClient, seeded) 
     votes = [doc for path, doc in seeded._docs.items() if path.startswith("audio_report_votes/")]
     assert len(votes) == 1 and votes[0]["uid"]
     assert "uid" not in str(_aggregate(seeded)).lower()
+
+
+def test_resolving_releases_votes_so_the_user_can_report_again(client: TestClient, seeded) -> None:
+    client.post("/api/audio_report", json=_payload(), headers=AUTH)
+    assert _mine(client).json()["reported"] == [{"voice": "female", "form_key": EXAMPLE_KEY}]
+    report_id = f"es_es_hablar_female_{EXAMPLE_KEY}"
+
+    assert client.post(f"/admin/api/audio-reports/{report_id}/resolve", cookies=_admin()).status_code == 200
+
+    assert _mine(client).json()["reported"] == []
+    doc = _aggregate(seeded)
+    assert doc["status"] == "resolved" and doc["count"] == 0 and doc["resolved_count"] == 1
+    again = client.post("/api/audio_report", json=_payload(), headers=AUTH)
+    assert again.json() == {"ok": True, "duplicate": False}
+    assert _aggregate(seeded)["status"] == "open" and _aggregate(seeded)["count"] == 1
+
+
+def test_resolving_keeps_votes_for_other_clips(client: TestClient, seeded) -> None:
+    client.post("/api/audio_report", json=_payload(), headers=AUTH)
+    client.post("/api/audio_report", json=_payload(voice="male"), headers=AUTH)
+
+    client.post(f"/admin/api/audio-reports/es_es_hablar_female_{EXAMPLE_KEY}/resolve", cookies=_admin())
+
+    assert _mine(client).json()["reported"] == [{"voice": "male", "form_key": EXAMPLE_KEY}]

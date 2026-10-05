@@ -62,7 +62,9 @@
     var set = reportedSet();
     Array.prototype.forEach.call(document.querySelectorAll(".audio-report-btn"), function (btn) {
       var clip = parseClip(btn);
-      if (clip && set.has(clipId(clip))) btn.setAttribute("aria-pressed", "true");
+      if (!clip) return;
+      if (set.has(clipId(clip))) btn.setAttribute("aria-pressed", "true");
+      else btn.removeAttribute("aria-pressed");
     });
   }
 
@@ -233,7 +235,10 @@
           if (!res.ok) throw new Error("HTTP " + res.status);
           return res.json();
         }).then(function (data) {
+          // Signed in: the server is the source of truth for this verb, so a report the admin resolved
+          // (votes released) stops showing as reported here.
           var set = reportedSet();
+          Array.from(set).forEach(function (id) { if (id.indexOf(verbId + ":") === 0) set.delete(id); });
           ((data && data.reported) || []).forEach(function (c) {
             set.add(verbId + ":" + c.voice + ":" + c.form_key);
           });
