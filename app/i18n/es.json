@@ -168,5 +168,7 @@
   "audio_report.thanks": "Gracias, informe enviado.",
   "audio_report.already": "Ya informado",
   "audio_report.error": "No se pudo enviar. Inténtalo más tarde.",
-  "audio_report.sign_in": "Inicia sesión para informar de un problema de audio."
+  "audio_report.sign_in": "Inicia sesión para informar de un problema de audio.",
+  "audio_issue.label": "Problema de audio conocido",
+  "audio_issue.note": "El audio de esta forma no es preciso. Léela en lugar de escucharla."
 }

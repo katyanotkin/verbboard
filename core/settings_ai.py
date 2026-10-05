@@ -149,7 +149,8 @@ SPANISH (es)
 _PROMPT_HE = """\
 ────────────────────────────────────────
 HEBREW (he)
-  lemma: infinitive (לְ prefix form)
+  lemma: infinitive (לְ prefix form) WITH full nikud on every letter that takes a vowel, e.g. "לֶאֱכֹל",
+    "לָלֶכֶת", "לְדַבֵּר" (never bare consonants such as "לאכול"; the infinitive is voiced by TTS)
   morph:
     binyan: one of פָּעַל, נִפְעַל, פִּיעֵל, פֻּעַל, הִתְפַּעֵל, הִפְעִיל, הוּפְעַל
     root: letters separated by dots, e.g. "ל.מ.ד"
@@ -157,7 +158,9 @@ HEBREW (he)
     present:   { m_sg, f_sg, m_pl, f_pl }
     past:      { 1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl }
     future:    { 1sg, 2msg, 2fsg, 3msg, 3fsg, 1pl, 2mpl, 2fpl, 3pl }
-    imperative: { ms, fs, mp, fp }
+    imperative: { ms, fs, mp }  ← masculine singular, feminine singular, masculine plural only (no feminine
+      plural: it is literary and error-prone). A verb with no natural command form (stative, no real command: to need,
+      to want, to prefer; but verbs like to die DO have a natural imperative) returns imperative as an empty object {} instead of an invented form.
     Critical homographs: past 2msg ends in ָּ (qamatz + dagesh), 2fsg ends in ְ (shva). Never omit.
     Example for הלך: past.2msg = "הָלַכְתָּ", past.2fsg = "הָלַכְתְּ"
   examples: 4 to 6 sentences in Hebrew script, each using a distinct grammatical form:

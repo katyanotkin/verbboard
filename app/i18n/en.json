@@ -168,5 +168,7 @@
   "audio_report.thanks": "Thanks, report sent.",
   "audio_report.already": "Already reported",
   "audio_report.error": "Could not send. Try again later.",
-  "audio_report.sign_in": "Sign in to report an audio problem."
+  "audio_report.sign_in": "Sign in to report an audio problem.",
+  "audio_issue.label": "Known audio issue",
+  "audio_issue.note": "Audio is not accurate for this form. Read it instead of listening."
 }

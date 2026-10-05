@@ -9,7 +9,6 @@ from fastapi.templating import Jinja2Templates
 
 from app.routes.admin_utils import ADMIN_PREFIX, require_admin_api, require_admin_page
 from core.admin_report_service import build_report
-from core.audio_report_service import list_open_audio_reports, resolve_audio_report
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -46,17 +45,3 @@ async def report_api(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return JSONResponse(report)
-
-
-@router.get("/api/audio-reports")
-async def audio_reports_api(request: Request) -> JSONResponse:
-    require_admin_api(request)
-    return JSONResponse({"reports": await asyncio.to_thread(list_open_audio_reports)})
-
-
-@router.post("/api/audio-reports/{report_id}/resolve")
-async def resolve_audio_report_api(request: Request, report_id: str) -> JSONResponse:
-    require_admin_api(request)
-    if not await asyncio.to_thread(resolve_audio_report, report_id):
-        raise HTTPException(status_code=404, detail="Report not found")
-    return JSONResponse({"ok": True})

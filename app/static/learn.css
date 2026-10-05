@@ -1072,3 +1072,61 @@ button {
     transition: opacity 0.18s ease, color 0.18s ease;
   }
 }
+
+/* ── known audio issue flag (admin-confirmed reports): replaces the report flag on that clip ── */
+.audio-issue {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 44px;
+  vertical-align: middle;
+  margin-inline-start: 2px;
+}
+
+.audio-issue-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #d97706;
+  border-radius: 50%;
+  background: transparent;
+  color: #b45309;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.audio-issue-btn svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.audio-issue-btn:hover,
+.audio-issue-btn[aria-expanded="true"] {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* One shared note, mounted on <body> by audio_report.js so no table overflow clips it. */
+.audio-issue-note {
+  position: absolute;
+  z-index: 30;
+  width: max-content;
+  padding: 8px 12px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  color: var(--color-navy);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: start;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}

@@ -51,6 +51,9 @@ def _no_real_firestore(request, monkeypatch):
     # The process-wide verb list cache would otherwise carry one test's
     # (fake) catalog into the next.
     monkeypatch.setattr(verb_loader, "_ENTRIES_CACHE", {})
+    from core import audio_report_service
+
+    monkeypatch.setattr(audio_report_service, "_CONFIRMED_CACHE", {})
 
 
 @pytest.fixture()

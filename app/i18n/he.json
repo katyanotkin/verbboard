@@ -168,5 +168,7 @@
   "audio_report.thanks": "תודה, הדיווח נשלח.",
   "audio_report.already": "כבר דווח",
   "audio_report.error": "השליחה נכשלה. נסו שוב מאוחר יותר.",
-  "audio_report.sign_in": "התחברו כדי לדווח על בעיה באודיו."
+  "audio_report.sign_in": "התחברו כדי לדווח על בעיה באודיו.",
+  "audio_issue.label": "בעיית שמע ידועה",
+  "audio_issue.note": "השמע של צורה זו אינו מדויק. כדאי לקרוא אותה במקום להאזין."
 }

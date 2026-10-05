@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from core.admin_auth import get_session_uid
 from core.admin_logging import log_missing_verb_search
+from core.audio_report_service import confirmed_form_keys
 from core.audio_service import (
     build_hashed_audio_key,
     ensure_audio,
@@ -172,6 +173,9 @@ async def learn(
     ui_lang = resolve_ui_language(request)
     ui_strings = get_strings(ui_lang)
     settings = load_settings()
+
+    # Warm the 60 s confirmed-audio-issue cache off the event loop; render_board_html then hits the cache.
+    await asyncio.to_thread(confirmed_form_keys, language, verb.id)
 
     html = render_board_html(
         board=board,

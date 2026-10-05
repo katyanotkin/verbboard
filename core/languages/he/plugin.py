@@ -13,11 +13,13 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     present = forms.get("present", {}) or {}
     past = forms.get("past", {}) or {}
     future = forms.get("future", {}) or {}
+    imperative = forms.get("imperative", {}) or {}
 
     tts = getattr(verb, "tts_forms", None) or {}
     tts_present = tts.get("present", {}) or {}
     tts_past = tts.get("past", {}) or {}
     tts_future = tts.get("future", {}) or {}
+    tts_imperative = tts.get("imperative", {}) or {}
 
     def _row(key: str, label: str, text: str, tts_src: dict, tts_key: str, **extra) -> dict:
         r: dict = {"key": key, "label": label, "text": text, **extra}
@@ -74,6 +76,16 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
             ],
         },
     ]
+
+    # Imperative: masculine/feminine singular and masculine plural only. The feminine plural (-נָה) is
+    # literary, rarely spoken and error-prone; verbs with no natural command form store an empty dict.
+    imperative_rows = [
+        _row(f"imper_{slot}", label, imperative.get(slot, ""), tts_imperative, slot, gender=gender, number=number)
+        for slot, label, gender, number in (("ms", "אתה", "m", "sg"), ("fs", "את", "f", "sg"), ("mp", "אתם", "m", "pl"))
+        if imperative.get(slot)
+    ]
+    if imperative_rows:
+        sections.append({"title": "board.tense_imperative", "rows": imperative_rows})
 
     return Board(
         language="he",

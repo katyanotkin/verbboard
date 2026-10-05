@@ -10,7 +10,6 @@
   <div
     id="admin-report-config"
     data-api-url="{{ admin_prefix }}/api/reports"
-    data-audio-reports-url="{{ admin_prefix }}/api/audio-reports"
     data-default-from="{{ default_date_from }}"
     data-default-to="{{ default_date_to }}"
   ></div>
@@ -22,6 +21,7 @@
       <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/#candidates">Candidates</a>
       <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/entitlements">Entitlements</a>
       <a class="nav-item active nav-item-tab" href="{{ admin_prefix }}/reports">Reports</a>
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/audio-reports">Audio reports</a>
       <a href="{{ admin_prefix }}" style="margin-left:auto;">Back to admin</a>
       <form method="post" action="{{ admin_prefix }}/logout" style="display:inline;">
         <button type="submit" style="border:none; background:none; color:inherit; font:inherit; cursor:pointer; padding:0; text-decoration:underline;">Log out</button>
@@ -60,14 +60,10 @@
       </div>
     </div>
 
+    <p class="text-muted">Audio problem reports moved to <a href="{{ admin_prefix }}/audio-reports">Audio reports</a>.</p>
+
     <div id="report-error" class="error-msg" hidden></div>
     <div id="report-body"></div>
-
-    <div class="card card-body" id="audio-reports">
-      <h2>Audio problems</h2>
-      <p class="cell-meta">Open reports from signed-in learners, most reported first. A new report on a resolved clip reopens it.</p>
-      <div id="audio-reports-body"><p class="text-muted">Loading...</p></div>
-    </div>
   </main>
   <script src="/static/admin_report.js"></script>
 </body>

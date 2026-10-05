@@ -203,8 +203,54 @@
   });
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") closePop(true);
+    if (event.key === "Escape") { closePop(true); closeIssueNote(true); }
   });
+
+  // ── known-audio-issue note: one shared body-level popover, clamped to the viewport ──
+  var issueNote = document.getElementById("audio-issue-note");
+  var issueTrigger = null;
+  if (issueNote) document.body.appendChild(issueNote);
+
+  function placeIssueNote(trigger) {
+    var gutter = 16;
+    var vw = document.documentElement.clientWidth;
+    var vh = document.documentElement.clientHeight;
+    issueNote.style.maxWidth = Math.min(240, vw - 2 * gutter) + "px";
+    var rect = trigger.getBoundingClientRect();
+    var noteRect = issueNote.getBoundingClientRect();
+    var left = rect.left + rect.width / 2 - noteRect.width / 2;
+    left = Math.max(gutter, Math.min(left, vw - gutter - noteRect.width));
+    var top = rect.bottom + 8;
+    if (top + noteRect.height > vh - gutter && rect.top - 8 - noteRect.height >= gutter) {
+      top = rect.top - 8 - noteRect.height;
+    }
+    issueNote.style.left = left + window.pageXOffset + "px";
+    issueNote.style.top = top + window.pageYOffset + "px";
+  }
+
+  function closeIssueNote(returnFocus) {
+    if (!issueNote || !issueTrigger) return;
+    var trigger = issueTrigger;
+    issueTrigger = null;
+    issueNote.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+    if (returnFocus) trigger.focus();
+  }
+
+  document.addEventListener("click", function (event) {
+    if (!issueNote) return;
+    var trigger = event.target.closest(".audio-issue-btn");
+    if (trigger && trigger === issueTrigger) { closeIssueNote(false); return; }
+    closeIssueNote(false);
+    if (!trigger) return;
+    issueTrigger = trigger;
+    issueNote.textContent = trigger.dataset.note || "";
+    issueNote.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    placeIssueNote(trigger);
+  });
+  window.addEventListener("resize", function () { closeIssueNote(false); });
+  window.addEventListener("scroll", function () { closeIssueNote(false); }, { passive: true });
 
   window.addEventListener("resize", function () { if (activeBtn && !pop.hidden) placePop(activeBtn); });
 

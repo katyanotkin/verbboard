@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from core.audio_report_service import confirmed_form_keys
 from core.audio_service import build_hashed_audio_key
 from core.languages.config import LANGUAGE as LANG_CONFIG
 from core.languages.ru.homographs import HOMOGRAPH_MARKS, mark_text
@@ -81,6 +82,27 @@ def render_board_html(
         "<path d='M6 3v18M6 4h12l-2.5 4.5L18 13H6'/></svg></button>"
     )
 
+    # Known audio issue (admin-confirmed reports): a help-hint instead of the report flag.
+    confirmed_keys = confirmed_form_keys(board.language, board.verb.id)
+    issue_label = escape(ui.get("audio_issue.label", "Known audio issue"))
+    issue_note = escape(
+        ui.get("audio_issue.note", "Audio is not accurate for this form. Read it instead of listening.")
+    )
+    # The note text lives in data-note and is shown by audio_report.js in ONE shared body-level
+    # popover (#audio-issue-note): an in-table panel would be clipped by the tables' overflow:hidden.
+    issue_button_html = (
+        "<span class='audio-issue'>"
+        f"<button type='button' class='audio-issue-btn' aria-expanded='false' aria-controls='audio-issue-note' "
+        f"aria-label='{issue_label}' data-note='{issue_note}'>"
+        "<svg viewBox='0 0 24 24' width='16' height='16' aria-hidden='true'>"
+        "<path d='M12 3.5 2.8 20h18.4L12 3.5zM12 10v5M12 17.6v.1'/></svg>"
+        f"<span class='vb-sr-only'>{issue_label}</span></button>"
+        "</span>"
+    )
+
+    def clip_flag_html(form_key: str) -> str:
+        return issue_button_html if form_key in confirmed_keys else report_button_html
+
     sections_html = []
     for section_index, section in enumerate(board.sections, start=1):
         rows = []
@@ -110,7 +132,7 @@ def render_board_html(
                     f"<button class='{button_class}' data-lang='{board.language}' title='Play' "
                     f"onclick=\"const audio=document.getElementById('{audio_id}'); "
                     f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
-                    f"{report_button_html}"
+                    f"{clip_flag_html(hashed_key)}"
                 )
                 if jump_to_example_enabled and has_examples and is_conjugated_form and key not in LEMMA_ROW_KEYS:
                     audio_html += (
@@ -250,7 +272,7 @@ def render_board_html(
             f'audio.pause(); audio.currentTime=0; audio.playbackRate=0.65; audio.play()">'
             f"<img src='/static/snail.svg' class='slow-icon' />"
             f"</button>"
-            f"{report_button_html}"
+            f"{clip_flag_html(hashed_key)}"
             "</td>"
             "</tr>"
         )
@@ -357,6 +379,10 @@ def render_board_html(
             "audio_report.already": ui.get("audio_report.already", "Already reported"),
             "audio_report.error": ui.get("audio_report.error", "Could not send. Try again later."),
             "audio_report.sign_in": ui.get("audio_report.sign_in", "Sign in to report an audio problem."),
+            "audio_issue.label": ui.get("audio_issue.label", "Known audio issue"),
+            "audio_issue.note": ui.get(
+                "audio_issue.note", "Audio is not accurate for this form. Read it instead of listening."
+            ),
         },
         ensure_ascii=False,
     )

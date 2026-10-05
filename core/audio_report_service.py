@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
+import time
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlencode
@@ -24,6 +26,8 @@ from core.rate_limit import SlidingWindowRateLimiter
 from core.storage.firestore_db import get_db
 from core.tts import VOICES
 
+logger = logging.getLogger(__name__)
+
 VOTES_COLLECTION = "audio_report_votes"
 REPORTS_COLLECTION = "audio_reports"
 
@@ -31,6 +35,12 @@ VALID_VOICES = ("female", "male")
 VALID_REASONS = ("wrong_form", "stress", "glitch", "other")
 MAX_COMMENT_LENGTH = 200
 MAX_OPEN_REPORTS_LISTED = 500
+REPORT_STATUSES = ("open", "confirmed", "resolved")
+ADMIN_IDENTIFIER = "admin"  # the admin session carries no per-person identity
+_CONFIRMED_CACHE_TTL = 60.0
+_CONFIRMED_FAILURE_TTL = 10.0  # an outage must not add a Firestore round trip per page view
+# (language, verb_id) -> (loaded_at, confirmed form_keys); per Cloud Run instance, like verb_loader.
+_CONFIRMED_CACHE: dict[tuple[str, str], tuple[float, float, frozenset[str]]] = {}  # (loaded_at, ttl, keys)
 MAX_COMMENTS_STORED = 5
 _MAX_ID_LENGTH = 80
 
@@ -128,8 +138,14 @@ def submit_audio_report(
             "count": firestore.Increment(1),
             "reasons": {reason: firestore.Increment(1)},
             "last_at": now,
-            "status": "open",
         }
+        # Known race (accepted): `existing` is read, not transactional, so a report landing in the same
+        # millisecond as an admin transition can flip the status; the admin recovers by re-confirming.
+        if (existing or {}).get("status") == "confirmed":
+            # Stay confirmed (the public flag is the admin's call); just count the extra reports.
+            payload["reports_since_confirm"] = firestore.Increment(1)
+        else:
+            payload["status"] = "open"  # new, open, or resolved (a report on a resolved clip reopens it)
         if ui_language in UI_LANGUAGES:
             payload["ui_langs"] = {ui_language: firestore.Increment(1)}
         if existing is None:
@@ -191,21 +207,27 @@ def _iso(value: Any) -> str:
     return value.isoformat() if isinstance(value, datetime) else ""
 
 
-def list_open_audio_reports() -> list[dict[str, Any]]:
-    """Open reports, most-reported first. Sorted here (not by Firestore) to avoid a composite index."""
-    snapshots = (
-        get_db().collection(REPORTS_COLLECTION).where("status", "==", "open").limit(MAX_OPEN_REPORTS_LISTED).stream()
-    )
+def list_audio_reports(status: str = "open", language: str = "") -> list[dict[str, Any]]:
+    """Reports in one status. Filtered by status in Firestore (equality only) and sorted here: no composite index.
+
+    open: count desc (ties newest first); confirmed: confirmed_at desc; resolved: resolved_at desc.
+    """
+    if status not in REPORT_STATUSES:
+        raise ValueError("Unknown status")
+    query = get_db().collection(REPORTS_COLLECTION).where("status", "==", status)
+    if language:
+        query = query.where("language", "==", language)
     rows: list[dict[str, Any]] = []
-    for snapshot in snapshots:
+    for snapshot in query.limit(MAX_OPEN_REPORTS_LISTED).stream():
         data = snapshot.to_dict() or {}
-        language = str(data.get("language", ""))
+        language_code = str(data.get("language", ""))
         verb_id = str(data.get("verb_id", ""))
         voice = str(data.get("voice", ""))
         rows.append(
             {
                 "id": snapshot.id,
-                "language": language,
+                "status": status,
+                "language": language_code,
                 "verb_id": verb_id,
                 "voice": voice,
                 "text": str(data.get("text", "")),
@@ -214,30 +236,42 @@ def list_open_audio_reports() -> list[dict[str, Any]]:
                 "reasons": dict(data.get("reasons") or {}),
                 "comments": [str(c) for c in (data.get("comments") or [])],
                 "last_at": _iso(data.get("last_at")),
+                "confirmed_at": _iso(data.get("confirmed_at")),
+                "resolved_at": _iso(data.get("resolved_at")),
+                "reports_since_confirm": int(data.get("reports_since_confirm", 0) or 0),
                 "learn_url": "/learn?"
-                + urlencode({"language": language, "verb_id": verb_id, "voice": voice, "ui_language": "en"}),
+                + urlencode({"language": language_code, "verb_id": verb_id, "voice": voice, "ui_language": "en"}),
             }
         )
-    rows.sort(key=lambda row: row["last_at"], reverse=True)
-    rows.sort(key=lambda row: row["count"], reverse=True)  # stable: ties stay newest first
+    if status == "confirmed":
+        rows.sort(key=lambda row: row["confirmed_at"], reverse=True)
+    elif status == "resolved":
+        rows.sort(key=lambda row: row["resolved_at"], reverse=True)
+    else:
+        rows.sort(key=lambda row: row["last_at"], reverse=True)
+        rows.sort(key=lambda row: row["count"], reverse=True)  # stable: ties stay newest first
     return rows
 
 
-def resolve_audio_report(report_id: str) -> bool:
-    """Mark a report resolved and release the users' votes for that clip.
+def list_open_audio_reports() -> list[dict[str, Any]]:
+    return list_audio_reports("open")
 
-    Releasing the votes lets a user report the clip again if it is still wrong (a new report reopens it)
-    and clears their "reported" flag on their next page load. The counters restart from zero so the admin
-    ranking reflects only reports made after the fix; the old total is kept as `resolved_count`.
-    """
-    if not report_id or "/" in report_id:
-        return False
-    db = get_db()
-    ref = db.collection(REPORTS_COLLECTION).document(report_id)
-    snapshot = ref.get()
-    if not snapshot.exists:
-        return False
-    data = snapshot.to_dict() or {}
+
+# ── admin transitions ─────────────────────────────────────────────────────────
+# open -> confirm -> confirmed;  open|confirmed -> resolve -> resolved;  confirmed -> unconfirm -> open.
+
+
+class ReportTransitionError(Exception):
+    """Report missing (404) or not in the state the action needs (409)."""
+
+    def __init__(self, status_code: int, detail: str) -> None:
+        super().__init__(detail)
+        self.status_code = status_code
+        self.detail = detail
+
+
+def _release_votes_and_restart(db: Any, ref: Any, data: dict[str, Any]) -> None:
+    """Delete the users' votes for the clip and restart the counters (old total kept as resolved_count)."""
     votes = (
         db.collection(VOTES_COLLECTION)
         .where("language", "==", data.get("language"))
@@ -257,6 +291,99 @@ def resolve_audio_report(report_id: str) -> bool:
             "reasons": {},
             "ui_langs": {},
             "comments": [],
+            "reports_since_confirm": 0,
+            "confirmed_voice_id": None,
         }
     )
+
+
+def _current_voice_id(language: str, voice: str) -> str:
+    voice_entry = VOICES.get(language, {}).get(voice)
+    return voice_entry.edge_id if voice_entry else ""
+
+
+def transition_audio_report(report_id: str, action: str) -> None:
+    """Apply an admin action (confirm | unconfirm | resolve). Raises ReportTransitionError."""
+    if not report_id or "/" in report_id:
+        raise ReportTransitionError(404, "Report not found")
+    db = get_db()
+    ref = db.collection(REPORTS_COLLECTION).document(report_id)
+    snapshot = ref.get()
+    if not snapshot.exists:
+        raise ReportTransitionError(404, "Report not found")
+    data = snapshot.to_dict() or {}
+    status = data.get("status") or "open"
+    required = {"confirm": ("open",), "resolve": ("open", "confirmed"), "unconfirm": ("confirmed",)}
+    if action not in required:
+        raise ReportTransitionError(400, "Unknown action")
+    if status not in required[action]:
+        raise ReportTransitionError(409, f"Cannot {action} a {status} report")
+
+    if action == "confirm":
+        ref.update(
+            {
+                "status": "confirmed",
+                "confirmed_at": datetime.now(UTC),
+                "confirmed_by": ADMIN_IDENTIFIER,
+                "reports_since_confirm": 0,
+                "confirmed_voice_id": _current_voice_id(str(data.get("language", "")), str(data.get("voice", ""))),
+            }
+        )
+    elif action == "unconfirm":
+        ref.update({"status": "open", "confirmed_voice_id": None, "reports_since_confirm": 0})
+    else:  # resolve: dismissed or fixed; clears the public flag
+        _release_votes_and_restart(db, ref, data)
+    invalidate_confirmed_cache(str(data.get("language", "")), str(data.get("verb_id", "")))
+
+
+def resolve_audio_report(report_id: str) -> bool:
+    """Resolve an open or confirmed report (kept for callers that want a bool)."""
+    try:
+        transition_audio_report(report_id, "resolve")
+    except ReportTransitionError as exc:
+        if exc.status_code == 404:
+            return False
+        raise
     return True
+
+
+# ── public "known audio issue" flag ───────────────────────────────────────────
+
+
+def invalidate_confirmed_cache(language: str, verb_id: str) -> None:
+    _CONFIRMED_CACHE.pop((language, verb_id), None)
+
+
+def confirmed_form_keys(language: str, verb_id: str) -> set[str]:
+    """form_keys of clips publicly flagged as having inaccurate audio.
+
+    A form is flagged if either voice's report doc is confirmed (both voices read the same text), and only
+    while the doc's confirmed_voice_id equals the voice id in use now, so swapping a voice clears the flag.
+    One equality-only query, cached 60 s per (language, verb_id). Never raises: rendering must not break.
+    """
+    cache_key = (language, verb_id)
+    cached = _CONFIRMED_CACHE.get(cache_key)
+    now = time.monotonic()
+    if cached is not None and now - cached[0] < cached[1]:
+        return set(cached[2])
+    try:
+        snapshots = (
+            get_db()
+            .collection(REPORTS_COLLECTION)
+            .where("language", "==", language)
+            .where("verb_id", "==", verb_id)
+            .where("status", "==", "confirmed")
+            .stream()
+        )
+        keys: set[str] = set()
+        for snapshot in snapshots:
+            data = snapshot.to_dict() or {}
+            voice_id = _current_voice_id(language, str(data.get("voice", "")))
+            if voice_id and data.get("confirmed_voice_id") == voice_id and data.get("form_key"):
+                keys.add(str(data["form_key"]))
+    except Exception:
+        logger.exception("confirmed_form_keys failed for %s/%s", language, verb_id)
+        _CONFIRMED_CACHE[cache_key] = (now, _CONFIRMED_FAILURE_TTL, frozenset())
+        return set()
+    _CONFIRMED_CACHE[cache_key] = (now, _CONFIRMED_CACHE_TTL, frozenset(keys))
+    return keys

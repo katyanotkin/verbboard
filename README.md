@@ -54,10 +54,12 @@ Visual indicators:
 - Focus filter: hide conjugation rows by gender (masculine / feminine) and number (singular / plural) — Hebrew, Russian, Spanish
 - Italian boards also show the condizionale presente, congiuntivo presente and congiuntivo imperfetto, as bare forms like the other tenses
 - Spanish boards also show the conditional, present subjunctive and imperfect subjunctive (-ra form), as bare forms like the other tenses
+- Hebrew boards show the imperative (masculine and feminine singular, masculine plural) for verbs that have a natural command form
 - French boards also show the conditionnel présent and subjonctif présent (the subjunctive title carries "que…"; rows hold the pronoun + verb form)
 - Pronoun reference: a collapsible "Pronouns" panel shows I/you/he-she-it/we/you/they in the verb's language, with translations revealed by the same toggle used for example sentences
 - Russian stress marks: for a few verbs whose forms the text-to-speech voice stresses wrongly (e.g. платить, мыть, начать, погнать), the correct stress is marked in the forms and example sentences (audio is unchanged) and a one-line note explains it
-- Report an audio problem: a small flag next to each play button lets a signed-in learner flag a clip as the wrong form, wrong stress, cut off/noisy, or other (optional 200-character note); reports are counted per clip for the admin Reports page
+- Report an audio problem: a small flag next to each play button lets a signed-in learner flag a clip as the wrong form, wrong stress, cut off/noisy, or other (optional 200-character note); reports are counted per clip for the admin Audio reports page (`/admin/audio-reports`: Open / Confirmed / Resolved tabs, language filter; Confirm, Resolve, Unconfirm)
+- Known audio issue: when an admin confirms a report, every learner sees a small amber warning icon next to that form's play button (both voices, forms and examples) saying the audio is not accurate and to read the form instead; the report flag is hidden on it until the admin resolves it
 
 ### Verbs page
 - Browse with filters: new / seen / known / recent

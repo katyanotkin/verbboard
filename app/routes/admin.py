@@ -6,6 +6,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from app.routes.admin_audio_reports import router as admin_audio_reports_router
 from app.routes.admin_auth import router as admin_auth_router
 from app.routes.admin_candidates import router as admin_candidates_router
 from app.routes.admin_entitlements import router as admin_entitlements_router
@@ -37,3 +38,4 @@ router.include_router(admin_signals_router)
 router.include_router(admin_candidates_router)
 router.include_router(admin_entitlements_router)
 router.include_router(admin_report_router)
+router.include_router(admin_audio_reports_router)
