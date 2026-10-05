@@ -157,7 +157,7 @@
   "privacy.delete_account_error": "משהו השתבש. נסה שוב בעוד כמה דקות או השתמש בטופס המשוב.",
   "privacy.delete_account_disabled_title": "יש להתחבר עם Google כדי למחוק את החשבון",
   "audio_report.trigger": "דווח על בעיה באודיו הזה",
-  "audio_report.title": "מה השתבש?",
+  "audio_report.title": "דווח על בעיה באודיו הזה",
   "audio_report.reason_wrong_form": "נשמע כמו צורה אחרת",
   "audio_report.reason_stress": "הטעמה או תנועה שגויה",
   "audio_report.reason_glitch": "נחתך או רועש",

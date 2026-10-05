@@ -157,7 +157,7 @@
   "privacy.delete_account_error": "Что-то пошло не так. Попробуйте снова через несколько минут или воспользуйтесь формой обратной связи.",
   "privacy.delete_account_disabled_title": "Войдите через Google, чтобы удалить свой аккаунт",
   "audio_report.trigger": "Сообщить о проблеме с этим аудио",
-  "audio_report.title": "Что не так?",
+  "audio_report.title": "Сообщить о проблеме с этим аудио",
   "audio_report.reason_wrong_form": "Звучит другая форма",
   "audio_report.reason_stress": "Неверное ударение или гласная",
   "audio_report.reason_glitch": "Обрезано или с шумом",

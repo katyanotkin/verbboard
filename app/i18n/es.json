@@ -157,7 +157,7 @@
   "privacy.delete_account_error": "Algo salió mal. Inténtalo de nuevo en unos minutos o usa el formulario de comentarios.",
   "privacy.delete_account_disabled_title": "Inicia sesión con Google para eliminar tu cuenta",
   "audio_report.trigger": "Informar de un problema con este audio",
-  "audio_report.title": "¿Qué falló?",
+  "audio_report.title": "Informar de un problema con este audio",
   "audio_report.reason_wrong_form": "Suena como otra forma",
   "audio_report.reason_stress": "Acento o vocal incorrectos",
   "audio_report.reason_glitch": "Cortado o con ruido",

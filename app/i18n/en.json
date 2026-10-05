@@ -157,7 +157,7 @@
   "privacy.delete_account_error": "Something went wrong. Please try again in a few minutes, or use the feedback form.",
   "privacy.delete_account_disabled_title": "Sign in with Google to delete your account",
   "audio_report.trigger": "Report a problem with this audio",
-  "audio_report.title": "What went wrong?",
+  "audio_report.title": "Report a problem with this audio",
   "audio_report.reason_wrong_form": "Sounds like a different form",
   "audio_report.reason_stress": "Wrong stress or vowel",
   "audio_report.reason_glitch": "Cut off or noisy",

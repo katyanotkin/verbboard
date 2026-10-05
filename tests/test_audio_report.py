@@ -210,7 +210,7 @@ def test_learn_page_renders_report_buttons_and_popover(client: TestClient, seede
     assert "audio-report-btn" in html
     assert html.count("class='audio-report-btn'") >= 2  # a form row and the example row
     assert 'id="audio-report-pop"' in html
-    assert "Что не так?" in html
+    assert "Сообщить о проблеме с этим аудио" in html  # popover heading, ru
     assert "/static/audio_report.js" in html
 
 
