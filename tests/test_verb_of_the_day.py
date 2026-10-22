@@ -165,3 +165,15 @@ def test_stale_doc_is_corrected_via_set_not_create() -> None:
     assert payload == {"language": LANGUAGE, "date": DATE_STR, "verb_id": expected.id}
 
     doc_ref.create.assert_not_called()
+
+
+def test_confirmed_pick_is_served_from_process_cache_without_a_second_firestore_read() -> None:
+    entries = _make_entries()
+    db, doc_ref = _make_fake_db([_FakeSnapshot(exists=True, data={"verb_id": entries[1].id})])
+
+    with patch("core.storage.firestore_db.get_db", return_value=db):
+        first = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
+        second = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
+
+    assert first is second is entries[1]
+    assert doc_ref.get.call_count == 1

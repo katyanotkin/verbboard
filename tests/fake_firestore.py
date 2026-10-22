@@ -232,6 +232,9 @@ class FakeBatch:
     def set(self, ref: FakeDocRef, data: dict[str, Any], merge: bool = False) -> None:
         self._ops.append(_BatchOp("set", ref, data, merge))
 
+    def create(self, ref: FakeDocRef, data: dict[str, Any]) -> None:
+        self._ops.append(_BatchOp("create", ref, data, False))
+
     def update(self, ref: FakeDocRef, data: dict[str, Any]) -> None:
         self._ops.append(_BatchOp("update", ref, data, False))
 
@@ -244,6 +247,9 @@ class FakeBatch:
             if op.kind == "set":
                 assert op.data is not None
                 op.ref.set(op.data, merge=op.merge)
+            elif op.kind == "create":
+                assert op.data is not None
+                op.ref.create(op.data)
             elif op.kind == "update":
                 assert op.data is not None
                 op.ref.update(op.data)

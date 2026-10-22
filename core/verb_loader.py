@@ -93,6 +93,12 @@ def pick_verb_of_the_day(entries: list[VerbEntry], *, language: str, date_str: s
 _VOTD_COLLECTION = "verb_of_the_day"
 
 
+# (language, date) -> verb_id already confirmed against Firestore. The day's pick
+# never changes once persisted, so a process that has seen it skips the per-request
+# doc read. Only a pick confirmed present in `entries` is cached.
+_VOTD_PICK_CACHE: dict[tuple[str, str], str] = {}
+
+
 def get_verb_of_the_day(entries: list[VerbEntry], *, language: str, date_str: str) -> VerbEntry | None:
     """Stable Verb of the Day: persists the day's pick so it can't flip mid-day.
 
@@ -114,6 +120,12 @@ def get_verb_of_the_day(entries: list[VerbEntry], *, language: str, date_str: st
     if not entries:
         return None
 
+    cached_verb_id = _VOTD_PICK_CACHE.get((language, date_str))
+    if cached_verb_id is not None:
+        for entry in entries:
+            if entry.id == cached_verb_id:
+                return entry
+
     from google.api_core.exceptions import AlreadyExists
 
     from core.storage.firestore_db import get_db
@@ -128,6 +140,7 @@ def get_verb_of_the_day(entries: list[VerbEntry], *, language: str, date_str: st
         stored_verb_id = (doc.to_dict() or {}).get("verb_id")
         for entry in entries:
             if entry.id == stored_verb_id:
+                _VOTD_PICK_CACHE[(language, date_str)] = entry.id
                 return entry
         # Stored pick no longer exists in the current catalog (e.g. manually
         # deleted) -- fall through and repick, then overwrite the stale doc
@@ -142,6 +155,7 @@ def get_verb_of_the_day(entries: list[VerbEntry], *, language: str, date_str: st
 
     if doc_existed:
         doc_ref.set(payload)
+        _VOTD_PICK_CACHE[(language, date_str)] = picked.id
         return picked
 
     try:
@@ -152,8 +166,11 @@ def get_verb_of_the_day(entries: list[VerbEntry], *, language: str, date_str: st
         stored_verb_id = (doc.to_dict() or {}).get("verb_id")
         for entry in entries:
             if entry.id == stored_verb_id:
+                _VOTD_PICK_CACHE[(language, date_str)] = entry.id
                 return entry
+        return picked
 
+    _VOTD_PICK_CACHE[(language, date_str)] = picked.id
     return picked
 
 

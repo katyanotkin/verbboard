@@ -85,7 +85,7 @@ async def learn(
     source_lang: str | None = Query(None),
 ) -> HTMLResponse:
     session_uid = get_session_uid(request)
-    if not can_study(language, session_uid):
+    if not await asyncio.to_thread(can_study, language, session_uid):
         # Plus-only language, not entitled (anonymous or signed in): signing in
         # would not unlock it, so go straight to the /verbs notice. Not
         # not_available=1 -- that means "search miss" and would render a
@@ -102,7 +102,8 @@ async def learn(
             return HTMLResponse("Candidate not found", status_code=404)
         if not verb_id:
             return HTMLResponse("verb_id required for candidate preview", status_code=400)
-        verb = load_entry_by_id(
+        verb = await asyncio.to_thread(
+            load_entry_by_id,
             language=language,
             verb_id=verb_id,
             source="candidate",
@@ -112,11 +113,11 @@ async def learn(
             return HTMLResponse("Candidate not found", status_code=404)
     else:
         if verb_id:
-            verb = load_entry_by_id(language=language, verb_id=verb_id)
+            verb = await asyncio.to_thread(load_entry_by_id, language=language, verb_id=verb_id)
             if verb is None:
                 return HTMLResponse("Verb not found", status_code=404)
         else:
-            entries = load_entries_for_language(language=language)
+            entries = await asyncio.to_thread(load_entries_for_language, language=language)
             if not entries:
                 return HTMLResponse("No verbs available", status_code=400)
             verb = entries[0]
@@ -132,6 +133,9 @@ async def learn(
     plugin = get_plugin(language)
 
     voice_meta = VOICES[language][selected_voice]
+    # Deliberately NOT in asyncio.to_thread: the RU plugin only fire-and-forgets its
+    # paid pair generation when a loop is running; in a worker thread it would block
+    # this render on a synchronous Claude call.
     board = plugin.build_board(verb, selected_voice, voice_meta.label)
 
     audio_backend = request.app.state.audio_backend
@@ -190,7 +194,8 @@ async def learn(
     # Warm the 60 s confirmed-audio-issue cache off the event loop; render_board_html then hits the cache.
     await asyncio.to_thread(confirmed_form_keys, language, verb.id)
 
-    html = render_board_html(
+    html = await asyncio.to_thread(
+        render_board_html,
         board=board,
         return_to=return_to or ("/admin#candidates" if source == "candidate" else None),
         candidate_verb_id=verb.id if source == "candidate" else None,

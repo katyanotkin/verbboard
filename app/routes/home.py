@@ -142,10 +142,10 @@ async def search_verb_by_lang(
         query = ""  # never search a truncated prefix; no real verb query is this long
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
-        return _home_redirect(request, language, ui_language)
+        return await asyncio.to_thread(_home_redirect, request, language, ui_language)
 
     session_uid = get_session_uid(request)
-    if not can_study(language, session_uid):
+    if not await asyncio.to_thread(can_study, language, session_uid):
         return _entitlement_redirect(language, ui_language, return_to)
 
     if not (_TRANSLATE_RATE_LIMITER.allow(_client_ip(request)) and _TRANSLATE_GLOBAL_RATE_LIMITER.allow("global")):
@@ -166,19 +166,19 @@ async def search_verb_by_lang(
     logger.debug("search_verb_by_lang q=%r translated=%r lang=%s", query, translated, language)
 
     if translated:
-        doc = find_verb_by_search_extract(language, translated)
+        doc = await asyncio.to_thread(find_verb_by_search_extract, language, translated)
 
         if not doc:
             # Gemini may return multi-word output despite the single-word prompt;
             # try each token so "бегать/бежать" or "correr." still resolves.
             for token in tokenize_text(translated):
-                doc = find_verb_by_search_extract(language, token)
+                doc = await asyncio.to_thread(find_verb_by_search_extract, language, token)
                 if doc:
                     break
 
         if not doc:
             # Fuzzy fallback against all cached verbs (60 s TTL).
-            all_entries = load_entries_for_language(language=language)
+            all_entries = await asyncio.to_thread(load_entries_for_language, language=language)
             matched = find_best_entry(all_entries, translated)
             if matched:
                 doc = {"verb_id": matched.id}
@@ -211,7 +211,8 @@ async def search_verb_by_lang(
         )
     # Translation succeeded but verb not in DB -- show translated word
     # so user sees what was actually searched in the target language.
-    log_missing_verb_search(
+    await asyncio.to_thread(
+        log_missing_verb_search,
         language=language,
         query=translated,
         page="home",
@@ -275,10 +276,10 @@ async def search_verb(
         query = ""  # never search a truncated prefix; no real verb query is this long
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
-        return _home_redirect(request, language, ui_language)
+        return await asyncio.to_thread(_home_redirect, request, language, ui_language)
 
     session_uid = get_session_uid(request)
-    if not can_study(language, session_uid):
+    if not await asyncio.to_thread(can_study, language, session_uid):
         return _entitlement_redirect(language, ui_language, return_to)
 
     if language in _NON_LATIN_LANGUAGES and _looks_english(query):
@@ -289,21 +290,22 @@ async def search_verb(
 
     _rt_suffix = f"&return_to={quote(return_to, safe='/')}" if return_to else ""
 
-    doc = find_verb_by_search_extract(language, query)
+    doc = await asyncio.to_thread(find_verb_by_search_extract, language, query)
 
     if doc:
         matched_verb_id = doc.get("verb_id")
         record_search_hit(language=language, verb_id=matched_verb_id, source="search")
         return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_verb_id}{_ui_suffix}{_rt_suffix}")
 
-    entries = _load_entries(language)
+    entries = await asyncio.to_thread(_load_entries, language)
     matched_entry = find_best_entry(entries, query)
 
     if matched_entry:
         record_search_hit(language=language, verb_id=matched_entry.id, source="search")
         return RedirectResponse(url=f"/learn?language={language}&verb_id={matched_entry.id}{_ui_suffix}{_rt_suffix}")
 
-    log_missing_verb_search(
+    await asyncio.to_thread(
+        log_missing_verb_search,
         language=language,
         query=query,
         page="home",

@@ -465,7 +465,7 @@ button {
 }
 
 .practice-nav-btn:disabled {
-  opacity: 0.25;
+  opacity: 0.6;
   cursor: default;
 }
 
@@ -489,7 +489,7 @@ button {
 }
 
 .practice-nav-btn--pending {
-  opacity: 0.45;
+  opacity: 0.6;
   cursor: default;
   transform: scale(0.97);
 }
@@ -968,7 +968,7 @@ button {
 
 /* Dimmed (not hidden, no layout shift) until a clip has been played. */
 #learn-page:not(.audio-played) .audio-report-btn {
-  opacity: 0.45;
+  opacity: 0.7;
 }
 
 /* Examples: the audio cell holds play + slow + flag; let the flag wrap on narrow widths. */

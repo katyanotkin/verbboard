@@ -12,6 +12,7 @@ which would silently "pass" without validating what was actually written).
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -80,7 +81,8 @@ def test_write_promoted_verb_commits_a_single_batch_with_both_docs(monkeypatch: 
     assert len(db.created_batches) == 1
     batch = db.created_batches[0]
 
-    assert batch.set.call_count == 2
+    assert batch.set.call_count == 1
+    assert batch.create.call_count == 1
     batch.commit.assert_called_once()
 
 
@@ -91,7 +93,8 @@ def test_write_promoted_verb_writes_correctly_shaped_candidate_and_live_docs(mon
 
     batch = db.created_batches[0]
     payload_by_collection = {
-        call.args[0].collection_name: (call.args[0].id, call.args[1]) for call in batch.set.call_args_list
+        call.args[0].collection_name: (call.args[0].id, call.args[1])
+        for call in [*batch.set.call_args_list, *batch.create.call_args_list]
     }
 
     assert set(payload_by_collection.keys()) == {verb_candidates_collection_name(), verbs_collection_name()}
@@ -144,7 +147,7 @@ def test_write_promoted_verb_includes_pronoun_forms_when_present(monkeypatch: py
         )
 
     batch = db.created_batches[0]
-    for call in batch.set.call_args_list:
+    for call in [*batch.set.call_args_list, *batch.create.call_args_list]:
         doc = call.args[1]
         assert doc["pronoun_forms"] == {"1sg": "I"}
 
@@ -177,3 +180,26 @@ def test_write_promoted_verb_does_not_commit_if_first_set_raises(monkeypatch: py
             pass
 
     batch.commit.assert_not_called()
+
+
+def test_write_promoted_verb_raises_already_exists_instead_of_overwriting_a_live_verb(fake_db) -> None:
+    """A racing autogen of the same lemma must lose cleanly, not overwrite."""
+    from google.api_core.exceptions import AlreadyExists
+
+    fake_db.collection(verbs_collection_name()).document("en_go").set({"lemma": "go", "rank": 1})
+    kwargs: dict[str, Any] = dict(
+        language="en",
+        verb_id="en_go",
+        lemma="go",
+        rank=5,
+        forms={"base": "go"},
+        examples=[],
+        morph=None,
+        search_extract=["go"],
+        pronoun_forms=None,
+        query="go",
+    )
+    with pytest.raises(AlreadyExists):
+        _write_promoted_verb(**kwargs)
+
+    assert fake_db.collection(verbs_collection_name()).document("en_go").get().to_dict()["rank"] == 1

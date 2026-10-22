@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import vertexai
+from google.api_core.exceptions import AlreadyExists
 from pydantic import BaseModel, ValidationError
 from vertexai.generative_models import GenerationConfig, GenerativeModel
 
@@ -412,7 +413,11 @@ def _write_promoted_verb(
     # corresponding live verb (invisible to both learners and the admin queue).
     batch = db.batch()
     batch.set(db.collection(verb_candidates_collection_name()).document(verb_id), candidate_doc)
-    batch.set(db.collection(verbs_collection_name()).document(verb_id), live_doc)
+    # create() (not set()) for the live doc: _allocate_verb_id's existence check
+    # runs well before this write (translation sits in between), so two racing
+    # autogens of the same lemma must not overwrite each other. The loser's
+    # whole batch fails with AlreadyExists, which the caller treats as "done".
+    batch.create(db.collection(verbs_collection_name()).document(verb_id), live_doc)
     batch.commit()
 
     from core.admin_logging import resolve_signal_label
@@ -492,20 +497,26 @@ async def autogenerate_missing_verb(*, language: str, query: str, audio_backend:
             logger.warning("autogen: translation timed out for %s/%s, publishing untranslated", language, lemma)
             lemma_translations = {}
 
-        await asyncio.to_thread(
-            _write_promoted_verb,
-            language=language,
-            verb_id=verb_id,
-            lemma=lemma,
-            rank=rank,
-            forms=parsed.forms,
-            examples=examples,
-            morph=parsed.morph,
-            search_extract=search_extract,
-            pronoun_forms=parsed.pronoun_forms,
-            query=query,
-            lemma_translations=lemma_translations,
-        )
+        try:
+            await asyncio.to_thread(
+                _write_promoted_verb,
+                language=language,
+                verb_id=verb_id,
+                lemma=lemma,
+                rank=rank,
+                forms=parsed.forms,
+                examples=examples,
+                morph=parsed.morph,
+                search_extract=search_extract,
+                pronoun_forms=parsed.pronoun_forms,
+                query=query,
+                lemma_translations=lemma_translations,
+            )
+        except AlreadyExists:
+            logger.info(
+                "autogen: %s/%s (verb_id=%s) was published by a concurrent request, skipping", language, lemma, verb_id
+            )
+            return
 
         # Bust the list cache so the new verb appears on the next /verbs load
         from core.verb_loader import invalidate_entries_cache
