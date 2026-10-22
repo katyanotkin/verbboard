@@ -140,7 +140,12 @@
       const provider = new firebase.auth.GoogleAuthProvider();
       // Always show the account chooser, even when the browser has a cached
       // Google session -- prevents silent single-account auto-sign-in.
-      provider.setCustomParameters({ prompt: 'select_account' });
+      // hl: Google's own account chooser follows it, not the page language
+      // (auth().languageCode was tried and does not reach Google).
+      var signInParams = { prompt: 'select_account' };
+      var uiCode = window.VB_UI_LANG || document.documentElement.lang;
+      if (uiCode) signInParams.hl = uiCode;
+      provider.setCustomParameters(signInParams);
       if (isTwa) {
         // TWA (Trusted Web Activity, e.g. the Play Store install): reports
         // display-mode: standalone like a desktop-installed PWA, but it's a

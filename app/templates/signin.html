@@ -88,7 +88,7 @@
       status.textContent = S['signin.signing_in'];
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
+        provider.setCustomParameters({ prompt: 'select_account', hl: {{ lang | tojson }} });
         const cred = await firebase.auth().signInWithPopup(provider);
         await establishSessionCookie(cred.user);
         proceedAfterSignIn();
