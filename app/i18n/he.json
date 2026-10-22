@@ -83,6 +83,8 @@
   "practice.gate_cta": "המשך עם Google",
   "practice.gate_note": "בחינם. אנחנו משתמשים בשם ובאימייל שלכם רק כדי לשמור את ההתקדמות.",
   "practice.gate_dismiss": "להמשיך לעיין",
+  "practice.listens_decrease": "הפחתה",
+  "practice.listens_increase": "הגדלה",
   "practice.prev": "קודם",
   "practice.next": "הבא",
   "practice.wrap_up": "התרגול הסתיים",
@@ -174,5 +176,17 @@
   "audio_report.error": "השליחה נכשלה. נסו שוב מאוחר יותר.",
   "audio_report.sign_in": "התחברו כדי לדווח על בעיה באודיו.",
   "audio_issue.label": "בעיית שמע ידועה",
-  "audio_issue.note": "השמע של צורה זו אינו מדויק. כדאי לקרוא אותה במקום להאזין."
+  "audio_issue.note": "השמע של צורה זו אינו מדויק. כדאי לקרוא אותה במקום להאזין.",
+  "signin.title": "התחברות ל-VerbBoard",
+  "signin.checking": "בודקים את מצב ההתחברות…",
+  "signin.button": "התחברות עם Google",
+  "signin.tap_to_sign_in": "הקישו על הכפתור כדי להתחבר ל-VerbBoard.",
+  "signin.signing_in": "מתחברים…",
+  "signin.signing_you_in": "מחברים אתכם…",
+  "signin.signed_in": "התחברתם!",
+  "signin.close_tab": "אפשר לסגור את הלשונית ולחזור ל-VerbBoard.",
+  "signin.failed": "ההתחברות נכשלה.",
+  "signin.not_configured": "ההתחברות לא הוגדרה.",
+  "signin.unavailable": "ההתחברות אינה זמינה כרגע.",
+  "signin.unavailable_hint": "לא ניתן לטעון את ההתחברות עם Google. בדקו את החיבור או חוסמי תוכן ורעננו את הדף."
 }

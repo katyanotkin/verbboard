@@ -83,6 +83,8 @@
   "practice.gate_cta": "Продолжить с Google",
   "practice.gate_note": "Бесплатно. Мы используем ваше имя и почту, только чтобы сохранять прогресс.",
   "practice.gate_dismiss": "Продолжить просмотр",
+  "practice.listens_decrease": "Уменьшить",
+  "practice.listens_increase": "Увеличить",
   "practice.prev": "Назад",
   "practice.next": "Вперёд",
   "practice.wrap_up": "Тренировка завершена",
@@ -174,5 +176,17 @@
   "audio_report.error": "Не удалось отправить. Попробуйте позже.",
   "audio_report.sign_in": "Войдите, чтобы сообщить о проблеме с аудио.",
   "audio_issue.label": "Известная проблема с аудио",
-  "audio_issue.note": "Аудио для этой формы неверно. Рекомендуем читать, а не слушать."
+  "audio_issue.note": "Аудио для этой формы неверно. Рекомендуем читать, а не слушать.",
+  "signin.title": "Вход в VerbBoard",
+  "signin.checking": "Проверяем вход…",
+  "signin.button": "Войти через Google",
+  "signin.tap_to_sign_in": "Нажмите кнопку, чтобы войти в VerbBoard.",
+  "signin.signing_in": "Входим…",
+  "signin.signing_you_in": "Выполняем вход…",
+  "signin.signed_in": "Вы вошли!",
+  "signin.close_tab": "Эту вкладку можно закрыть и вернуться в VerbBoard.",
+  "signin.failed": "Не удалось войти.",
+  "signin.not_configured": "Вход не настроен.",
+  "signin.unavailable": "Вход временно недоступен.",
+  "signin.unavailable_hint": "Не удалось загрузить вход через Google. Проверьте соединение или блокировщики контента и перезагрузите страницу."
 }

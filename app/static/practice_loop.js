@@ -367,9 +367,9 @@
 
       const listenStepper = `
         <div class="practice-listens-stepper">
-          <button class="practice-listens-btn" id="listens-dec" aria-label="Decrease"${activeListens <= LISTENS_MIN ? ' disabled' : ''}>&#8722;</button>
+          <button class="practice-listens-btn" id="listens-dec" aria-label="${escapeHtml(ui['practice.listens_decrease'] || 'Decrease')}"${activeListens <= LISTENS_MIN ? ' disabled' : ''}>&#8722;</button>
           <span class="practice-listens-val" id="listens-val">${activeListens}</span>
-          <button class="practice-listens-btn" id="listens-inc" aria-label="Increase"${activeListens >= LISTENS_MAX ? ' disabled' : ''}>+</button>
+          <button class="practice-listens-btn" id="listens-inc" aria-label="${escapeHtml(ui['practice.listens_increase'] || 'Increase')}"${activeListens >= LISTENS_MAX ? ' disabled' : ''}>+</button>
         </div>
       `;
 
@@ -706,8 +706,13 @@
 
       const card = document.createElement('div');
       card.className = 'practice-wrapup-card';
+      card.setAttribute('role', 'dialog');
+      card.setAttribute('aria-modal', 'true');
+      card.setAttribute('aria-labelledby', 'practice-wrapup-title');
+      const previouslyFocused = document.activeElement;
 
       const heading = document.createElement('h3');
+      heading.id = 'practice-wrapup-title';
       heading.textContent = ui['practice.wrap_up'] || 'Practice complete';
 
       card.appendChild(heading);
@@ -806,6 +811,41 @@
       overlay.appendChild(card);
       document.body.appendChild(overlay);
 
+      function closeWrapUp() {
+        document.removeEventListener('keydown', onWrapUpKeydown, true);
+        overlay.remove();
+        if (previouslyFocused && previouslyFocused.isConnected && previouslyFocused.focus) {
+          previouslyFocused.focus();
+        }
+      }
+
+      function onWrapUpKeydown(event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeWrapUp();
+        } else if (event.key === 'Tab') {
+          const focusable = Array.from(
+            card.querySelectorAll('button, a[href], input, [tabindex]:not([tabindex="-1"])')
+          ).filter(el => !el.disabled);
+          if (focusable.length === 0) return;
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (!card.contains(document.activeElement)) {
+            event.preventDefault();
+            first.focus();
+          } else if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      }
+
+      document.addEventListener('keydown', onWrapUpKeydown, true);
+      doneButton.focus();
+
       doneButton.addEventListener('click', async function () {
         const checked = overlay.querySelectorAll("input[type='checkbox']:checked");
 
@@ -827,7 +867,7 @@
           }
         }
 
-        overlay.remove();
+        closeWrapUp();
         render();
         updateProgress();
         renderPracticePanel();

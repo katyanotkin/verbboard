@@ -127,6 +127,8 @@ def verb_browser(
             "practice.gate_cta": ui["practice.gate_cta"],
             "practice.gate_note": ui["practice.gate_note"],
             "practice.gate_dismiss": ui["practice.gate_dismiss"],
+            "practice.listens_decrease": ui["practice.listens_decrease"],
+            "practice.listens_increase": ui["practice.listens_increase"],
             "practice.wrap_up": ui["practice.wrap_up"],
             "practice.learned_prompt": ui["practice.learned_prompt"],
             "practice.done": ui["practice.done"],

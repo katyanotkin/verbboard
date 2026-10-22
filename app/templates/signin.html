@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ lang }}" dir="{{ html_dir }}">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Sign in to VerbBoard</title>
+  <title>{{ strings["signin.title"] }}</title>
   <meta name="theme-color" content="#2d6a4f"/>
   <meta name="mobile-web-app-capable" content="yes"/>
   <link rel="manifest" href="/static/manifest.json"/>
@@ -14,12 +14,13 @@
   <div class="msg">
     <img src="/static/snail-logo.svg" alt="" width="56" height="56" class="signin-logo">
     <div class="signin-wordmark">VerbBoard</div>
-    <p id="status">Checking sign-in status…</p>
-    <button id="signin-btn" type="button" onclick="doSignIn()" hidden>Sign in with Google</button>
+    <p id="status">{{ strings["signin.checking"] }}</p>
+    <button id="signin-btn" type="button" onclick="doSignIn()" hidden>{{ strings["signin.button"] }}</button>
     <small id="hint"></small>
   </div>
   <script>
     window.FIREBASE_WEB_CONFIG = {{ firebase_cfg_json | safe }};
+    const S = {{ strings_json | safe }};
     // If the Firebase CDN scripts fail to load (ad-blocker, corporate firewall,
     // flaky mobile connection -- exactly the population most likely to land on
     // this bounce page), fail visibly instead of leaving the button permanently
@@ -29,9 +30,9 @@
       var statusEl = document.getElementById('status');
       var btnEl = document.getElementById('signin-btn');
       var hintEl = document.getElementById('hint');
-      if (statusEl) statusEl.textContent = 'Sign-in is temporarily unavailable.';
+      if (statusEl) statusEl.textContent = S['signin.unavailable'];
       if (btnEl) { btnEl.hidden = false; btnEl.disabled = true; }
-      if (hintEl) hintEl.textContent = 'Could not load Google Sign-In. Check your connection or content blockers, then reload this page.';
+      if (hintEl) hintEl.textContent = S['signin.unavailable_hint'];
     }
   </script>
   <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js" onerror="handleSdkLoadFailure()"></script>
@@ -62,7 +63,7 @@
     }
 
     function proceedAfterSignIn() {
-      status.textContent = 'Signed in!';
+      status.textContent = S['signin.signed_in'];
       let sameOriginTarget = null;
       try {
         const parsed = new URL(returnTo, window.location.origin);
@@ -74,7 +75,7 @@
         window.location.href = sameOriginTarget;
       } else {
         // Show hint before attempting close so it's visible if close() is a no-op.
-        hint.textContent = 'You can close this tab and return to VerbBoard.';
+        hint.textContent = S['signin.close_tab'];
         btn.hidden = true;
         // Notify the PWA shell window (future hook; Firebase IndexedDB sync also fires).
         try { window.opener?.postMessage('vb:signed-in', location.origin); } catch (_) {}
@@ -84,7 +85,7 @@
 
     async function doSignIn() {
       btn.disabled = true;
-      status.textContent = 'Signing in…';
+      status.textContent = S['signin.signing_in'];
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
@@ -92,7 +93,7 @@
         await establishSessionCookie(cred.user);
         proceedAfterSignIn();
       } catch (err) {
-        status.textContent = 'Sign-in failed.';
+        status.textContent = S['signin.failed'];
         hint.textContent = err.message || String(err);
         btn.disabled = false;
         btn.hidden = false;
@@ -100,7 +101,7 @@
     }
 
     if (!cfg || !cfg.apiKey) {
-      status.textContent = 'Auth not configured.';
+      status.textContent = S['signin.not_configured'];
       btn.hidden = true;
     } else {
       try {
@@ -115,11 +116,11 @@
           if (handledInitialAuthState) return;
           handledInitialAuthState = true;
           if (user) {
-            status.textContent = 'Signing you in…';
+            status.textContent = S['signin.signing_you_in'];
             btn.hidden = true;
             establishSessionCookie(user).then(proceedAfterSignIn);
           } else {
-            status.textContent = 'Tap the button to sign in to VerbBoard.';
+            status.textContent = S['signin.tap_to_sign_in'];
             btn.hidden = false;
           }
         });

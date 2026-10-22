@@ -129,3 +129,21 @@ def test_is_mobile_matches_mobile_ua(is_mobile_re: _re.Pattern, ua: str) -> None
 @pytest.mark.parametrize("ua", _DESKTOP_UAS)
 def test_is_mobile_does_not_match_desktop_ua(is_mobile_re: _re.Pattern, ua: str) -> None:
     assert not is_mobile_re.search(ua), f"Expected desktop UA NOT to match: {ua}"
+
+
+# ── localization ──────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "lang,button,direction",
+    [
+        ("en", "Sign in with Google", "ltr"),
+        ("ru", "Войти через Google", "ltr"),
+        ("es", "Iniciar sesión con Google", "ltr"),
+        ("he", "התחברות עם Google", "rtl"),
+    ],
+)
+def test_auth_signin_is_localized(client: TestClient, lang: str, button: str, direction: str) -> None:
+    html = client.get(f"/auth/signin?ui_language={lang}").text
+    assert f'<html lang="{lang}" dir="{direction}">' in html
+    assert button in html

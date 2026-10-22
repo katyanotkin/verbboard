@@ -208,7 +208,7 @@ def test_ios_standalone_keeps_window_open(ios_standalone_page, live_server_url):
     opens = ios_standalone_page.evaluate("window.__windowOpenCalls")
     assert calls["redirect"] == 0
     assert calls["popup"] == 0
-    assert opens == ["/auth/signin"]
+    assert len(opens) == 1 and opens[0].startswith("/auth/signin")
 
 
 def test_desktop_standalone_keeps_window_open(desktop_standalone_page, live_server_url):
@@ -220,4 +220,4 @@ def test_desktop_standalone_keeps_window_open(desktop_standalone_page, live_serv
     opens = desktop_standalone_page.evaluate("window.__windowOpenCalls")
     assert calls["redirect"] == 0
     assert calls["popup"] == 0
-    assert opens == ["/auth/signin"]
+    assert len(opens) == 1 and opens[0].startswith("/auth/signin")

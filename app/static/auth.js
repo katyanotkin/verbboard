@@ -67,6 +67,11 @@
   // localStorage `vb_signin_redirect`: ?signin=redirect sets '1' (force on),
   // ?signin=popup sets '0' (force off, the legacy flow), ?signin=default removes
   // it. With no override the platform default applies (see useRedirectSignIn).
+  // Only pages that define VB_UI_LANG carry the learner's UI language; elsewhere
+  // the sign-in page falls back to Accept-Language.
+  function uiLanguageQuery(prefix) {
+    return window.VB_UI_LANG ? prefix + 'ui_language=' + encodeURIComponent(window.VB_UI_LANG) : '';
+  }
   var REDIRECT_FLAG_KEY = 'vb_signin_redirect';
 
   function syncRedirectFlagFromUrl() {
@@ -158,7 +163,7 @@
         // Standalone PWA: opening a browser tab crosses the PWA/browser
         // boundary and focuses the new tab. Firebase syncs auth state back
         // to the PWA shell via IndexedDB once sign-in completes.
-        window.open('/auth/signin', '_blank');
+        window.open('/auth/signin' + uiLanguageQuery('?'), '_blank');
       } else if (isMobile() && useRedirectSignIn()) {
         // Opt-in: full-page redirect to Google and back to the current URL.
         // The result is consumed by getRedirectResult() in
@@ -169,7 +174,7 @@
         // Chrome Android (no focus switch). Navigate the current page to the
         // sign-in page instead; it redirects back via return_to after success.
         var returnTo = encodeURIComponent(location.pathname + location.search);
-        window.location.href = '/auth/signin?return_to=' + returnTo;
+        window.location.href = '/auth/signin?return_to=' + returnTo + uiLanguageQuery('&');
       } else {
         await firebase.auth().signInWithPopup(provider);
       }

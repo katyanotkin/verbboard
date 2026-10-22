@@ -37,8 +37,27 @@
 </head>
 <body>
   <img src="/static/icons/icon-192x192.png" alt="">
-  <h1>You're offline</h1>
-  <p>VerbBoard needs a connection to load this page. Reconnect and try again.</p>
-  <button onclick="location.reload()">Try again</button>
+  <h1 id="t">You're offline</h1>
+  <p id="m">VerbBoard needs a connection to load this page. Reconnect and try again.</p>
+  <button id="b" onclick="location.reload()">Try again</button>
+  <script>
+    // Static page served by the service worker with no server round trip, so
+    // the four UI languages are picked client-side from navigator.language.
+    var STRINGS = {
+      ru: ['Нет подключения', 'Для загрузки этой страницы VerbBoard нужен интернет. Подключитесь и попробуйте снова.', 'Повторить'],
+      he: ['אין חיבור לאינטרנט', 'VerbBoard צריך חיבור כדי לטעון את הדף הזה. התחברו שוב ונסו שוב.', 'נסו שוב'],
+      es: ['Sin conexión', 'VerbBoard necesita conexión para cargar esta página. Vuelve a conectarte e inténtalo de nuevo.', 'Reintentar']
+    };
+    var code = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    var text = STRINGS[code];
+    if (text) {
+      document.documentElement.lang = code;
+      document.documentElement.dir = code === 'he' ? 'rtl' : 'ltr';
+      document.title = 'VerbBoard -- ' + text[0];
+      document.getElementById('t').textContent = text[0];
+      document.getElementById('m').textContent = text[1];
+      document.getElementById('b').textContent = text[2];
+    }
+  </script>
 </body>
 </html>

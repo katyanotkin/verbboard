@@ -105,9 +105,9 @@
   color: #111827;
 }
 .vb-search:focus {
-  outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 2px #2563eb;
+  outline: 2px solid #1d4ed8;
+  outline-offset: 1px;
+  border-color: #1d4ed8;
 }
 
 
@@ -794,6 +794,9 @@
   line-height: 1;
   cursor: pointer;
   padding: 4px 6px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -10px -6px;
   opacity: 0.6;
 }
 

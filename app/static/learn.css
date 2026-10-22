@@ -933,7 +933,7 @@ button {
 /* ── audio problem report (issue #71) ─────────────────────────────────────── */
 .audio-report-btn {
   flex-shrink: 0;
-  width: 40px;
+  width: 44px;
   height: 44px;
   padding: 0;
   border: none;
@@ -945,7 +945,7 @@ button {
   justify-content: center;
   vertical-align: middle;
   touch-action: manipulation;
-  margin-inline-start: 2px;
+  margin-inline-start: 0;
 }
 
 .audio-report-btn svg {
@@ -1079,10 +1079,10 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 44px;
   height: 44px;
   vertical-align: middle;
-  margin-inline-start: 2px;
+  margin-inline-start: 0;
 }
 
 .audio-issue-btn {

@@ -115,9 +115,9 @@ input[type="text"] {
 
 select:focus,
 input[type="text"]:focus {
-  outline: none;
-  border-color: var(--input-focus);
-  box-shadow: 0 0 0 2px #2563eb;
+  outline: 2px solid #1d4ed8;
+  outline-offset: 1px;
+  border-color: #1d4ed8;
 }
 
 /* ===== Verb of the day (hero) ===== */
@@ -633,8 +633,10 @@ input[type="text"]:focus {
   line-height: 1;
   padding: 0;
   opacity: 0.55;
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 44px;
+  min-height: 44px;
+  margin-block: -10px;
+  margin-inline: -10px;
   display: flex;
   align-items: center;
   justify-content: center;

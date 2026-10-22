@@ -83,6 +83,8 @@
   "practice.gate_cta": "Continuar con Google",
   "practice.gate_note": "Gratis. Usamos tu nombre y correo solo para guardar tu progreso.",
   "practice.gate_dismiss": "Seguir explorando",
+  "practice.listens_decrease": "Disminuir",
+  "practice.listens_increase": "Aumentar",
   "practice.prev": "Anterior",
   "practice.next": "Siguiente",
   "practice.wrap_up": "Práctica completada",
@@ -174,5 +176,17 @@
   "audio_report.error": "No se pudo enviar. Inténtalo más tarde.",
   "audio_report.sign_in": "Inicia sesión para informar de un problema de audio.",
   "audio_issue.label": "Problema de audio conocido",
-  "audio_issue.note": "El audio de esta forma no es preciso. Léela en lugar de escucharla."
+  "audio_issue.note": "El audio de esta forma no es preciso. Léela en lugar de escucharla.",
+  "signin.title": "Iniciar sesión en VerbBoard",
+  "signin.checking": "Comprobando el inicio de sesión…",
+  "signin.button": "Iniciar sesión con Google",
+  "signin.tap_to_sign_in": "Toca el botón para iniciar sesión en VerbBoard.",
+  "signin.signing_in": "Iniciando sesión…",
+  "signin.signing_you_in": "Iniciando tu sesión…",
+  "signin.signed_in": "¡Sesión iniciada!",
+  "signin.close_tab": "Puedes cerrar esta pestaña y volver a VerbBoard.",
+  "signin.failed": "No se pudo iniciar sesión.",
+  "signin.not_configured": "Autenticación no configurada.",
+  "signin.unavailable": "El inicio de sesión no está disponible por ahora.",
+  "signin.unavailable_hint": "No se pudo cargar el inicio de sesión de Google. Revisa tu conexión o bloqueadores de contenido y recarga la página."
 }
