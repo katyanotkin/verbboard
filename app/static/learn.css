@@ -981,7 +981,8 @@ button {
     white-space: normal;
   }
   .conj-form {
-    gap: 8px;
+    gap: 4px 8px;
+    flex-wrap: wrap;
   }
 }
 

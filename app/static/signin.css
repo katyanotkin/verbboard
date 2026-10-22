@@ -47,6 +47,7 @@ body {
 }
 
 #signin-btn {
+  min-height: 44px;
   margin-top: 16px;
   padding: 12px 24px;
   font-size: 1rem;
