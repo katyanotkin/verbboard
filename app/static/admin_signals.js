@@ -129,8 +129,8 @@ function aggrClassifySelect(query, language, currentStatus) {
     .map(([value, label]) => `<option value="${value}">${label}</option>`)
     .join('');
 
-  return `<select class="status-select"
-    onchange="classifyGroup('${esc(query)}','${esc(language)}',this)">${options}</select>`;
+  return `<select class="status-select" data-on="change" data-act="classifyGroup"
+    data-a1="${esc(query)}" data-a2="${esc(language)}">${options}</select>`;
 }
 
 function aggrRows() {
@@ -280,9 +280,9 @@ function renderAggr() {
           ? (
               item.hidden
                 ? `<button class="btn-del" title="Unhide"
-                    onclick="unhideSignalLabel('${esc(item.labelId)}',this)">Unhide</button>`
+                    data-act="unhideSignalLabel" data-a1="${esc(item.labelId)}">Unhide</button>`
                 : `<button class="btn-del" title="Hide"
-                    onclick="hideSignalLabel('${esc(item.labelId)}',this)">Hide</button>`
+                    data-act="hideSignalLabel" data-a1="${esc(item.labelId)}">Hide</button>`
             )
           : '';
 
@@ -299,21 +299,21 @@ function renderAggr() {
             ${statusPill(item.status)}
             ${reasonHint}
             <button class="btn-del" title="Undo classification"
-              onclick="undoLabel('${esc(item.labelId)}',this)">↩</button>
+              data-act="undoLabel" data-a1="${esc(item.labelId)}">↩</button>
             ${hideAction}
           </span>`;
       } else {
         actionCell = `<span class="action-cell">
             ${statusPill(item.status)}
             <button class="btn-del" title="Undo classification"
-              onclick="undoLabel('${esc(item.labelId)}',this)">↩</button>
+              data-act="undoLabel" data-a1="${esc(item.labelId)}">↩</button>
           </span>`;
       }
     } else if (isTrash) {
       actionCell = `<span class="action-cell wrap">
           <span class="trash-hint" title="${esc(item.trashReason)}">${esc(item.trashReason)}</span>
-          <button class="btn-confirm-trash" onclick="quickTrash('${esc(item.query)}','${esc(item.language)}',this)">Mark garbage</button>
-          <button class="btn-del" onclick="quickHideTrash('${esc(item.query)}','${esc(item.language)}',this)">Hide</button>
+          <button class="btn-confirm-trash" data-act="quickTrash" data-a1="${esc(item.query)}" data-a2="${esc(item.language)}">Mark garbage</button>
+          <button class="btn-del" data-act="quickHideTrash" data-a1="${esc(item.query)}" data-a2="${esc(item.language)}">Hide</button>
         </span>`;
     } else if (canClassify) {
       actionCell = aggrClassifySelect(item.query, item.language, item.status);
@@ -527,3 +527,13 @@ function renderRaw() {
     </tr>`;
   }).join('');
 }
+
+Object.assign(ADMIN_ACTIONS, {
+  classifyGroup,
+  quickTrash,
+  quickHideTrash,
+  // (id, button) handlers: the dispatcher passes (a1, a2, element).
+  hideSignalLabel: (id, _a2, el) => hideSignalLabel(id, el),
+  unhideSignalLabel: (id, _a2, el) => unhideSignalLabel(id, el),
+  undoLabel: (id, _a2, el) => undoLabel(id, el),
+});

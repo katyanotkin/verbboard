@@ -844,3 +844,31 @@ def test_plain_single_word_translation_unaffected_by_fallback(client: TestClient
     location = response.headers["location"]
     assert "generating=1" in location
     assert autogen_calls[0]["query"] == "бегать"
+
+
+# ---------------------------------------------------------------------------
+# autogen_rate_limited: kill switch and global hourly cap
+# ---------------------------------------------------------------------------
+
+
+def test_autogen_rate_limited_true_when_autogen_disabled(monkeypatch) -> None:
+    from core.verb_autogen import autogen_rate_limited
+
+    monkeypatch.setenv("AUTOGEN_ENABLED", "false")
+    assert autogen_rate_limited("1.2.3.4") is True
+
+
+def test_autogen_rate_limited_allows_when_enabled(monkeypatch) -> None:
+    from core.verb_autogen import autogen_rate_limited
+
+    monkeypatch.setenv("AUTOGEN_ENABLED", "true")
+    assert autogen_rate_limited("1.2.3.4") is False
+
+
+def test_autogen_global_cap_blocks_even_with_distinct_ips(monkeypatch) -> None:
+    from core.verb_autogen import autogen_rate_limited
+
+    monkeypatch.setenv("AUTOGEN_ENABLED", "true")
+    results = [autogen_rate_limited(f"10.0.0.{i}") for i in range(31)]
+    assert results[:30] == [False] * 30
+    assert results[30] is True

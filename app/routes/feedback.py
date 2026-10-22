@@ -15,10 +15,16 @@ from core.polls import (
     get_poll_question,
     get_poll_valid_answers,
 )
+from core.rate_limit import SlidingWindowRateLimiter, client_ip
 from core.safe_return import safe_return_to
 from core.settings import load_settings
 
 router = APIRouter()
+
+# Public unauthenticated write (issue #77): cap size and rate per client.
+_MAX_COMMENT_LENGTH = 4000
+_MAX_FIELD_LENGTH = 200
+_FEEDBACK_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=10, window_seconds=600)
 
 # Pages whose feedback needs a reply address: policy questions and Plus access requests.
 _CONTACT_REQUIRED_PAGES = {"privacy", "terms", "plus"}
@@ -97,8 +103,13 @@ def submit_feedback(
     contact_email: str = Form(""),
 ):
     return_to = safe_return_to(return_to, fallback="/")
-    clean_comment = comment.strip()
-    clean_contact_email = contact_email.strip()
+    if not _FEEDBACK_RATE_LIMITER.allow(client_ip(request)):
+        return RedirectResponse(url=return_to, status_code=303)
+    clean_comment = comment.strip()[:_MAX_COMMENT_LENGTH]
+    clean_contact_email = contact_email.strip()[:_MAX_FIELD_LENGTH]
+    page = page[:_MAX_FIELD_LENGTH]
+    language = language[:_MAX_FIELD_LENGTH]
+    verb_id = verb_id[:_MAX_FIELD_LENGTH]
 
     if page in _CONTACT_REQUIRED_PAGES and not clean_contact_email:
         params = urlencode(

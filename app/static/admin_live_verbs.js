@@ -51,9 +51,9 @@ function renderLiveVerbsTable(verbs) {
       <td>
         <div class="btn-row">
           <a class="btn-preview" href="${previewHref}" target="_blank">👁 Preview</a>
-          <button class="btn-regen" onclick="regenLiveExamples('${safeId}')">⟳ Examples</button>
-          <button class="btn-regen" onclick="regenLiveForms('${safeId}')">⟳ Forms</button>
-          <button class="btn-needs-fix" onclick="regenLiveFull('${safeId}')">⟳ Full</button>
+          <button class="btn-regen" data-act="regenLiveExamples" data-a1="${safeId}">⟳ Examples</button>
+          <button class="btn-regen" data-act="regenLiveForms" data-a1="${safeId}">⟳ Forms</button>
+          <button class="btn-needs-fix" data-act="regenLiveFull" data-a1="${safeId}">⟳ Full</button>
         </div>
         <span id="regen-status-${safeId}" class="regen-status"></span>
       </td>
@@ -113,3 +113,5 @@ async function refreshLiveVerbRow(verbId) {
     // best-effort refresh
   }
 }
+
+Object.assign(ADMIN_ACTIONS, { regenLiveExamples, regenLiveForms, regenLiveFull });

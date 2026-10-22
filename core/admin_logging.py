@@ -5,6 +5,9 @@ from datetime import UTC, datetime
 
 logger = logging.getLogger(__name__)
 
+# Demand signals are single words; cap what a public caller can store (issue #77).
+_MAX_SIGNAL_QUERY_LENGTH = 100
+
 
 def log_missing_verb_search(
     *,
@@ -15,7 +18,7 @@ def log_missing_verb_search(
     verb_id: str = "",
     provider_unavailable: bool = False,
 ) -> None:
-    normalized_query = query.strip().casefold()
+    normalized_query = query.strip().casefold()[:_MAX_SIGNAL_QUERY_LENGTH]
     if not normalized_query:
         return
 

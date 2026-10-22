@@ -19,6 +19,7 @@ from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import LANGUAGE
 from core.provider_health import provider_unavailable_reason
+from core.rate_limit import SlidingWindowRateLimiter, client_ip
 from core.safe_return import safe_return_to
 from core.search_utils import find_best_entry, tokenize_text
 from core.settings import load_settings
@@ -61,24 +62,19 @@ def _entitlement_redirect(
     return RedirectResponse(url=f"{base}{sep}plus_required=1")
 
 
-def _client_ip(request: Request) -> str:
-    """Best-effort per-instance rate-limit key -- NOT a hard security boundary.
+# Longest search query either search route will act on (issue #77): real verb
+# queries are one short word; longer input only inflates Gemini prompts and
+# demand_signal rows.
+_MAX_QUERY_LENGTH = 60
 
-    Deliberately takes the LAST X-Forwarded-For hop, not the first: unlike
-    core.analytics.session_tracker's fingerprint (best-effort analytics, first
-    hop is fine), this key gates a paid-LLM-call rate limit, where the first
-    hop is whatever the client itself sent and trivially spoofable. The last
-    hop is appended by the infra closest to Cloud Run and is the one a client
-    can't directly control. If this deployment's proxy chain doesn't append in
-    that order, this key stops being a meaningful rate-limit boundary -- worth
-    confirming against the actual Fastly/GFE config in front of Cloud Run.
-    """
-    forwarded_for = request.headers.get("x-forwarded-for", "")
-    if forwarded_for:
-        hops = [hop.strip() for hop in forwarded_for.split(",") if hop.strip()]
-        if hops:
-            return hops[-1]
-    return (request.client.host if request.client else "") or "unknown"
+# Per-instance cap on the paid Gemini translate call in /search_verb_by_lang.
+_TRANSLATE_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=30, window_seconds=600)
+# Global ceiling too: the per-IP key may be a rotating proxy address (issue #73).
+_TRANSLATE_GLOBAL_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=300, window_seconds=600)
+
+
+def _client_ip(request: Request) -> str:
+    return client_ip(request)
 
 
 def _autogen_paused(language: str) -> bool:
@@ -142,6 +138,8 @@ async def search_verb_by_lang(
     ui_language: str = "",
 ):
     query = (q or "").strip()
+    if len(query) > _MAX_QUERY_LENGTH:
+        query = ""  # never search a truncated prefix; no real verb query is this long
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
         return _home_redirect(request, language, ui_language)
@@ -149,6 +147,14 @@ async def search_verb_by_lang(
     session_uid = get_session_uid(request)
     if not can_study(language, session_uid):
         return _entitlement_redirect(language, ui_language, return_to)
+
+    if not (_TRANSLATE_RATE_LIMITER.allow(_client_ip(request)) and _TRANSLATE_GLOBAL_RATE_LIMITER.allow("global")):
+        logger.warning("search_verb_by_lang translate rate-limited client q=%r", query)
+        _limited_base = safe_return_to(return_to or "", fallback="") or f"/?language={language}{_ui_suffix}"
+        _sep = "&" if "?" in _limited_base else "?"
+        return RedirectResponse(
+            url=f"{_limited_base}{_sep}not_available=1&search={quote(query, safe='')}&search_mode={source_lang}"
+        )
 
     translated = await asyncio.to_thread(
         translate_search_query,
@@ -265,6 +271,8 @@ async def search_verb(
     return_to: str | None = None,
 ):
     query = (q or "").strip()
+    if len(query) > _MAX_QUERY_LENGTH:
+        query = ""  # never search a truncated prefix; no real verb query is this long
     _ui_suffix = f"&ui_language={ui_language}" if ui_language else ""
     if not query:
         return _home_redirect(request, language, ui_language)

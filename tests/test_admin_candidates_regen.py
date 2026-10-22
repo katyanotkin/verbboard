@@ -399,6 +399,7 @@ def _stub_render(**kwargs) -> str:
 
 
 def test_learn_candidate_return_to_defaults_to_admin(client: TestClient, monkeypatch, mock_verb) -> None:
+    monkeypatch.setattr("app.routes.learn.read_session_claims", lambda request: {"role": "admin"})
     """When source=candidate and no return_to param is given, render_board_html
     must receive return_to='/admin#candidates'."""
     captured = {}
@@ -421,6 +422,7 @@ def test_learn_candidate_return_to_defaults_to_admin(client: TestClient, monkeyp
 
 
 def test_learn_candidate_explicit_return_to_is_respected(client: TestClient, monkeypatch, mock_verb) -> None:
+    monkeypatch.setattr("app.routes.learn.read_session_claims", lambda request: {"role": "admin"})
     """An explicit return_to query param must override the default."""
     captured = {}
 

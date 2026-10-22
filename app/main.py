@@ -34,7 +34,7 @@ from app.routes.terms import router as terms_router
 from app.routes.verbs import router as verbs_router
 from app.routes.well_known import router as well_known_router
 from core.audio_backend.factory import create_audio_backend
-from core.settings import load_settings
+from core.settings import _resolve_environment, load_settings
 
 
 @asynccontextmanager
@@ -54,6 +54,41 @@ class _CachedStaticFiles(StaticFiles):
         response = await super().get_response(path, scope)
         response.headers["Cache-Control"] = "no-cache"
         return response
+
+
+_SECURITY_HEADERS = (
+    (b"x-content-type-options", b"nosniff"),
+    (b"x-frame-options", b"SAMEORIGIN"),
+    (b"content-security-policy", b"frame-ancestors 'self'"),
+    (b"referrer-policy", b"strict-origin-when-cross-origin"),
+)
+
+
+class _SecurityHeadersMiddleware:
+    """Adds baseline hardening headers to every HTTP response.
+
+    Deliberately no Cross-Origin-Opener-Policy (breaks Firebase popup sign-in)
+    and no full CSP (inline scripts are used); frame-ancestors only blocks
+    third-party framing. Existing headers set by a route are left alone.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self._app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self._app(scope, receive, send)
+            return
+
+        async def send_with_headers(message) -> None:
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                present = {name.lower() for name, _ in headers}
+                headers.extend(h for h in _SECURITY_HEADERS if h[0] not in present)
+                message = {**message, "headers": headers}
+            await send(message)
+
+        await self._app(scope, receive, send_with_headers)
 
 
 class _PageViewMiddleware:
@@ -109,7 +144,16 @@ class _PageViewMiddleware:
         await self._app(scope, receive, send)
 
 
-app = FastAPI(lifespan=lifespan, title="VerbBoard")
+# Interactive API docs and the OpenAPI schema are local-development only.
+_DOCS_ENABLED = _resolve_environment() == "local"
+app = FastAPI(
+    lifespan=lifespan,
+    title="VerbBoard",
+    docs_url="/docs" if _DOCS_ENABLED else None,
+    redoc_url="/redoc" if _DOCS_ENABLED else None,
+    openapi_url="/openapi.json" if _DOCS_ENABLED else None,
+)
+app.add_middleware(_SecurityHeadersMiddleware)
 app.add_middleware(_PageViewMiddleware)  # pure ASGI — preserves all route-handler headers
 app.mount("/static", _CachedStaticFiles(directory="app/static"), name="static")
 

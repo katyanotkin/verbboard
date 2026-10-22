@@ -46,6 +46,24 @@ function esc(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Delegated action dispatcher: markup carries data-act="name" plus data-a1/data-a2
+// (values arrive via dataset, never parsed as JS), so no inline handlers are built
+// from Firestore data. Pages register handlers on ADMIN_ACTIONS: fn(a1, a2, element).
+// Elements with data-on="change" fire on change; all others fire on click.
+const ADMIN_ACTIONS = {};
+function adminDispatch(event) {
+  const el = event.target.closest && event.target.closest('[data-act]');
+  if (!el) return;
+  const onChange = el.dataset.on === 'change';
+  if ((event.type === 'change') !== onChange) return;
+  const fn = Object.prototype.hasOwnProperty.call(ADMIN_ACTIONS, el.dataset.act)
+    ? ADMIN_ACTIONS[el.dataset.act]
+    : null;
+  if (fn) fn(el.dataset.a1, el.dataset.a2, el);
+}
+document.addEventListener('click', adminDispatch);
+document.addEventListener('change', adminDispatch);
+
 function populateFilter(selectId, values) {
   const select = document.getElementById(selectId);
   const firstOption = select.options[0];

@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 from datetime import UTC, datetime
 from typing import Any
 
@@ -76,9 +77,26 @@ _GENERATING: set[str] = set()
 _AUTOGEN_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=5, window_seconds=600)
 
 
+# Global ceiling across all clients (issue #73): the per-IP key can be useless
+# behind Firebase Hosting (the last X-Forwarded-For hop may be a rotating Google
+# proxy address), so total spend is capped independently of who is asking.
+_AUTOGEN_GLOBAL_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=30, window_seconds=3600)
+
+
+def autogen_enabled() -> bool:
+    """False when AUTOGEN_ENABLED=false (stage, which shares prod data, turns it off)."""
+    return os.getenv("AUTOGEN_ENABLED", "true").strip().lower() != "false"
+
+
 def autogen_rate_limited(client_ip: str) -> bool:
-    """Return True if this client should NOT be allowed to trigger another autogen call."""
-    return not _AUTOGEN_RATE_LIMITER.allow(client_ip)
+    """Return True if this client should NOT be allowed to trigger another autogen call.
+
+    Also True when autogen is switched off or the global hourly cap is spent."""
+    if not autogen_enabled():
+        return True
+    if not _AUTOGEN_RATE_LIMITER.allow(client_ip):
+        return True
+    return not _AUTOGEN_GLOBAL_RATE_LIMITER.allow("global")
 
 
 class _VerbGenResponse(BaseModel):

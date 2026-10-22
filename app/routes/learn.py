@@ -6,9 +6,9 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, BackgroundTasks, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from core.admin_auth import get_session_uid
+from core.admin_auth import get_session_uid, read_session_claims
 from core.admin_logging import log_missing_verb_search
 from core.audio_report_service import confirmed_form_keys
 from core.audio_service import (
@@ -18,6 +18,8 @@ from core.audio_service import (
 )
 from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
+from core.languages.config import ALL_STUDY_LANGUAGES
+from core.rate_limit import SlidingWindowRateLimiter, client_ip
 from core.registry import get as get_plugin
 from core.render import render_board_html
 from core.settings import load_settings
@@ -30,16 +32,24 @@ router = APIRouter()
 
 
 class _FormSignalBody(BaseModel):
-    language: str
-    verb_id: str = ""
-    form_text: str
+    language: str = Field(max_length=8)
+    verb_id: str = Field(default="", max_length=80)
+    form_text: str = Field(max_length=100)
+
+
+_FORM_SIGNAL_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=30, window_seconds=600)
 
 
 @router.post("/api/learn/form_signal")
-async def log_form_signal(body: _FormSignalBody) -> JSONResponse:
+async def log_form_signal(body: _FormSignalBody, request: Request) -> JSONResponse:
     """Log a demand signal when a user tries to jump to an example for a form
     that has no matching example yet -- feeds the same pipeline as unknown
-    verb searches, so this form can gain an example in a future generation pass."""
+    verb searches, so this form can gain an example in a future generation pass.
+    Public and unauthenticated, so language is validated and calls are limited."""
+    if body.language not in ALL_STUDY_LANGUAGES:
+        return JSONResponse({"ok": False}, status_code=400)
+    if not _FORM_SIGNAL_RATE_LIMITER.allow(client_ip(request)):
+        return JSONResponse({"ok": False}, status_code=429)
     log_missing_verb_search(
         language=body.language,
         query=body.form_text,
@@ -87,6 +97,9 @@ async def learn(
 
     logger.debug("lookup source %s -> verb %s", source, verb_id)
     if source == "candidate":
+        # Unpublished candidates are an admin preview; hide them from the public.
+        if read_session_claims(request).get("role") != "admin":
+            return HTMLResponse("Candidate not found", status_code=404)
         if not verb_id:
             return HTMLResponse("verb_id required for candidate preview", status_code=400)
         verb = load_entry_by_id(

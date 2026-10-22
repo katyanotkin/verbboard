@@ -173,3 +173,34 @@ def test_eviction_not_triggered_below_max_tracked_keys(fake_clock: _FakeClock) -
     # len(_hits) == 2, well under max_tracked_keys=10 -- no sweep should run,
     # so the stale key is still present (just functionally expired).
     assert "k1" in limiter._hits
+
+
+# ---------------------------------------------------------------------------
+# Thread safety and client_ip
+# ---------------------------------------------------------------------------
+
+
+def test_concurrent_allow_never_exceeds_max_calls() -> None:
+    """The lock must keep the count exact when many threads race on one key."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    limiter = SlidingWindowRateLimiter(max_calls=25, window_seconds=600)
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        results = list(pool.map(lambda _: limiter.allow("k"), range(200)))
+    assert sum(results) == 25
+
+
+def test_client_ip_prefers_last_forwarded_hop_and_falls_back() -> None:
+    from starlette.requests import Request
+
+    from core.rate_limit import client_ip
+
+    def make(headers, client=("7.7.7.7", 1)):
+        scope = {"type": "http", "headers": [(k.encode(), v.encode()) for k, v in headers.items()]}
+        if client:
+            scope["client"] = client
+        return Request(scope)
+
+    assert client_ip(make({"x-forwarded-for": "1.1.1.1, 2.2.2.2"})) == "2.2.2.2"
+    assert client_ip(make({})) == "7.7.7.7"
+    assert client_ip(make({}, client=None)) == "unknown"

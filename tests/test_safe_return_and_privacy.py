@@ -275,3 +275,28 @@ def test_auth_signin_return_to_is_quoted_js_string_literal(
     """safe_return_json must render as a JS string with surrounding quotes."""
     html = client.get("/auth/signin?return_to=/verbs%3Flanguage%3Den").text
     assert '"/verbs?language=en"' in html
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/\t/evil.com",
+        "/\n/evil.com",
+        "/\r/evil.com",
+        "/%09/evil.com",
+        "/%0a/evil.com",
+        "/a\x00b",
+        "/%252f/evil.com",
+        "/%2f%2fevil.com",
+        "%2f%2fevil.com",
+        "/%5cevil.com",
+        "/%255cevil.com",
+    ],
+)
+def test_safe_return_to_rejects_whitespace_control_and_double_encoding(url: str) -> None:
+    assert safe_return_to(url, fallback="/home") == "/home"
+
+
+def test_safe_return_to_allows_encoded_space_in_query() -> None:
+    """A search term with a space (%20) is a legitimate return_to; only tab/CR/LF/control chars are rejected."""
+    assert safe_return_to("/verbs?q=a%20b", fallback="") == "/verbs?q=a b"

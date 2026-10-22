@@ -233,6 +233,10 @@ def translate_lemma(
     return result
 
 
+_SEARCH_TRANSLATION_CACHE: dict[tuple[str, str, str], str] = {}
+_SEARCH_TRANSLATION_CACHE_MAX = 2000
+
+
 def translate_search_query(
     query: str,
     source_lang: str,
@@ -240,8 +244,27 @@ def translate_search_query(
 ) -> str | None:
     """Translate a single search query word to the target language verb lemma.
 
-    Returns the native-script verb string, or None on failure.
+    Returns the native-script verb string, or None on failure. Successful
+    results are cached in-process (issue #77): repeat searches and scripted
+    repeats of one word cost one Gemini call per instance, not one per request.
     """
+    cache_key = (query.casefold(), source_lang, target_lang)
+    cached = _SEARCH_TRANSLATION_CACHE.get(cache_key)
+    if cached:
+        return cached
+    result = _translate_search_query_uncached(query, source_lang, target_lang)
+    if result:
+        if len(_SEARCH_TRANSLATION_CACHE) >= _SEARCH_TRANSLATION_CACHE_MAX:
+            _SEARCH_TRANSLATION_CACHE.clear()
+        _SEARCH_TRANSLATION_CACHE[cache_key] = result
+    return result
+
+
+def _translate_search_query_uncached(
+    query: str,
+    source_lang: str,
+    target_lang: str,
+) -> str | None:
     src_name = _LANG_NAMES.get(source_lang, source_lang)
     tgt_name = _LANG_NAMES.get(target_lang, target_lang)
     prompt = (

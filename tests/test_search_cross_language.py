@@ -400,3 +400,54 @@ def test_search_by_lang_run_he_fuzzy_fallback(client: TestClient, monkeypatch) -
     location = response.headers["location"]
     assert "/learn" in location
     assert "he_larutz" in location
+
+
+# ── Query length cap and translate rate limit (issue #77) ─────────────────────
+
+
+def test_by_lang_overlong_query_treated_as_empty(client: TestClient, monkeypatch) -> None:
+    calls: list[str] = []
+    monkeypatch.setattr("app.routes.home.translate_search_query", lambda *a, **k: calls.append("t"))
+    monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda *a: calls.append("f"))
+
+    response = client.get(f"/search_verb_by_lang?language=es&q={'a' * 61}&source_lang=en", follow_redirects=False)
+
+    assert response.status_code in (302, 307)
+    assert "not_available" not in response.headers["location"]
+    assert calls == []
+
+
+def test_search_verb_overlong_query_treated_as_empty(client: TestClient, monkeypatch) -> None:
+    calls: list[str] = []
+    monkeypatch.setattr("app.routes.home.find_verb_by_search_extract", lambda *a: calls.append("f"))
+
+    response = client.get(f"/search_verb?language=en&q={'a' * 61}", follow_redirects=False)
+
+    assert response.status_code in (302, 307)
+    assert "not_available" not in response.headers["location"]
+    assert calls == []
+
+
+def test_by_lang_query_at_limit_is_searched(client: TestClient, monkeypatch) -> None:
+    calls: list[str] = []
+    monkeypatch.setattr("app.routes.home.translate_search_query", lambda q, *a, **k: calls.append(q))
+    client.get(f"/search_verb_by_lang?language=es&q={'a' * 60}&source_lang=en", follow_redirects=False)
+    assert calls == ["a" * 60]
+
+
+def test_by_lang_translate_rate_limit_redirects_without_translating(client: TestClient, monkeypatch) -> None:
+    from core.rate_limit import SlidingWindowRateLimiter
+
+    calls: list[str] = []
+    monkeypatch.setattr("app.routes.home.translate_search_query", lambda q, *a, **k: calls.append(q))
+    monkeypatch.setattr(
+        "app.routes.home._TRANSLATE_RATE_LIMITER", SlidingWindowRateLimiter(max_calls=0, window_seconds=600)
+    )
+
+    response = client.get("/search_verb_by_lang?language=es&q=run&source_lang=en", follow_redirects=False)
+
+    assert response.status_code in (302, 307)
+    location = response.headers["location"]
+    assert "not_available=1" in location
+    assert "search=run" in location
+    assert calls == []

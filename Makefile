@@ -99,7 +99,7 @@ test-e2e-stage: ## QA: run Playwright browser flow tests against stage
 test-qatp-stage: ## QA: QATP (XSS, practice ui_language, voice banner) vs stage
 	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e/test_qatp.py -n 2 -v
 
-## QA: run progress API integration tests against stage (mock user, requires ALLOW_LOCAL_DEV_AUTH=true)
+## QA: progress API integration tests against stage. NOTE: stage no longer sets ALLOW_LOCAL_DEV_AUTH (issue #76, it shares prod data), so the user-stage token is rejected unless you temporarily enable it.
 test-progress-stage: ## QA: progress API integration tests vs stage
 	PROGRESS_TEST_BASE_URL=$(STAGE_URL) PROGRESS_TEST_TOKEN=user-stage PYTHONPATH=. pytest tests/integration -v
 
@@ -216,7 +216,7 @@ gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branc
 		--platform=managed \
 		--allow-unauthenticated \
 		--project=$(GCP_PROJECT) \
-		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD),JUMP_TO_EXAMPLE_ENABLED=false,ALLOW_LOCAL_DEV_AUTH=true \
+		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD),JUMP_TO_EXAMPLE_ENABLED=false,AUTOGEN_ENABLED=false \
 		--set-secrets=$(STAGE_SECRETS)
 	$(MAKE) firebase-deploy-hosting
 

@@ -132,7 +132,7 @@ function renderCandidates() {
 
       if (canPromote) {
         actionButtons.push(
-          `<button class="btn-promote" onclick="promoteCandidate('${esc(item.verb_id)}',this)">▲ Promote</button>`,
+          `<button class="btn-promote" data-act="promoteCandidate" data-a1="${esc(item.verb_id)}">▲ Promote</button>`,
         );
       }
 
@@ -144,26 +144,26 @@ function renderCandidates() {
 
       if (canNeedsFix) {
         actionButtons.push(
-          `<button class="btn-needs-fix" onclick="setCandidateStatus('${esc(item.verb_id)}','to_be_fixed',this)">⚑ Needs fix</button>`,
+          `<button class="btn-needs-fix" data-act="setCandidateStatus" data-a1="${esc(item.verb_id)}" data-a2="to_be_fixed">⚑ Needs fix</button>`,
         );
       }
 
       if (canReopen) {
         actionButtons.push(
-          `<button class="btn-reopen" onclick="setCandidateStatus('${esc(item.verb_id)}','pending',this)">↩ Reopen</button>`,
+          `<button class="btn-reopen" data-act="setCandidateStatus" data-a1="${esc(item.verb_id)}" data-a2="pending">↩ Reopen</button>`,
         );
       }
 
       if (canGenerate) {
         const label = needsGeneration ? '⚡ Generate' : '⟳ Regen';
         actionButtons.push(
-          `<button class="btn-regen" onclick="regenSingle('${esc(item.verb_id)}',this)">${label}</button>`,
+          `<button class="btn-regen" data-act="regenSingle" data-a1="${esc(item.verb_id)}">${label}</button>`,
         );
       }
 
       if (isDuplicate) {
         actionButtons.push(
-          `<button class="btn-del" onclick="deleteCandidate('${esc(item.verb_id)}',this)">🗑</button>`,
+          `<button class="btn-del" data-act="deleteCandidate" data-a1="${esc(item.verb_id)}">🗑</button>`,
         );
       }
 
@@ -172,7 +172,7 @@ function renderCandidates() {
         : '<em class="text-muted">—</em>';
 
       const examplesCell = item.examples && item.examples.length
-        ? `<button class="btn-examples" id="cand-ex-btn-${esc(item.verb_id)}" onclick="toggleExamples('${esc(item.verb_id)}')">📖 ${item.examples.length}</button>`
+        ? `<button class="btn-examples" id="cand-ex-btn-${esc(item.verb_id)}" data-act="toggleExamples" data-a1="${esc(item.verb_id)}">📖 ${item.examples.length}</button>`
         : '<span class="cell-meta">—</span>';
 
       return `<tr id="cand-row-${esc(item.verb_id)}" class="${isPromoted ? 'row-promoted' : ''}">
@@ -209,7 +209,7 @@ function renderExamplesRowHtml(item) {
       return `<li class="cand-example-item">
         <span class="cand-example-idx">${i + 1}.</span>
         ${body}
-        <button class="btn-regen-ex" onclick="regenExample('${vid}',${i},this)" title="Regen this example">⟳</button>
+        <button class="btn-regen-ex" data-act="regenExample" data-a1="${vid}" data-a2="${i}" title="Regen this example">⟳</button>
       </li>`;
     })
     .join('');
@@ -240,6 +240,7 @@ function refreshExamplesRow(verbId) {
 }
 
 async function regenExample(verbId, index, button) {
+  index = Number(index);
   button.disabled = true;
   const orig = button.textContent;
   button.textContent = '…';
@@ -450,3 +451,14 @@ async function deleteCandidate(verbId, button) {
     alert('Delete failed: ' + error.message);
   }
 }
+
+// Handlers taking (id, button) get the clicked element as 2nd arg; the dispatcher
+// passes (a1, a2, element), so wrap them.
+Object.assign(ADMIN_ACTIONS, {
+  promoteCandidate: (id, _a2, el) => promoteCandidate(id, el),
+  setCandidateStatus,
+  regenSingle: (id, _a2, el) => regenSingle(id, el),
+  deleteCandidate: (id, _a2, el) => deleteCandidate(id, el),
+  toggleExamples,
+  regenExample,
+});

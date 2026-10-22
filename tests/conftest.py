@@ -23,6 +23,28 @@ from tests.fake_firestore import FakeFirestore  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
+def _reset_ip_limiters(monkeypatch):
+    """Fresh per-IP limiters per test (admin login, audio generation)."""
+    from core.rate_limit import SlidingWindowRateLimiter
+
+    monkeypatch.setattr(
+        "app.routes.admin_auth._LOGIN_LIMITER", SlidingWindowRateLimiter(max_calls=5, window_seconds=600)
+    )
+    monkeypatch.setattr(
+        "app.routes.audio._GENERATION_LIMITER", SlidingWindowRateLimiter(max_calls=30, window_seconds=600)
+    )
+    for target, calls, window in (
+        ("core.verb_autogen._AUTOGEN_GLOBAL_RATE_LIMITER", 30, 3600),
+        ("app.routes.home._TRANSLATE_RATE_LIMITER", 30, 600),
+        ("app.routes.home._TRANSLATE_GLOBAL_RATE_LIMITER", 300, 600),
+        ("app.routes.learn._FORM_SIGNAL_RATE_LIMITER", 30, 600),
+        ("app.routes.feedback._FEEDBACK_RATE_LIMITER", 10, 600),
+    ):
+        monkeypatch.setattr(target, SlidingWindowRateLimiter(max_calls=calls, window_seconds=window))
+    monkeypatch.setattr("core.translation_service._SEARCH_TRANSLATION_CACHE", {})
+
+
+@pytest.fixture(autouse=True)
 def _no_real_firestore(request, monkeypatch):
     """Guard: no unit test may reach the real Firestore project (issue #8).
 

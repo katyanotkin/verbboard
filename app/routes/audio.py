@@ -6,7 +6,7 @@ import logging
 from fastapi import APIRouter, Request
 from fastapi.responses import PlainTextResponse, Response
 
-from core.admin_auth import get_session_uid
+from core.admin_auth import get_session_uid, read_session_claims
 from core.audio_service import (
     build_audio_key,
     ensure_audio,
@@ -14,11 +14,17 @@ from core.audio_service import (
     read_audio_bytes,
 )
 from core.entitlements import can_study
+from core.rate_limit import SlidingWindowRateLimiter, client_ip
 from core.tts import VOICES
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Cache-miss generation costs TTS time and a GCS write; cap it per client IP
+# (per instance, best effort).
+_GENERATION_LIMITER = SlidingWindowRateLimiter(max_calls=30, window_seconds=600)
+_NO_STORE = {"Cache-Control": "no-store"}
 
 
 async def _generate_on_demand(
@@ -28,6 +34,7 @@ async def _generate_on_demand(
     verb_id: str,
     voice: str,
     form_key: str,
+    allow_candidate: bool = False,
 ) -> bytes | None:
     from core.registry import get as get_plugin
     from core.verb_loader import load_entry_by_id
@@ -35,7 +42,8 @@ async def _generate_on_demand(
     voice_meta = VOICES[language][voice]
 
     verb = await asyncio.to_thread(load_entry_by_id, language=language, verb_id=verb_id)
-    if verb is None:
+    if verb is None and allow_candidate:
+        # Unpublished candidates are only previewable by admins.
         verb = await asyncio.to_thread(load_entry_by_id, language=language, verb_id=verb_id, source="candidate")
     if verb is None:
         return None
@@ -87,6 +95,13 @@ async def get_audio(
     )
 
     if audio_bytes is None and language in VOICES and voice in VOICES[language]:
+        if not _GENERATION_LIMITER.allow(client_ip(request)):
+            return PlainTextResponse(
+                "Too many requests",
+                status_code=429,
+                headers={**_NO_STORE, "Retry-After": "60"},
+            )
+        is_admin = read_session_claims(request).get("role") == "admin"
         try:
             audio_bytes = await _generate_on_demand(
                 request=request,
@@ -95,6 +110,7 @@ async def get_audio(
                 verb_id=verb_id,
                 voice=voice,
                 form_key=form_key,
+                allow_candidate=is_admin,
             )
         except Exception:
             logger.exception(
@@ -104,10 +120,10 @@ async def get_audio(
                 voice,
                 form_key,
             )
-            return None
+            return PlainTextResponse("Audio generation failed", status_code=503, headers=_NO_STORE)
 
     if audio_bytes is None:
-        return PlainTextResponse("Audio not found", status_code=404)
+        return PlainTextResponse("Audio not found", status_code=404, headers=_NO_STORE)
 
     return Response(
         content=audio_bytes,

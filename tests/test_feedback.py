@@ -136,3 +136,37 @@ def test_plus_access_request_requires_a_contact_email(client: TestClient, monkey
         follow_redirects=False,
     )
     assert len(saved) == 1 and saved[0]["page"] == "plus"
+
+
+def test_feedback_comment_truncated_to_4000_chars(client: TestClient, monkeypatch) -> None:
+    saved: list[dict] = []
+
+    def _fake_save(**kw) -> str:
+        saved.append(kw)
+        return "id"
+
+    monkeypatch.setattr("app.routes.feedback.save_feedback", _fake_save)
+
+    response = client.post("/feedback", data={"comment": "x" * 5000, "return_to": "/"}, follow_redirects=False)
+
+    assert response.status_code == 303
+    assert len(saved) == 1
+    assert len(saved[0]["comment"]) == 4000
+
+
+def test_feedback_eleventh_submit_in_window_is_not_saved(client: TestClient, monkeypatch) -> None:
+    saved: list[dict] = []
+
+    def _fake_save(**kw) -> str:
+        saved.append(kw)
+        return "id"
+
+    monkeypatch.setattr("app.routes.feedback.save_feedback", _fake_save)
+
+    statuses = [
+        client.post("/feedback", data={"comment": f"c{i}", "return_to": "/"}, follow_redirects=False).status_code
+        for i in range(11)
+    ]
+
+    assert len(saved) == 10
+    assert set(statuses) == {303}

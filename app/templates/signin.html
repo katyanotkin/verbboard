@@ -63,8 +63,15 @@
 
     function proceedAfterSignIn() {
       status.textContent = 'Signed in!';
-      if (returnTo) {
-        window.location.href = returnTo;
+      let sameOriginTarget = null;
+      try {
+        const parsed = new URL(returnTo, window.location.origin);
+        if (parsed.origin === window.location.origin) sameOriginTarget = parsed.href;
+      } catch (e) {
+        sameOriginTarget = null;
+      }
+      if (returnTo && sameOriginTarget) {
+        window.location.href = sameOriginTarget;
       } else {
         // Show hint before attempting close so it's visible if close() is a no-op.
         hint.textContent = 'You can close this tab and return to VerbBoard.';
