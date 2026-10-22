@@ -45,6 +45,20 @@ Inside the zip:
 - [x] Package generated -- `VerbBoard.aab` built Jul 23, package name confirmed `com.verbboard.app` via compiled manifest inspection (2026-07-29)
 - [x] **Keystore backed up** -- `verbboard-play-signing-keystore` + `verbboard-play-signing-key-info` present in GCP Secret Manager (verified 2026-07-29)
 
+### Step 5.1b: Rebuild at target API 36 [YOU DO THIS] (Play Console policy issue, 2026-10-22)
+
+Play Console reports "App must target Android 16 (API level 36) or higher". The
+target API level is baked into the wrapper by PWABuilder, so it needs a rebuild;
+nothing in the web app changes it. Do this before the production release (5.7),
+or sooner if Play blocks updates to the current closed-testing build.
+
+- Repackage at https://www.pwabuilder.com with Package ID `com.verbboard.app` and the SAME signing key (`verbboard-play-signing-keystore` in Secret Manager; see the gcloud binary-secret gotcha in memory)
+- Set a version code higher than the last uploaded build
+- Inspect the compiled `AndroidManifest.xml` inside the new AAB (as in 5.1) and confirm `targetSdkVersion` >= 36 before uploading; if PWABuilder's output is still lower, build with Bubblewrap CLI instead
+- Upload to the current track (closed testing); the Digital Asset Links fingerprint (5.5) is unchanged while the Play App Signing key is unchanged
+
+- [ ] AAB rebuilt with targetSdkVersion >= 36 and uploaded
+
 ### Step 5.2: Create app in Play Console [YOU DO THIS]
 
 play.google.com/console > Create app
