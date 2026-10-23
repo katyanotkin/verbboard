@@ -140,12 +140,7 @@
       const provider = new firebase.auth.GoogleAuthProvider();
       // Always show the account chooser, even when the browser has a cached
       // Google session -- prevents silent single-account auto-sign-in.
-      // hl: Google's own account chooser follows it, not the page language
-      // (auth().languageCode was tried and does not reach Google).
-      var signInParams = { prompt: 'select_account' };
-      var uiCode = window.VB_UI_LANG || document.documentElement.lang;
-      if (uiCode) signInParams.hl = uiCode;
-      provider.setCustomParameters(signInParams);
+      provider.setCustomParameters({ prompt: 'select_account' });
       if (isTwa) {
         // TWA (Trusted Web Activity, e.g. the Play Store install): reports
         // display-mode: standalone like a desktop-installed PWA, but it's a
@@ -181,6 +176,12 @@
         var returnTo = encodeURIComponent(location.pathname + location.search);
         window.location.href = '/auth/signin?return_to=' + returnTo + uiLanguageQuery('&');
       } else {
+        // hl: Google's own account chooser follows it, not the page language
+        // (auth().languageCode does not reach Google). Desktop popup only: the
+        // redirect branches above are the Android flows, which must send exactly
+        // what they sent before (see the 'missing initial state' report, #88).
+        var uiCode = window.VB_UI_LANG || document.documentElement.lang;
+        provider.setCustomParameters(uiCode ? { prompt: 'select_account', hl: uiCode } : { prompt: 'select_account' });
         await firebase.auth().signInWithPopup(provider);
       }
     } finally {
