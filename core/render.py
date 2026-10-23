@@ -70,6 +70,10 @@ def render_board_html(
     help_hint_label_raw = ui.get("help.hint_label", "More info")
     help_known_raw = ui.get("help.known", "Marks this verb as known. Tap again to undo.")
     help_translations_raw = ui.get("help.translations", "Shows a translation under each example sentence.")
+    help_audio_report_raw = ui.get(
+        "help.audio_report",
+        "Tap the flag next to any audio to report a problem with it. A free sign-in is needed.",
+    )
     help_hint_label = escape(help_hint_label_raw)
     help_translations_text = escape(help_translations_raw)
 
@@ -414,6 +418,7 @@ def render_board_html(
         board_mark_known=ui.get("board.mark_known", "Mark as learned"),
         board_help_hint_label=help_hint_label_raw,
         board_help_known=help_known_raw,
+        board_help_audio_report=help_audio_report_raw,
         ar_title=ui.get("audio_report.title", "What went wrong?"),
         ar_reason_wrong_form=ui.get("audio_report.reason_wrong_form", "Sounds like a different form"),
         ar_reason_stress=ui.get("audio_report.reason_stress", "Wrong stress or vowel"),

@@ -118,6 +118,7 @@
   "board.hide_translations": "× Translation",
   "help.hint_label": "More info",
   "help.known": "Marks this verb as known and starts spaced review. Practice sessions will later show a \"Recalled it\" button for it. Tap again to undo.",
+  "help.audio_report": "Tap the flag next to any audio to report a problem with it. A free sign-in is needed. A triangle instead of the flag marks a known audio issue.",
   "help.translations": "Shows a translation under each example sentence.",
   "help.practice": "Starts a practice session with a set of verbs and audio; earn a badge when you finish.",
   "help.session_size": "Sets how many verbs are included in the practice session.",
