@@ -41,8 +41,18 @@ window.vbInstall = async () => {
     window.navigator.standalone === true;
   var isTouch = window.matchMedia("(pointer: coarse)").matches;
 
+  // iOS/iPadOS (any browser) has no install flow we can point to, so the
+  // button is shown grayed out and inert (issue #89).
+  var isApple =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
   if (!isStandalone && isTouch) {
     btn.removeAttribute("hidden");
+    if (isApple) {
+      btn.disabled = true;
+      btn.classList.add("install-btn--disabled");
+    }
   }
 
   var closeBtn = document.getElementById("install-hint-close");

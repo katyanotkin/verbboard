@@ -603,6 +603,15 @@ input[type="text"]:focus {
   color: #ffffff;
 }
 
+.install-btn--disabled,
+.install-btn--disabled:hover {
+  border-color: #9ca3af;
+  background: transparent;
+  color: #6b7280;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .install-hint {
   display: flex;
   align-items: flex-start;
