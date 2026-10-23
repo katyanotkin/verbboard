@@ -221,3 +221,143 @@ def test_desktop_standalone_keeps_window_open(desktop_standalone_page, live_serv
     assert calls["redirect"] == 0
     assert calls["popup"] == 0
     assert len(opens) == 1 and opens[0].startswith("/auth/signin")
+
+
+# --- Opt-in Google Identity Services path on the TWA branch (issue #88) -------
+
+_GIS_STUB = """
+window.__gis = { initOpts: null, prompts: 0, credentialCalls: [], signInWithCredential: 0 };
+window.google = { accounts: { id: {
+  initialize: function (opts) { window.__gis.initOpts = opts; window.__gis.inits = (window.__gis.inits || 0) + 1; },
+  cancel: function () { window.__gis.cancels = (window.__gis.cancels || 0) + 1; },
+  prompt: function (cb) {
+    window.__gis.prompts++;
+    if (window.__gisMode === 'credential') {
+      window.__gis.initOpts.callback({ credential: 'fake-id-token' });
+    } else if (window.__gisMode === 'skipped') {
+      cb({ isNotDisplayed: function () { return false; }, isSkippedMoment: function () { return true; },
+           getSkippedReason: function () { return 'user_cancel'; }, isDismissedMoment: function () { return false; } });
+    } else if (window.__gisMode === 'dismissed') {
+      cb({ isNotDisplayed: function () { return false; }, isSkippedMoment: function () { return false; },
+           isDismissedMoment: function () { return true; }, getDismissedReason: function () { return 'cancel_called'; } });
+    } else if (window.__gisMode === 'not_displayed') {
+      cb({ isNotDisplayed: function () { return true; }, getNotDisplayedReason: function () { return 'browser_not_supported'; },
+           isSkippedMoment: function () { return false; }, isDismissedMoment: function () { return false; } });
+    }
+  },
+} } };
+const __origAuth = window.firebase.auth;
+window.firebase.auth = function () {
+  const a = __origAuth();
+  a.signInWithCredential = function (c) { window.__gis.signInWithCredential++; window.__gis.credentialCalls.push(c); return Promise.resolve(); };
+  return a;
+};
+window.firebase.auth.GoogleAuthProvider = __origAuth.GoogleAuthProvider;
+window.firebase.auth.GoogleAuthProvider.credential = function (t) { return { token: t }; };
+"""
+
+
+def _gis_twa_page(browser, mode):
+    ctx, page = _page_for(browser, _ANDROID_UA, standalone=True)
+    page.add_init_script(_GIS_STUB)
+    page.add_init_script(f"window.__gisMode = '{mode}';")
+    return ctx, page
+
+
+def test_gis_flag_param_sets_and_clears(twa_page, live_server_url):
+    twa_page.goto(f"{live_server_url}/feedback?signin=gis")
+    assert twa_page.evaluate("localStorage.getItem('vb_signin_gis')") == "1"
+    twa_page.goto(f"{live_server_url}/feedback?signin=redirect")
+    assert twa_page.evaluate("localStorage.getItem('vb_signin_gis')") is None
+    twa_page.goto(f"{live_server_url}/feedback?signin=gis")
+    twa_page.goto(f"{live_server_url}/feedback?signin=default")
+    assert twa_page.evaluate("localStorage.getItem('vb_signin_gis')") is None
+
+
+def test_gis_flag_on_twa_credential_signs_in_without_redirect(browser, live_server_url):
+    ctx, page = _gis_twa_page(browser, "credential")
+    page.goto(f"{live_server_url}/feedback?signin=gis")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    gis = page.evaluate("window.__gis")
+    assert gis["signInWithCredential"] == 1
+    assert gis["credentialCalls"] == [{"token": "fake-id-token"}]
+    assert gis["initOpts"]["use_fedcm_for_prompt"] is True
+    assert gis["initOpts"]["client_id"].endswith(".apps.googleusercontent.com")
+    assert page.evaluate("window.__fbCalls.redirect") == 0
+    ctx.close()
+
+
+def test_gis_not_displayed_falls_back_to_redirect(browser, live_server_url):
+    ctx, page = _gis_twa_page(browser, "not_displayed")
+    page.goto(f"{live_server_url}/feedback?signin=gis")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    assert page.evaluate("window.__gis.prompts") == 1
+    assert page.evaluate("window.__gis.signInWithCredential") == 0
+    assert page.evaluate("window.__fbCalls.redirect") == 1
+    ctx.close()
+
+
+def test_gis_flag_off_twa_keeps_redirect(browser, live_server_url):
+    ctx, page = _gis_twa_page(browser, "credential")
+    page.goto(f"{live_server_url}/feedback")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    assert page.evaluate("window.__gis.prompts") == 0
+    assert page.evaluate("window.__fbCalls.redirect") == 1
+    ctx.close()
+
+
+def test_gis_late_credential_after_fallback_is_ignored(browser, live_server_url):
+    ctx, page = _gis_twa_page(browser, "not_displayed")
+    page.goto(f"{live_server_url}/feedback?signin=gis")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    assert page.evaluate("window.__fbCalls.redirect") == 1
+    page.evaluate("window.__gis.initOpts.callback({ credential: 'late' })")
+    assert page.evaluate("window.__gis.signInWithCredential") == 0
+    assert page.evaluate("window.__gis.cancels") == 1
+    ctx.close()
+
+
+def test_gis_prompt_timeout_falls_back(browser, live_server_url):
+    ctx, page = _gis_twa_page(browser, "silent")
+    page.add_init_script("window.__vbGisTimeoutMs = 150;")
+    page.goto(f"{live_server_url}/feedback?signin=gis")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    assert page.evaluate("window.__fbCalls.redirect") == 1
+    ctx.close()
+
+
+def test_gis_script_load_failure_falls_back(browser, live_server_url):
+    ctx, page = _page_for(browser, _ANDROID_UA, standalone=True)
+    page.route("https://accounts.google.com/gsi/client", lambda route: route.abort())
+    page.goto(f"{live_server_url}/feedback?signin=gis")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    assert page.evaluate("window.__fbCalls.redirect") == 1
+    assert page.evaluate("document.querySelectorAll('script[src*=\"gsi/client\"]').length") == 0
+    ctx.close()
+
+
+def test_gis_skipped_falls_back(browser, live_server_url):
+    ctx, page = _gis_twa_page(browser, "skipped")
+    page.goto(f"{live_server_url}/feedback?signin=gis")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    assert page.evaluate("window.__fbCalls.redirect") == 1
+    ctx.close()
+
+
+def test_gis_user_dismissal_does_not_redirect(browser, live_server_url):
+    ctx, page = _gis_twa_page(browser, "dismissed")
+    page.goto(f"{live_server_url}/feedback?signin=gis")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    assert page.evaluate("window.__fbCalls.redirect") == 0
+    assert page.evaluate("window.__gis.signInWithCredential") == 0
+    ctx.close()
+
+
+def test_gis_initialize_once_and_credential_once(browser, live_server_url):
+    ctx, page = _gis_twa_page(browser, "credential")
+    page.goto(f"{live_server_url}/feedback?signin=gis")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    assert page.evaluate("window.__gis.inits") == 1
+    assert page.evaluate("window.__gis.signInWithCredential") == 2  # one per tap
+    ctx.close()

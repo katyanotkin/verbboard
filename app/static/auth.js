@@ -73,6 +73,7 @@
     return window.VB_UI_LANG ? prefix + 'ui_language=' + encodeURIComponent(window.VB_UI_LANG) : '';
   }
   var REDIRECT_FLAG_KEY = 'vb_signin_redirect';
+  var GIS_FLAG_KEY = 'vb_signin_gis';
 
   function syncRedirectFlagFromUrl() {
     try {
@@ -83,6 +84,13 @@
         localStorage.setItem(REDIRECT_FLAG_KEY, '0');
       } else if (mode === 'default') {
         localStorage.removeItem(REDIRECT_FLAG_KEY);
+      }
+      // Opt-in Google Identity Services path for the TWA branch (issue #88).
+      // ?signin=gis turns it on; ?signin=redirect|default turns it off again.
+      if (mode === 'gis') {
+        localStorage.setItem(GIS_FLAG_KEY, '1');
+      } else if (mode === 'redirect' || mode === 'default') {
+        localStorage.removeItem(GIS_FLAG_KEY);
       }
     } catch (_) {}
   }
@@ -104,6 +112,134 @@
       if (stored === '0') return false;
     } catch (_) {}
     return isAndroidBrowser();
+  }
+
+  function useGisSignIn() {
+    try {
+      return localStorage.getItem(GIS_FLAG_KEY) === '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  var GIS_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
+  var GIS_PROMPT_TIMEOUT_MS = 12000;
+  var GIS_SCRIPT_TIMEOUT_MS = 5000;
+
+  function loadGisScript() {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      return Promise.resolve();
+    }
+    return new Promise(function (resolve, reject) {
+      var el = document.createElement('script');
+      var done = false;
+      var timer = null;
+      function end(err) {
+        if (done) return;
+        done = true;
+        if (timer) clearTimeout(timer);
+        if (err) {
+          // Drop the failed element so a retry does not append duplicates.
+          if (el.parentNode) el.parentNode.removeChild(el);
+          reject(err);
+        } else {
+          resolve();
+        }
+      }
+      el.src = GIS_SCRIPT_URL;
+      el.async = true;
+      el.onload = function () { end(null); };
+      el.onerror = function () { end(new Error('gsi script failed to load')); };
+      timer = setTimeout(function () { end(new Error('gsi script load timed out')); },
+        window.__vbGisScriptTimeoutMs || GIS_SCRIPT_TIMEOUT_MS);
+      document.head.appendChild(el);
+    });
+  }
+
+  // initialize() runs once per page; its callback delegates to the current
+  // attempt's handler so later taps do not re-initialize.
+  var gisInitialized = false;
+  var gisCredentialHandler = null;
+
+  // Google Identity Services sign-in for the installed Android app (issue #88):
+  // the redirect round trip lands in a Custom Tab with its own sessionStorage
+  // and ends in "missing initial state". Resolves true once Firebase accepted
+  // the Google ID token, or when the user dismissed the prompt (a cancel, no
+  // redirect); false (after a console.warn) when the caller should fall back
+  // to signInWithRedirect. onAuthStateChanged does all post-sign-in work.
+  async function signInViaGis() {
+    var clientId = (config() || {}).gisClientId;
+    if (!clientId) {
+      console.warn('VB: GIS sign-in unavailable (no client id), falling back to redirect');
+      return false;
+    }
+    try {
+      await loadGisScript();
+    } catch (err) {
+      console.warn('VB: GIS sign-in unavailable (' + (err && err.message) + '), falling back to redirect');
+      return false;
+    }
+    return new Promise(function (resolve) {
+      var settled = false;
+      var timer = null;
+      function finish(ok, reason) {
+        if (settled) return;
+        settled = true;
+        if (timer) clearTimeout(timer);
+        gisCredentialHandler = null;
+        if (!ok) {
+          console.warn('VB: GIS sign-in fell back to redirect: ' + reason);
+          try { window.google.accounts.id.cancel(); } catch (_) {}
+        }
+        resolve(ok);
+      }
+      gisCredentialHandler = function (response) {
+        if (settled) return;
+        if (timer) { clearTimeout(timer); timer = null; }
+        try {
+          var idToken = response && response.credential;
+          if (!idToken) { finish(false, 'no credential in response'); return; }
+          var cred = firebase.auth.GoogleAuthProvider.credential(idToken);
+          Promise.resolve(firebase.auth().signInWithCredential(cred)).then(
+            function () { finish(true); },
+            function (err) { finish(false, 'signInWithCredential failed: ' + ((err && err.code) || err)); }
+          );
+        } catch (err) {
+          finish(false, 'credential handling failed: ' + ((err && err.message) || err));
+        }
+      };
+      try {
+        if (!gisInitialized) {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: function (response) {
+              if (gisCredentialHandler) gisCredentialHandler(response);
+            },
+            use_fedcm_for_prompt: true,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+          gisInitialized = true;
+        }
+        timer = setTimeout(function () { finish(false, 'prompt timed out'); },
+          window.__vbGisTimeoutMs || GIS_PROMPT_TIMEOUT_MS);
+        window.google.accounts.id.prompt(function (notification) {
+          if (!notification || settled) return;
+          if (notification.isNotDisplayed && notification.isNotDisplayed()) {
+            finish(false, 'prompt not displayed: ' + (notification.getNotDisplayedReason && notification.getNotDisplayedReason()));
+          } else if (notification.isSkippedMoment && notification.isSkippedMoment()) {
+            finish(false, 'prompt skipped: ' + (notification.getSkippedReason && notification.getSkippedReason()));
+          } else if (notification.isDismissedMoment && notification.isDismissedMoment()) {
+            // credential_returned: the callback handles it. Anything else is
+            // the user closing the prompt: a cancel, not a failure.
+            var why = notification.getDismissedReason && notification.getDismissedReason();
+            if (why !== 'credential_returned') finish(true);
+          }
+        });
+      } catch (err) {
+        finish(false, 'prompt threw: ' + ((err && err.message) || err));
+      }
+    });
   }
 
   // Fire-and-forget diagnostic ping for issue #28 (is sign-in friction
@@ -158,6 +294,9 @@
         // mobile-browser branch instead, unconditionally (there is no
         // working "legacy" fallback to opt back into here, unlike the
         // mobile-browser branch's useRedirectSignIn() escape hatch).
+        // Opt-in (vb_signin_gis): try Google Identity Services first and fall
+        // back to this redirect if the prompt cannot be shown (issue #88).
+        if (useGisSignIn() && (await signInViaGis())) return;
         await firebase.auth().signInWithRedirect(provider);
       } else if (isStandalone()) {
         // Standalone PWA: opening a browser tab crosses the PWA/browser

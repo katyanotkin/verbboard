@@ -20,6 +20,9 @@ _ANALYTICS_EXCLUDED_EMAILS_SECRET_NAME = "verbboard-analytics-excluded-emails"
 # Real Play App Signing key certificate (not the local upload-key keystore) --
 # copied from Play Console > Setup > App integrity > App signing key certificate
 # after the first AAB upload. Free-edition default; Plus overrides via env.
+# Firebase's auto-created web OAuth client (public, not a secret). Used by the
+# opt-in Google Identity Services sign-in on the TWA branch (issue #88).
+_DEFAULT_GOOGLE_OAUTH_WEB_CLIENT_ID = "850751922799-91f584d4ggej8t85eag95g4pbl9c0m1p.apps.googleusercontent.com"
 _DEFAULT_ANDROID_CERT_FINGERPRINT = (
     "3A:51:9F:C0:80:6A:91:31:16:71:4E:98:49:F8:B9:C2:F9:09:21:CE:06:E4:51:C7:2D:81:B5:40:42:85:F4:9C"
 )
@@ -54,6 +57,7 @@ class Settings:
     android_cert_fingerprints: tuple[str, ...]
     on_demand_examples_enabled: bool
     jump_to_example_enabled: bool
+    google_oauth_web_client_id: str = _DEFAULT_GOOGLE_OAUTH_WEB_CLIENT_ID
 
 
 def _resolve_environment() -> str:
@@ -156,6 +160,9 @@ def load_settings() -> Settings:
     edition = os.getenv("EDITION", "free").strip().lower() or "free"
     study_languages_raw = os.getenv("STUDY_LANGUAGES", "").strip().lower()
     android_fingerprints_raw = os.getenv("ANDROID_CERT_FINGERPRINTS", "").strip()
+    google_oauth_web_client_id = (
+        os.getenv("GOOGLE_OAUTH_WEB_CLIENT_ID", "").strip() or _DEFAULT_GOOGLE_OAUTH_WEB_CLIENT_ID
+    )
     settings = Settings(
         environment=environment,
         host=os.getenv("HOST", "0.0.0.0"),
@@ -172,12 +179,15 @@ def load_settings() -> Settings:
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         admin_secret=_load_admin_secret(),
         admin_session_secret=_load_admin_session_secret(),
-        firebase_web_config_json=_safe_firebase_config(os.getenv("FIREBASE_WEB_CONFIG_JSON", "")),
+        firebase_web_config_json=_safe_firebase_config(
+            os.getenv("FIREBASE_WEB_CONFIG_JSON", ""), gis_client_id=google_oauth_web_client_id
+        ),
         allow_local_dev_auth=os.getenv("ALLOW_LOCAL_DEV_AUTH", "").lower() == "true",
         badge_compact_threshold=int(os.getenv("BADGE_COMPACT_THRESHOLD", "20")),
         verbs_page_limit=int(os.getenv("VERBS_PAGE_LIMIT", "300")),
         verbs_display_batch=int(os.getenv("VERBS_DISPLAY_BATCH", "20")),
         gcp_region=os.getenv("GCP_REGION", "us-east1"),
+        google_oauth_web_client_id=google_oauth_web_client_id,
         analytics_excluded_emails=_load_analytics_excluded_emails(),
         edition=edition,
         study_languages=(
@@ -219,7 +229,7 @@ def verb_candidates_collection_name() -> str:
     return load_settings().verb_candidates_collection
 
 
-def _safe_firebase_config(raw: str) -> str:
+def _safe_firebase_config(raw: str, gis_client_id: str = "") -> str:
     """Re-parse and re-serialize Firebase config JSON with <, >, & unicode-escaped.
 
     Stored once at settings load time so every route that embeds this value
@@ -230,6 +240,11 @@ def _safe_firebase_config(raw: str) -> str:
         parsed = json.loads(raw or "null")
     except (TypeError, ValueError):
         return "null"
+    if isinstance(parsed, dict) and gis_client_id:
+        # Public OAuth client id for the opt-in Google Identity Services sign-in
+        # (issue #88); rides along in window.FIREBASE_WEB_CONFIG so no route
+        # or template context has to change. Firebase ignores unknown keys.
+        parsed["gisClientId"] = gis_client_id
     return json.dumps(parsed).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
 
