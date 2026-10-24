@@ -971,14 +971,17 @@ button {
   opacity: 0.7;
 }
 
-/* Examples: the audio cell holds play + slow + flag; let the flag wrap on narrow widths. */
+/* Examples: the audio cell holds play + slow + flag on one line; the text column yields the width. */
 .examples-table td:last-child {
   white-space: nowrap;
 }
 
 @media (max-width: 420px) {
+  .examples-table td:first-child {
+    width: auto;
+  }
   .examples-table td:last-child {
-    white-space: normal;
+    width: 1%;
   }
   .conj-form {
     gap: 4px 8px;
