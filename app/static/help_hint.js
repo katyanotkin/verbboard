@@ -30,6 +30,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const isOpen = trigger.getAttribute("aria-expanded") === "true";
     trigger.setAttribute("aria-expanded", isOpen ? "false" : "true");
     panel.hidden = isOpen;
+    if (!isOpen && getComputedStyle(panel).position === "fixed") {
+      const rect = trigger.getBoundingClientRect();
+      panel.style.top = rect.bottom + 8 + "px";
+      const half = panel.offsetWidth / 2 + 8;
+      const center = rect.left + rect.width / 2;
+      panel.style.left = Math.min(Math.max(center, half), window.innerWidth - half) + "px";
+    }
   });
 
   document.addEventListener("keydown", function (event) {

@@ -118,6 +118,7 @@
   "board.hide_translations": "× Traducción",
   "help.hint_label": "Más información",
   "help.known": "Marca este verbo como conocido e inicia la repetición espaciada. Las próximas sesiones de práctica mostrarán el botón \"Lo recordé\". Toca de nuevo para deshacer.",
+  "help.audio_report": "Pulsa la bandera junto a un audio para reportar un problema. Requiere un inicio de sesión gratuito. Un triángulo en lugar de la bandera indica un problema de audio conocido.",
   "help.translations": "Muestra una traducción debajo de cada ejemplo.",
   "help.practice": "Inicia una práctica con un conjunto de verbos y audio; gana una insignia al terminar.",
   "help.session_size": "Determina cuántos verbos incluye la sesión de práctica.",

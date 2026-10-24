@@ -971,6 +971,24 @@ button {
   opacity: 0.7;
 }
 
+/* Audio header hint: the panel is position:fixed so the table's overflow:hidden cannot clip it. */
+.examples-table th.col-audio {
+  white-space: nowrap;
+}
+.examples-table th.col-audio .help-hint {
+  vertical-align: middle;
+}
+.examples-table th.col-audio .help-hint-panel {
+  position: fixed;
+  left: 50%;
+  white-space: normal;
+  font-weight: 500;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+.examples-table th.col-audio .help-hint-panel::before {
+  display: none;
+}
+
 /* Examples: the audio cell holds play + slow + flag on one line; the text column yields the width. */
 .examples-table td:last-child {
   white-space: nowrap;
