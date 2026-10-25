@@ -95,8 +95,9 @@ tr:last-child td {
 
 .conj-form {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 4px 12px;
 }
 
 button {
@@ -643,7 +644,7 @@ button {
 /* ── examples table ───────────────────────────────────────────────────────── */
 
 .examples-table td:first-child {
-  width: 65%;
+  width: auto;
 }
 
 .example-src {
@@ -991,20 +992,8 @@ button {
 
 /* Examples: the audio cell holds play + slow + flag on one line; the text column yields the width. */
 .examples-table td:last-child {
+  width: 1%;
   white-space: nowrap;
-}
-
-@media (max-width: 420px) {
-  .examples-table td:first-child {
-    width: auto;
-  }
-  .examples-table td:last-child {
-    width: 1%;
-  }
-  .conj-form {
-    gap: 4px 8px;
-    flex-wrap: wrap;
-  }
 }
 
 .audio-report-pop {
