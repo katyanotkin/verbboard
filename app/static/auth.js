@@ -85,11 +85,14 @@
       } else if (mode === 'default') {
         localStorage.removeItem(REDIRECT_FLAG_KEY);
       }
-      // Opt-in Google Identity Services path for the TWA branch (issue #88).
-      // ?signin=gis turns it on; ?signin=redirect|default turns it off again.
+      // Google Identity Services path for the TWA branch (issue #88), ON by
+      // default. ?signin=redirect turns it off on this device (escape hatch),
+      // ?signin=gis forces it on, ?signin=default restores the default.
       if (mode === 'gis') {
         localStorage.setItem(GIS_FLAG_KEY, '1');
-      } else if (mode === 'redirect' || mode === 'default') {
+      } else if (mode === 'redirect') {
+        localStorage.setItem(GIS_FLAG_KEY, '0');
+      } else if (mode === 'default') {
         localStorage.removeItem(GIS_FLAG_KEY);
       }
     } catch (_) {}
@@ -116,9 +119,9 @@
 
   function useGisSignIn() {
     try {
-      return localStorage.getItem(GIS_FLAG_KEY) === '1';
+      return localStorage.getItem(GIS_FLAG_KEY) !== '0';
     } catch (_) {
-      return false;
+      return true;
     }
   }
 
@@ -294,7 +297,7 @@
         // mobile-browser branch instead, unconditionally (there is no
         // working "legacy" fallback to opt back into here, unlike the
         // mobile-browser branch's useRedirectSignIn() escape hatch).
-        // Opt-in (vb_signin_gis): try Google Identity Services first and fall
+        // Default on (vb_signin_gis='0' opts out): try Google Identity Services first and fall
         // back to this redirect if the prompt cannot be shown (issue #88).
         if (useGisSignIn() && (await signInViaGis())) return;
         await firebase.auth().signInWithRedirect(provider);

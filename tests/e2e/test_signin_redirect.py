@@ -268,7 +268,7 @@ def test_gis_flag_param_sets_and_clears(twa_page, live_server_url):
     twa_page.goto(f"{live_server_url}/feedback?signin=gis")
     assert twa_page.evaluate("localStorage.getItem('vb_signin_gis')") == "1"
     twa_page.goto(f"{live_server_url}/feedback?signin=redirect")
-    assert twa_page.evaluate("localStorage.getItem('vb_signin_gis')") is None
+    assert twa_page.evaluate("localStorage.getItem('vb_signin_gis')") == "0"
     twa_page.goto(f"{live_server_url}/feedback?signin=gis")
     twa_page.goto(f"{live_server_url}/feedback?signin=default")
     assert twa_page.evaluate("localStorage.getItem('vb_signin_gis')") is None
@@ -297,9 +297,18 @@ def test_gis_not_displayed_falls_back_to_redirect(browser, live_server_url):
     ctx.close()
 
 
-def test_gis_flag_off_twa_keeps_redirect(browser, live_server_url):
+def test_gis_is_default_on_twa_without_flag(browser, live_server_url):
     ctx, page = _gis_twa_page(browser, "credential")
     page.goto(f"{live_server_url}/feedback")
+    page.evaluate("window.VerbBoardAuth.signIn()")
+    assert page.evaluate("window.__gis.prompts") == 1
+    assert page.evaluate("window.__fbCalls.redirect") == 0
+    ctx.close()
+
+
+def test_gis_opt_out_twa_keeps_redirect(browser, live_server_url):
+    ctx, page = _gis_twa_page(browser, "credential")
+    page.goto(f"{live_server_url}/feedback?signin=redirect")
     page.evaluate("window.VerbBoardAuth.signIn()")
     assert page.evaluate("window.__gis.prompts") == 0
     assert page.evaluate("window.__fbCalls.redirect") == 1
