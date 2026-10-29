@@ -206,6 +206,15 @@ Install from Play Store on Android:
 - Side notes from launch day: (1) the "must target Android 16" policy notice named the old internal-testing release 1 (versionCode 1); release 2 was added to the Internal testing track from the library to supersede it (a closed-testing release cannot be promoted downward). (2) A "(beta)" subtitle in the Play listing on the owner's phone came from the account being on a testing track's tester list; removing the email from the Internal and Closed testing tester lists, clearing the Play Store cache and reinstalling cleared it. Real users never see it.
 - Post-launch web changes ship through the normal stage-push then `make gcp-promote-stage-to-prod` (activate `.venv` first, the Makefile calls bare `python`); do not touch `well_known.py` / `public/.well-known/assetlinks.json` unless the Play App Signing fingerprint changed.
 
+## Launch day log (2026-10-29)
+
+- **Play:** Production release 2 (1.0.0.0) approved about a day after submission, full rollout. Release 2 was also added to the Internal testing track to supersede the old versionCode 1 bundle. A fresh PWABuilder rebuild turned out to be unnecessary (release 2 already targeted API 36).
+- **Web (prod, image `82a009b`):** privacy policy and terms re-dated to 2026-10-29 with the usage-data, searches, AI-services and feedback-email disclosures plus an accounts/availability section; About language list now ends with "etc."; account deletion deliberately leaves audio-report vote markers (kept so fixes stay valid, stated on the privacy page).
+- **Monitoring (GCP console, nothing in the repo):** email channel, log-based metrics `vb_provider_unavailable` and `vb_autogen_promoted`, alert policies for PROVIDER_UNAVAILABLE, prod 5xx over 5 per 5 min and autogen over 20 verbs/hour, and a $25/month project budget (50/90/100%). Anthropic balance cannot be read or alerted on for an individual org: check the Billing page monthly by hand (calendar reminder). Auto-reload is intentionally off.
+- **Issues:** #1, #79, #88 and #91 closed; #90 (Gemini circuit breaker) opened.
+- **Announcement:** LinkedIn post published 2026-10-29: https://www.linkedin.com/posts/knotkin_verbboard-apps-on-google-play-activity-7521685848191401984-0H9b . Facebook (Russian) is being written and posted by the owner. Glassdoor is not a place for a launch post (employer reviews only); at most a neutral company-profile blurb. Rules kept for any future copy: audio is machine text-to-speech (never "native speakers"), no user counts or "every verb" claims, say "etc." for languages, mention that practice needs a free Google sign-in.
+- **Known and accepted:** a leftover local review entry can show "Recalled it" on a verb that is no longer starred (stale `srs:{lang}` entry; `getDueVerbIds` does not intersect with the known set). Not fixed, owner's call.
+
 ## TODO -- post-launch (ongoing)
 
 - [ ] **Maintenance loop** -- keep keystore backups current; regenerate the TWA wrapper when needed (manifest/icon changes); monitor crashes and user feedback in Play Console
