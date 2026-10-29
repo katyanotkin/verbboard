@@ -57,7 +57,7 @@ or sooner if Play blocks updates to the current closed-testing build.
 - Inspect the compiled `AndroidManifest.xml` inside the new AAB (as in 5.1) and confirm `targetSdkVersion` >= 36 before uploading; if PWABuilder's output is still lower, build with Bubblewrap CLI instead
 - Upload to the current track (closed testing); the Digital Asset Links fingerprint (5.5) is unchanged while the Play App Signing key is unchanged
 
-- [ ] AAB rebuilt with targetSdkVersion >= 36 and uploaded
+- [x] NOT NEEDED (checked 2026-10-28) -- release 2 (`com.verbboard.app`, versionCode 2, built 2026-09-25) already has `targetSdkVersion=36` / `compileSdkVersion=36` (decoded from the AAB's protobuf manifest), and it was promoted to Production unchanged. Two PWABuilder rebuild attempts the same day were discarded: the first used the default Package ID `com.verbboard.twa` and a freshly generated keystore, the second had the right key but still `com.verbboard.twa`. **Gotcha for any future rebuild:** PWABuilder's Package ID field defaults to `com.verbboard.twa` and the signing option must be "Use mine" with `verbboard-play-signing-keystore` (alias `my-key-alias`, cert SHA-256 `41:0A:0F:FA:...:14:B3`); check `package`, `versionCode` and the signing cert on the output before uploading. The remaining "For your next release" items on Publishing overview (edge-to-edge, orientation/resizability) are advisory; the manifest keeps `"orientation": "portrait"` by decision (landscape UI is not designed).
 
 ### Step 5.2: Create app in Play Console [YOU DO THIS]
 
@@ -180,9 +180,9 @@ fresh) > roll out to the closed track.
 - [ ] Share the closed-testing opt-in link (Play Console > Testing > Closed testing > your track > "Testers" tab) with all 12+ -- along with a short test list: sign in, practice session, audio, star a verb, feedback form (`/feedback`)
 - [ ] Confirm all 12+ have opted in (Play Console shows opt-in count) -- the 14-day clock only counts while a tester is opted in, not from AAB upload -- recorded 2026-10-08: 13 testers installed (11 US, 1 Israel, 1 Denmark), only 1 above the 12 needed, so recruit 2-3 more US testers as a buffer; the owner earlier reported 12-14 installed as of 2026-10-05, so verify on the Dashboard card the exact day the count first hit 12
 - [ ] Along the way: verify login, audio, progress sync, and navigation from the installed app -- de-risks the eventual public review too. Own on-device pass (Play-installed build, not Chrome): TWA sign-in (redirect in place), full practice loop incl. the sign-in gate on Start / "Recalled it" / listen gate, standalone-mode Back (bottom nav only), offline page, self-serve account deletion on `/privacy`, 375px RU/ES/HE layouts. Also test `https://verbboard.com/verbs?signin=redirect` on prod (only stage has been verified; iOS is issue #63)
-- [ ] Wait 14 continuous days with >=12 testers opted in -- owner's working target: closed testing over about 2 weeks from 2026-10-08, i.e. around 2026-10-22; earliest possible is 2026-10-19 if the clock actually started 2026-10-05. An uninstall that drops the count below 12 can stall or restart the clock
-- [ ] Apply for production access: Play Console > Dashboard > "Apply for production access" (answers questions about the app, testing process, production readiness)
-- [ ] Production access granted (email/dashboard confirmation)
+- [x] Wait 14 continuous days with >=12 testers opted in -- gate passed (inferred 2026-10-28 from Production being unlocked; exact date the clock cleared was not recorded). An uninstall that drops the count below 12 can stall or restart the clock
+- [x] Apply for production access: Play Console > Dashboard > "Apply for production access" (answers questions about the app, testing process, production readiness) -- done before 2026-10-22 (exact date not recorded)
+- [x] Production access granted -- evidenced by the Production countries change (14 countries added, submission 6) published 2026-10-22 and "Promote release" being available on the closed-testing release
 
 ### Step 5.7: Create production release and submit for review [YOU DO THIS]
 
@@ -193,8 +193,8 @@ the AAB already uploaded, or upload fresh) > Publishing overview > Send
 changes for review. Review takes 3-7 days; email arrives on approval or
 change request.
 
-- [ ] Production release created
-- [ ] Submitted
+- [x] Production release created -- 2026-10-28, via Closed testing > `closed-release-a` > Promote release > Production (reused release 2 (1.0.0.0), no new upload; en-US release notes written for a public launch, not "first test")
+- [x] Submitted -- 2026-10-28, passed the automatic pre-review checks, Production release 2 (1.0.0.0) shows **In review**. Waiting for Play's email (3-7 days). Keep `~/aab-build` (keystores + passwords) until approved, and do not touch `well_known.py` / `public/.well-known/assetlinks.json` meanwhile
 
 ### Step 5.8: Post-approval TWA check [YOU DO THIS]
 
