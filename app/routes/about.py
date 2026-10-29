@@ -19,6 +19,7 @@ def about_page(request: Request) -> HTMLResponse:
     settings = load_settings()
     plugins = active_study_plugins(settings)
     study_languages = ", ".join(study_language_label(code, plugins, ui) for code in plugins)
+    study_languages = f"{study_languages}, {ui.get('about.etc', 'etc.')}"
 
     response = templates.TemplateResponse(
         request,

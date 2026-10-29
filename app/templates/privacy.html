@@ -24,7 +24,7 @@
 
 <div class="container">
   <h1>Privacy Policy</h1>
-  <p class="effective-date">Effective date: July 30, 2026</p>
+  <p class="effective-date">Effective date: October 29, 2026</p>
 
   <div class="content">
     <p>VerbBoard is a verb conjugation and practice app. This policy explains what data we collect and how we use it.</p>
@@ -35,31 +35,36 @@
       <li>Your Google account email address</li>
       <li>Your display name</li>
       <li>Your profile picture URL</li>
-      <li>Your learning progress: which verbs you have seen and marked as known, and your practice badges</li>
+      <li>Your learning progress: which verbs you have seen and marked as known, your spaced-review schedule, and your practice badges</li>
+      <li>Audio problem reports you submit (which clip, the reason, and an optional short note)</li>
     </ul>
-    <p>This data is stored in Google Firestore and is used solely to sync your progress across devices. We do not sell it or use it for advertising.</p>
+    <p>This data is stored in Google Firestore and is used to sync your progress across devices and to fix audio problems. We do not sell it or use it for advertising.</p>
 
-    <h2>Data not linked to your account</h2>
-    <p>We log anonymous session data for performance monitoring and to understand how the app is used:</p>
+    <h2>Usage data</h2>
+    <p>We keep one usage record per visitor per day, for performance monitoring and to understand how the app is used:</p>
     <ul>
-      <li>Language being studied</li>
-      <li>UI language preference</li>
-      <li>Device type (mobile / desktop)</li>
+      <li>Language being studied and UI language</li>
+      <li>Device type (mobile / desktop / installed app)</li>
+      <li>The site you came from (referrer), and which main features you used (for example, viewed a verb, started a practice session)</li>
     </ul>
-    <p>This data is not linked to your identity and is not retained in a form that identifies you.</p>
+    <p>The record is identified by a one-way hash of your network address, browser type and the date; we do not store your IP address in it. If you sign in, that day's record is linked to your account, and it is removed when you delete your account.</p>
+
+    <h2>Searches</h2>
+    <p>When you search for a verb we don't have, we store the search text (without your account) to decide which verbs to add. To translate a search or generate a missing verb, the search text is sent to AI services (Google Gemini and Anthropic Claude). No account information is sent.</p>
 
     <h2>Feedback</h2>
-    <p>If you submit feedback via the 💬 form, the text you write is stored. Feedback is not linked to your account unless you choose to include identifying information in the message.</p>
+    <p>If you submit feedback via the 💬 form, the text you write is stored. Feedback is not linked to your account. If you give an email address so we can reply, it is stored with the feedback.</p>
 
     <h2>Third-party services</h2>
     <ul>
       <li><b>Google Sign-In (Firebase Auth)</b> — handles authentication. Subject to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</li>
+      <li><b>Google Gemini (Vertex AI) and Anthropic Claude</b> — used to translate searches and to generate verb data, examples and translations. They receive only the verb or search text, not your account or progress.</li>
       <li><b>Google Cloud</b> — data is stored on Google Cloud infrastructure (Firestore, Cloud Run) in the US.</li>
       <li><b>Microsoft Edge text-to-speech (neural voices)</b> — audio is generated from verb forms and example sentences and cached. No user data is sent to TTS.</li>
     </ul>
 
     <h2 id="data-deletion">Data deletion</h2>
-    <p>If you've signed in with Google, use the button below to permanently delete your account and all associated data (server and local) immediately.</p>
+    <p>If you've signed in with Google, use the button below to permanently delete your account, progress, practice data and usage records (server and local) immediately. Audio problem reports are kept so that fixes stay valid for other learners.</p>
     <button id="delete-account-btn" class="btn-secondary" disabled title="{{ delete_account_disabled_title }}">{{ delete_account_button }}</button>
 
     <h2>Children</h2>
