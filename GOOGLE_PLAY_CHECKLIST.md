@@ -155,7 +155,7 @@ Play Console > Policy > App content:
 - Target audience: 13+ or All ages
 - Data safety: see `PLAY_DATA_SAFETY.md` for the full category-by-category worksheet (selections, purposes, and descriptions to paste in)
 
-- [ ] Declarations complete -- partly recorded 2026-07-29 (ads: none; sign-in: OAuth only; data collected + encrypted in transit; content rating mandatory). Verify every item under Policy > App content shows complete, then tick
+- [x] Declarations complete -- recorded 2026-07-29 (ads: none; sign-in: OAuth only; data collected + encrypted in transit; content rating mandatory); the IARC rating certificate was issued 2026-10-29 and Production was approved the same day, so Play accepted every App content item
 
 ### Step 5.6b: Closed testing gate (REQUIRED, not optional) [YOU DO THIS]
 
@@ -202,7 +202,9 @@ Install from Play Store on Android:
 - App must open fullscreen with NO browser address bar. If the address bar is visible, assetlinks verification failed -- recheck step 5.5.
 - Sign in with Google inside the app to verify auth end to end.
 
-- [ ] Verified on device
+- [x] **LIVE on Google Play 2026-10-29** -- Production release 2 (1.0.0.0) approved about a day after submission and at "Full rollout". Verified on a real Android phone from the Play build: opens fullscreen with no address bar (assetlinks verified) and Google sign-in works (GIS path, #88). Practice/audio and the `/privacy` deletion button on the installed build were not reported back at the time of writing.
+- Side notes from launch day: (1) the "must target Android 16" policy notice named the old internal-testing release 1 (versionCode 1); release 2 was added to the Internal testing track from the library to supersede it (a closed-testing release cannot be promoted downward). (2) A "(beta)" subtitle in the Play listing on the owner's phone came from the account being on a testing track's tester list; removing the email from the Internal and Closed testing tester lists, clearing the Play Store cache and reinstalling cleared it. Real users never see it.
+- Post-launch web changes ship through the normal stage-push then `make gcp-promote-stage-to-prod` (activate `.venv` first, the Makefile calls bare `python`); do not touch `well_known.py` / `public/.well-known/assetlinks.json` unless the Play App Signing fingerprint changed.
 
 ## TODO -- post-launch (ongoing)
 
