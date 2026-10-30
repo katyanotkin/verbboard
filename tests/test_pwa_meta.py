@@ -4,7 +4,7 @@ Every page that is part of the PWA shell must include:
 - <link rel="manifest" href="/static/manifest.json">
 - <meta name="theme-color" content="#2d6a4f">
 - viewport-fit=cover (for iOS safe area insets)
-- /static/pwa.js script tag (install prompt, beforeinstallprompt)
+- /static/pwa.js script tag (service worker registration, Google Play link)
 
 manifest.json must declare scope='/' so the service worker controls the full
 origin (required for offline and TWA).

@@ -148,15 +148,8 @@
       </div>
     </div>
 
-    <button id="install-btn" hidden onclick="vbInstall()" class="install-btn">
-      Install VerbBoard
-    </button>
-
-    <div id="install-hint" class="install-hint" hidden>
-      <span class="install-hint-text">{{ ui['home.install_hint'] }}</span>
-      <button type="button" class="install-hint-close" id="install-hint-close"
-              aria-label="{{ ui['home.install_hint_dismiss'] }}">&#x2715;</button>
-    </div>
+    <a id="play-link" hidden class="play-link" rel="noopener"
+       href="https://play.google.com/store/apps/details?id=com.verbboard.app&amp;referrer=utm_source%3Dverbboard_web%26utm_medium%3Dhome_link">{{ ui['home.play_link'] }}</a>
   </div>
 
   <p class="home-legal-links">

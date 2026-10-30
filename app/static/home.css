@@ -579,80 +579,29 @@ input[type="text"]:focus {
   color: var(--color-navy);
 }
 
-/* ===== PWA install prompt ===== */
+/* ===== Google Play link (Android browsers only) ===== */
 
-.install-btn {
+.play-link {
   display: block;
+  width: fit-content;
   margin: 20px auto 0;
   padding: 9px 20px;
   min-height: 48px;
+  box-sizing: border-box;
+  line-height: 28px;
   border-radius: 999px;
   border: 1.5px solid #2d6a4f;
-  background: transparent;
   color: #2d6a4f;
-  font: inherit;
   font-size: 0.88rem;
   font-weight: 600;
-  cursor: pointer;
+  text-decoration: none;
   touch-action: manipulation;
   transition: background 0.12s ease, color 0.12s ease;
 }
 
-.install-btn:hover {
+.play-link:hover {
   background: #2d6a4f;
   color: #ffffff;
-}
-
-.install-btn--disabled,
-.install-btn--disabled:hover {
-  border-color: #9ca3af;
-  background: transparent;
-  color: #6b7280;
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.install-hint {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  max-width: 420px;
-  margin: 12px auto 0;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid #bbf7d0;
-  background: #f0fdf4;
-  color: #166534;
-  font-size: 0.84rem;
-  font-weight: 500;
-  line-height: 1.45;
-}
-
-.install-hint-text {
-  flex: 1;
-}
-
-.install-hint-close {
-  flex-shrink: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: #166534;
-  font-size: 15px;
-  line-height: 1;
-  padding: 0;
-  opacity: 0.55;
-  min-width: 44px;
-  min-height: 44px;
-  margin-block: -10px;
-  margin-inline: -10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.install-hint-close:hover {
-  opacity: 1;
 }
 
 /* ===== Search notice (generating / not-found) ===== */

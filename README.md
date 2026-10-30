@@ -28,7 +28,7 @@ The product focuses on:
 - guided learning flows with audio-first practice sessions
 - spaced repetition built into the practice loop, not a separate review mode
 - multilingual conjugation-first UX
-- PWA — installable on Android from the home page
+- PWA shell with offline fallback; Android browsers get a Google Play link on the home page
 - real-world usage feedback loops
 - fast iteration and operational simplicity
 
@@ -41,7 +41,7 @@ The product focuses on:
 - Verb of the day: one featured verb per language, deep-linked to the learn page — same pick all day, changes daily
 - Search verbs: studied language selected by default; select English to cross-search in your studied language (translated via Gemini)
 - Voice selection (`female`, `male`)
-- Install button on Android to add to home screen
+- "Get it on Google Play" link (Android browsers only) in place of the old install button
 
 Visual indicators:
 - ★ learned verbs
@@ -105,8 +105,8 @@ Visual indicators:
 ## PWA / Mobile
 
 - PWA manifest, service worker, and icons in `app/static/`
-- 4-tab icon-only bottom nav on mobile: Back / Verbs / Search / Login
-- Install prompt on Android via `beforeinstallprompt`
+- 4-tab icon-only bottom nav on mobile: Back / Verbs / Search / Home
+- Google Play link on Android browsers (`pwa.js` shows `#play-link`; hidden in the app, on iOS and on desktop)
 - Three-branch sign-in: standalone PWA → new tab, mobile browser → `/auth/signin`, desktop → popup
 - `/privacy` page for Google Play OAuth consent screen
 - Digital Asset Links at `/.well-known/assetlinks.json` (TWA fingerprint required for Play)
