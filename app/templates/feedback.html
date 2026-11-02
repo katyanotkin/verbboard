@@ -24,7 +24,8 @@
     </div>
 
     {% if success %}
-    <div class="alert alert-success">{{ success_msg }}</div>
+    <div class="alert alert-success" id="feedback-success" role="status">{{ success_msg }}</div>
+    <div class="actions"><a href="{{ return_to }}" class="feedback-link">{{ back_label }}</a></div>
     {% endif %}
 
     {% if error_empty %}
@@ -35,13 +36,36 @@
     <div class="alert alert-error">{{ error_email_required_msg }}</div>
     {% endif %}
 
-    <form method="post" action="/feedback">
+    {% if plus_error_msg %}
+    <div class="alert alert-error">{{ plus_error_msg }}</div>
+    {% endif %}
+
+    {% if not success %}
+    <form method="post" action="/feedback" id="feedback-form"{% if plus_mode %} data-plus="1"{% endif %}>
       <input type="hidden" name="page" value="{{ page }}">
       <input type="hidden" name="language" value="{{ language }}">
       <input type="hidden" name="verb_id" value="{{ verb_id }}">
       <input type="hidden" name="return_to" value="{{ return_to }}">
       <input type="hidden" name="ui_language" value="{{ lang }}">
 
+      {% if plus_mode %}
+      <input type="hidden" name="id_token" id="plus-id-token" value="">
+      <div hidden aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
+      <p class="plus-lang-chip" id="plus-lang">{{ plus_lang_label }}</p>
+      <div class="alert alert-error" id="plus-token-error" data-msg="{{ plus_error_signin_msg }}" hidden></div>
+      <p id="plus-account" data-tpl="{{ plus_account_tpl }}" hidden></p>
+      <div id="plus-signin" hidden>
+        <p>{{ plus_signin_label }}</p>
+        <button type="button" class="feedback-link" id="plus-signin-btn">{{ auth_login }}</button>
+      </div>
+      <label for="plus-note" class="contact-email-label">{{ plus_note_label }}</label>
+      <input type="text" id="plus-note" name="comment" class="contact-email-input" maxlength="{{ plus_max_note }}">
+      <label for="contact_email" class="contact-email-label">{{ contact_email_label }}</label>
+      <input type="email" id="contact_email" name="contact_email" class="contact-email-input" placeholder="{{ contact_email_placeholder }}" required>
+      <div class="actions">
+        <button type="submit" class="feedback-link" id="plus-submit" disabled>{{ plus_submit_label }}</button>
+      </div>
+      {% else %}
       {% if poll_question and poll_options %}
       <div class="question-block">
         <div class="question-title">{{ poll_question }}</div>
@@ -63,7 +87,9 @@
       <div class="actions">
         <button type="submit" class="feedback-link">💬 {{ submit_label }}</button>
       </div>
+      {% endif %}
     </form>
+    {% endif %}
   </div>
 
 {% set bnav_lang = language %}{% set bnav_active = '' %}{% set bnav_back_href = return_to %}{% include '_bottom_nav.html' %}

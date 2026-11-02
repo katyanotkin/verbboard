@@ -188,6 +188,17 @@
              </div>`
           : "";
 
+        const grantEmail = row.account_email || "";
+        const shownEmail = row.account_email || row.contact_email || "";
+        const grantUrl = feedbackApiBase.replace(/\/api\/feedback$/, "") + "/entitlements?q=" + encodeURIComponent(grantEmail);
+        const plusBadge = row.page === "plus"
+          ? `<div style="margin-top:6px;font-size:12px;">
+               <span style="font-size:11px;background:#fef3c7;padding:2px 6px;border-radius:6px;font-weight:700;">Plus request</span>
+               ${escapeHtml(row.language || "-")} · ${escapeHtml(shownEmail || "-")}
+               ${grantEmail ? `<a href="${escapeHtml(grantUrl)}">Grant</a>` : ""}
+             </div>`
+          : "";
+
         return `
 	  <div class="card" style="padding:14px;margin-bottom:12px;">
 	    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px;">
@@ -210,6 +221,7 @@
 	      ${escapeHtml(row.comment || "")}
 	    </div>
 
+	    ${plusBadge}
 	    ${contactEmail}
 	    ${pollRaw}
 	  </div>

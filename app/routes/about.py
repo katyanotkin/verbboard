@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 
 from core.editions import active_study_plugins, study_language_label
 from core.i18n import get_strings, resolve_ui_language
+from core.languages.config import PLUS_EXTRA_STUDY_LANGUAGES
 from core.settings import load_settings
 
 router = APIRouter()
@@ -30,6 +31,8 @@ def about_page(request: Request) -> HTMLResponse:
             "study_languages": study_languages,
             "title": ui.get("about.title", "About VerbBoard"),
             "back_label": ui.get("about.back", "Back"),
+            "plus_request_label": ui.get("about.plus_request", "Request Plus access"),
+            "plus_request_language": PLUS_EXTRA_STUDY_LANGUAGES[0] if PLUS_EXTRA_STUDY_LANGUAGES else "",
             "feedback_label": ui.get("about.feedback", "Feedback"),
             "privacy_label": ui.get("about.privacy", "Privacy Policy"),
             "terms_label": ui.get("about.terms", "Terms of Use"),

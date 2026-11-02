@@ -223,5 +223,19 @@
   "fill.progress": "{n} / {total}",
   "fill.empty_input": "Сначала введите ответ",
   "fill.your_answer": "Ваш ответ",
-  "fill.blank_label": "Пропуск"
+  "fill.blank_label": "Пропуск",
+  "plus.req_title": "Запрос доступа к Plus",
+  "plus.req_lang": "Язык: {language}",
+  "plus.req_account": "Аккаунт: {email}",
+  "plus.req_signin": "Войдите через Google, чтобы мы нашли ваш аккаунт",
+  "plus.req_note": "Что-то добавить? (необязательно)",
+  "plus.req_submit": "Запросить доступ",
+  "plus.req_done": "Запрос получен. Мы напишем вам, когда доступ откроется.",
+  "plus.req_dup": "Вы уже отправляли запрос. Мы свяжемся с вами.",
+  "plus.req_error_email": "Укажите корректный адрес электронной почты.",
+  "plus.req_error_signin": "Войдите через Google и повторите попытку.",
+  "about.plus_request": "Запрос доступа к Plus",
+  "plus.req_error_note": "Заметка слишком длинная (не более 300 символов).",
+  "plus.req_error_language": "Для этого языка доступ к Plus не нужен.",
+  "plus.req_error_failed": "Что-то пошло не так. Попробуйте позже."
 }

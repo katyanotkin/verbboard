@@ -223,5 +223,19 @@
   "fill.progress": "{n} / {total}",
   "fill.empty_input": "Escribe una respuesta primero",
   "fill.your_answer": "Tu respuesta",
-  "fill.blank_label": "Hueco por completar"
+  "fill.blank_label": "Hueco por completar",
+  "plus.req_title": "Solicitar acceso a Plus",
+  "plus.req_lang": "Idioma: {language}",
+  "plus.req_account": "Cuenta: {email}",
+  "plus.req_signin": "Inicia sesión con Google para localizar tu cuenta",
+  "plus.req_note": "¿Algo más que debamos saber? (opcional)",
+  "plus.req_submit": "Solicitar acceso",
+  "plus.req_done": "Solicitud recibida. Te escribiremos cuando se active.",
+  "plus.req_dup": "Ya enviaste esta solicitud. Te contactaremos.",
+  "plus.req_error_email": "Introduce un correo electrónico válido.",
+  "plus.req_error_signin": "Inicia sesión con Google e inténtalo de nuevo.",
+  "about.plus_request": "Solicitar acceso a Plus",
+  "plus.req_error_note": "La nota es demasiado larga (máximo 300 caracteres).",
+  "plus.req_error_language": "El acceso Plus no está disponible para este idioma.",
+  "plus.req_error_failed": "Algo salió mal. Inténtalo de nuevo más tarde."
 }

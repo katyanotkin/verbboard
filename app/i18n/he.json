@@ -223,5 +223,19 @@
   "fill.progress": "{n} / {total}",
   "fill.empty_input": "הקלידו תשובה קודם",
   "fill.your_answer": "התשובה שלך",
-  "fill.blank_label": "מקום להשלמה"
+  "fill.blank_label": "מקום להשלמה",
+  "plus.req_title": "בקשת גישה ל-Plus",
+  "plus.req_lang": "שפה: {language}",
+  "plus.req_account": "חשבון: {email}",
+  "plus.req_signin": "התחברו עם Google כדי שנמצא את החשבון שלכם",
+  "plus.req_note": "משהו שכדאי שנדע? (אופציונלי)",
+  "plus.req_submit": "בקשת גישה",
+  "plus.req_done": "הבקשה התקבלה. נשלח לכם מייל כשהגישה תיפתח.",
+  "plus.req_dup": "כבר שלחתם בקשה. ניצור קשר.",
+  "plus.req_error_email": "נא להזין כתובת מייל תקינה.",
+  "plus.req_error_signin": "התחברו עם Google ונסו שוב.",
+  "about.plus_request": "בקשת גישה ל-Plus",
+  "plus.req_error_note": "ההערה ארוכה מדי (עד 300 תווים).",
+  "plus.req_error_language": "גישת Plus אינה זמינה לשפה זו.",
+  "plus.req_error_failed": "משהו השתבש. נסו שוב מאוחר יותר."
 }

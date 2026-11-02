@@ -139,6 +139,12 @@
       <span>{{ feedback_label }}</span>
     </a>
 
+    {% if plus_request_language %}
+    <a href="/feedback?page=plus&amp;language={{ plus_request_language | urlencode }}&amp;return_to={{ ('/about?ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}" class="feedback-link" id="about-plus-request">
+      <span>{{ plus_request_label }}</span>
+    </a>
+    {% endif %}
+
     <div id="auth-slot" class="auth-slot" style="display:contents"></div>
   </div>
 

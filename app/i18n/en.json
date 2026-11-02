@@ -223,5 +223,19 @@
   "fill.progress": "{n} / {total}",
   "fill.empty_input": "Type an answer first",
   "fill.your_answer": "Your answer",
-  "fill.blank_label": "Blank to fill in"
+  "fill.blank_label": "Blank to fill in",
+  "plus.req_title": "Request Plus access",
+  "plus.req_lang": "Language: {language}",
+  "plus.req_account": "Account: {email}",
+  "plus.req_signin": "Sign in with Google so we can find your account",
+  "plus.req_note": "Anything we should know? (optional)",
+  "plus.req_submit": "Request access",
+  "plus.req_done": "Request received. We will email you when access is on.",
+  "plus.req_dup": "You already asked for this. We will be in touch.",
+  "plus.req_error_email": "Please enter a valid email address.",
+  "plus.req_error_signin": "Please sign in with Google and try again.",
+  "about.plus_request": "Request Plus access",
+  "plus.req_error_note": "Your note is too long (300 characters at most).",
+  "plus.req_error_language": "Plus access is not available for this language.",
+  "plus.req_error_failed": "Something went wrong. Please try again later."
 }

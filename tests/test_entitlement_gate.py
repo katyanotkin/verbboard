@@ -452,7 +452,7 @@ def test_set_language_and_empty_search_still_go_home_for_free_language(client: T
 
 def test_about_no_longer_advertises_plus_only_french(client: TestClient) -> None:
     html = client.get("/about?ui_language=en").text
-    assert "page=plus" not in html
+    assert "page=plus&amp;language=fr" not in html  # the Plus request link is for Turkish only
     assert "Plus version only" not in html
 
 

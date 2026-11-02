@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any
 
+from core.plus_request_service import account_emails_by_request_ids
 from core.polls import ACTIVE_POLL_ID, POLL_OPTIONS, POLL_QUESTIONS
 from core.settings import load_settings, verb_candidates_collection_name
 from core.storage.firestore_db import get_db
@@ -23,6 +24,8 @@ def _normalize_feedback_doc(doc: Any) -> dict[str, Any]:
         "source": str(data.get("source") or ""),
         "verb_id": str(data.get("verb_id") or ""),
         "contact_email": str(data.get("contact_email") or ""),
+        "request_id": str(data.get("request_id") or ""),
+        "account_email": "",
         "hidden": bool(data.get("hidden", False)),
         "created_at": created_at.isoformat() if created_at else "",
     }
@@ -82,6 +85,10 @@ def list_feedback_rows(
     docs = db.collection("feedback").order_by("created_at", direction=direction).limit(limit).stream()
 
     feedback_rows = [_normalize_feedback_doc(doc) for doc in docs]
+    request_ids = {row["request_id"] for row in feedback_rows if row["page"] == "plus" and row["request_id"]}
+    account_emails = account_emails_by_request_ids(request_ids)
+    for row in feedback_rows:
+        row["account_email"] = account_emails.get(row["request_id"], "")
     return _filter_feedback_rows(
         feedback_rows,
         visibility=visibility,

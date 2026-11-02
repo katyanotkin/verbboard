@@ -180,6 +180,10 @@ def set_entitlement(
 
     doc_ref.set(data, merge=True)
     invalidate_entitlement_cache(uid)
+    if status == "active":
+        from core.plus_request_service import mark_requests_granted
+
+        mark_requests_granted(uid)
 
     merged = {**(existing_snap.to_dict() or {}), **data}
     merged["uid"] = uid

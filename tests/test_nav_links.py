@@ -7,7 +7,7 @@ feedback POST redirect-back flow.
 from __future__ import annotations
 
 import re
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 from fastapi.testclient import TestClient
 
@@ -151,7 +151,7 @@ def test_feedback_submit_returns_to_learn_page(client: TestClient, monkeypatch) 
         follow_redirects=False,
     )
     assert response.status_code == 303
-    location = response.headers["location"]
+    location = unquote(response.headers["location"])
     assert "/learn" in location
     assert "en_go" in location
 
@@ -164,7 +164,7 @@ def test_feedback_submit_returns_to_verbs_page(client: TestClient, monkeypatch) 
         follow_redirects=False,
     )
     assert response.status_code == 303
-    assert "/verbs" in response.headers["location"]
+    assert "/verbs" in unquote(response.headers["location"])
 
 
 def test_feedback_submit_rejects_external_return_to(client: TestClient, monkeypatch) -> None:
