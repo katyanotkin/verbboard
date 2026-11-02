@@ -194,7 +194,7 @@ button {
 }
 
 .voice-label {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
@@ -281,7 +281,7 @@ button {
 }
 
 .filter-label {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -500,7 +500,7 @@ button {
 }
 
 .practice-audio-progress {
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: #6b7280;
   white-space: nowrap;
   padding: 0 2px;
@@ -535,7 +535,7 @@ button {
   bottom: -22px;
   left: 0;
   right: 0;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: #b45309;
   text-align: center;
   pointer-events: none;
@@ -1140,4 +1140,12 @@ button {
   line-height: 1.4;
   text-align: start;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.form-value {
+  font-size: var(--fs-form);
+}
+
+.form-value--aux {
+  font-size: var(--fs-form-aux);
 }

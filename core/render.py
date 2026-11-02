@@ -145,8 +145,8 @@ def render_board_html(
             else:
                 audio_html = ""
 
-            value_font_size = "15px" if key in ("pair", "aspect") else "22px"
-            form_cell = f"<span style='font-size:{value_font_size}'>{value_html}</span>{audio_html}"
+            value_class = "form-value form-value--aux" if key in ("pair", "aspect") else "form-value"
+            form_cell = f"<span class='{value_class}'>{value_html}</span>{audio_html}"
 
             gender = str(row.get("gender", ""))
             number_val = str(row.get("number", ""))

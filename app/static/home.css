@@ -156,7 +156,7 @@ input[type="text"]:focus {
 }
 
 .votd-hero-label {
-  font-size: 0.76rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--button-primary-bg);
   text-transform: uppercase;
@@ -229,7 +229,7 @@ input[type="text"]:focus {
 }
 
 .browse-icon {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   opacity: 0.85;
 }
 
@@ -476,7 +476,7 @@ input[type="text"]:focus {
   background: #eff6ff;
   border: 1px solid #93c5fd;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 500;
   color: var(--color-navy);
   line-height: 1.4;
@@ -654,7 +654,7 @@ input[type="text"]:focus {
 .home-legal-links {
   margin: 16px 0 8px;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--text-muted, #6b7280);
 }
 

@@ -23,9 +23,15 @@
 
 body {
   overscroll-behavior-y: contain;
+  line-height: 1.5;
 }
 
 :root {
+  /* Type scale: 13px is the floor for secondary text; form text on /learn is the largest body size. */
+  --fs-xs: 0.8125rem;
+  --fs-form: 1.2rem;
+  --fs-form-aux: 0.95rem;
+
   --page-bg: #f8fafc;
   --card-bg: #ffffff;
   --card-border: #e5e7eb;
@@ -406,7 +412,7 @@ body {
   border: 1px solid var(--input-border);
   background: #e2e8f0;
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
   line-height: 1.5;
@@ -615,7 +621,7 @@ body {
   border-radius: 50%;
   background: var(--button-secondary-bg);
   color: var(--text-subtle);
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
@@ -651,7 +657,7 @@ body {
   border: 1px solid #93c5fd;
   border-radius: 10px;
   color: var(--color-navy);
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   line-height: 1.4;
   text-align: center;

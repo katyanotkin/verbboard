@@ -56,7 +56,7 @@
   border: 1px solid var(--card-border);
   border-radius: 8px;
   background: white;
-  font-size: 13px;
+  font-size: 16px; /* below 16px iOS Safari zooms the page on focus */
   color: #374151;
   cursor: pointer;
 }
@@ -133,7 +133,7 @@
   border: none;
   background: transparent;
   color: #6b7280;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -229,14 +229,14 @@
 /* ── tap hint ────────────────────────────────────────────────────────────── */
 .vb-tap-hint {
   margin: 0 0 2px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   line-height: 1.4;
 }
 
 .vb-known-legend {
   margin: 0 0 8px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   line-height: 1.4;
 }
@@ -319,7 +319,7 @@
 
 .vb-section-label {
   grid-column: 1 / -1;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -494,7 +494,7 @@
 }
 
 .practice-size-hint {
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: #3b82f6;
   white-space: nowrap;
   font-weight: 600;
@@ -581,7 +581,7 @@
   border-radius: 50%;
   background: linear-gradient(160deg, #F5C542 0%, #E09200 100%);
   color: #7A4F00;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 800;
   position: relative;
   border: 2px solid #C8880A;
