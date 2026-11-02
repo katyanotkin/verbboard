@@ -4,6 +4,7 @@ import hashlib
 import time
 from typing import Any
 
+from core.example_targets import parse_example_target
 from core.models import Example, VerbEntry
 from core.storage.verb_repository import get_candidate, get_verb, list_verbs
 
@@ -12,6 +13,8 @@ _CACHE_TTL = 300.0
 
 
 def _firestore_document_to_verb_entry(document: dict[str, Any]) -> VerbEntry:
+    language = document.get("language", "")
+    forms = document.get("forms", {})
     examples = [
         Example(
             # regen-format examples store the native sentence in "src" and English in "dst";
@@ -20,6 +23,7 @@ def _firestore_document_to_verb_entry(document: dict[str, Any]) -> VerbEntry:
             translations={
                 k: v for k, v in example.get("translations", {}).items() if isinstance(k, str) and isinstance(v, str)
             },
+            target=parse_example_target(language, example.get("src") or example["dst"], forms, example.get("target")),
         )
         for example in document.get("examples", [])
         if isinstance(example, dict) and isinstance(example.get("dst"), str)

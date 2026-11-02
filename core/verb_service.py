@@ -7,6 +7,7 @@ from typing import Any
 
 import anthropic
 
+from core.example_targets import tag_generated_payload
 from core.languages.ru.stress import strip_stress_marks
 from core.provider_health import ANTHROPIC as ANTHROPIC_BREAKER
 from core.provider_health import ProviderUnavailable
@@ -142,6 +143,7 @@ def generate_and_promote_verb(language: str, lemma: str) -> dict[str, Any] | Non
             generated = json.loads(raw)
             if language == "ru":
                 generated = strip_stress_marks(generated)
+            generated = tag_generated_payload(language, generated)
         except ProviderUnavailable as exc:
             # An outage is not a property of this lemma: no marker, so it is
             # retried as soon as Claude is back instead of after 24 h.

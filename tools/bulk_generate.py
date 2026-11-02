@@ -257,6 +257,9 @@ def run(
             from core.languages.ru.stress import strip_stress_marks
 
             generated = strip_stress_marks(generated)
+        from core.example_targets import tag_generated_payload
+
+        generated = tag_generated_payload(language, generated)
 
         # Post-generation duplicate check on the model-resolved lemma -- mirrors
         # generate_candidate which checks by doc ID and by search_extract.

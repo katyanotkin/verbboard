@@ -450,6 +450,8 @@ def _mock_live_verb_db(verb_id: str, data: dict | None) -> MagicMock:
     return mock_db
 
 
+_LIVE_EXAMPLES: list[dict[str, str]] = [{"dst": "הוא הלך הביתה."}]
+
 _LIVE_VERB = {
     "verb_id": "he_llkt",
     "language": "he",
@@ -458,7 +460,7 @@ _LIVE_VERB = {
     "forms": {"past": {"2msg": _PLAIN_2MSG, "2fsg": _PLAIN_2FSG}},
     "tts_forms": _HE_TTS_FORMS,  # legacy field present before regen
     "morph": {"binyan": "פָּעַל", "root": "ה.ל.כ"},
-    "examples": [{"dst": "הוא הלך הביתה."}],
+    "examples": _LIVE_EXAMPLES,
 }
 
 # Claude response under Option A: nikud in forms, no tts_forms
@@ -509,7 +511,7 @@ def test_regen_forms_writes_nikud_forms_and_clears_tts_forms(client: TestClient)
     assert written["forms"]["past"]["2fsg"] == _NIKUD_2FSG
 
 
-def test_regen_forms_keeps_existing_examples(client: TestClient) -> None:
+def test_regen_forms_keeps_existing_sentences(client: TestClient) -> None:
     db = _mock_live_verb_db("he_llkt", _LIVE_VERB)
 
     with (
@@ -520,7 +522,9 @@ def test_regen_forms_keeps_existing_examples(client: TestClient) -> None:
         client.post("/admin/api/verbs/he_llkt/regen_forms", cookies=_admin_cookies())
 
     written = db.collection.return_value.document.return_value.update.call_args[0][0]
-    assert "examples" not in written, "regen_forms must not overwrite examples"
+    # Sentences are never regenerated; only their form targets are re-derived against the new forms.
+    assert [e["dst"] for e in written["examples"]] == [e["dst"] for e in _LIVE_EXAMPLES]
+    assert written["examples"][0]["target"]["answer"] == "הלך", "targets are re-derived against the new forms"
 
 
 def test_regen_forms_verb_not_found(client: TestClient) -> None:

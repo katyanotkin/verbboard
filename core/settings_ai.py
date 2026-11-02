@@ -26,11 +26,13 @@ Schema:
   "lemma": "<dictionary base form>",
   "morph": { <language-specific metadata — see below> },
   "forms": { <conjugated forms, nested objects — see below> },
-  "examples": [ {"dst": "<sentence>"}, ... ]
+  "examples": [ {"dst": "<sentence>", "form": "<tense>.<person>", "answer": "<words in the sentence>"}, ... ]
 }
 
 Examples must be idiomatic, everyday language, naturally using the target verb.
-No two examples may use the same grammatical form."""
+No two examples may use the same grammatical form.
+
+Example tagging: for every example, "form" is the path into YOUR "forms" object of the one conjugated form the sentence shows, as "<tense>.<person>" (e.g. "present.3sg") or just "<tense>" for a form without persons (e.g. "gerund", "past_participle"). "answer" is those exact words as written in the sentence: one word for a simple tense; for a compound tense the auxiliary plus participle without the subject pronoun. The answer must appear in "dst" exactly once and match the stored form. If the sentence shows no listed form (e.g. a bare infinitive), set "form" to null and omit "answer"."""
 
 _PROMPT_EN = """\
 ────────────────────────────────────────

@@ -8,6 +8,9 @@ from typing import Any, Dict, List, Optional
 class Example:
     dst: str
     translations: Dict[str, str] = field(default_factory=dict)
+    # Validated link to the conjugated form this sentence shows (core/example_targets.py);
+    # None when the example is untagged or its stored tag no longer validates.
+    target: Optional[Dict[str, Any]] = None
 
 
 @dataclass(frozen=True)

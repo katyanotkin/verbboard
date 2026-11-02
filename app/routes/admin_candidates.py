@@ -16,6 +16,7 @@ from app.routes.admin_utils import (
     require_admin_api,
 )
 from core.admin_logging import resolve_signal_label
+from core.example_targets import tag_examples, tag_generated_payload
 from core.languages.fr.forms import normalize_subjonctif
 from core.languages.ru.stress import strip_stress_marks
 from core.provider_health import ACTION_HINT, ProviderUnavailable
@@ -300,8 +301,10 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
     try:
         generated = json.loads(raw)
         if language == "ru":
-            return strip_stress_marks(generated)
-        return normalize_subjonctif(generated) if language == "fr" else generated
+            generated = strip_stress_marks(generated)
+        elif language == "fr":
+            generated = normalize_subjonctif(generated)
+        return tag_generated_payload(language, generated)
     except json.JSONDecodeError as exc:
         logger.warning(
             "Claude returned invalid JSON for %s/%s: %s",
@@ -513,8 +516,10 @@ async def promote_candidate(request: Request, verb_id: str) -> JSONResponse:
     # complete, so this is safe/cheap to run on every promote.
     language = data.get("language", "")
     lemma = data.get("lemma", "")
+    # Same idea for example targets: keeps valid tags, tags what is still untagged.
+    tagged_examples = tag_examples(language, data.get("forms"), data.get("examples", []))
     translated_examples, lemma_translations, translations_incomplete = await _translate_verb(
-        language, lemma, data.get("examples", []), data.get("lemma_translations")
+        language, lemma, tagged_examples, data.get("lemma_translations")
     )
     data["examples"] = translated_examples
     if lemma_translations:
@@ -721,6 +726,9 @@ async def regen_verb_forms(request: Request, verb_id: str) -> JSONResponse:
         "tts_forms": None,  # forms now carry nikud directly; clear legacy tts_forms
         "updated_at": now,
     }
+    # Examples are kept but their targets point into the old forms: re-derive them.
+    if existing.get("examples"):
+        update["examples"] = tag_examples(language, update["forms"], existing["examples"], retag=True)
     doc_ref.update(update)
 
     updated_verb_data = {**existing, **update}
@@ -774,6 +782,7 @@ async def regen_candidate_example(request: Request, verb_id: str, index: int) ->
         if translations:
             new_example = {**new_example, "translations": translations}
 
+    new_example = tag_examples(language, data.get("forms"), [new_example])[0]
     examples[index] = new_example
     now = datetime.now(UTC).isoformat()
     ref.update({"examples": examples, "updated_at": now})

@@ -23,6 +23,7 @@ from google.api_core.exceptions import AlreadyExists
 from pydantic import BaseModel, ValidationError
 from vertexai.generative_models import GenerationConfig, GenerativeModel
 
+from core.example_targets import tag_generated_payload
 from core.languages.config import STUDY_LANGUAGE_SCRIPTS
 from core.languages.fr.forms import normalize_subjonctif
 from core.languages.ru.stress import strip_stress_marks
@@ -154,10 +155,10 @@ def _build_verb_prompt(language: str, query: str) -> str:
 def _normalize_generated(language: str, generated: Any) -> Any:
     """Language-specific cleanup of a generated payload, applied to both providers."""
     if language == "ru":
-        return strip_stress_marks(generated)
-    if language == "fr":
-        return normalize_subjonctif(generated)
-    return generated
+        generated = strip_stress_marks(generated)
+    elif language == "fr":
+        generated = normalize_subjonctif(generated)
+    return tag_generated_payload(language, generated)
 
 
 def _generate_verb_gemini(language: str, query: str) -> dict[str, Any] | None:
