@@ -243,6 +243,36 @@ def _allocate_verb_id(*, language: str, lemma: str, max_attempts: int = 5) -> st
     return None
 
 
+def _alias_query_to_live_verb(*, language: str, lemma: str, query: str) -> None:
+    """Make `query` findable on the already-live verb for `lemma` (e.g. a form missing from its index).
+
+    The user's next search then redirects to the verb board instead of missing again.
+    """
+    from google.cloud import firestore
+
+    from core.admin_logging import resolve_signal_label
+    from core.search_utils import normalize_text
+
+    try:
+        alias = normalize_text(query)
+        if not alias:
+            return
+        docs = (
+            get_db()
+            .collection(verbs_collection_name())
+            .where("language", "==", language)
+            .where("search_extract", "array_contains", normalize_text(lemma))
+            .limit(1)
+            .stream()
+        )
+        for doc in docs:
+            doc.reference.update({"search_extract": firestore.ArrayUnion([alias])})
+            resolve_signal_label(language=language, query=query)
+            return
+    except Exception:
+        logger.exception("autogen: could not alias %s/%s to live verb %s", language, query, lemma)
+
+
 def _allocate_candidate_doc_id(*, language: str, query: str, max_attempts: int = 5) -> str:
     """Return a verb_candidates doc id safe to write for `query`.
 
@@ -473,7 +503,8 @@ async def autogenerate_missing_verb(*, language: str, query: str, audio_backend:
         # from the one just generated, instead of silently no-oping.
         verb_id = await asyncio.to_thread(_allocate_verb_id, language=language, lemma=lemma)
         if verb_id is None:
-            logger.debug("autogen: %s/%s already exists under its generated lemma, skipping", language, lemma)
+            logger.info("autogen: %s/%s resolves to live lemma %s, aliasing query", language, query, lemma)
+            await asyncio.to_thread(_alias_query_to_live_verb, language=language, lemma=lemma, query=query)
             return
 
         rank = await asyncio.to_thread(_get_max_rank, language) + 1
