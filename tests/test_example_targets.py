@@ -293,3 +293,10 @@ def test_russian_stress_marks_do_not_break_tagging():
     target = tag_sentence("ru", "Я мо́ю посуду.", forms)
     assert target is not None and target["answer"] == "мо́ю"
     assert validate_target("ru", "Я мо́ю посуду.", forms, target) == []
+
+
+def test_turkish_person_marked_question_particle_splits_the_form():
+    forms = {"present_continuous": {"o": "alıyor", "siz": "alıyorsunuz"}}
+    assert tag_sentence("tr", "Siz de bilet alıyor musunuz?", forms) is None
+    assert tag_sentence("tr", "O bilet alıyor mu?", forms)["person"] == "o"  # bare mu is third person
+    assert tag_sentence("tr", "Siz bilet alıyorsunuz.", forms)["person"] == "siz"

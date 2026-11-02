@@ -336,12 +336,29 @@ def _prefer_by_subject(language: str, sentence: str, start: int, cells: list[For
     return consistent or cells
 
 
+def _split_by_turkish_question_particle(language: str, sentence: str, end: int) -> bool:
+    """True when a Turkish form is followed by a person-marked question particle (alıyor musunuz).
+
+    The person suffix moves onto the particle there, so the stored third-person-shaped form alone is
+    not the form the sentence shows; a bare "mi/mı/mu/mü" (third person) is fine.
+    """
+    if language != "tr":
+        return False
+    following = re.match(r"\s+(\w+)", sentence[end:])
+    if not following:
+        return False
+    word = fold(language, following.group(1))
+    return len(word) > 2 and word[0] == "m" and word[1] in "ıiuü"
+
+
 def tag_sentence(language: str, sentence: str, forms: Any) -> Optional[dict[str, Any]]:
     """Deterministic tag: only when exactly one form cell matches at exactly one place."""
     if not sentence or unicodedata.normalize("NFC", sentence) != sentence:
         return None
     matches = _drop_contained(find_matches(language, sentence, forms))
     if len({(m.start, m.end) for m in matches}) != 1:
+        return None
+    if _split_by_turkish_question_particle(language, sentence, matches[0].end):
         return None
     ordered_cells: list[FormCell] = []
     for match in matches:
