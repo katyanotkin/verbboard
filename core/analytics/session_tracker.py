@@ -360,6 +360,29 @@ async def record_practice_gate_shown(fingerprint: str, date: str) -> None:
     task.add_done_callback(_pending.discard)
 
 
+def _record_fill_started(fingerprint: str, date: str) -> None:
+    """Record that this session-day started a "fill the form" practice round.
+    Set-once like practice_started; dropped (no stub doc) when the session doc
+    does not exist."""
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        if not snapshot.exists or snapshot.to_dict().get("fill_started"):
+            return
+        doc_ref.set({"fill_started": True}, merge=True)
+    except Exception:
+        logger.exception("Failed to record fill started")
+
+
+async def record_fill_started(fingerprint: str, date: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_fill_started, fingerprint, date))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
 def delete_sessions_for_uid(uid: str) -> None:
     """Delete every analytics_sessions doc attached to this uid.
 

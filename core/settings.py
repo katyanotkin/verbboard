@@ -8,7 +8,7 @@ from functools import lru_cache
 from dotenv import load_dotenv
 from google.cloud import secretmanager
 
-from core.languages.config import FREE_STUDY_LANGUAGES, default_study_languages
+from core.languages.config import ALL_STUDY_LANGUAGES, FREE_STUDY_LANGUAGES, default_study_languages
 
 load_dotenv(override=True)
 
@@ -58,6 +58,9 @@ class Settings:
     on_demand_examples_enabled: bool
     jump_to_example_enabled: bool
     google_oauth_web_client_id: str = _DEFAULT_GOOGLE_OAUTH_WEB_CLIENT_ID
+    fill_practice_enabled: bool = True
+    fill_practice_languages: tuple[str, ...] = ()
+    fill_practice_plus_only: bool = False
 
 
 def _resolve_environment() -> str:
@@ -129,6 +132,15 @@ def _env_flag(name: str, default: bool) -> bool:
 
 def _parse_csv_tuple(raw: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in raw.split(",") if item.strip())
+
+
+_DEFAULT_FILL_PRACTICE_LANGUAGES = "en,es,it,fr,ru,tr"
+
+
+def _parse_fill_languages(raw: str) -> tuple[str, ...]:
+    """Allow-list for the fill practice page, restricted to real study languages."""
+    requested = _parse_csv_tuple((raw or _DEFAULT_FILL_PRACTICE_LANGUAGES).lower())
+    return tuple(lang for lang in requested if lang in ALL_STUDY_LANGUAGES)
 
 
 @lru_cache(maxsize=1)
@@ -208,6 +220,12 @@ def load_settings() -> Settings:
         # prossimo); this lets it be disabled without a code change/redeploy
         # if the audit finds it materially broken for a shipped language.
         jump_to_example_enabled=_env_flag("JUMP_TO_EXAMPLE_ENABLED", default=True),
+        # "Fill the form" practice page (/practice/fill). Free by default; flip
+        # FILL_PRACTICE_PLUS_ONLY to make it Plus later. Hebrew is absent from
+        # the default allow-list until a linguist audit of its example targets passes.
+        fill_practice_enabled=_env_flag("FILL_PRACTICE_ENABLED", default=True),
+        fill_practice_languages=_parse_fill_languages(os.getenv("FILL_PRACTICE_LANGUAGES", "")),
+        fill_practice_plus_only=_env_flag("FILL_PRACTICE_PLUS_ONLY", default=False),
     )
     _validate(settings)
     return settings

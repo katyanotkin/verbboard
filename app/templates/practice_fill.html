@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="{{ ui_language }}" dir="{{ html_dir }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#2d6a4f"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <link rel="manifest" href="/static/manifest.json"/>
+
+  <title>{{ ui['fill.title'] }}</title>
+
+  <link rel="stylesheet" href="/static/common.css"/>
+  <link rel="stylesheet" href="/static/practice_fill.css"/>
+{% include '_persist_ui_lang.html' %}
+  <script>
+    window.VB_LANGUAGE = {{ language | tojson }};
+    window.VB_UI_LANG = {{ ui_language | tojson }};
+    window.UI = {{ {'auth.login': ui['auth.login'], 'auth.logout': ui['auth.logout']} | tojson }};
+  </script>
+
+  {% include '_firebase_auth.html' %}
+</head>
+<body>
+  <div class="fill-page" id="fill-app" data-language="{{ language }}" data-back-href="{{ back_href }}">
+
+    <div class="topbar-nav">
+      <a href="{{ back_href }}" class="nav-btn nav-btn--ghost">
+        <span>{{ ui['fill.back'] }}</span>
+      </a>
+      <div class="topbar-nav-right">
+        <div id="auth-slot" class="auth-slot"></div>
+      </div>
+    </div>
+
+    <header class="fill-header">
+      <div class="fill-title-row">
+        <h1 class="fill-title">{{ ui['fill.title'] }}</h1>
+        <span class="help-hint">
+          <button type="button" class="help-hint-trigger" aria-expanded="false" aria-label="{{ ui['fill.hint_label'] }}">?</button>
+          <span class="help-hint-panel" role="note" hidden>{{ ui['fill.help'] }}</span>
+        </span>
+      </div>
+      <p class="fill-subtitle">{{ ui['fill.subtitle'] }}</p>
+    </header>
+
+    {% if empty %}
+    <div class="fill-card fill-empty" id="fill-empty">
+      <p>{{ ui['fill.empty'] }}</p>
+      <a href="{{ back_href }}" class="fill-btn fill-btn--primary">{{ ui['fill.back'] }}</a>
+    </div>
+    {% else %}
+    <div class="fill-pool" id="fill-pool" role="group" aria-label="{{ ui['fill.pool_label'] }}" hidden>
+      <button type="button" class="fill-pool-btn" data-pool="all" aria-pressed="false">{{ ui['fill.pool_all'] }}</button>
+      <button type="button" class="fill-pool-btn" data-pool="known" aria-pressed="false">{{ ui['fill.pool_known'] }}</button>
+    </div>
+
+    <div class="fill-progress" id="fill-progress" hidden>
+      <div class="fill-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0">
+        <div class="fill-progress-fill" id="fill-progress-fill"></div>
+      </div>
+      <span class="fill-progress-text" id="fill-progress-text" dir="ltr"></span>
+    </div>
+
+    <main class="fill-card" id="fill-card" aria-live="off"></main>
+    {% endif %}
+  </div>
+
+  {% if not empty %}
+  <script id="fill-data" type="application/json">{{ page_data_json | safe }}</script>
+  {% endif %}
+
+  {% set bnav_lang = language %}{% set bnav_ui_lang = ui_language %}{% set bnav_active = 'browse' %}{% set bnav_back_href = back_href %}{% include '_bottom_nav.html' %}
+
+  <script defer src="/static/storage.js"></script>
+  <script defer src="/static/help_hint.js"></script>
+  <script defer src="/static/nav_urls.js"></script>
+  <script defer src="/static/fill_grade.js"></script>
+  <script defer src="/static/fill_practice.js"></script>
+  <script defer src="/static/pwa.js"></script>
+</body>
+</html>

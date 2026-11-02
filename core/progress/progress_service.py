@@ -6,6 +6,7 @@ from core.progress.progress_repository import (
     get_practice_progress,
     list_progress_for_language,
     mark_seen,
+    record_fill_session,
     record_review,
     save_practice_progress,
     set_known,
@@ -120,4 +121,23 @@ def record_practice_progress(
         user_id=user.uid,
         language=language,
         badges=badges,
+    )
+
+
+def record_fill_practice_session(
+    *,
+    user: AuthUser,
+    language: str,
+    answers: int,
+    correct: int,
+    completed: bool,
+) -> None:
+    sync_user_profile(user)
+
+    record_fill_session(
+        user_id=user.uid,
+        language=language,
+        answers=answers,
+        correct=correct,
+        completed=completed,
     )

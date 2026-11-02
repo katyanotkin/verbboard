@@ -4,19 +4,24 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field, field_validator
 
 from core.auth.firebase_auth import get_optional_auth_user
+from core.languages.config import ALL_STUDY_LANGUAGES
 from core.progress.progress_service import (
     get_language_progress,
     load_practice_progress,
+    record_fill_practice_session,
     record_known,
     record_known_batch,
     record_practice_progress,
     record_review_result,
     record_seen,
 )
+from core.rate_limit import SlidingWindowRateLimiter
 
 router = APIRouter(prefix="/api/progress")
 
 _VALID_BADGE_SIZES = {3, 6, 9}
+_MAX_FILL_ANSWERS = 200
+_FILL_SESSION_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=60, window_seconds=600)
 
 
 class SeenRequest(BaseModel):
@@ -60,6 +65,14 @@ class PracticeProgressRequest(BaseModel):
         if invalid:
             raise ValueError(f"badges contains invalid sizes {invalid}; allowed: {sorted(_VALID_BADGE_SIZES)}")
         return v
+
+
+class FillSessionRequest(BaseModel):
+    # Range checks live in the handler so a bad body answers 400 like the language check.
+    language: str = Field(max_length=16)
+    answers: int
+    correct: int
+    completed: bool
 
 
 def _require_user(request: Request):
@@ -200,6 +213,31 @@ def set_practice_progress(
         user=user,
         language=payload.language,
         badges=payload.badges,
+    )
+
+    return {"ok": True}
+
+
+@router.post("/fill_session")
+def post_fill_session(
+    request: Request,
+    payload: FillSessionRequest,
+):
+    user = _require_user(request)
+
+    if payload.language not in ALL_STUDY_LANGUAGES:
+        raise HTTPException(status_code=400, detail="Unknown language")
+    if not 0 <= payload.correct <= payload.answers <= _MAX_FILL_ANSWERS:
+        raise HTTPException(status_code=400, detail="Invalid answer counts")
+    if not _FILL_SESSION_RATE_LIMITER.allow(user.uid):
+        raise HTTPException(status_code=429, detail="Too many requests")
+
+    record_fill_practice_session(
+        user=user,
+        language=payload.language,
+        answers=payload.answers,
+        correct=payload.correct,
+        completed=payload.completed,
     )
 
     return {"ok": True}

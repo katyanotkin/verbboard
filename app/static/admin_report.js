@@ -94,7 +94,8 @@
     practice_started: "Practice started",
     practice_completed: "Practice completed",
     practice_gate_shown: "Practice gate shown",
-    practice_gate_then_signed_in: "Gate shown, then signed in"
+    practice_gate_then_signed_in: "Gate shown, then signed in",
+    fill_started: "Fill practice started"
   };
 
   function engagementLabel(flag) {

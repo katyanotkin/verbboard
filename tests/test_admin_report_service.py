@@ -194,6 +194,7 @@ def test_language_breakdowns_ui_picks_and_engagement_flags(fake_db) -> None:
         "practice_started": 2,
         "practice_completed": 1,
         "practice_gate_shown": 0,
+        "fill_started": 0,
         "practice_gate_then_signed_in": 0,
     }
 

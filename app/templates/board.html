@@ -105,6 +105,9 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
     <h2>{{ board_examples_heading }}</h2>
     {{ board_examples_toggle | safe }}
   </div>
+  {% if fill_practice_href %}
+  <a class="fill-entry-link" href="{{ fill_practice_href }}">{{ board_fill_entry | default('Practice forms') }}</a>
+  {% endif %}
 
   <table class="examples-table">
     <tr><th>{{ board_col_sentence }}</th><th class="col-audio"><span class="col-audio-label">{{ board_col_audio }}</span>

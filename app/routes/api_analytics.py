@@ -12,6 +12,7 @@ from core.analytics.session_tracker import (
     enrich_lang,
     get_fingerprint_sid,
     record_app_launch,
+    record_fill_started,
     record_practice_completed,
     record_practice_gate_shown,
     record_practice_started,
@@ -23,7 +24,7 @@ from core.auth.firebase_auth import get_optional_auth_user
 
 router = APIRouter()
 
-_VALID_PRACTICE_EVENTS = {"started", "completed", "gate_shown"}
+_VALID_PRACTICE_EVENTS = {"started", "completed", "gate_shown", "fill_started"}
 
 
 @router.post("/api/analytics/session")
@@ -96,6 +97,8 @@ async def record_practice_event(request: Request) -> JSONResponse:
         await record_practice_started(fingerprint, date)
     elif event == "gate_shown":
         await record_practice_gate_shown(fingerprint, date)
+    elif event == "fill_started":
+        await record_fill_started(fingerprint, date)
     else:
         await record_practice_completed(fingerprint, date)
     return JSONResponse({"ok": True})

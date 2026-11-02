@@ -8,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from core.audio_report_service import confirmed_form_keys
 from core.audio_service import build_hashed_audio_key
+from core.fill_practice_service import fill_practice_available, verb_has_fill_items
 from core.languages.config import LANGUAGE as LANG_CONFIG
 from core.languages.ru.homographs import HOMOGRAPH_MARKS, mark_text
 from core.models import Board
@@ -39,6 +40,7 @@ def render_board_html(
     translated_from: str | None = None,
     source_lang: str | None = None,
     jump_to_example_enabled: bool = True,
+    fill_practice_allowed: bool = True,
 ) -> str:
     ui = ui_strings or {}
     html_dir = "rtl" if ui_lang == "he" else "ltr"
@@ -390,8 +392,21 @@ def render_board_html(
         ensure_ascii=False,
     )
 
+    fill_practice_href = None
+    if (
+        fill_practice_allowed
+        and not candidate_verb_id
+        and fill_practice_available(board.language)
+        and verb_has_fill_items(board.verb)
+    ):
+        fill_practice_href = (
+            f"/practice/fill?language={quote(board.language, safe='')}"
+            f"&verb_id={quote(board.verb.id, safe='')}&ui_language={quote(ui_lang, safe='')}"
+        )
+
     template = _jinja_env.get_template("board.html")
     return template.render(
+        fill_practice_href=fill_practice_href,
         translated_from_banner=translated_from_banner,
         html_lang=ui_lang,
         html_dir=html_dir,
@@ -436,6 +451,7 @@ def render_board_html(
             ui.get("board.stress_note", "") if board.language == "ru" and board.verb.id in HOMOGRAPH_MARKS else ""
         ),
         board_examples_heading=ui.get("board.examples_heading", "Examples"),
+        board_fill_entry=ui.get("fill.entry", "Practice forms"),
         board_examples_toggle=examples_toggle,
         board_col_sentence=ui.get("board.col_sentence", "Sentence"),
         board_col_audio=ui.get("board.col_audio", "Audio"),

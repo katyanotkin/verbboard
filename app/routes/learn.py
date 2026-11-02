@@ -17,6 +17,7 @@ from core.audio_service import (
     prewarm_verb_audio_keys,
 )
 from core.entitlements import can_study
+from core.fill_practice_service import user_has_fill_access
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import ALL_STUDY_LANGUAGES
 from core.rate_limit import SlidingWindowRateLimiter, client_ip
@@ -206,6 +207,7 @@ async def learn(
         translated_from=translated_from,
         source_lang=source_lang,
         jump_to_example_enabled=settings.jump_to_example_enabled,
+        fill_practice_allowed=await asyncio.to_thread(user_has_fill_access, session_uid, settings),
     )
 
     return HTMLResponse(html)

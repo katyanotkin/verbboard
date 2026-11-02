@@ -158,7 +158,14 @@ def _excluded_uids() -> set[str]:
 # Set-once boolean flags on analytics_sessions. home_viewed only exists on
 # sessions created on/after 2026-09-24, so votd_clicked / home_viewed is only
 # meaningful for that window.
-_ENGAGEMENT_FLAGS = ("home_viewed", "votd_clicked", "practice_started", "practice_completed", "practice_gate_shown")
+_ENGAGEMENT_FLAGS = (
+    "home_viewed",
+    "votd_clicked",
+    "practice_started",
+    "practice_completed",
+    "practice_gate_shown",
+    "fill_started",
+)
 
 _TOP_SEARCH_HITS = 10
 

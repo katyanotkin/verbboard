@@ -393,6 +393,34 @@ def save_practice_progress(
     doc_ref.set(data, merge=True)
 
 
+def record_fill_session(
+    *,
+    user_id: str,
+    language: str,
+    answers: int,
+    correct: int,
+    completed: bool,
+) -> None:
+    """Add one "fill the form" round to the per-language counters.
+
+    Atomic Increment on user_practice/{uid}/languages/{lang} via set(merge=True),
+    so it works before the doc exists. Deliberately leaves `badges`/`started_at`
+    alone: those belong to the practice loop, and the admin practice summary
+    counts only docs that have badges.
+    """
+    _practice_doc_ref(user_id, language).set(
+        {
+            "language": language,
+            "fill_started": firestore.Increment(1),
+            "fill_completed": firestore.Increment(1 if completed else 0),
+            "fill_answers": firestore.Increment(answers),
+            "fill_correct": firestore.Increment(correct),
+            "fill_last_at": firestore.SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Full account deletion
 # ---------------------------------------------------------------------------
