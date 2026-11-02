@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 
 from core.admin_auth import get_session_uid
 from core.editions import picker_study_plugins, resolve_study_language, study_language_label
-from core.entitlements import can_study, requires_entitlement
+from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import UI_LANGUAGES
 from core.settings import load_settings
@@ -173,7 +173,9 @@ def verb_browser(
             "verbs_display_batch": settings.verbs_display_batch,
             "firebase_web_config_json": (settings.firebase_web_config_json),
             "verbs_return_to": quote(f"/verbs?language={selected_language}&ui_language={ui_lang}", safe="/"),
-            "plus_required": (plus_required == 1 and requires_entitlement(selected_language)) or not entitled,
+            # An entitled user never sees the notice, even with a stale plus_required=1 in the URL
+            # (e.g. they were redirected here signed out, then signed in on this page).
+            "plus_required": not entitled,
             "plus_required_message": ui["verbs.plus_required"].format(
                 language=study_language_label(selected_language, plugins, ui)
             ),

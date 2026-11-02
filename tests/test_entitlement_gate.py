@@ -391,6 +391,20 @@ def test_verbs_french_entitled_uid_gets_verb_list_without_notice(client: TestCli
     assert "vb-plus-request-link" not in resp.text
 
 
+def test_verbs_entitled_user_with_stale_plus_required_sees_no_notice(
+    client: TestClient, monkeypatch, mock_verb
+) -> None:
+    """Redirected here signed out, then signed in on this page: the URL keeps plus_required=1."""
+    monkeypatch.setattr("app.routes.verbs.load_entries_for_language", lambda **kw: [mock_verb])
+    with (
+        patch("app.routes.verbs.get_session_uid", return_value="user-1"),
+        patch("app.routes.verbs.can_study", return_value=True),
+    ):
+        resp = client.get("/verbs?language=fr&plus_required=1&ui_language=en")
+    assert resp.status_code == 200
+    assert "vb-plus-request-link" not in resp.text
+
+
 def test_home_free_language_unchanged(client: TestClient) -> None:
     resp = client.get("/?language=es&ui_language=en", follow_redirects=False)
     assert resp.status_code == 200
