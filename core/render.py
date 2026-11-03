@@ -35,7 +35,7 @@ _jinja_env = Environment(
     autoescape=select_autoescape(["html"]),
 )
 
-FILL_BANNER_DEFAULT = "Type the missing form in each sentence. Audio and translation unlock after you answer."
+FILL_BANNER_DEFAULT = "Type the missing form in each sentence. Audio unlocks after you answer."
 
 
 def render_board_html(

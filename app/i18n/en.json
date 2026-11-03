@@ -120,7 +120,7 @@
   "help.known": "Marks this verb as known and starts spaced review. Practice sessions will later show a \"Recalled it\" button for it. Tap again to undo.",
   "help.audio_report": "Tap the flag next to any audio to report a problem with it. A triangle instead of the flag marks a known audio issue.",
   "help.translations": "Shows a translation under each example sentence.",
-  "help.fill": "Turns the example sentences into a typing drill: type the missing verb form in each one. Audio and translation unlock after you answer.",
+  "help.fill": "Turns the example sentences into a typing drill: type the missing verb form in each one. Audio unlocks after you answer. Translations have their own button.",
   "help.practice": "Starts a practice session with a set of verbs and audio; earn a badge when you finish.",
   "help.session_size": "Sets how many verbs are included in the practice session.",
   "help.listens": "Sets how many times you must listen to the audio before moving to the next verb.",
@@ -234,7 +234,7 @@
   "plus.about_title": "VerbBoard Plus",
   "plus.about_body": "Some study languages, such as Turkish, are part of Plus. Plus access is currently granted by hand to people who ask for it. Sign in and use the request button below. Plus pricing has not been decided yet.",
   "board.fill_toggle": "Fill in the blank",
-  "board.fill_banner": "Type the missing form in each sentence. Audio and translation unlock after you answer.",
+  "board.fill_banner": "Type the missing form in each sentence. Audio unlocks after you answer.",
   "board.fill_check": "Check",
   "board.fill_show": "Show answer"
 }

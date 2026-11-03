@@ -100,6 +100,7 @@ def test_toggle_on_blanks_rows_and_locks_media_until_answered(browser, live_serv
         assert page.locator(".fill-inline-input").count() == 3
         assert "mode=fill" in page.url
         row = _row(page, 0)
+        # Translations are independent of fill mode: hidden until the translations toggle is used.
         assert row.locator(".example-translation").is_hidden()
         assert float(row.locator("td").last.evaluate("e => getComputedStyle(e).opacity")) < 1
         assert row.locator(".fill-chip").inner_text() == "Preterite · él/ella/Ud."
@@ -110,7 +111,7 @@ def test_toggle_on_blanks_rows_and_locks_media_until_answered(browser, live_serv
         assert row.locator("mark.fill-answer--correct").inner_text() == "abrió"
         assert row.locator(".example-src").inner_text() == "El camarero abrió una botella."
         assert row.locator(".example-translation").inner_text() == "The waiter opened a bottle."
-        assert row.locator(".example-translation").is_visible()
+        assert row.locator(".example-translation").is_hidden()  # answering does not reveal it
         assert float(row.locator("td").last.evaluate("e => getComputedStyle(e).opacity")) == 1
         # The next row stays locked.
         assert float(_row(page, 1).locator("td").last.evaluate("e => getComputedStyle(e).opacity")) < 1

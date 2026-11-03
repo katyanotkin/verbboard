@@ -34,19 +34,10 @@
   line-height: 1.4;
 }
 
-/* Unanswered fill rows: audio dimmed and inert, translation hidden until answered. */
+/* Unanswered fill rows: audio dimmed and inert. Translations follow their own toggle, independent of fill mode. */
 #learn-page.fill-mode .fill-row:not(.fill-answered) td:last-child {
   opacity: 0.35;
   pointer-events: none;
-}
-
-#learn-page.fill-mode .fill-row:not(.fill-answered) .example-translation {
-  display: none;
-}
-
-/* Answered rows show their translation even when the global toggle is off. */
-#learn-page.fill-mode .fill-row.fill-answered .example-translation:not(:empty) {
-  display: block;
 }
 
 .fill-slot {

@@ -1,7 +1,7 @@
 // In-place "Fill in the blank" mode on /learn. Rows with a usable example target carry
 // data-fill-start/end/label/alts (core/render.py); this swaps the target word for an input,
 // grades with VerbBoardFillGrade, then shows the sentence with the form in place and unlocks
-// that row's audio and translation. The mode lives in the URL only (?mode=fill).
+// that row's audio (translations follow their own toggle). The mode lives in the URL only (?mode=fill).
 (function () {
   'use strict';
 
