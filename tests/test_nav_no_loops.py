@@ -25,7 +25,7 @@ from core.settings import load_settings
 from tests.conftest import patch_everywhere, seed_spanish_verb
 
 MAX_HOPS = 4
-PAGES = ("/", "/verbs", "/learn?verb_id=es_hablar", "/about", "/feedback")
+PAGES = ("/", "/verbs", "/learn?verb_id=es_hablar", "/about", "/feedback", "/feedback?page=plus&language=tr")
 # Links that are not plain navigation (assets, APIs, auth, paid generation).
 SKIPPED_PREFIXES = ("/static", "/audio", "/api", "/auth", "/admin", "/search_verb", "/set_language", "/manifest")
 HREF_RE = re.compile(r'href="(/[^"#]*)')

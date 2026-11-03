@@ -8,16 +8,9 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from core.analytics.client_context import detect_device_type
-from core.auth.firebase_auth import get_bearer_token, verify_firebase_token
 from core.feedback_store import save_feedback
 from core.i18n import get_strings, resolve_ui_language
-from core.plus_request_service import (
-    MAX_NOTE_LENGTH,
-    create_plus_request,
-    is_requestable_language,
-    is_valid_email,
-    request_doc_id,
-)
+from core.plus_request_service import is_requestable_language
 from core.polls import (
     ACTIVE_POLL_ID,
     get_poll_options,
@@ -36,20 +29,9 @@ _MAX_COMMENT_LENGTH = 4000
 _MAX_FIELD_LENGTH = 200
 _FEEDBACK_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=10, window_seconds=600)
 
-# Pages whose feedback needs a reply address: policy questions and Plus access requests.
-_CONTACT_REQUIRED_PAGES = {"privacy", "terms", "plus"}
+# Pages whose feedback needs a reply address: policy questions.
+_CONTACT_REQUIRED_PAGES = {"privacy", "terms"}
 templates = Jinja2Templates(directory="app/templates")
-
-
-def _verified_user(request: Request, id_token: str):
-    """AuthUser from the verified Firebase ID token (form field or Bearer header), else None."""
-    token = id_token.strip() or get_bearer_token(request)
-    if not token:
-        return None
-    try:
-        return verify_firebase_token(token)
-    except Exception:
-        return None
 
 
 def _feedback_redirect(*, page: str, language: str, verb_id: str, return_to: str, ui_language: str, **extra: str):
@@ -98,7 +80,7 @@ def feedback_form(
             "html_dir": "rtl" if ui_lang == "he" else "ltr",
             "firebase_web_config_json": settings.firebase_web_config_json,
             "title": ui["feedback.title"],
-            "heading": ui["plus.req_title"] if plus_mode else ui["feedback.heading"],
+            "heading": ui["plus.request_btn"] if plus_mode else ui["feedback.heading"],
             "back_label": ui["feedback.back"],
             "comment_placeholder": ui["feedback.comment_placeholder"],
             "contact_email_required": contact_email_required,
@@ -114,26 +96,19 @@ def feedback_form(
             "language": language,
             "verb_id": verb_id,
             "return_to": return_to,
-            "success": success in ("1", "dup"),
-            "success_msg": (
-                ui["plus.req_dup"] if success == "dup" else ui["plus.req_done"] if plus_mode else ui["feedback.success"]
-            ),
+            "success": success == "1",
+            "success_msg": ui["feedback.success"],
             "plus_mode": plus_mode,
-            "plus_title": ui["plus.req_title"],
-            "plus_lang_label": ui["plus.req_lang"].format(language=language_label),
+            "plus_btn_label": ui["plus.request_btn"],
             "plus_account_tpl": ui["plus.req_account"],
-            "plus_signin_label": ui["plus.req_signin"],
-            "plus_note_label": ui["plus.req_note"],
-            "plus_submit_label": ui["plus.req_submit"],
-            "plus_max_note": MAX_NOTE_LENGTH,
-            "plus_error_signin_msg": ui["plus.req_error_signin"],
-            "plus_error_msg": {
-                "email_invalid": ui["plus.req_error_email"],
-                "signin": ui["plus.req_error_signin"],
-                "note": ui["plus.req_error_note"],
-                "language": ui["plus.req_error_language"],
-                "failed": ui["plus.req_error_failed"],
-            }.get(error, ""),
+            "plus_lang_label": ui["plus.req_lang"].format(language=language_label),
+            "plus_strings": {
+                "done": ui["plus.request_done"],
+                "already": ui["plus.request_already"],
+                "error": ui["plus.request_error"],
+                "signin_prompt": ui["plus.signin_prompt"],
+                "signin_btn": ui["plus.signin_btn"],
+            },
             "error_empty": error == "empty",
             "error_empty_msg": ui["feedback.error_empty"],
             "error_email_required": error == "email_required",
@@ -157,23 +132,10 @@ def submit_feedback(
     return_to: str = Form("/"),
     ui_language: str = Form(""),
     contact_email: str = Form(""),
-    id_token: str = Form(""),
-    website: str = Form(""),
 ):
     return_to = safe_return_to(return_to, fallback="/")
     if not _FEEDBACK_RATE_LIMITER.allow(client_ip(request)):
         return RedirectResponse(url=return_to, status_code=303)
-    if page == "plus":
-        return _submit_plus_request(
-            request,
-            comment=comment,
-            language=language,
-            return_to=return_to,
-            ui_language=ui_language,
-            contact_email=contact_email,
-            id_token=id_token,
-            website=website,
-        )
     clean_comment = comment.strip()[:_MAX_COMMENT_LENGTH]
     clean_contact_email = contact_email.strip()[:_MAX_FIELD_LENGTH]
     page = page[:_MAX_FIELD_LENGTH]
@@ -232,76 +194,3 @@ def submit_feedback(
     return _feedback_redirect(
         page=page, language=language, verb_id=verb_id, return_to=return_to, ui_language=ui_language, success="1"
     )
-
-
-def _submit_plus_request(
-    request: Request,
-    *,
-    comment: str,
-    language: str,
-    return_to: str,
-    ui_language: str,
-    contact_email: str,
-    id_token: str,
-    website: str,
-):
-    language = language[:_MAX_FIELD_LENGTH]
-    if not is_requestable_language(language):
-        return _feedback_redirect(
-            page="", language="", verb_id="", return_to=return_to, ui_language=ui_language, error="language"
-        )
-    ui_language = ui_language[:_MAX_FIELD_LENGTH]
-    redirect_args = {
-        "page": "plus",
-        "language": language,
-        "verb_id": "",
-        "return_to": return_to,
-        "ui_language": ui_language,
-    }
-
-    clean_contact_email = contact_email.strip()
-    if website:  # honeypot: look successful, store nothing
-        return _feedback_redirect(success="1", **redirect_args)
-
-    user = _verified_user(request, id_token)
-    if user is None or not user.email:
-        return _feedback_redirect(error="signin", **redirect_args)
-
-    note = comment.strip()
-    if len(note) > MAX_NOTE_LENGTH:
-        return _feedback_redirect(error="note", **redirect_args)
-    if not is_valid_email(clean_contact_email):
-        return _feedback_redirect(error="email_invalid", **redirect_args)
-
-    try:
-        created = create_plus_request(
-            uid=user.uid,
-            email=user.email,
-            contact_email=clean_contact_email,
-            language=language,
-            note=note,
-            ui_language=ui_language,
-        )
-    except Exception:
-        logger.warning("plus request write failed", exc_info=True)
-        return _feedback_redirect(error="failed", **redirect_args)
-    if not created:
-        return _feedback_redirect(success="dup", **redirect_args)
-
-    # Also write the normal feedback entry so the admin feedback list shows it.
-    try:
-        user_agent = request.headers.get("user-agent", "")
-        save_feedback(
-            comment=note or "(no note)",
-            page="plus",
-            language=language,
-            path=str(request.url.path),
-            user_agent=user_agent,
-            device_type=detect_device_type(user_agent),
-            source="plus_request",
-            contact_email=clean_contact_email,
-            request_id=request_doc_id(user.uid, language),
-        )
-    except Exception:
-        logger.warning("plus request feedback entry failed", exc_info=True)
-    return _feedback_redirect(success="1", **redirect_args)

@@ -360,6 +360,28 @@ async def record_practice_gate_shown(fingerprint: str, date: str) -> None:
     task.add_done_callback(_pending.discard)
 
 
+def _record_plus_notice_shown(fingerprint: str, date: str) -> None:
+    """Record that this session-day was shown the Plus access notice/button.
+    Set-once; dropped (no stub doc) when the session doc does not exist."""
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        if not snapshot.exists or snapshot.to_dict().get("plus_notice_shown"):
+            return
+        doc_ref.set({"plus_notice_shown": True}, merge=True)
+    except Exception:
+        logger.exception("Failed to record plus notice shown")
+
+
+async def record_plus_notice_shown(fingerprint: str, date: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_plus_notice_shown, fingerprint, date))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
 def _record_fill_started(fingerprint: str, date: str) -> None:
     """Record that this session-day started a "fill the form" practice round.
     Set-once like practice_started; dropped (no stub doc) when the session doc

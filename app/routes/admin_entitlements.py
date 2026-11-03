@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.routes.admin_utils import ADMIN_PREFIX, require_admin_page
 from core.entitlements import get_entitlement, list_entitlements, lookup_uid_by_email, set_entitlement
+from core.plus_request_service import list_open_requests
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,14 @@ def _resolve_uid(identifier: str) -> tuple[str | None, str | None, str | None]:
     return identifier, None, None
 
 
+def _open_requests_safe() -> list[dict]:
+    try:
+        return list_open_requests()
+    except Exception:
+        logger.warning("admin_entitlements: listing open Plus requests failed", exc_info=True)
+        return []
+
+
 def _render(
     request: Request,
     *,
@@ -55,6 +64,7 @@ def _render(
             "error": error,
             "entitlement": entitlement,
             "records": list_entitlements(),
+            "open_requests": _open_requests_safe(),
         },
     )
 

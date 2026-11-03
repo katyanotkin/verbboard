@@ -712,3 +712,69 @@ body {
     margin-left: 0;
   }
 }
+
+/* ===== Plus access request card (/feedback?page=plus) and link-button (/verbs, /about) ===== */
+
+.plus-request {
+  margin: 12px 0;
+  padding: 12px;
+  background: #fffaf5;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  color: var(--text-body);
+}
+
+.plus-request__text {
+  margin: 0 0 8px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.plus-request__error {
+  color: #b42318;
+}
+
+.plus-request__btn,
+.plus-request-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding-block: 8px;
+  padding-inline: 16px;
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.plus-request__btn--primary,
+.plus-request-link {
+  background: var(--button-primary-bg);
+  border-color: var(--button-primary-bg);
+  color: var(--button-primary-text);
+}
+
+.plus-request__btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.plus-request-link {
+  margin-block-start: 8px;
+}
+
+@media (max-width: 479px) {
+  .plus-request__btn,
+  .plus-request-link {
+    display: flex;
+    width: 100%;
+  }
+}

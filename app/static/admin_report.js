@@ -94,6 +94,7 @@
     practice_started: "Practice started",
     practice_completed: "Practice completed",
     practice_gate_shown: "Practice gate shown",
+    plus_notice_shown: "Plus notice shown",
     practice_gate_then_signed_in: "Gate shown, then signed in",
     fill_started: "Fill practice started"
   };

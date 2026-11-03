@@ -148,6 +148,7 @@ def verb_browser(
     garbage_query = notice_text if (notice_text and garbage == 1 and not generating_verb) else None
     not_a_verb_query = notice_text if (notice_text and not_a_verb == 1 and not generating_verb) else None
 
+    verbs_return_to_encoded = quote(f"/verbs?language={selected_language}&ui_language={ui_lang}", safe="")
     response = templates.TemplateResponse(
         request,
         "verbs.html",
@@ -179,9 +180,10 @@ def verb_browser(
             "plus_required_message": ui["verbs.plus_required"].format(
                 language=study_language_label(selected_language, plugins, ui)
             ),
-            "plus_request_access": ui["verbs.plus_request_access"],
+            "plus_request_btn": ui["plus.request_btn"],
             "plus_feedback_href": (
                 f"/feedback?page=plus&language={quote(selected_language, safe='')}&ui_language={quote(ui_lang, safe='')}"
+                f"&return_to={verbs_return_to_encoded}"
             ),
         },
     )

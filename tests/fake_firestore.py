@@ -176,7 +176,7 @@ class FakeQuery:
             paths = [p for p in self._store._docs if p.startswith(prefix) and "/" not in p[len(prefix) :]]
 
         for field, op, value in self._filters:
-            paths = [p for p in paths if _op_matches(self._store._docs[p].get(field), op, value)]
+            paths = [p for p in paths if _op_matches(_get_field(self._store._docs[p], field), op, value)]
 
         if self._order_by:
             field, direction = self._order_by
@@ -192,6 +192,18 @@ class FakeQuery:
             paths = paths[: self._limit]
 
         return paths
+
+
+def _get_field(doc: dict[str, Any], field: str) -> Any:
+    """Field lookup supporting Firestore dotted paths into nested maps."""
+    if field in doc:
+        return doc[field]
+    value: Any = doc
+    for part in field.split("."):
+        if not isinstance(value, dict) or part not in value:
+            return None
+        value = value[part]
+    return value
 
 
 def _parent_collection(path: str) -> str:

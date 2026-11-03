@@ -4,7 +4,6 @@ import logging
 
 from core.analytics.session_tracker import delete_sessions_for_uid
 from core.entitlements import delete_entitlement
-from core.plus_request_service import delete_plus_requests_for_uid
 from core.progress.progress_repository import delete_all_progress_data
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,6 @@ def delete_account(uid: str) -> None:
     """
     delete_all_progress_data(uid)
     delete_entitlement(uid)
-    delete_plus_requests_for_uid(uid)
     delete_sessions_for_uid(uid)
     _delete_auth_user(uid)
 

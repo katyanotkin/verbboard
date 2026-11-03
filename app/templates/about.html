@@ -127,6 +127,12 @@
     <p><b>Feedback</b><br/>
     Use the 💬 button on any page for ideas, bugs and poll questions.</p>
     {% endif %}
+
+    {% if plus_request_language %}
+    <p id="about-plus"><b>{{ plus_title }}</b><br/>
+    {{ plus_body }}</p>
+    <p><a href="/feedback?page=plus&amp;language={{ plus_request_language | urlencode }}&amp;return_to={{ ('/about?ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}" class="plus-request-link" id="about-plus-request">{{ plus_request_label }}</a></p>
+    {% endif %}
   </div>
 
   <div class="back">
@@ -138,12 +144,6 @@
       <span>💬</span>
       <span>{{ feedback_label }}</span>
     </a>
-
-    {% if plus_request_language %}
-    <a href="/feedback?page=plus&amp;language={{ plus_request_language | urlencode }}&amp;return_to={{ ('/about?ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}" class="feedback-link" id="about-plus-request">
-      <span>{{ plus_request_label }}</span>
-    </a>
-    {% endif %}
 
     <div id="auth-slot" class="auth-slot" style="display:contents"></div>
   </div>

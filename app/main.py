@@ -21,6 +21,7 @@ from app.routes.admin import router as admin_router
 from app.routes.api_account import router as api_account_router
 from app.routes.api_analytics import router as api_analytics_router
 from app.routes.api_audio_report import router as api_audio_report_router
+from app.routes.api_plus import router as api_plus_router
 from app.routes.api_preferences import router as api_preferences_router
 from app.routes.api_progress import router as api_progress_router
 from app.routes.audio import router as audio_router
@@ -175,4 +176,5 @@ app.include_router(learn_router)
 app.include_router(practice_fill_router)
 app.include_router(verbs_router)
 app.include_router(api_preferences_router)
+app.include_router(api_plus_router)
 app.include_router(api_progress_router)

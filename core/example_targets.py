@@ -336,6 +336,53 @@ def _prefer_by_subject(language: str, sentence: str, start: int, cells: list[For
     return consistent or cells
 
 
+_EN_PARTICIPLE_AUXILIARIES = frozenset(
+    {"have", "has", "had", "having", "be", "am", "is", "are", "was", "were", "been", "being", "s", "ve", "d"}
+)
+_IMPERATIVE_TENSES = {"es": "imperative", "it": "imperativo", "fr": "imperatif"}
+
+
+def _words_before(language: str, sentence: str, start: int, limit: int = _SUBJECT_WINDOW_WORDS) -> list[str]:
+    before = fold(language, sentence[:start]).replace("'", "' ")
+    return re.findall(r"[\w']+", before)[-limit:]
+
+
+def _rank_by_context(language: str, sentence: str, start: int, cells: list[FormCell]) -> list[FormCell]:
+    """Order shared-form cells so the label shown first is the reading the sentence most likely has.
+
+    No cell is dropped; a reading that needs a trigger word (en participle after have/be, fr subjonctif
+    after que, an imperative opening its clause) goes last when the trigger is absent, so the label
+    never leads with an impossible reading such as "Subjonctif" in "J'aime le café".
+    """
+    if len(cells) < 2:
+        return cells
+    words = _words_before(language, sentence, start)
+    demote: set[str] = set()
+    promote: set[str] = set()
+    if language == "en":
+        participle_paths = {c.path for c in cells if c.tense == "past_participle"}
+        if any(w.strip("'") in _EN_PARTICIPLE_AUXILIARIES for w in words):
+            promote |= participle_paths
+        else:
+            demote |= participle_paths
+    elif language == "fr":
+        subjunctive_paths = {c.path for c in cells if c.tense == "subjonctif_present"}
+        if any(w in ("que", "qu'") for w in words):
+            promote |= subjunctive_paths
+        else:
+            demote |= subjunctive_paths
+    if language in _IMPERATIVE_TENSES:
+        clause = re.split(r"[,;:.!?¿¡]", sentence[:start])[-1]
+        if re.search(r"\w", clause):  # words precede the form in its clause: not a command
+            demote |= {c.path for c in cells if c.tense == _IMPERATIVE_TENSES[language]}
+    if language == "es":
+        has_first_person_cue = any(w == "yo" for w in words)
+        if not has_first_person_cue and any(c.path == "imperfect.el" for c in cells):
+            demote |= {c.path for c in cells if c.path == "imperfect.yo"}
+    middle = [c for c in cells if c.path not in demote and c.path not in promote]
+    return [c for c in cells if c.path in promote] + middle + [c for c in cells if c.path in demote]
+
+
 def _split_by_turkish_question_particle(language: str, sentence: str, end: int) -> bool:
     """True when a Turkish form is followed by a person-marked question particle (alıyor musunuz).
 
@@ -365,6 +412,7 @@ def tag_sentence(language: str, sentence: str, forms: Any) -> Optional[dict[str,
         if match.cell.path not in {c.path for c in ordered_cells}:
             ordered_cells.append(match.cell)
     ordered_cells = _prefer_by_subject(language, sentence, matches[0].start, ordered_cells)
+    ordered_cells = _rank_by_context(language, sentence, matches[0].start, ordered_cells)
     if len(ordered_cells) > MAX_LABELS_PER_TARGET:
         return None
     primary = next(m for m in matches if m.cell.path == ordered_cells[0].path)

@@ -1,87 +1,110 @@
-"""Plus access requests: signed-in users only, deduped per (uid, language)."""
+"""Plus access requests, stored on the user doc: users/{uid}.plus_requests.<language>.
+
+Entry shape: {requested_at, status: "open"|"granted", ui_language}. The account
+email is written to users/{uid}.email from the verified token, never from a form.
+"""
 
 from __future__ import annotations
 
-import hashlib
 import logging
-import re
 from datetime import UTC, datetime
 from typing import Any
-
-from google.api_core.exceptions import AlreadyExists
 
 from core.languages.config import PLUS_EXTRA_STUDY_LANGUAGES
 from core.storage.firestore_db import get_db
 
 logger = logging.getLogger(__name__)
 
-PLUS_REQUESTS_COLLECTION = "plus_requests"
-MAX_NOTE_LENGTH = 300
-MAX_EMAIL_LENGTH = 200
-
-_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
-
-def is_valid_email(value: str) -> bool:
-    return len(value) <= MAX_EMAIL_LENGTH and bool(_EMAIL_RE.match(value))
+USERS_COLLECTION = "users"
+_MAX_ADMIN_ROWS = 200
 
 
 def is_requestable_language(language: str) -> bool:
     return language in PLUS_EXTRA_STUDY_LANGUAGES
 
 
-def request_doc_id(uid: str, language: str) -> str:
-    return hashlib.sha1(f"{uid}|{language}".encode()).hexdigest()[:16]
+def _user_doc(uid: str):
+    return get_db().collection(USERS_COLLECTION).document(uid)
 
 
-def create_plus_request(
-    *, uid: str, email: str, contact_email: str, language: str, note: str, ui_language: str
-) -> bool:
-    """Write the request once. Returns False when this user already asked for this language."""
-    doc_ref = get_db().collection(PLUS_REQUESTS_COLLECTION).document(request_doc_id(uid, language))
-    try:
-        doc_ref.create(
-            {
-                "uid": uid,
-                "email": email,
-                "contact_email": contact_email,
-                "language": language,
-                "note": note,
-                "ui_language": ui_language,
-                "created_at": datetime.now(UTC),
-                "status": "open",
-            }
-        )
-    except AlreadyExists:
+def _existing_entry(uid: str, language: str) -> dict[str, Any] | None:
+    snapshot = _user_doc(uid).get()
+    if not snapshot.exists:
+        return None
+    entry = ((snapshot.to_dict() or {}).get("plus_requests") or {}).get(language)
+    return entry if isinstance(entry, dict) else None
+
+
+def request_plus(*, uid: str, email: str, language: str, ui_language: str) -> bool:
+    """Record the request. Returns False (and writes nothing) when one already exists.
+
+    The check-then-write is not transactional on purpose: two simultaneous taps both write the same
+    open entry, and a grant cannot land before the first request exists.
+    """
+    if _existing_entry(uid, language) is not None:
         return False
+    _user_doc(uid).set(
+        {
+            "email": email,
+            "plus_requests": {
+                language: {
+                    "requested_at": datetime.now(UTC),
+                    "status": "open",
+                    "ui_language": ui_language,
+                }
+            },
+        },
+        merge=True,
+    )
     return True
+
+
+def get_request_status(uid: str, language: str) -> str | None:
+    """ "open", "granted", or None when this user never asked for this language."""
+    entry = _existing_entry(uid, language)
+    return str(entry.get("status") or "open") if entry else None
 
 
 def mark_requests_granted(uid: str) -> None:
     """Flag this user's open requests as granted once an entitlement is made active. Best effort."""
     try:
-        docs = get_db().collection(PLUS_REQUESTS_COLLECTION).where("uid", "==", uid).stream()
-        for doc in docs:
-            data: dict[str, Any] = doc.to_dict() or {}
-            if data.get("status") == "open":
-                doc.reference.update({"status": "granted", "granted_at": datetime.now(UTC)})
+        snapshot = _user_doc(uid).get()
+        requests = ((snapshot.to_dict() or {}).get("plus_requests") or {}) if snapshot.exists else {}
+        now = datetime.now(UTC)
+        updates = {
+            language: {"status": "granted", "granted_at": now}
+            for language, entry in requests.items()
+            if isinstance(entry, dict) and entry.get("status") == "open"
+        }
+        if updates:
+            _user_doc(uid).set({"plus_requests": updates}, merge=True)
     except Exception:
         logger.warning("mark_requests_granted failed for uid=%s", uid, exc_info=True)
 
 
-def delete_plus_requests_for_uid(uid: str) -> None:
-    """Account deletion: remove every Plus request this uid made."""
-    for doc in get_db().collection(PLUS_REQUESTS_COLLECTION).where("uid", "==", uid).stream():
-        doc.reference.delete()
-
-
-def account_emails_by_request_ids(request_ids: set[str]) -> dict[str, str]:
-    """Map plus_requests doc id -> verified account email, for the admin feedback list."""
-    collection = get_db().collection(PLUS_REQUESTS_COLLECTION)
-    found: dict[str, str] = {}
-    for request_id in request_ids:
-        snapshot = collection.document(request_id).get()
-        email = (snapshot.to_dict() or {}).get("email") if snapshot.exists else None
-        if email:
-            found[request_id] = str(email)
-    return found
+def list_open_requests() -> list[dict[str, Any]]:
+    """Open requests across requestable languages, oldest first, for the admin page."""
+    rows: list[dict[str, Any]] = []
+    for language in PLUS_EXTRA_STUDY_LANGUAGES:
+        query = get_db().collection(USERS_COLLECTION).where(f"plus_requests.{language}.status", "==", "open")
+        for doc in query.limit(_MAX_ADMIN_ROWS).stream():
+            data = doc.to_dict() or {}
+            entry = (data.get("plus_requests") or {}).get(language) or {}
+            requested_at: Any = entry.get("requested_at")
+            rows.append(
+                {
+                    "uid": doc.id,
+                    "email": str(data.get("email") or ""),
+                    "language": language,
+                    "requested_at": requested_at,
+                    "requested_at_label": requested_at.strftime("%Y-%m-%d %H:%M")
+                    if hasattr(requested_at, "strftime")
+                    else "",
+                }
+            )
+    rows.sort(
+        key=lambda row: (
+            row["requested_at"] if hasattr(row["requested_at"], "timestamp") else datetime.min.replace(tzinfo=UTC)
+        )
+    )
+    return rows

@@ -300,3 +300,47 @@ def test_turkish_person_marked_question_particle_splits_the_form():
     assert tag_sentence("tr", "Siz de bilet alıyor musunuz?", forms) is None
     assert tag_sentence("tr", "O bilet alıyor mu?", forms)["person"] == "o"  # bare mu is third person
     assert tag_sentence("tr", "Siz bilet alıyorsunuz.", forms)["person"] == "siz"
+
+
+# --- label order on shared forms (the primary label must be the plausible reading) ---
+
+
+def _primary_and_also(language, sentence, forms):
+    target = tag_sentence(language, sentence, forms)
+    assert target is not None
+    return f"{target['tense']}.{target['person']}" if target["person"] else target["tense"], target.get("also", [])
+
+
+def test_english_participle_is_last_without_auxiliary() -> None:
+    forms = {"base": "ask", "past": "asked", "past_participle": "asked", "present_other": "ask"}
+    primary, also = _primary_and_also("en", "They asked about the price.", forms)
+    assert primary == "past" and "past_participle" in also
+    primary, _ = _primary_and_also("en", "They have asked about the price.", forms)
+    assert primary == "past_participle"
+
+
+def test_french_subjonctif_needs_que_to_lead() -> None:
+    forms = {
+        "present": {"je": "aime", "tu": "aimes", "il": "aime"},
+        "subjonctif_present": {"je": "aime", "tu": "aimes", "il": "aime"},
+    }
+    primary, also = _primary_and_also("fr", "J'aime le café.", forms)
+    assert primary == "present.je" and "subjonctif_present.je" in also
+    primary, _ = _primary_and_also("fr", "Il faut que j'aime le café.", forms)
+    assert primary == "subjonctif_present.je"
+
+
+def test_spanish_imperative_and_imperfect_yo_demoted() -> None:
+    forms = {
+        "present": {"tu": "compras", "el": "compra"},
+        "imperative": {"tu": "compra"},
+        "imperfect": {"yo": "compraba", "el": "compraba"},
+    }
+    primary, also = _primary_and_also("es", "Mi madre compra el pan.", forms)
+    assert primary == "present.el" and "imperative.tu" in also
+    primary, _ = _primary_and_also("es", "¡Compra el pan!", forms)
+    assert primary == "present.el" or primary == "imperative.tu"
+    primary, _ = _primary_and_also("es", "El panadero compraba el pan.", forms)
+    assert primary == "imperfect.el"
+    primary, _ = _primary_and_also("es", "Yo compraba el pan.", forms)
+    assert primary == "imperfect.yo"

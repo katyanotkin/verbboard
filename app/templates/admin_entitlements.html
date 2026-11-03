@@ -43,6 +43,25 @@
     <div class="error-msg">{{ error }}</div>
     {% endif %}
 
+    {% if open_requests %}
+    <div class="card card-body" id="plus-open-requests">
+      <strong>Open Plus requests ({{ open_requests|length }})</strong>
+      <table>
+        <thead><tr><th>Email</th><th>Language</th><th>Requested</th><th></th></tr></thead>
+        <tbody>
+          {% for req in open_requests %}
+          <tr>
+            <td>{{ req.email or req.uid }}</td>
+            <td>{{ req.language }}</td>
+            <td>{{ req.requested_at_label }}</td>
+            <td><a href="{{ admin_prefix }}/entitlements?q={{ (req.email or req.uid) | urlencode }}">Grant</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
     {% if records %}
     <div class="card card-form">
       <label for="existing-records">Existing grants ({{ records|length }})</label>

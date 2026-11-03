@@ -84,9 +84,8 @@ def test_learn_gate_entitled_user_passes_through(client: TestClient, monkeypatch
 def test_verbs_plus_required_renders_notice(client: TestClient, plus_only_french) -> None:
     resp = client.get("/verbs?language=fr&plus_required=1&ui_language=es")
     assert resp.status_code == 200
-    assert 'href="/feedback?page=plus&amp;language=fr&amp;ui_language=es"' in resp.text or (
-        'href="/feedback?page=plus&language=fr&ui_language=es"' in resp.text
-    )
+    assert "/feedback?page=plus&amp;language=fr&amp;ui_language=es&amp;return_to=" in resp.text
+    assert "data-plus-notice" in resp.text
     assert "vb-plus-request-link" in resp.text
 
 

@@ -1,0 +1,18 @@
+{# One-tap Plus access request card (only on /feedback?page=plus). Driven by /static/plus_request.js.
+   Context: plus_language, lang (ui language), plus_strings {done, already, error, signin_prompt, signin_btn},
+   plus_btn_label, plus_account_tpl. States are mutually exclusive [hidden] swaps; JS reveals one. #}
+<section class="plus-request" id="plus-request" role="status" aria-live="polite"
+  data-language="{{ plus_language }}" data-ui-language="{{ lang }}"
+  data-account-tpl="{{ plus_account_tpl }}"
+  data-done="{{ plus_strings.done }}" data-already="{{ plus_strings.already }}" data-error="{{ plus_strings.error }}">
+  <p class="plus-request__text plus-request__account" data-plus-state="account" hidden></p>
+  <div data-plus-state="signed-out" hidden>
+    <p class="plus-request__text">{{ plus_strings.signin_prompt }}</p>
+    <button type="button" class="plus-request__btn" data-plus-act="signin">{{ plus_strings.signin_btn }}</button>
+  </div>
+  <div data-plus-state="signed-in" hidden>
+    <button type="button" class="plus-request__btn plus-request__btn--primary" data-plus-act="request">{{ plus_btn_label }}</button>
+  </div>
+  <p class="plus-request__text" data-plus-state="done" tabindex="-1" hidden></p>
+  <p class="plus-request__text plus-request__error" data-plus-state="error" hidden></p>
+</section>
