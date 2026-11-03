@@ -400,25 +400,26 @@ def record_fill_session(
     answers: int,
     correct: int,
     completed: bool,
+    inline: bool = False,
 ) -> None:
     """Add one "fill the form" round to the per-language counters.
 
     Atomic Increment on user_practice/{uid}/languages/{lang} via set(merge=True),
     so it works before the doc exists. Deliberately leaves `badges`/`started_at`
     alone: those belong to the practice loop, and the admin practice summary
-    counts only docs that have badges.
+    counts only docs that have badges. `inline` (answers typed on /learn) adds
+    only fill_answers/fill_correct/fill_last_at, never a started/completed round.
     """
-    _practice_doc_ref(user_id, language).set(
-        {
-            "language": language,
-            "fill_started": firestore.Increment(1),
-            "fill_completed": firestore.Increment(1 if completed else 0),
-            "fill_answers": firestore.Increment(answers),
-            "fill_correct": firestore.Increment(correct),
-            "fill_last_at": firestore.SERVER_TIMESTAMP,
-        },
-        merge=True,
-    )
+    data: dict = {
+        "language": language,
+        "fill_answers": firestore.Increment(answers),
+        "fill_correct": firestore.Increment(correct),
+        "fill_last_at": firestore.SERVER_TIMESTAMP,
+    }
+    if not inline:
+        data["fill_started"] = firestore.Increment(1)
+        data["fill_completed"] = firestore.Increment(1 if completed else 0)
+    _practice_doc_ref(user_id, language).set(data, merge=True)
 
 
 # ---------------------------------------------------------------------------

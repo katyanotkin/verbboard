@@ -60,7 +60,7 @@ Visual indicators:
 - Russian stress marks: for a few verbs whose forms the text-to-speech voice stresses wrongly (e.g. платить, мыть, начать, погнать), the correct stress is marked in the forms and example sentences (audio is unchanged) and a one-line note explains it
 - Report an audio problem: a small flag next to each play button lets a signed-in learner flag a clip as the wrong form, wrong stress, cut off/noisy, or other (optional 200-character note); reports are counted per clip for the admin Audio reports page (`/admin/audio-reports`: Open / Confirmed / Resolved tabs, language filter; Confirm, Resolve, Unconfirm)
 - Known audio issue: when an admin confirms a report, every learner sees a small amber warning icon next to that form's play button (both voices, forms and examples) saying the audio is not accurate and to read the form instead; the report flag is hidden on it until the admin resolves it
-- Fill-the-form practice entry: when a verb has an example sentence with a tagged conjugated form, a pill on the page opens a short fill-in-the-blank drill for that verb
+- Fill in the blank: for English, Spanish, Italian and French verbs with tagged example sentences, a toggle above the examples swaps the verb form in each sentence for an input (labelled with tense and person). Check the answer (missing accents still count, the exact spelling is shown), then the full sentence appears and that row's audio and translation unlock. Open it directly with `?mode=fill`; the mode is not remembered between visits. Languages are set by `FILL_INLINE_LANGUAGES` (default en,es,it,fr)
 
 ### Verbs page
 - Browse with filters: new / seen / known / recent
@@ -87,7 +87,7 @@ Visual indicators:
 - Audio listening required before advancing to the next verb, with no bypass
 - A free Google sign-in is required to start a practice session (browsing verbs, audio, search and the Verb of the Day stay open without an account); a session already in progress can always be finished
 - Complete a session to earn a badge
-- Fill-the-form practice (`/practice/fill`): short sessions of 8 example sentences with the conjugated verb blanked out. You see the tense, the person and the verb's infinitive, then type the form. Audio and translation stay hidden until you answer. Grading is forgiving about case, accents (the exact answer is still shown), Hebrew vowel points, Russian ё and stress marks, Turkish dotless i, French pronoun prefixes and "/" alternatives
+- Fill-the-form practice (`/practice/fill`, reachable by URL only; verb pages use the inline fill mode instead): short sessions of 8 example sentences with the conjugated verb blanked out. You see the tense, the person and the verb's infinitive, then type the form. Audio and translation stay hidden until you answer. Grading is forgiving about case, accents (the exact answer is still shown), Hebrew vowel points, Russian ё and stress marks, Turkish dotless i, French pronoun prefixes and "/" alternatives
 - Choose the pool for fill-the-form practice: all verbs, or only verbs you have seen or marked known (the default once you have at least five). Sentences you answered correctly recently come later
 - Fill-the-form practice is available for English, Spanish, Italian, French, Russian and Turkish; Hebrew is held back until a linguist audit. No sign-in needed; signed-in learners also get their fill-practice counts saved to their account
 - Anonymous users earning a badge see a one-tap sign-in prompt in the completion screen, so progress isn't lost if the device changes

@@ -179,6 +179,24 @@ def verb_has_fill_items(entry: VerbEntry) -> bool:
     return any(usable_target(example) is not None for example in entry.examples or [])
 
 
+def target_label(
+    language: str, target: dict[str, Any], strings: dict[str, str], fallback_strings: dict[str, str]
+) -> str:
+    """Localized tense + person label(s) of a target, shared labels joined with " / "."""
+    person = target.get("person")
+    paths = [f"{target['tense']}.{person}" if person else str(target["tense"])]
+    paths += [str(p) for p in target.get("also") or [] if isinstance(p, str) and p]
+    return " / ".join(_cell_label(language, path, strings, fallback_strings) for path in paths)
+
+
+def target_alternatives(target: dict[str, Any], answer: str) -> list[str]:
+    alternatives: list[str] = []
+    for alt in target.get("alternatives") or []:
+        if isinstance(alt, str) and alt.strip() and alt != answer and alt not in alternatives:
+            alternatives.append(alt)
+    return alternatives
+
+
 def _build_item(
     entry: VerbEntry,
     index: int,
@@ -194,16 +212,9 @@ def _build_item(
     start, end = target["start"], target["end"]
     answer = sentence[start:end]
 
-    person = target.get("person")
-    paths = [f"{target['tense']}.{person}" if person else str(target["tense"])]
-    paths += [str(p) for p in target.get("also") or [] if isinstance(p, str) and p]
-    cell_labels = [_cell_label(language, path, strings, fallback_strings) for path in paths]
+    label = target_label(language, target, strings, fallback_strings)
     lemma = _verb_lemma(entry)
-
-    alternatives: list[str] = []
-    for alt in target.get("alternatives") or []:
-        if isinstance(alt, str) and alt.strip() and alt != answer and alt not in alternatives:
-            alternatives.append(alt)
+    alternatives = target_alternatives(target, answer)
 
     translation = ""
     if ui_language != language:
@@ -214,7 +225,7 @@ def _build_item(
         "id": f"{entry.id}:{index}",
         "verbId": entry.id,
         "lemma": lemma,
-        "label": " / ".join(cell_labels),
+        "label": label,
         "prefix": sentence[:start],
         "answer": answer,
         "suffix": sentence[end:],
@@ -334,6 +345,16 @@ def fill_practice_available(language: str, settings: Settings | None = None) -> 
     return (
         settings.fill_practice_enabled
         and language in settings.fill_practice_languages
+        and language in ALL_STUDY_LANGUAGES
+    )
+
+
+def fill_inline_available(language: str, settings: Settings | None = None) -> bool:
+    """In-place fill mode on /learn: practice switch on, and the language in FILL_INLINE_LANGUAGES."""
+    settings = settings or load_settings()
+    return (
+        settings.fill_practice_enabled
+        and language in settings.fill_inline_languages
         and language in ALL_STUDY_LANGUAGES
     )
 

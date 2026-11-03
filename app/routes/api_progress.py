@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field, field_validator
 
@@ -73,6 +75,9 @@ class FillSessionRequest(BaseModel):
     answers: int
     correct: int
     completed: bool
+    # "practice" = a /practice/fill round; "inline" = answers typed into /learn's fill mode
+    # (adds answers/correct only; no started/completed counts).
+    mode: Literal["practice", "inline"] = "practice"
 
 
 def _require_user(request: Request):
@@ -238,6 +243,7 @@ def post_fill_session(
         answers=payload.answers,
         correct=payload.correct,
         completed=payload.completed,
+        inline=payload.mode == "inline",
     )
 
     return {"ok": True}

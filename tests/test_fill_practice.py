@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -244,41 +245,73 @@ def test_route_plus_only_feature_redirects_anonymous(
     assert resp.status_code == 303 and resp.headers["location"].startswith("/feedback?page=plus&language=es")
 
 
-# ── board link ──────────────────────────────────────────────────────────────
+# ── board: inline fill mode (replaces the old entry pill) ─────────────────
 
 
-def _render_href(verb: VerbEntry, **kwargs):
+def _render(verb: VerbEntry, language: str = "es", ui_lang: str = "en", **kwargs) -> str:
     from core.render import render_board_html
 
-    captured = {}
-    real = __import__("core.render", fromlist=["_jinja_env"])._jinja_env.get_template
-
-    class _Spy:
-        def __init__(self, template):
-            self._t = template
-
-        def render(self, **ctx):
-            captured.update(ctx)
-            return self._t.render(**ctx)
-
-    with patch.object(
-        __import__("core.render", fromlist=["_jinja_env"])._jinja_env,
-        "get_template",
-        lambda name, *a, **k: _Spy(real(name, *a, **k)) if name == "board.html" else real(name, *a, **k),
-    ):
-        render_board_html(
-            Board(language="es", verb=verb, voice_key="female", voice_label="F", sections=[]), ui_lang="en", **kwargs
-        )
-    return captured["fill_practice_href"]
+    board = Board(language=language, verb=verb, voice_key="female", voice_label="F", sections=[])
+    return render_board_html(board, ui_lang=ui_lang, **kwargs)
 
 
-def test_fill_practice_href_present_and_absent(monkeypatch) -> None:
-    assert _render_href(_es_verb()) == "/practice/fill?language=es&verb_id=es_abrir&ui_language=en"
+def test_no_entry_pill_rendered() -> None:
+    html = _render(_es_verb())
+    assert "fill-entry-link" not in html and "/practice/fill" not in html
+
+
+def test_toggle_renders_for_tagged_verb_with_row_attributes() -> None:
+    from html import unescape
+
+    html = _render(_es_verb())
+    assert "id='fill-toggle'" in html and "Fill in the blank" in html
+    assert "id='fill-banner'" in html
+    assert "/static/fill_inline.js" in html and "/static/fill_grade.js" in html
+    assert html.index("fill_grade.js") < html.index("fill_inline.js")
+    # Three tagged rows; the untagged first sentence carries no fill attributes.
+    assert html.count("class='fill-row'") == 3
+    row = re.search(
+        r"<tr class='fill-row' data-fill-index='\d+' data-fill-lemma='[^']*' data-fill-start='(\d+)' data-fill-end='(\d+)' data-fill-label='([^']*)'",
+        html,
+    )
+    assert row is not None
+    start, end = int(row.group(1)), int(row.group(2))
+    assert "El camarero abrió una botella."[start:end] == "abrió"
+    assert unescape(row.group(3)) == "Preterite · él/ella/Ud."
+    assert "data-fill-alts='[]'" in html
+
+
+def test_row_attributes_are_attribute_escaped() -> None:
+    verb = _es_verb()
+    verb.examples[1].target["also"] = ["present.nos"]  # type: ignore[index]
+    verb.examples[1].target["alternatives"] = ["a'b\"<x>"]  # type: ignore[index]
+    html = _render(verb)
+    assert "a'b" not in html and "<x>" not in html
+    assert "&quot;" in html and "&#x27;" in html and "&lt;x&gt;" in html
+
+
+@pytest.mark.parametrize("language", ["he", "ru", "tr"])
+def test_toggle_absent_for_languages_outside_inline_list(language) -> None:
+    html = _render(_es_verb(), language=language)
+    assert "fill-toggle" not in html and "fill-row" not in html
+
+
+def test_toggle_absent_without_targets_candidate_disabled_or_plus_gate(monkeypatch) -> None:
     untagged = VerbEntry(id="es_x", rank=1, lemma="x", forms={}, examples=[Example(dst="Hola.")])
-    assert _render_href(untagged) is None
-    assert _render_href(_es_verb(), fill_practice_allowed=False) is None
+    assert "fill-toggle" not in _render(untagged)
+    assert "fill-toggle" not in _render(_es_verb(), candidate_verb_id="es_abrir")
+    assert "fill-toggle" not in _render(_es_verb(), fill_practice_allowed=False)
     monkeypatch.setenv("FILL_PRACTICE_ENABLED", "false")
-    assert _render_href(_es_verb()) is None
+    assert "fill-toggle" not in _render(_es_verb())
+
+
+def test_inline_languages_setting_parses(monkeypatch) -> None:
+    from core.settings import _parse_fill_inline_languages
+
+    assert _parse_fill_inline_languages("") == ("en", "es", "it", "fr")
+    assert _parse_fill_inline_languages(" ES , xx, fr ") == ("es", "fr")
+    monkeypatch.setenv("FILL_INLINE_LANGUAGES", "it")
+    assert service.fill_inline_available("it") and not service.fill_inline_available("es")
 
 
 # ── counters ────────────────────────────────────────────────────────────────
@@ -310,6 +343,21 @@ def test_fill_session_increments_and_creates_missing_doc(client, signed_in, fake
     assert _post(client, answers=4, correct=1, completed=False).status_code == 200
     doc = fake_db.collection("user_practice").document("u1").collection("languages").document("es").get().to_dict()
     assert (doc["fill_started"], doc["fill_completed"], doc["fill_answers"], doc["fill_correct"]) == (2, 1, 12, 7)
+
+
+def test_fill_session_inline_only_touches_answer_counters(client, signed_in, fake_db) -> None:
+    assert _post(client, answers=5, correct=3, completed=False, mode="inline").status_code == 200
+    ref = fake_db.collection("user_practice").document("u1").collection("languages").document("es")
+    doc = ref.get().to_dict()
+    assert (doc["fill_answers"], doc["fill_correct"]) == (5, 3)
+    assert "fill_started" not in doc and "fill_completed" not in doc and doc["fill_last_at"] is not None
+    assert _post(client).status_code == 200  # a practice round still counts started/completed
+    doc = ref.get().to_dict()
+    assert (doc["fill_started"], doc["fill_completed"], doc["fill_answers"]) == (1, 1, 13)
+
+
+def test_fill_session_rejects_unknown_mode(client, signed_in, fake_db) -> None:
+    assert _post(client, mode="bogus").status_code == 422
 
 
 @pytest.mark.parametrize(

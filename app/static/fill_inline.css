@@ -1,0 +1,189 @@
+/* In-place "Fill in the blank" mode on /learn (see fill_inline.js). Loaded only when the toggle renders. */
+
+#learn-page {
+  --fill-ok-bg: #f0fdf4;
+  --fill-ok-border: #86efac;
+  --fill-ok-text: #166534;
+  --fill-accent-bg: #fffbeb;
+  --fill-accent-border: #fcd34d;
+  --fill-accent-text: #92400e;
+  --fill-bad-bg: #fef2f2;
+  --fill-bad-border: #fca5a5;
+  --fill-bad-text: #991b1b;
+}
+
+.fill-toggle-btn {
+  border-color: #94a3b8;
+  font-weight: 500;
+}
+
+.fill-toggle-btn[aria-pressed="true"] {
+  background: var(--fill-ok-bg);
+  border-color: var(--fill-ok-border);
+  color: var(--fill-ok-text);
+}
+
+.fill-banner {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--button-secondary-bg);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Unanswered fill rows: audio dimmed and inert, translation hidden until answered. */
+#learn-page.fill-mode .fill-row:not(.fill-answered) td:last-child {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+#learn-page.fill-mode .fill-row:not(.fill-answered) .example-translation {
+  display: none;
+}
+
+/* Answered rows show their translation even when the global toggle is off. */
+#learn-page.fill-mode .fill-row.fill-answered .example-translation:not(:empty) {
+  display: block;
+}
+
+.fill-slot {
+  display: inline-block;
+  max-inline-size: 100%;
+  vertical-align: baseline;
+}
+
+.fill-inline-input {
+  box-sizing: border-box;
+  inline-size: 8ch;
+  min-inline-size: 6ch;
+  max-inline-size: 100%;
+  min-block-size: 36px;
+  padding-inline: 8px;
+  border: 2px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 16px;
+}
+
+.fill-inline-input:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 1px;
+}
+
+.fill-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-block-start: 6px;
+}
+
+.fill-chip {
+  display: inline-block;
+  max-inline-size: 100%;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--button-secondary-bg);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.fill-check-btn {
+  min-block-size: 36px;
+  padding-inline: 14px;
+  font-size: 0.9rem;
+}
+
+.fill-show-link {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.fill-answer {
+  padding-inline: 2px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.fill-answer--correct {
+  background: var(--fill-ok-bg);
+  color: var(--fill-ok-text);
+}
+
+.fill-answer--accent {
+  background: var(--fill-accent-bg);
+  color: var(--fill-accent-text);
+}
+
+.fill-answer--wrong {
+  background: var(--fill-bad-bg);
+  color: var(--fill-bad-text);
+}
+
+.fill-feedback {
+  display: block;
+  margin-block-start: 6px;
+  padding: 6px 10px;
+  border: 1px solid;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.fill-feedback--correct {
+  background: var(--fill-ok-bg);
+  border-color: var(--fill-ok-border);
+  color: var(--fill-ok-text);
+}
+
+.fill-feedback--accent {
+  background: var(--fill-accent-bg);
+  border-color: var(--fill-accent-border);
+  color: var(--fill-accent-text);
+}
+
+.fill-feedback--wrong {
+  background: var(--fill-bad-bg);
+  border-color: var(--fill-bad-border);
+  color: var(--fill-bad-text);
+}
+
+.fill-feedback s {
+  opacity: 0.8;
+}
+
+/* The heading row now holds two buttons; let it wrap on narrow screens instead of overflowing. */
+.examples-heading-row {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.fill-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fill-feedback:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 2px;
+}

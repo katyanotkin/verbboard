@@ -131,6 +131,7 @@ def record_fill_practice_session(
     answers: int,
     correct: int,
     completed: bool,
+    inline: bool = False,
 ) -> None:
     sync_user_profile(user)
 
@@ -140,4 +141,5 @@ def record_fill_practice_session(
         answers=answers,
         correct=correct,
         completed=completed,
+        inline=inline,
     )

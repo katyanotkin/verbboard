@@ -9,6 +9,7 @@
 <title>{{ title }}</title>
 <link rel="stylesheet" href="/static/common.css"/>
 <link rel="stylesheet" href="/static/learn.css"/>
+{% if fill_toggle %}<link rel="stylesheet" href="/static/fill_inline.css"/>{% endif %}
 {{ candidate_banner_assets | safe }}
 {% include '_persist_ui_lang.html' %}
 <script>window.UI = {{ board_ui_json | safe }};
@@ -23,6 +24,8 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
 <script defer src="/static/audio_report.js"></script>
 <script defer src="/static/login_nudge.js"></script>
 <script defer src="/static/learn.js"></script>
+{% if fill_toggle %}<script defer src="/static/fill_grade.js"></script>
+<script defer src="/static/fill_inline.js"></script>{% endif %}
 <script defer src="/static/nav_urls.js"></script>
 <script defer src="/static/learn_practice.js"></script>
 <script defer src="/static/audio_loading.js"></script>
@@ -104,10 +107,9 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
   <div class="examples-heading-row">
     <h2>{{ board_examples_heading }}</h2>
     {{ board_examples_toggle | safe }}
+    {{ fill_toggle | safe }}
   </div>
-  {% if fill_practice_href %}
-  <a class="fill-entry-link" href="{{ fill_practice_href }}">{{ board_fill_entry | default('Practice forms') }}</a>
-  {% endif %}
+  {{ fill_banner | safe }}
 
   <table class="examples-table">
     <tr><th>{{ board_col_sentence }}</th><th class="col-audio"><span class="col-audio-label">{{ board_col_audio }}</span>

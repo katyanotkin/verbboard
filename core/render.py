@@ -8,7 +8,14 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from core.audio_report_service import confirmed_form_keys
 from core.audio_service import build_hashed_audio_key
-from core.fill_practice_service import fill_practice_available, verb_has_fill_items
+from core.fill_practice_service import (
+    fill_inline_available,
+    target_alternatives,
+    target_label,
+    usable_target,
+    verb_has_fill_items,
+)
+from core.i18n import get_strings
 from core.languages.config import LANGUAGE as LANG_CONFIG
 from core.languages.ru.homographs import HOMOGRAPH_MARKS, mark_text
 from core.models import Board
@@ -27,6 +34,8 @@ _jinja_env = Environment(
     loader=FileSystemLoader(str(TEMPLATES_DIR)),
     autoescape=select_autoescape(["html"]),
 )
+
+FILL_BANNER_DEFAULT = "Type the missing form in each sentence. Audio and translation unlock after you answer."
 
 
 def render_board_html(
@@ -236,6 +245,19 @@ def render_board_html(
         any(ui_lang in ex.translations for ex in board.verb.examples) or bool(lemma_translation_text)
     )
 
+    # In-place "Fill in the blank" mode: rows with a usable target carry data-fill-* attributes and JS
+    # (fill_inline.js) swaps the target word for an input. Not for candidate previews. Russian is not
+    # enabled: its displayed sentence carries stress marks, so the code-point offsets would not line up.
+    fill_inline_on = bool(
+        fill_practice_allowed
+        and not candidate_verb_id
+        and board.language != "ru"
+        and fill_inline_available(board.language)
+        and verb_has_fill_items(board.verb)
+    )
+    fill_strings = get_strings(ui_lang) if fill_inline_on else {}
+    fill_fallback_strings = get_strings("en") if fill_inline_on else {}
+
     examples_rows = []
     for index, ex in enumerate(board.verb.examples, start=1):
         base_key = f"example_{index}"
@@ -261,8 +283,23 @@ def render_board_html(
             f"<span class='example-translation' dir='{translation_dir}'>{escape(translation_text)}</span>"
         )
 
+        fill_attrs = ""
+        fill_target = usable_target(ex) if fill_inline_on else None
+        if fill_target is not None:
+            fill_lemma = title
+            fill_label = target_label(board.language, fill_target, fill_strings, fill_fallback_strings)
+            fill_alts = target_alternatives(fill_target, raw_text[fill_target["start"] : fill_target["end"]])
+            fill_attrs = (
+                f" class='fill-row' data-fill-index='{index}'"
+                f" data-fill-lemma='{escape(fill_lemma, quote=True)}'"
+                f" data-fill-start='{int(fill_target['start'])}'"
+                f" data-fill-end='{int(fill_target['end'])}'"
+                f" data-fill-label='{escape(fill_label, quote=True)}'"
+                f" data-fill-alts='{escape(json.dumps(fill_alts, ensure_ascii=False), quote=True)}'"
+            )
+
         examples_rows.append(
-            "<tr>"
+            f"<tr{fill_attrs}>"
             f"<td dir='{example_direction}' style='text-align:{example_align}'>"
             f"<span class='example-src'>{escape(display_text)}</span>"
             f"{translation_span}"
@@ -384,6 +421,13 @@ def render_board_html(
             "audio_report.already": ui.get("audio_report.already", "Already reported"),
             "audio_report.error": ui.get("audio_report.error", "Could not send. Try again later."),
             "audio_report.sign_in": ui.get("audio_report.sign_in", "Sign in to report an audio problem."),
+            "board.fill_check": ui.get("board.fill_check", "Check"),
+            "board.fill_show": ui.get("board.fill_show", "Show answer"),
+            "fill.correct": ui.get("fill.correct", "Correct!"),
+            "fill.correct_accent": ui.get("fill.correct_accent", "Correct, note the accent: {answer}"),
+            "fill.wrong": ui.get("fill.wrong", "Not quite."),
+            "fill.answer_is": ui.get("fill.answer_is", "Answer: {answer}"),
+            "fill.empty_input": ui.get("fill.empty_input", "Type an answer first"),
             "audio_issue.label": ui.get("audio_issue.label", "Known audio issue"),
             "audio_issue.note": ui.get(
                 "audio_issue.note", "Audio is not accurate for this form. Read it instead of listening."
@@ -392,21 +436,23 @@ def render_board_html(
         ensure_ascii=False,
     )
 
-    fill_practice_href = None
-    if (
-        fill_practice_allowed
-        and not candidate_verb_id
-        and fill_practice_available(board.language)
-        and verb_has_fill_items(board.verb)
-    ):
-        fill_practice_href = (
-            f"/practice/fill?language={quote(board.language, safe='')}"
-            f"&verb_id={quote(board.verb.id, safe='')}&ui_language={quote(ui_lang, safe='')}"
+    if fill_inline_on:
+        fill_toggle_html = (
+            f"<button type='button' id='fill-toggle' class='btn-secondary fill-toggle-btn' hidden "
+            f"aria-pressed='false'>{escape(ui.get('board.fill_toggle', 'Fill in the blank'))}</button>"
         )
+        fill_banner_html = (
+            f"<p id='fill-banner' class='fill-banner' hidden>"
+            f"{escape(ui.get('board.fill_banner', FILL_BANNER_DEFAULT))}</p>"
+        )
+    else:
+        fill_toggle_html = ""
+        fill_banner_html = ""
 
     template = _jinja_env.get_template("board.html")
     return template.render(
-        fill_practice_href=fill_practice_href,
+        fill_toggle=fill_toggle_html,
+        fill_banner=fill_banner_html,
         translated_from_banner=translated_from_banner,
         html_lang=ui_lang,
         html_dir=html_dir,
@@ -451,7 +497,6 @@ def render_board_html(
             ui.get("board.stress_note", "") if board.language == "ru" and board.verb.id in HOMOGRAPH_MARKS else ""
         ),
         board_examples_heading=ui.get("board.examples_heading", "Examples"),
-        board_fill_entry=ui.get("fill.entry", "Practice forms"),
         board_examples_toggle=examples_toggle,
         board_col_sentence=ui.get("board.col_sentence", "Sentence"),
         board_col_audio=ui.get("board.col_audio", "Audio"),

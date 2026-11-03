@@ -800,25 +800,6 @@ button {
   margin: 0;
 }
 
-.fill-entry-link {
-  display: inline-flex;
-  align-items: center;
-  min-block-size: 44px;
-  padding-inline: 16px;
-  margin-block-end: 8px;
-  border: 1px solid var(--input-border);
-  border-radius: 999px;
-  background: var(--card-bg);
-  color: var(--color-navy);
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.fill-entry-link:hover {
-  background: var(--button-secondary-bg);
-}
-
 .toggle-translations-btn {
   border-color: #94a3b8;
   font-weight: 500;

@@ -100,7 +100,9 @@
       });
     }).then(function (result) {
       if (!result.ok || !result.data.ok) throw new Error("request failed");
-      showDone(root, root.getAttribute(result.data.duplicate ? "data-already" : "data-done"));
+      // Reload so the page shows the stored state (same as any later visit) and the user is not left
+      // guessing whether the click did something.
+      window.location.reload();
     }).catch(function () {
       show(root, "signed-in");
       var err = root.querySelector('[data-plus-state="error"]');

@@ -61,6 +61,7 @@ class Settings:
     fill_practice_enabled: bool = True
     fill_practice_languages: tuple[str, ...] = ()
     fill_practice_plus_only: bool = False
+    fill_inline_languages: tuple[str, ...] = ()
 
 
 def _resolve_environment() -> str:
@@ -135,6 +136,15 @@ def _parse_csv_tuple(raw: str) -> tuple[str, ...]:
 
 
 _DEFAULT_FILL_PRACTICE_LANGUAGES = "en,es,it,fr,ru,tr"
+
+
+_DEFAULT_FILL_INLINE_LANGUAGES = "en,es,it,fr"
+
+
+def _parse_fill_inline_languages(raw: str) -> tuple[str, ...]:
+    """Allow-list for the in-place "Fill in the blank" mode on /learn (Latin-script languages only by default)."""
+    requested = _parse_csv_tuple((raw or _DEFAULT_FILL_INLINE_LANGUAGES).lower())
+    return tuple(lang for lang in requested if lang in ALL_STUDY_LANGUAGES)
 
 
 def _parse_fill_languages(raw: str) -> tuple[str, ...]:
@@ -226,6 +236,8 @@ def load_settings() -> Settings:
         fill_practice_enabled=_env_flag("FILL_PRACTICE_ENABLED", default=True),
         fill_practice_languages=_parse_fill_languages(os.getenv("FILL_PRACTICE_LANGUAGES", "")),
         fill_practice_plus_only=_env_flag("FILL_PRACTICE_PLUS_ONLY", default=False),
+        # In-place fill mode on /learn (?mode=fill); also needs FILL_PRACTICE_ENABLED.
+        fill_inline_languages=_parse_fill_inline_languages(os.getenv("FILL_INLINE_LANGUAGES", "")),
     )
     _validate(settings)
     return settings
