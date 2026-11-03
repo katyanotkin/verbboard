@@ -344,3 +344,22 @@ def test_spanish_imperative_and_imperfect_yo_demoted() -> None:
     assert primary == "imperfect.el"
     primary, _ = _primary_and_also("es", "Yo compraba el pan.", forms)
     assert primary == "imperfect.yo"
+
+
+def test_russian_bare_second_person_is_imperative_first() -> None:
+    forms = {
+        "present": {"2pl": "ходите", "3sg": "ходит"},
+        "imperative": {"sg": "ходи", "pl": "ходите"},
+    }
+    primary, also = _primary_and_also("ru", "Ходите осторожно!", forms)
+    assert primary == "imperative.pl" and "present.2pl" in also
+    primary, _ = _primary_and_also("ru", "Вы ходите осторожно.", forms)
+    assert primary == "present.2pl"
+
+
+def test_russian_pronoun_forms_helper_is_never_a_target() -> None:
+    forms = {"past": {"m": "был"}, "pronoun_forms": {"m": "он был"}}
+    target = tag_sentence("ru", "Он был очень усталым.", forms)
+    assert target is not None
+    assert (target["tense"], target["person"]) == ("past", "m")
+    assert "Он был очень усталым."[target["start"] : target["end"]] == "был"

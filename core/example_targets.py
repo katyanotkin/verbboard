@@ -277,7 +277,7 @@ def _find_spans(language: str, sentence: str, answer_text: str, tier: int = 1) -
 def _find_matches_at_tier(language: str, sentence: str, forms: Any, tier: int) -> list[Match]:
     matches: list[Match] = []
     for cell in iter_form_cells(forms):
-        if (language, cell.tense, cell.person) in _UNPRACTICED_CELLS:
+        if cell.tense == "pronoun_forms" or (language, cell.tense, cell.person) in _UNPRACTICED_CELLS:
             continue
         for variant in variants_for(language, cell):
             for start, end, kind in _find_spans(language, sentence, variant, tier):
@@ -371,6 +371,15 @@ def _rank_by_context(language: str, sentence: str, start: int, cells: list[FormC
             promote |= subjunctive_paths
         else:
             demote |= subjunctive_paths
+    if language == "ru":
+        # A bare 2nd-person form with no subject pronoun is a command ("Ходите осторожно!"); with a
+        # pronoun before it ("Вы ходите") it is a present/future form.
+        has_subject = any(w in {"я", "ты", "он", "она", "оно", "мы", "вы", "они"} for w in words)
+        imperative_paths = {c.path for c in cells if c.tense == "imperative"}
+        if has_subject:
+            demote |= imperative_paths
+        else:
+            promote |= imperative_paths
     if language in _IMPERATIVE_TENSES:
         clause = re.split(r"[,;:.!?¿¡]", sentence[:start])[-1]
         if re.search(r"\w", clause):  # words precede the form in its clause: not a command
