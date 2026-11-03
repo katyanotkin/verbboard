@@ -90,6 +90,10 @@ def test_toggle_on_blanks_rows_and_locks_media_until_answered(browser, live_serv
     ctx, page, _, _ = _open(browser, live_server_url)
     try:
         assert page.locator("#fill-banner").is_hidden()
+        hint = page.locator("#fill-toggle-wrap .help-hint-trigger")
+        assert hint.is_visible()
+        hint.click()
+        assert page.locator("#fill-toggle-wrap .help-hint-panel").is_visible()
         page.click("#fill-toggle")
         assert page.get_attribute("#fill-toggle", "aria-pressed") == "true"
         assert page.locator("#fill-banner").is_visible()

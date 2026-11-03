@@ -345,6 +345,8 @@
   }
 
   toggle.hidden = false;
+  var toggleWrap = document.getElementById('fill-toggle-wrap');
+  if (toggleWrap) toggleWrap.hidden = false;
   toggle.addEventListener('click', function () {
     setActive(!active, true);
   });

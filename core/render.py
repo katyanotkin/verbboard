@@ -437,9 +437,17 @@ def render_board_html(
     )
 
     if fill_inline_on:
+        fill_help = escape(ui.get("help.fill", "Type the missing verb form in each example."))
         fill_toggle_html = (
-            f"<button type='button' id='fill-toggle' class='btn-secondary fill-toggle-btn' hidden "
+            f"<span class='examples-toggle-wrap' id='fill-toggle-wrap' hidden>"
+            f"<button type='button' id='fill-toggle' class='btn-secondary fill-toggle-btn' "
             f"aria-pressed='false'>{escape(ui.get('board.fill_toggle', 'Fill in the blank'))}</button>"
+            f"<span class='help-hint'>"
+            f"<button type='button' class='help-hint-trigger' aria-expanded='false' "
+            f"aria-label='{help_hint_label}'>?</button>"
+            f"<span class='help-hint-panel' role='note' hidden>{fill_help}</span>"
+            f"</span>"
+            f"</span>"
         )
         fill_banner_html = (
             f"<p id='fill-banner' class='fill-banner' hidden>"
