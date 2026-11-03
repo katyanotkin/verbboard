@@ -418,3 +418,43 @@ def test_report_engagement_includes_fill_started() -> None:
     from core.admin_report_service import _REPORT_FLAGS
 
     assert "fill_started" in _REPORT_FLAGS
+
+
+# ── Russian session (QATP C1) ───────────────────────────────────────────────
+
+RU_FORMS = {
+    "present": {"1sg": "читаю", "2sg": "читаешь", "3sg": "читает", "1pl": "читаем", "2pl": "читаете", "3pl": "читают"},
+    "past": {"m": "читал", "f": "читала", "n": "читало", "pl": "читали"},
+}
+
+
+def _ru_verb(verb_id: str) -> VerbEntry:
+    sentences = ["Мы читаем книгу.", "Он читал газету.", "Они читают вечером.", "Ты читаешь быстро."]
+    examples = []
+    for sentence in sentences:
+        target = tag_sentence("ru", sentence, RU_FORMS)
+        assert target is not None, sentence
+        examples.append(Example(dst=sentence, target=target))
+    return VerbEntry(id=verb_id, rank=1, lemma="читать", forms=RU_FORMS, examples=examples)
+
+
+def test_russian_page_data_builds_a_full_session_of_tagged_items(monkeypatch) -> None:
+    entries = [_ru_verb(f"ru_chitat{i}") for i in range(3)]
+    monkeypatch.setattr(service, "load_entries_for_language", lambda language: entries if language == "ru" else [])
+    data = service.build_fill_page_data("ru", "en", seed=3)
+    assert len(data["items"]) == 6  # max 2 per verb across 3 verbs
+    assert data["limits"] == {"sessionSize": 8}
+    for item in data["items"]:
+        sentence = item["prefix"] + item["answer"] + item["suffix"]
+        assert sentence in {e.dst for e in entries[0].examples}
+        assert item["label"] and "_" not in item["label"] and " / " not in item["label"]
+        assert item["audioSrc"].startswith("/audio/ru/")
+
+
+def test_russian_route_is_enabled_by_default_and_not_empty(client: TestClient, monkeypatch, stub_template) -> None:
+    monkeypatch.delenv("FILL_PRACTICE_LANGUAGES", raising=False)
+    entries = [_ru_verb("ru_chitat")]
+    monkeypatch.setattr(service, "load_entries_for_language", lambda language: entries if language == "ru" else [])
+    resp = client.get("/practice/fill?language=ru&ui_language=en")
+    assert resp.status_code == 200 and "empty=False" in resp.text
+    assert json.loads(resp.text.split("DATA=", 1)[1])["items"]

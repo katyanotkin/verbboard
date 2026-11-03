@@ -363,3 +363,73 @@ def test_russian_pronoun_forms_helper_is_never_a_target() -> None:
     assert target is not None
     assert (target["tense"], target["person"]) == ("past", "m")
     assert "Он был очень усталым."[target["start"] : target["end"]] == "был"
+
+
+# --- settled-label rebuild and imperative demotion (QATP B4, B5, D4) ---
+
+
+def test_settled_label_rebuild_is_single_generated_label_fr_and_es() -> None:
+    fr_forms = {
+        "present": {"je": "aime", "il": "aime"},
+        "subjonctif_present": {"je": "aime", "il": "aime"},
+    }
+    shared = tag_sentence("fr", "J'aime le café.", fr_forms)
+    assert shared is not None and "also" in shared  # shared before settling
+    target = tag_from_hint("fr", "J'aime le café.", fr_forms, "present.je", "aime")
+    assert target is not None
+    assert (target["tense"], target["person"], target["source"]) == ("present", "je", "generated")
+    assert "also" not in target
+
+    es_forms = {"present": {"tu": "compras", "el": "compra"}, "imperative": {"tu": "compra"}}
+    sentence = "Mi madre compra el pan."
+    target = tag_from_hint("es", sentence, es_forms, "present.el", "compra")
+    assert target is not None
+    assert (target["tense"], target["person"], target["source"]) == ("present", "el", "generated")
+    assert "also" not in target and sentence[target["start"] : target["end"]] == "compra"
+
+
+@pytest.mark.parametrize(
+    "language,forms,leading,mid,imperative_path,indicative_path",
+    [
+        (
+            "it",
+            {"imperativo": {"tu": "parla"}, "presente": {"lui": "parla"}},
+            "Parla piano!",
+            "Maria parla piano.",
+            "imperativo.tu",
+            "presente.lui",
+        ),
+        (
+            "fr",
+            {"imperatif": {"tu": "parle"}, "present": {"il": "parle"}},
+            "Parle plus fort!",
+            "Marie parle plus fort.",
+            "imperatif.tu",
+            "present.il",
+        ),
+    ],
+)
+def test_it_fr_imperative_demoted_only_when_words_precede_it(
+    language, forms, leading, mid, imperative_path, indicative_path
+) -> None:
+    primary, also = _primary_and_also(language, leading, forms)
+    assert primary == imperative_path and indicative_path in also  # opening the clause: unchanged order
+    primary, also = _primary_and_also(language, mid, forms)
+    assert primary == indicative_path and also == [imperative_path]  # words precede: imperative last
+    # A new clause after punctuation counts as leading again.
+    primary, _ = _primary_and_also(language, "Oui, " + leading[0].lower() + leading[1:], forms)
+    assert primary == imperative_path
+
+
+def test_russian_imperative_demoted_by_subject_pronoun_in_three_preceding_words() -> None:
+    forms = {
+        "present": {"2sg": "ходишь", "2pl": "ходите"},
+        "imperative": {"sg": "ходи", "pl": "ходите"},
+    }
+    for sentence in ("Вы ходите осторожно.", "Вы всегда ходите осторожно.", "Вы очень всегда ходите."):
+        primary, also = _primary_and_also("ru", sentence, forms)
+        assert primary == "present.2pl", sentence
+        assert primary not in ("imperative.pl",) and (not also or also[-1] == "imperative.pl"), sentence
+    # Pronoun beyond the three-word window no longer demotes it.
+    primary, _ = _primary_and_also("ru", "Вы очень часто всегда ходите.", forms)
+    assert primary == "imperative.pl"
