@@ -50,8 +50,24 @@ def stub_verb(monkeypatch):
     monkeypatch.setattr(render_module, "confirmed_form_keys", lambda *a, **k: set())
 
 
-def _open(browser, base, *, query="", ui="en", user=None, viewport=None):
-    ctx = browser.new_context(**({"viewport": viewport} if viewport else {}))
+_NO_CONFIG_STUB = """
+Object.defineProperty(window, 'FIREBASE_WEB_CONFIG', {
+  get: function () { return null; },
+  set: function () {},
+});
+"""
+
+_EMBEDDED_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Instagram 300.0"
+
+
+def _open(browser, base, *, query="", ui="en", user=_FAKE_USER, viewport=None, user_agent=None, firebase_config=True):
+    """Open /learn. Defaults to a signed-in user; pass user=None for an anonymous visitor."""
+    options = {}
+    if viewport:
+        options["viewport"] = viewport
+    if user_agent:
+        options["user_agent"] = user_agent
+    ctx = browser.new_context(**options)
     beacons: list[str] = []
     sessions: list[dict] = []
 
@@ -71,10 +87,12 @@ def _open(browser, base, *, query="", ui="en", user=None, viewport=None):
     page = ctx.new_page()
     page.set_default_timeout(30_000)
     page.route("https://www.gstatic.com/firebasejs/**", lambda r: r.abort())
-    page.add_init_script(_CONFIG_STUB)
+    page.add_init_script(_CONFIG_STUB if firebase_config else _NO_CONFIG_STUB)
     page.add_init_script(_FIREBASE_STUB.replace("__USER__", user or "null"))
     page.goto(f"{base}/learn?language=es&verb_id=es_abrir&ui_language={ui}{query}")
     page.wait_for_selector("#fill-toggle:not([hidden])")
+    if user is not None or firebase_config:
+        page.wait_for_function("window.VerbBoardAuth && typeof window.VerbBoardAuth.ready === 'function'")
     return ctx, page, beacons, sessions
 
 
@@ -199,8 +217,10 @@ def test_signed_in_sends_inline_totals_once_on_hide(browser, live_server_url):
 
 
 def test_anonymous_sends_no_progress(browser, live_server_url):
-    ctx, page, _, sessions = _open(browser, live_server_url, query="&mode=fill")
+    # Anonymous fail-open (embedded in-app browser) so fill mode is reachable without a user.
+    ctx, page, _, sessions = _open(browser, live_server_url, query="&mode=fill", user=None, user_agent=_EMBEDDED_UA)
     try:
+        page.wait_for_selector(".fill-inline-input")
         _row(page, 0).locator(".fill-inline-input").fill("abrió")
         page.keyboard.press("Enter")
         page.evaluate("window.dispatchEvent(new Event('pagehide'))")
@@ -238,5 +258,141 @@ def test_unanswered_audio_is_inert_and_focus_moves_on(browser, live_server_url):
         assert page.evaluate("document.querySelector('[aria-live=polite].fill-sr-only')") is not None
         label = _row(page, 1).locator(".fill-inline-input").get_attribute("aria-label")
         assert label.startswith("abrir")
+    finally:
+        ctx.close()
+
+
+# ---- sign-in gate for anonymous visitors --------------------------------------------------------
+
+
+def _stub_sign_in(page):
+    page.evaluate(
+        "window.__signInCalls = 0; window.VerbBoardAuth.signIn = function () {"
+        " window.__signInCalls += 1; return Promise.resolve(); };"
+        " undefined;"  # a function-valued expression would be invoked by Playwright
+    )
+
+
+def test_anonymous_tap_shows_gate_not_fill_mode(browser, live_server_url):
+    ctx, page, _, _ = _open(browser, live_server_url, user=None)
+    try:
+        assert page.locator("#fill-toggle-wrap .help-hint-trigger").is_visible()
+        _stub_sign_in(page)
+        page.click("#fill-toggle")
+        gate = page.locator("#fill-gate")
+        gate.wait_for(state="visible")
+        assert gate.get_attribute("role") == "status"
+        assert page.get_attribute("#fill-toggle", "aria-pressed") == "false"
+        assert page.locator(".fill-inline-input").count() == 0
+        assert "mode=fill" not in page.url
+        button = gate.locator("button")
+        assert button.bounding_box()["height"] >= 44
+        button.click()
+        assert page.evaluate("window.__signInCalls") == 1
+    finally:
+        ctx.close()
+
+
+def test_anonymous_mode_fill_url_shows_gate_and_no_inputs(browser, live_server_url):
+    ctx, page, _, _ = _open(browser, live_server_url, query="&mode=fill", user=None)
+    try:
+        page.locator("#fill-gate").wait_for(state="visible")
+        assert page.locator(".fill-inline-input").count() == 0
+        assert page.get_attribute("#fill-toggle", "aria-pressed") == "false"
+    finally:
+        ctx.close()
+
+
+def test_anonymous_gate_375px_no_horizontal_scroll(browser, live_server_url):
+    ctx, page, _, _ = _open(browser, live_server_url, user=None, viewport={"width": 375, "height": 800})
+    try:
+        page.click("#fill-toggle")
+        page.locator("#fill-gate").wait_for(state="visible")
+        assert _no_horizontal_scroll(page)
+        box = page.locator("#fill-gate button").bounding_box()
+        assert box["x"] >= 0 and box["x"] + box["width"] <= 375
+    finally:
+        ctx.close()
+
+
+def test_signing_in_after_gate_starts_fill_mode(browser, live_server_url):
+    ctx, page, _, _ = _open(browser, live_server_url, user=None)
+    try:
+        page.click("#fill-toggle")
+        page.locator("#fill-gate").wait_for(state="visible")
+        page.evaluate("window.dispatchEvent(new Event('vb:progress-hydrated'))")
+        page.wait_for_selector(".fill-inline-input")
+        assert page.locator(".fill-inline-input").count() == 3
+        assert page.locator("#fill-gate").is_hidden()
+        assert page.get_attribute("#fill-toggle", "aria-pressed") == "true"
+        assert "mode=fill" in page.url
+    finally:
+        ctx.close()
+
+
+def test_hydrated_event_without_gate_does_not_enter_fill_mode(browser, live_server_url):
+    ctx, page, _, _ = _open(browser, live_server_url)
+    try:
+        page.evaluate("window.dispatchEvent(new Event('vb:progress-hydrated'))")
+        page.wait_for_timeout(200)
+        assert page.locator(".fill-inline-input").count() == 0
+    finally:
+        ctx.close()
+
+
+def test_embedded_browser_fails_open(browser, live_server_url):
+    ctx, page, _, _ = _open(browser, live_server_url, user=None, user_agent=_EMBEDDED_UA)
+    try:
+        page.click("#fill-toggle")
+        page.wait_for_selector(".fill-inline-input")
+        assert page.get_attribute("#fill-toggle", "aria-pressed") == "true"
+        assert page.locator("#fill-gate").count() == 0 or page.locator("#fill-gate").is_hidden()
+    finally:
+        ctx.close()
+
+
+def test_missing_firebase_config_fails_open(browser, live_server_url):
+    ctx, page, _, _ = _open(browser, live_server_url, user=None, firebase_config=False)
+    try:
+        page.click("#fill-toggle")
+        page.wait_for_selector(".fill-inline-input")
+        assert page.get_attribute("#fill-toggle", "aria-pressed") == "true"
+        assert page.locator("#fill-gate").count() == 0 or page.locator("#fill-gate").is_hidden()
+    finally:
+        ctx.close()
+
+
+def test_check_button_is_primary_and_enabled(browser, live_server_url):
+    ctx, page, _, _ = _open(browser, live_server_url, query="&mode=fill")
+    try:
+        page.wait_for_selector(".fill-check-btn")
+        check = page.locator(".fill-check-btn").first
+        assert check.is_enabled()
+        colors = page.evaluate(
+            """() => {
+              const probe = document.createElement('i');
+              probe.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--navy').trim();
+              document.body.appendChild(probe);
+              const navy = getComputedStyle(probe).backgroundColor;
+              probe.remove();
+              const btn = getComputedStyle(document.querySelector('.fill-check-btn')).backgroundColor;
+              const show = getComputedStyle(document.querySelector('.fill-show-link')).backgroundColor;
+              return {navy, btn, show};
+            }"""
+        )
+        assert colors["btn"] != "rgba(0, 0, 0, 0)"
+        assert colors["btn"] == colors["navy"] or colors["navy"] == "rgba(0, 0, 0, 0)"
+        assert colors["btn"] != colors["show"]
+    finally:
+        ctx.close()
+
+
+def test_help_hint_does_not_mention_translations(browser, live_server_url):
+    ctx, page, _, _ = _open(browser, live_server_url)
+    try:
+        page.click("#fill-toggle-wrap .help-hint-trigger")
+        text = page.locator("#fill-toggle-wrap .help-hint-panel").inner_text().lower()
+        assert text.strip()
+        assert "translation" not in text
     finally:
         ctx.close()

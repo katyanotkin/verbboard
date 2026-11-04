@@ -120,7 +120,7 @@
   "help.known": "Marks this verb as known and starts spaced review. Practice sessions will later show a \"Recalled it\" button for it. Tap again to undo.",
   "help.audio_report": "Tap the flag next to any audio to report a problem with it. A triangle instead of the flag marks a known audio issue.",
   "help.translations": "Shows a translation under each example sentence.",
-  "help.fill": "Turns the example sentences into a typing drill: type the missing verb form in each one. Audio unlocks after you answer. Translations have their own button.",
+  "help.fill": "Turns the example sentences into a typing drill: type the missing verb form in each one. Audio unlocks after you answer.",
   "help.practice": "Starts a practice session with a set of verbs and audio; earn a badge when you finish.",
   "help.session_size": "Sets how many verbs are included in the practice session.",
   "help.listens": "Sets how many times you must listen to the audio before moving to the next verb.",
@@ -236,5 +236,7 @@
   "board.fill_toggle": "Fill in the blank",
   "board.fill_banner": "Type the missing form in each sentence. Audio unlocks after you answer.",
   "board.fill_check": "Check",
-  "board.fill_show": "Show answer"
+  "board.fill_show": "Show answer",
+  "board.fill_gate": "Signing in with Google is free and required for this mode.",
+  "board.fill_gate_btn": "Sign in with Google"
 }

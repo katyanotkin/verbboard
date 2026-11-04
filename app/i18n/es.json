@@ -120,7 +120,7 @@
   "help.known": "Marca este verbo como conocido e inicia la repetición espaciada. Las próximas sesiones de práctica mostrarán el botón \"Lo recordé\". Toca de nuevo para deshacer.",
   "help.audio_report": "Pulsa la bandera junto a un audio para reportar un problema. Un triángulo en lugar de la bandera indica un problema de audio conocido.",
   "help.translations": "Muestra una traducción debajo de cada ejemplo.",
-  "help.fill": "Convierte los ejemplos en un ejercicio: escribe la forma verbal que falta en cada frase. El audio se abre al responder. Las traducciones tienen su propio botón.",
+  "help.fill": "Convierte los ejemplos en un ejercicio: escribe la forma verbal que falta en cada frase. El audio se abre al responder.",
   "help.practice": "Inicia una práctica con un conjunto de verbos y audio; gana una insignia al terminar.",
   "help.session_size": "Determina cuántos verbos incluye la sesión de práctica.",
   "help.listens": "Determina cuántas veces debes escuchar el audio antes de pasar al siguiente verbo.",
@@ -236,5 +236,7 @@
   "board.fill_toggle": "Rellenar el hueco",
   "board.fill_banner": "Escribe la forma que falta en cada frase. El audio se abre al responder.",
   "board.fill_check": "Comprobar",
-  "board.fill_show": "Ver respuesta"
+  "board.fill_show": "Ver respuesta",
+  "board.fill_gate": "Para este modo hace falta iniciar sesión con Google; es gratis.",
+  "board.fill_gate_btn": "Iniciar sesión con Google"
 }

@@ -290,7 +290,7 @@ def test_row_attributes_are_attribute_escaped() -> None:
     assert "&quot;" in html and "&#x27;" in html and "&lt;x&gt;" in html
 
 
-@pytest.mark.parametrize("language", ["he", "ru", "tr"])
+@pytest.mark.parametrize("language", ["he", "tr"])
 def test_toggle_absent_for_languages_outside_inline_list(language) -> None:
     html = _render(_es_verb(), language=language)
     assert "fill-toggle" not in html and "fill-row" not in html
@@ -308,7 +308,7 @@ def test_toggle_absent_without_targets_candidate_disabled_or_plus_gate(monkeypat
 def test_inline_languages_setting_parses(monkeypatch) -> None:
     from core.settings import _parse_fill_inline_languages
 
-    assert _parse_fill_inline_languages("") == ("en", "es", "it", "fr")
+    assert _parse_fill_inline_languages("") == ("en", "es", "it", "fr", "ru")
     assert _parse_fill_inline_languages(" ES , xx, fr ") == ("es", "fr")
     monkeypatch.setenv("FILL_INLINE_LANGUAGES", "it")
     assert service.fill_inline_available("it") and not service.fill_inline_available("es")
@@ -458,3 +458,88 @@ def test_russian_route_is_enabled_by_default_and_not_empty(client: TestClient, m
     resp = client.get("/practice/fill?language=ru&ui_language=en")
     assert resp.status_code == 200 and "empty=False" in resp.text
     assert json.loads(resp.text.split("DATA=", 1)[1])["items"]
+
+
+# ── Russian inline fill: offsets map onto the displayed (stress-marked) sentence ──
+
+ACUTE = "\u0301"
+
+
+def test_display_offset_identity_when_unchanged() -> None:
+    from core.render import _display_offset
+
+    assert _display_offset("Он читал.", "Он читал.", 3) == 3
+
+
+def test_display_offset_mark_before_target_shifts_offsets() -> None:
+    from core.render import _display_offset
+
+    raw = "Мама читает книгу"
+    display = "Ма" + ACUTE + "ма читает книгу"
+    start = raw.index("читает")
+    assert _display_offset(raw, display, start) == start + 1
+    assert _display_offset(raw, display, start + len("читает")) == start + 1 + len("читает")
+
+
+def test_display_offset_mark_inside_target_end_includes_mark() -> None:
+    from core.render import _display_offset
+
+    raw = "Я плачу сразу"
+    display = "Я плачу" + ACUTE + " сразу"
+    assert _display_offset(raw, display, 2) == 2
+    end = _display_offset(raw, display, 7)
+    assert display[2:end] == "плачу" + ACUTE
+
+
+def test_display_offset_mark_after_last_vowel_of_target() -> None:
+    from core.render import _display_offset
+
+    raw = "они мою"
+    display = "они мо" + ACUTE + "ю"
+    start = _display_offset(raw, display, 4)
+    end = _display_offset(raw, display, 7)
+    assert display[start:end] == "мо" + ACUTE + "ю"
+
+
+def test_display_offset_at_end_of_string() -> None:
+    from core.render import _display_offset
+
+    raw = "Я плачу"
+    display = "Я плачу" + ACUTE
+    assert _display_offset(raw, display, len(raw)) == len(display)
+    assert _display_offset(raw, display, 99) == len(display)
+
+
+def test_russian_render_offsets_slice_displayed_text_including_stress_mark() -> None:
+    from html import unescape
+
+    forms = {
+        "present": {
+            "1sg": "плачу",
+            "2sg": "платишь",
+            "3sg": "платит",
+            "1pl": "платим",
+            "2pl": "платите",
+            "3pl": "платят",
+        }
+    }
+    sentences = ["Я плачу за кофе.", "Мама платит каждый день."]
+    examples = []
+    for sentence in sentences:
+        target = tag_sentence("ru", sentence, forms)
+        assert target is not None, sentence
+        examples.append(Example(dst=sentence, target=target))
+    verb = VerbEntry(id="ru_platit", rank=1, lemma="платить", forms=forms, examples=examples)
+    html = _render(verb, language="ru")
+    assert "id='fill-toggle'" in html
+    rows = re.findall(
+        r"<tr class='fill-row'[^>]*data-fill-start='(\d+)' data-fill-end='(\d+)'[^>]*>.*?<span class='example-src'>(.*?)</span>",
+        html,
+    )
+    assert len(rows) == 2
+    start, end, shown = int(rows[0][0]), int(rows[0][1]), unescape(rows[0][2])
+    assert shown == "Я плачу" + ACUTE + " за кофе."
+    assert shown[start:end] == "плачу" + ACUTE
+    # Second sentence has no curated mark: offsets unchanged.
+    start, end, shown = int(rows[1][0]), int(rows[1][1]), unescape(rows[1][2])
+    assert shown[start:end] == "платит"

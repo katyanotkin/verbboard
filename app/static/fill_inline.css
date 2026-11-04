@@ -87,8 +87,53 @@
 
 .fill-check-btn {
   min-block-size: 36px;
-  padding-inline: 14px;
+  padding-inline: 18px;
+  border: 1px solid var(--color-navy);
+  background: var(--color-navy);
+  color: #fff;
   font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.btn-secondary.fill-check-btn:hover:not(:disabled) {
+  background: var(--color-navy);
+  filter: brightness(1.15);
+}
+
+.fill-check-btn:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+.fill-gate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--fill-accent-border);
+  border-radius: 8px;
+  background: var(--fill-accent-bg);
+  color: var(--fill-accent-text);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.fill-gate[hidden] {
+  display: none;
+}
+
+.fill-gate-text {
+  flex: 1 1 200px;
+  margin: 0;
+}
+
+.fill-gate-btn {
+  min-block-size: 44px;
+  padding-inline: 18px;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 
 .fill-show-link {

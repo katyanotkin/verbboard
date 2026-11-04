@@ -344,11 +344,106 @@
     }
   }
 
+  // ---- sign-in gate (teaser for anonymous visitors) ----------------------------
+  // Same rules as practice_loop.js: product gate only, fails OPEN when Firebase auth is unusable
+  // (no config, SDK blocked, not resolved in time) or in embedded in-app browsers.
+  var GATE_AUTH_TIMEOUT_MS = 1500;
+  var gateNotice = null;
+  var gateChecking = false;
+
+  function authAvailable() {
+    var cfg = window.FIREBASE_WEB_CONFIG;
+    return !!(
+      cfg && cfg.apiKey &&
+      typeof window.firebase !== 'undefined' &&
+      window.VerbBoardAuth &&
+      typeof window.VerbBoardAuth.currentUser === 'function' &&
+      typeof window.VerbBoardAuth.ready === 'function'
+    );
+  }
+
+  function inEmbeddedBrowser() {
+    return /; wv\)|FBAN|FBAV|FB_IAB|Instagram|LinkedInApp|Snapchat|MicroMessenger|\bLine\//i.test(
+      navigator.userAgent || ''
+    );
+  }
+
+  function isAnonymousForGate() {
+    if (!authAvailable() || inEmbeddedBrowser()) return Promise.resolve(false);
+    var a = window.VerbBoardAuth;
+    if (a.currentUser()) return Promise.resolve(false);
+    var settled = false;
+    var ready = Promise.resolve(a.ready()).then(function () { settled = true; });
+    var timeout = new Promise(function (resolve) { setTimeout(resolve, GATE_AUTH_TIMEOUT_MS); });
+    return Promise.race([ready, timeout])
+      .then(function () { return settled && !a.currentUser(); })
+      .catch(function () { return false; });
+  }
+
+  function hideGateNotice() {
+    if (gateNotice) gateNotice.hidden = true;
+  }
+
+  function showGateNotice(focusButton) {
+    if (!gateNotice) {
+      gateNotice = el('div', 'fill-gate');
+      gateNotice.id = 'fill-gate';
+      gateNotice.setAttribute('role', 'status');
+      gateNotice.appendChild(el('p', 'fill-gate-text', t('board.fill_gate')));
+      var signIn = el('button', 'btn-pill-navy fill-gate-btn', t('board.fill_gate_btn'));
+      signIn.type = 'button';
+      signIn.addEventListener('click', function () {
+        var a = auth();
+        if (a && a.signIn) {
+          Promise.resolve(a.signIn()).catch(function (err) {
+            console.warn('VB: fill gate sign-in failed', (err && err.code) || err);
+          });
+        }
+      });
+      gateNotice.appendChild(signIn);
+      var headingRow = toggle.closest('.examples-heading-row');
+      if (headingRow && headingRow.parentNode) {
+        headingRow.parentNode.insertBefore(gateNotice, headingRow.nextSibling);
+      } else {
+        toggle.parentNode.appendChild(gateNotice);
+      }
+    }
+    gateNotice.hidden = false;
+    announce(t('board.fill_gate'));
+    if (focusButton) gateNotice.querySelector('button').focus({ preventScroll: false });
+  }
+
+  // Popup sign-in completes without a reload: enter fill mode the visitor asked for.
+  window.addEventListener('vb:progress-hydrated', function () {
+    if (gateNotice && !gateNotice.hidden && !active) {
+      hideGateNotice();
+      setActive(true, true);
+    }
+  });
+
+  function requestFill(updateUrl) {
+    if (gateChecking) return;
+    gateChecking = true;
+    isAnonymousForGate().then(function (anonymous) {
+      gateChecking = false;
+      if (anonymous) {
+        showGateNotice(updateUrl);
+      } else {
+        hideGateNotice();
+        setActive(true, updateUrl);
+      }
+    });
+  }
+
   toggle.hidden = false;
   var toggleWrap = document.getElementById('fill-toggle-wrap');
   if (toggleWrap) toggleWrap.hidden = false;
   toggle.addEventListener('click', function () {
-    setActive(!active, true);
+    if (active) {
+      setActive(false, true);
+    } else {
+      requestFill(true);
+    }
   });
 
   window.addEventListener('pagehide', function () {
@@ -365,5 +460,5 @@
   try {
     wantsFill = new URLSearchParams(window.location.search).get('mode') === 'fill';
   } catch (_) {}
-  if (wantsFill) setActive(true, false);
+  if (wantsFill) requestFill(false);
 })();

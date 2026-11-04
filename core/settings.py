@@ -138,11 +138,11 @@ def _parse_csv_tuple(raw: str) -> tuple[str, ...]:
 _DEFAULT_FILL_PRACTICE_LANGUAGES = "en,es,it,fr,ru,tr"
 
 
-_DEFAULT_FILL_INLINE_LANGUAGES = "en,es,it,fr"
+_DEFAULT_FILL_INLINE_LANGUAGES = "en,es,it,fr,ru"
 
 
 def _parse_fill_inline_languages(raw: str) -> tuple[str, ...]:
-    """Allow-list for the in-place "Fill in the blank" mode on /learn (Latin-script languages only by default)."""
+    """Allow-list for the in-place "Fill in the blank" mode on /learn (Hebrew and Turkish are not enabled by default)."""
     requested = _parse_csv_tuple((raw or _DEFAULT_FILL_INLINE_LANGUAGES).lower())
     return tuple(lang for lang in requested if lang in ALL_STUDY_LANGUAGES)
 

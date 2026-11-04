@@ -38,6 +38,22 @@ _jinja_env = Environment(
 FILL_BANNER_DEFAULT = "Type the missing form in each sentence. Audio unlocks after you answer."
 
 
+_STRESS_MARK = "\u0301"
+
+
+def _display_offset(raw_text: str, display_text: str, raw_offset: int) -> int:
+    """Map a code-point offset in the plain sentence to the displayed one (Russian stress marks are inserted)."""
+    if raw_text == display_text:
+        return raw_offset
+    seen_raw = 0
+    for position, char in enumerate(display_text):
+        if seen_raw == raw_offset and char != _STRESS_MARK:
+            return position
+        if char != _STRESS_MARK:
+            seen_raw += 1
+    return len(display_text)
+
+
 def render_board_html(
     board: Board,
     return_to: str | None = None,
@@ -246,12 +262,11 @@ def render_board_html(
     )
 
     # In-place "Fill in the blank" mode: rows with a usable target carry data-fill-* attributes and JS
-    # (fill_inline.js) swaps the target word for an input. Not for candidate previews. Russian is not
-    # enabled: its displayed sentence carries stress marks, so the code-point offsets would not line up.
+    # (fill_inline.js) swaps the target word for an input. Not for candidate previews. Russian rows carry
+    # offsets into the displayed sentence (stress marks inserted), see _display_offset.
     fill_inline_on = bool(
         fill_practice_allowed
         and not candidate_verb_id
-        and board.language != "ru"
         and fill_inline_available(board.language)
         and verb_has_fill_items(board.verb)
     )
@@ -292,8 +307,8 @@ def render_board_html(
             fill_attrs = (
                 f" class='fill-row' data-fill-index='{index}'"
                 f" data-fill-lemma='{escape(fill_lemma, quote=True)}'"
-                f" data-fill-start='{int(fill_target['start'])}'"
-                f" data-fill-end='{int(fill_target['end'])}'"
+                f" data-fill-start='{_display_offset(raw_text, display_text, int(fill_target['start']))}'"
+                f" data-fill-end='{_display_offset(raw_text, display_text, int(fill_target['end']))}'"
                 f" data-fill-label='{escape(fill_label, quote=True)}'"
                 f" data-fill-alts='{escape(json.dumps(fill_alts, ensure_ascii=False), quote=True)}'"
             )
@@ -423,6 +438,8 @@ def render_board_html(
             "audio_report.sign_in": ui.get("audio_report.sign_in", "Sign in to report an audio problem."),
             "board.fill_check": ui.get("board.fill_check", "Check"),
             "board.fill_show": ui.get("board.fill_show", "Show answer"),
+            "board.fill_gate": ui.get("board.fill_gate", "Signing in with Google is free and required for this mode."),
+            "board.fill_gate_btn": ui.get("board.fill_gate_btn", "Sign in with Google"),
             "fill.correct": ui.get("fill.correct", "Correct!"),
             "fill.correct_accent": ui.get("fill.correct_accent", "Correct, note the accent: {answer}"),
             "fill.wrong": ui.get("fill.wrong", "Not quite."),
