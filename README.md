@@ -110,6 +110,7 @@ Visual indicators:
 
 - PWA manifest, service worker, and icons in `app/static/`
 - 4-tab icon-only bottom nav on mobile: Back / Verbs / Search / Home
+- "New version available" banner (en/ru/es/he) with an Update button when the service worker finds a newer release; never reloads on its own
 - Google Play link on Android browsers (`pwa.js` shows `#play-link`; hidden in the app, on iOS and on desktop)
 - Three-branch sign-in: standalone PWA → new tab, mobile browser → `/auth/signin`, desktop → popup
 - `/privacy` page for Google Play OAuth consent screen

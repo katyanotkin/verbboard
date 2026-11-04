@@ -778,3 +778,61 @@ body {
     width: 100%;
   }
 }
+
+/* ===== "New version available" banner (pwa.js) ===== */
+
+.vb-update-banner {
+  position: fixed;
+  inset-inline: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 420px;
+  margin-inline: auto;
+  padding: 8px;
+  padding-inline-start: 14px;
+  background: var(--card-bg);
+  color: var(--text-main);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.18);
+  font-size: 0.95rem;
+}
+
+/* Sit above the 56px bottom nav where it is shown. */
+@media (display-mode: standalone) and (max-width: 639px) {
+  .vb-update-banner {
+    bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+}
+
+.vb-update-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.vb-update-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--text-main);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vb-update-dismiss {
+  min-height: 44px;
+  min-width: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
