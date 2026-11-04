@@ -29,8 +29,13 @@ Schema:
   "examples": [ {"dst": "<sentence>", "form": "<tense>.<person>", "answer": "<words in the sentence>"}, ... ]
 }
 
-Examples must be idiomatic, everyday language, naturally using the target verb.
-No two examples may use the same grammatical form.
+Examples: write the way a careful native speaker would, natural and idiomatic, each sentence a single concrete everyday
+situation (5-14 words) with the word order natural to the language (do not copy English order). Each example shows ONE
+conjugated form, and no two examples use the same tense+person cell. Follow the tense distribution given for the language
+below: never spend two examples on cells of one tense while a required tense has none. Across the set use at least three
+different persons, including one plural. Do not reuse a sentence frame within the verb. If a form is unnatural for this
+verb (a progressive of a stative verb, a command nobody would give), cover another required form instead and never
+invent a context to fill the slot.
 
 Example tagging: for every example, "form" is the path into YOUR "forms" object of the one conjugated form the sentence shows, as "<tense>.<person>" (e.g. "present.3sg") or just "<tense>" for a form without persons (e.g. "gerund", "past_participle"). "answer" is those exact words as written in the sentence: one word for a simple tense; for a compound tense the auxiliary plus participle without the subject pronoun. The answer must appear in "dst" exactly once and match the stored form. If the sentence shows no listed form (e.g. a bare infinitive), set "form" to null and omit "answer"."""
 
@@ -48,9 +53,11 @@ ENGLISH (en)
   common form and use it consistently for both past and past_participle —
   do not hedge, mention the variant, or return alternatives.
 
-  examples: exactly 5 sentences covering in order:
-    simple present (1st person: I / we), simple present (3rd singular: she/he),
-    simple present (3rd plural: they), simple past, present perfect"""
+  examples: exactly 6 sentences:
+    simple present (I / we), simple present (3rd singular: she/he), simple past, present perfect,
+    a progressive using the gerund form ("is eating"; for a stative verb such as know, need, believe, seem,
+    understand, like, own, use a second simple past instead), and an imperative only if the verb has a natural one
+    (otherwise a simple present with they/you)."""
 
 _PROMPT_RU = """\
 ────────────────────────────────────────
@@ -84,12 +91,18 @@ RUSSIAN (ru)
     pronoun_forms, pair, examples). Never write a combining acute accent (U+0301) or any other
     stress mark, even for words whose stress is hard to predict.
 
-  examples:
-    paired verb: 5 sentences
-    biaspectual or unpaired verb: 6 sentences
-    Aim to include one past neuter singular example (subject is grammatically neuter,
-    e.g. "Солнце начало садиться.", "Молоко закипело."), but skip it if it would feel
-    forced or unnatural. Never use more than one."""
+  examples: exactly 7 sentences, with the split depending on aspect. Imperfective shows process, repetition or habit;
+    perfective shows one completed result.
+    imperfective: 3 present (three different persons, one ты/вы and one мы/они; one habitual, one ongoing),
+      2 past (different gender/number), 1 imperative, 1 more present or past.
+    Do not use the compound future "буду/будешь... + infinitive" in examples (it has no cell on the board).
+    perfective: 3 future (different persons, a single completed result), 2 past, 1 imperative,
+      1 more future or past.
+    biaspectual: 2 present, 2 future, 2 past, 1 imperative.
+    Skip the imperative for verbs with no natural command (хотеть, мочь, ненавидеть, значить) and add one more
+    present (imperfective) or future (perfective) instead.
+    Past neuter only with a naturally neuter subject (солнце, молоко, письмо, время), never это, эхо, дитя or
+    привидение; at most one. Natural word order ("Она медленно закрыла книгу")."""
 
 _PROMPT_ES = """\
 ────────────────────────────────────────
@@ -130,11 +143,12 @@ SPANISH (es)
     vosotros = "levantaos"; gerund "levantándose"; participle plain ("levantado").
   Verbs used with an indirect object (gustar, parecer): give the forms as they are used
     (me gusta / me gustan are examples, forms follow the 3rd person), and say so in the examples.
-  examples: 5 to 6 sentences in Spanish (Spain Spanish), each using a distinct grammatical form:
-    at least one present, one preterite, one imperfect or future, one conditional (a polite request, a
+  examples: 7 sentences in Spanish (Spain Spanish), one each of present, preterite, imperfect, future, conditional,
+    subjunctive and imperative (a different form instead if the verb has no natural imperative), plus an optional
+    gerund as an 8th; at least four persons including vosotros and ellos. In detail: the conditional (a polite request, a
     wish or the result of "si + imperfecto de subjuntivo"), one subjunctive (presente after a trigger like
     "quiero que", "es importante que", "para que", or imperfecto in "Si fuera barato, lo compraría")
-    unless the verb has none, one imperative — and no more than two presents. Use real scenes with a complete meaning (a subject, an object where the verb needs
+    unless the verb has none. Use real scenes with a complete meaning (a subject, an object where the verb needs
     one); do NOT use filler frames like "Yo ... cada día", "Él ... ahora", "Ayer nosotros ... juntos"
     or "Estamos <gerund> hoy". Vary persons (tú, ella, ellos, vosotros, usted) and settings from verb
     to verb. Use vosotros for informal plural (imperative "Venid aquí", "¿Queréis un café?") and
@@ -165,8 +179,10 @@ HEBREW (he)
       to want, to prefer; but verbs like to die DO have a natural imperative) returns imperative as an empty object {} instead of an invented form.
     Critical homographs: past 2msg ends in ָּ (qamatz + dagesh), 2fsg ends in ְ (shva). Never omit.
     Example for הלך: past.2msg = "הָלַכְתָּ", past.2fsg = "הָלַכְתְּ"
-  examples: 4 to 6 sentences in Hebrew script, each using a distinct grammatical form:
-    at least one present, one past, one future, and others from different forms."""
+  examples: 6 sentences in Hebrew script: 2 present (different gender/number), 1-2 past, 1-2 future (including a
+    2nd person, at least one feminine), and 1 imperative if the verb has one (otherwise another future or past).
+    Point the conjugated verb fully with nikud and leave the other words unpointed. Check that numerals agree in
+    gender with their noun."""
 
 _PROMPT_IT = """\
 ────────────────────────────────────────
@@ -215,9 +231,10 @@ ITALIAN (it)
     "lei" only in formal register the same as any other imperativo slot (e.g.
     "si chiami" for lei, "chiamati" for tu with clitic postposed and attached).
     gerundio/participio keep the clitic postposed and attached: "chiamandosi", "chiamatosi".
-  examples: 4 to 6 sentences in Italian, each using a distinct grammatical form:
-    at least one presente, one passato prossimo, one imperfetto or futuro, one imperativo, one
-    condizionale (a polite request or a wish) and one congiuntivo (presente after "penso che" or
+  examples: 7 sentences in Italian, one each of presente, passato prossimo, imperfetto, futuro, condizionale,
+    congiuntivo and imperativo (a different form instead if the verb has no natural imperativo), plus an optional
+    gerundio as an 8th; at least four persons including voi and loro. In detail: the condizionale (a polite
+    request or a wish) and the congiuntivo (presente after "penso che" or
     "voglio che", or imperfetto in "Se fossi ricco, comprerei ...") unless the verb has none.
     Vary the sentence frames: do not open the imperfetto example with "Da bambino"/"Quando ero
     bambino", the presente with "Ogni mattina", or the futuro with "L'anno prossimo" by default;
@@ -264,11 +281,12 @@ FRENCH (fr)
     gerondif: "<gérondif, e.g. 'en parlant'>"  (string)
     participe_passe: "<past participle>"       (string, masculine singular form)
   Elision: use standard French elision (je → j') before a vowel sound, e.g. "j'ai parlé", "j'aime".
-  examples: 4 to 6 sentences in French, each using a distinct grammatical form:
-    at least one present, one passé composé, one imparfait or futur, one conditionnel présent
-    (a polite request, a wish or the result of "si + imparfait"), one subjonctif présent after a
-    real trigger (il faut que, bien que, pour que, je veux que) unless the verb has none, and one
-    impératif — unless the verb has no natural imperative (see above), in which case cover another form instead.
+  examples: 7 sentences in French, one each of présent, passé composé, imparfait, futur, conditionnel présent,
+    subjonctif présent and impératif (a different form instead if the verb has no natural impératif), plus an
+    optional gérondif as an 8th; at least four persons including vous and ils. In detail: the conditionnel présent
+    (a polite request, a wish or the result of "si + imparfait") and the subjonctif présent after a
+    real trigger (il faut que, bien que, pour que, je veux que) unless the verb has none; skip the impératif
+    if the verb has no natural imperative (see above) and cover another form instead.
     Some verbs (e.g. devoir) DO have real, grammatically valid imperative forms, but those
     forms are pragmatically near-unusable as genuine commands in natural French (ordering
     someone to "obligate themselves" is semantically redundant as a speech act — native
@@ -297,8 +315,8 @@ TURKISH (tr)
   Apply vowel harmony, consonant softening (gitmek → gidiyorum, gidecek; etmek → ediyorum)
     and the verb's real aorist vowel (almak → alırım, görmek → görürüm, olmak → olurum,
     vermek → veririm, bilmek → bilirim, yapmak → yaparım). Never invent a form.
-  examples: 4 to 6 sentences in Turkish, each using a distinct grammatical form: at least one
-    present continuous, one aorist, one past, one future, and one imperative where it is natural."""
+  examples: 4 to 6 sentences in Turkish: at least one present continuous, one aorist, one past, one future, and one
+    imperative where it is natural; use at least four persons including onlar."""
 
 _LANG_PROMPTS: dict[str, str] = {
     "en": f"{_PROMPT_INTRO}\n\n{_PROMPT_EN}\n",
@@ -323,7 +341,7 @@ _GENERATION_SYSTEM_PROMPT = (
 _MODEL: dict[str, str] = {"en": "claude-haiku-4-5-20251001"}
 _MODEL_DEFAULT = "claude-sonnet-4-6"
 
-_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072, "fr": 3072, "es": 3072, "it": 3072}
+_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072, "fr": 3072, "es": 3072, "it": 3072, "en": 3072, "tr": 3072}
 _MAX_TOKENS_DEFAULT = 2048
 
 # ---------------------------------------------------------------------------

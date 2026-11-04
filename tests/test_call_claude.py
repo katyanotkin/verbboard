@@ -5,7 +5,7 @@ Covers:
 - Successful JSON response is parsed and returned as a dict
 - Invalid JSON from Claude raises HTTPException 502
 - Per-language model selection (en->Haiku, others->Sonnet)
-- Per-language max_tokens routing (he=4096, others=2048)
+- Per-language max_tokens routing (he=4096, ru/es/it/fr/en/tr=3072, default 2048)
 - Markdown fence stripping
 - No assistant prefill (single user message only)
 - get_anthropic_client singleton identity
@@ -136,7 +136,7 @@ def test_call_claude_uses_4096_max_tokens_for_hebrew() -> None:
     assert kwargs.get("max_tokens") == 4096, f"expected max_tokens=4096 for 'he', got {kwargs.get('max_tokens')}"
 
 
-def test_call_claude_uses_2048_max_tokens_for_non_hebrew() -> None:
+def test_call_claude_uses_3072_max_tokens_for_english() -> None:
     mock_client = _make_mock_client('{"lemma": "go"}')
 
     with patch(
@@ -148,7 +148,7 @@ def test_call_claude_uses_2048_max_tokens_for_non_hebrew() -> None:
         _run_async(_call_claude("en", "go"))
 
     _, kwargs = mock_client.messages.create.call_args
-    assert kwargs.get("max_tokens") == 2048, f"expected max_tokens=2048 for 'en', got {kwargs.get('max_tokens')}"
+    assert kwargs.get("max_tokens") == 3072, f"expected max_tokens=3072 for 'en', got {kwargs.get('max_tokens')}"
 
 
 # ── per-language model selection ──────────────────────────────────────────────
