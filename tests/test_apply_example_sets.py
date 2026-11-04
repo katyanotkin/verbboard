@@ -140,14 +140,14 @@ def test_zero_results_rejected() -> None:
     assert "0 examples" in problems
 
 
-def test_more_than_eight_rejected() -> None:
-    result, problems = _build([_new() for _ in range(9)])
-    assert len(result) == 9
-    assert "9 examples" in problems
+def test_more_than_twelve_rejected() -> None:
+    result, problems = _build([_new() for _ in range(13)])
+    assert len(result) == 13
+    assert "13 examples" in problems
 
 
-def test_eight_is_accepted() -> None:
-    _, problems = _build([_new() for _ in range(8)])
+def test_twelve_is_accepted() -> None:
+    _, problems = _build([_new() for _ in range(12)])
     assert problems == []
 
 

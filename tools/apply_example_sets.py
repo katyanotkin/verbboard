@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 STRESS_MARK = "́"
 MIN_WORDS, MAX_WORDS = 4, 16
-MAX_EXAMPLES = 8
+MAX_EXAMPLES = 12
 _COMPOUND_FUTURE = re.compile(r"\bбуд(у|ешь|ет|ем|ете|ут)\s+\w+(ть|ться|ти|чь)\b", re.IGNORECASE)
 
 
