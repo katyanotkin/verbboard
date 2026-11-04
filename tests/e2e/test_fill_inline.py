@@ -7,6 +7,7 @@ here depends on live Firestore data. Firebase is stubbed like tests/e2e/test_fil
 from __future__ import annotations
 
 import json
+import os
 
 import pytest
 
@@ -14,7 +15,13 @@ import app.routes.learn as learn_route
 import core.render as render_module
 from tests.test_fill_practice import _es_verb
 
-pytestmark = pytest.mark.e2e
+pytestmark = [
+    pytest.mark.e2e,
+    pytest.mark.skipif(
+        bool(os.getenv("E2E_BASE_URL")),
+        reason="stubs the in-process server (verb lookup / page data); not valid against a deployed URL",
+    ),
+]
 
 _CONFIG_STUB = """
 Object.defineProperty(window, 'FIREBASE_WEB_CONFIG', {

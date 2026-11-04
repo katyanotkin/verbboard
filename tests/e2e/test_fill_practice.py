@@ -8,6 +8,7 @@ client (grading flow, hidden-until-answered media, pool toggle, summary, RTL).
 from __future__ import annotations
 
 import json
+import os
 import re
 
 import pytest
@@ -15,7 +16,13 @@ import pytest
 import app.routes.practice_fill as fill_route
 from core.fill_practice_service import ACCESS_OK, _fill_strings
 
-pytestmark = pytest.mark.e2e
+pytestmark = [
+    pytest.mark.e2e,
+    pytest.mark.skipif(
+        bool(os.getenv("E2E_BASE_URL")),
+        reason="stubs the in-process server (verb lookup / page data); not valid against a deployed URL",
+    ),
+]
 
 _CONFIG_STUB = """
 Object.defineProperty(window, 'FIREBASE_WEB_CONFIG', {
