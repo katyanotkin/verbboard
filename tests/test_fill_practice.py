@@ -139,11 +139,11 @@ def test_board_labels_cover_every_shape_cell() -> None:
                 assert path in labels, (language, path)
 
 
-def test_default_languages_exclude_hebrew(monkeypatch) -> None:
+def test_default_languages_include_hebrew(monkeypatch) -> None:
     from core.settings import load_settings
 
     monkeypatch.delenv("FILL_PRACTICE_LANGUAGES", raising=False)
-    assert set(load_settings().fill_practice_languages) == {"en", "es", "it", "fr", "ru", "tr"}
+    assert set(load_settings().fill_practice_languages) == {"en", "es", "it", "fr", "ru", "he", "tr"}
     monkeypatch.setenv("FILL_PRACTICE_LANGUAGES", "he,es,xx")
     assert load_settings().fill_practice_languages == ("he", "es")
 
@@ -217,13 +217,17 @@ def test_real_template_embeds_escaped_data_and_no_answer_outside_the_json(client
 def test_route_404_when_switch_off_or_language_not_allowed(
     client: TestClient, es_entries, stub_template, monkeypatch
 ) -> None:
-    assert client.get("/practice/fill?language=he&ui_language=en").status_code == 404
     assert client.get("/practice/fill?language=xx&ui_language=en").status_code == 404
     monkeypatch.setenv("FILL_PRACTICE_ENABLED", "false")
     assert client.get("/practice/fill?language=es&ui_language=en").status_code == 404
 
 
-def test_route_he_enabled_via_allow_list(client: TestClient, monkeypatch, stub_template) -> None:
+def test_route_he_enabled_by_default_and_off_when_removed(client: TestClient, monkeypatch, stub_template) -> None:
+    monkeypatch.setattr(service, "load_entries_for_language", lambda language: [])
+    resp = client.get("/practice/fill?language=he&ui_language=en")
+    assert resp.status_code == 200 and "study=rtl" in resp.text
+    monkeypatch.setenv("FILL_PRACTICE_LANGUAGES", "es")
+    assert client.get("/practice/fill?language=he&ui_language=en").status_code == 404
     monkeypatch.setenv("FILL_PRACTICE_LANGUAGES", "he")
     monkeypatch.setattr(service, "load_entries_for_language", lambda language: [])
     resp = client.get("/practice/fill?language=he&ui_language=en")
@@ -290,7 +294,7 @@ def test_row_attributes_are_attribute_escaped() -> None:
     assert "&quot;" in html and "&#x27;" in html and "&lt;x&gt;" in html
 
 
-@pytest.mark.parametrize("language", ["he", "tr"])
+@pytest.mark.parametrize("language", ["tr"])
 def test_toggle_absent_for_languages_outside_inline_list(language) -> None:
     html = _render(_es_verb(), language=language)
     assert "fill-toggle" not in html and "fill-row" not in html
@@ -308,7 +312,7 @@ def test_toggle_absent_without_targets_candidate_disabled_or_plus_gate(monkeypat
 def test_inline_languages_setting_parses(monkeypatch) -> None:
     from core.settings import _parse_fill_inline_languages
 
-    assert _parse_fill_inline_languages("") == ("en", "es", "it", "fr", "ru")
+    assert _parse_fill_inline_languages("") == ("en", "es", "it", "fr", "ru", "he")
     assert _parse_fill_inline_languages(" ES , xx, fr ") == ("es", "fr")
     monkeypatch.setenv("FILL_INLINE_LANGUAGES", "it")
     assert service.fill_inline_available("it") and not service.fill_inline_available("es")
@@ -543,3 +547,22 @@ def test_russian_render_offsets_slice_displayed_text_including_stress_mark() -> 
     # Second sentence has no curated mark: offsets unchanged.
     start, end, shown = int(rows[1][0]), int(rows[1][1]), unescape(rows[1][2])
     assert shown[start:end] == "платит"
+
+
+def test_hebrew_row_offsets_point_at_the_pointed_verb_and_alts_keep_unpointed_form() -> None:
+    import re
+    from html import unescape
+
+    from core.example_targets import tag_sentence
+
+    forms = {"past": {"3msg": "הָלַךְ", "1sg": "הָלַכְתִּי"}, "present": {"m_sg": "הוֹלֵךְ"}}
+    sentence = "אתמול הָלַכְתִּי לעבודה ברגל."
+    target = tag_sentence("he", sentence, forms)
+    assert target is not None and target["tense"] == "past" and target["person"] == "1sg"
+    verb = VerbEntry(id="he_x", rank=1, lemma="לָלֶכֶת", forms=forms, examples=[Example(dst=sentence, target=target)])
+    html = _render(verb, language="he")
+    row = re.search(r"data-fill-start='(\d+)' data-fill-end='(\d+)'", html)
+    assert row is not None
+    assert sentence[int(row.group(1)) : int(row.group(2))] == "הָלַכְתִּי"
+    assert "fill-toggle" in html and "dir='rtl'" in html
+    assert unescape(html).count("fill-row") >= 1

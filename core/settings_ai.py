@@ -57,7 +57,8 @@ ENGLISH (en)
     simple present (I / we), simple present (3rd singular: she/he), simple past, present perfect,
     a progressive using the gerund form ("is eating"; for a stative verb such as know, need, believe, seem,
     understand, like, own, use a second simple past instead), and an imperative only if the verb has a natural one
-    (otherwise a simple present with they/you)."""
+    (otherwise a simple present with they/you). An imperative must be a real command addressed to someone, never a
+    bare fragment ("Mean it.") or a present-tense sentence that merely contains the verb."""
 
 _PROMPT_RU = """\
 ────────────────────────────────────────

@@ -49,3 +49,7 @@ def test_en_prompt_exercises_gerund():
 
 def test_tr_prompt_requires_onlar():
     assert "onlar" in _LANG_PROMPTS["tr"].split("examples:")[1]
+
+
+def test_english_prompt_requires_real_imperatives():
+    assert "real command" in _LANG_PROMPTS["en"]

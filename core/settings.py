@@ -135,14 +135,14 @@ def _parse_csv_tuple(raw: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in raw.split(",") if item.strip())
 
 
-_DEFAULT_FILL_PRACTICE_LANGUAGES = "en,es,it,fr,ru,tr"
+_DEFAULT_FILL_PRACTICE_LANGUAGES = "en,es,it,fr,ru,he,tr"
 
 
-_DEFAULT_FILL_INLINE_LANGUAGES = "en,es,it,fr,ru"
+_DEFAULT_FILL_INLINE_LANGUAGES = "en,es,it,fr,ru,he"
 
 
 def _parse_fill_inline_languages(raw: str) -> tuple[str, ...]:
-    """Allow-list for the in-place "Fill in the blank" mode on /learn (Hebrew and Turkish are not enabled by default)."""
+    """Allow-list for the in-place "Fill in the blank" mode on /learn (Turkish is not enabled by default)."""
     requested = _parse_csv_tuple((raw or _DEFAULT_FILL_INLINE_LANGUAGES).lower())
     return tuple(lang for lang in requested if lang in ALL_STUDY_LANGUAGES)
 
@@ -231,8 +231,8 @@ def load_settings() -> Settings:
         # if the audit finds it materially broken for a shipped language.
         jump_to_example_enabled=_env_flag("JUMP_TO_EXAMPLE_ENABLED", default=True),
         # "Fill the form" practice page (/practice/fill). Free by default; flip
-        # FILL_PRACTICE_PLUS_ONLY to make it Plus later. Hebrew is absent from
-        # the default allow-list until a linguist audit of its example targets passes.
+        # FILL_PRACTICE_PLUS_ONLY to make it Plus later. Hebrew joined the default
+        # allow-list (2026-11-05) after the linguist audit of its example targets.
         fill_practice_enabled=_env_flag("FILL_PRACTICE_ENABLED", default=True),
         fill_practice_languages=_parse_fill_languages(os.getenv("FILL_PRACTICE_LANGUAGES", "")),
         fill_practice_plus_only=_env_flag("FILL_PRACTICE_PLUS_ONLY", default=False),
