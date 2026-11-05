@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "anthropic==0.96.0",
-    "edge-tts>=7.2.8",
+    "edge-tts>=7.3.1",
     "fastapi>=0.136.1",
     "firebase-admin>=7.4.0",
     "google-cloud-aiplatform>=1.152.0",
