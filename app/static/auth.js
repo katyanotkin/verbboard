@@ -659,7 +659,9 @@
   }
 
   function initializeFirebase() {
-    if (!hasFirebaseConfig()) {
+    // No config, or the Firebase SDK was blocked/failed to load (ad blocker, flaky network): behave as signed out.
+    // Without resolving here, pages that wait on auth (e.g. painting the known star) would never finish.
+    if (!hasFirebaseConfig() || typeof firebase === 'undefined') {
       authReadyResolve();
       return;
     }
