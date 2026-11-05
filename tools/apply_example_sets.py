@@ -46,6 +46,15 @@ def _path(target: dict[str, Any]) -> str:
     return f"{target['tense']}.{target['person']}" if target.get("person") else str(target["tense"])
 
 
+def _tag_requested_cell(language: str, dst: str, forms: dict[str, Any], form: str) -> dict[str, Any] | None:
+    tense, _, person = form.partition(".")
+    cell = forms.get(tense)
+    answer = cell.get(person) if isinstance(cell, dict) and person else cell
+    if not isinstance(answer, str) or not answer:
+        return None
+    return tag_from_hint(language, dst, forms, form, answer)
+
+
 def build_examples(
     language: str, doc: dict[str, Any], entries: list[dict[str, Any]]
 ) -> tuple[list[dict[str, Any]], list[str]]:
@@ -86,8 +95,12 @@ def build_examples(
             continue
         target = tag_sentence(language, dst, forms)
         if target is None:
-            problems.append(f"#{position}: could not tag {dst!r} for {form}")
-            continue
+            # Too many cells share this surface form for the tagger (e.g. Italian congiuntivo io/tu/lui = presente tu):
+            # trust the requested cell if its stored form really sits in the sentence.
+            target = _tag_requested_cell(language, dst, forms, form)
+            if target is None:
+                problems.append(f"#{position}: could not tag {dst!r} for {form}")
+                continue
         if _path(target) != form:
             if form in (target.get("also") or []):
                 target = tag_from_hint(language, dst, forms, form, target["answer"])

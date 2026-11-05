@@ -55,3 +55,4 @@ certificates.zip
 
 # Personal manual QA plans (automated tests live in tests/)
 QATP*.txt
+REVIEW*.txt

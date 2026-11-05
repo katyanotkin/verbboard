@@ -154,6 +154,75 @@ def test_twelve_is_accepted() -> None:
 # --- main() -----------------------------------------------------------------
 
 
+IT_FORMS = {
+    "presente": {
+        "io": "mangio",
+        "tu": "mangi",
+        "lui": "mangia",
+        "noi": "mangiamo",
+        "voi": "mangiate",
+        "loro": "mangiano",
+    },
+    "congiuntivo_presente": {
+        "io": "mangi",
+        "tu": "mangi",
+        "lui": "mangi",
+        "noi": "mangiamo",
+        "voi": "mangiate",
+        "loro": "mangino",
+    },
+}
+IT_SENTENCE = "Il medico vuole che mio padre mangi meno sale."
+IT_TR = {"en": "x", "ru": "y", "he": "z", "es": "w"}
+
+
+def _it_build(entries, forms=IT_FORMS):
+    doc = {"language": "it", "verb_id": "it_mangiare", "forms": forms, "examples": []}
+    return tool.build_examples("it", doc, entries)
+
+
+def _it_entry(dst=IT_SENTENCE, form="congiuntivo_presente.lui") -> dict:
+    return {"dst": dst, "form": form, "tr": dict(IT_TR)}
+
+
+def test_fallback_tags_requested_cell_when_tagger_gives_up() -> None:
+    assert tag_sentence("it", IT_SENTENCE, IT_FORMS) is None, "fixture must defeat tag_sentence"
+    result, problems = _it_build([_it_entry()])
+    assert problems == []
+    target = result[0]["target"]
+    assert (target["tense"], target["person"]) == ("congiuntivo_presente", "lui")
+    assert target["source"] == "generated"
+    assert IT_SENTENCE[target["start"] : target["end"]] == "mangi"
+
+
+def test_fallback_rejects_sentence_lacking_stored_form() -> None:
+    result, problems = _it_build([_it_entry("Il medico vuole che mio padre beva meno vino.")])
+    assert result == []
+    assert any("could not tag" in p for p in problems)
+
+
+@pytest.mark.parametrize("form", ["congiuntivo_presente.egli", "condizionale.lui", "bogus"])
+def test_form_missing_from_forms_is_a_problem(form) -> None:
+    result, problems = _it_build([_it_entry(form=form)])
+    assert result == []
+    assert problems
+
+
+def test_tag_requested_cell_none_for_flat_cell_with_person() -> None:
+    forms = {"participio": "mangiato"}
+    assert tool._tag_requested_cell("it", "Ho mangiato troppo ieri sera", forms, "participio.lui") is None
+
+
+def test_tag_requested_cell_none_for_missing_tense() -> None:
+    assert tool._tag_requested_cell("it", IT_SENTENCE, IT_FORMS, "condizionale.lui") is None
+    assert tool._tag_requested_cell("it", IT_SENTENCE, IT_FORMS, "") is None
+
+
+def test_tag_requested_cell_flat_without_person_is_none_for_dict_cell() -> None:
+    # A dict cell with no person named has no single answer.
+    assert tool._tag_requested_cell("it", IT_SENTENCE, IT_FORMS, "congiuntivo_presente") is None
+
+
 class _Snapshot:
     update_time = "t0"
 
