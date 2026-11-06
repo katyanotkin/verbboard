@@ -158,7 +158,7 @@
     if (act === "signin") {
       if (!auth()) return;
       storageSet(root.getAttribute("data-language"));
-      auth().signIn();
+      Promise.resolve(auth().signIn()).catch(function (err) { console.warn('VB: sign-in failed', err); });
     } else if (act === "request") {
       sendRequest(root);
     }

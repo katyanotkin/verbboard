@@ -55,6 +55,12 @@
     return !(window.VerbBoardAuth && window.VerbBoardAuth.currentUser());
   }
 
+  // False when the Firebase SDK was blocked or failed to load: the sign-in button would do nothing, so no nudge
+  // surface may offer it.
+  function canSignIn() {
+    return typeof window.firebase !== 'undefined';
+  }
+
   // Synchronously claims the "one nudge per page load" slot, independent of
   // script order or promise/microtask timing. showWrapUp() (practice_loop.js)
   // calls this synchronously, during initial parse, before it ever awaits
@@ -140,12 +146,13 @@
   // Still gated on anonymity so a signed-in user never sees or accrues this.
   function recordBadgeEarned() {
     bump(WEIGHT_BADGE_EARNED);
-    return isAnonymous() && !lifetimeCapReached();
+    return isAnonymous() && canSignIn() && !lifetimeCapReached();
   }
 
   function shouldShowThresholdCard() {
     return (
       isAnonymous() &&
+      canSignIn() &&
       !lifetimeCapReached() &&
       !inDismissalCooldown() &&
       !shownThisPageLoad &&
@@ -241,6 +248,7 @@
     reserveThisPageLoad: reserveThisPageLoad,
     buildCta: buildCta,
     isAnonymous: isAnonymous,
+    canSignIn: canSignIn,
     whenAuthReady: whenAuthReady,
   };
 })();

@@ -796,7 +796,7 @@
       if (wrapupData.loginNudge && window.VerbBoardLoginNudge) {
         window.VerbBoardLoginNudge.reserveThisPageLoad();
         window.VerbBoardLoginNudge.whenAuthReady(function () {
-          if (!window.VerbBoardLoginNudge.isAnonymous()) return;
+          if (!window.VerbBoardLoginNudge.isAnonymous() || !window.VerbBoardLoginNudge.canSignIn()) return;
           const nudgeCopy =
             ui['login_nudge.badge'] ||
             "You just earned a badge! Sign in with Google so it's still here next time.";

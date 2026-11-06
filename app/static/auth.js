@@ -271,6 +271,12 @@
   _trackAppLaunch();
 
   async function signIn() {
+    // SDK blocked or failed to load (ad blocker, flaky network): there is nothing to sign in with. Return before
+    // signInInProgress is set so a later retry is not locked out, and so callers never see a ReferenceError rejection.
+    if (typeof firebase === 'undefined') {
+      console.warn('VB: sign-in unavailable, Firebase SDK not loaded');
+      return;
+    }
     if (signInInProgress) return;
     signInInProgress = true;
     try {
@@ -341,6 +347,7 @@
     try {
       await fetch('/api/analytics/session/clear', { method: 'POST' });
     } catch (_) {}
+    if (typeof firebase === 'undefined') return;
     await firebase.auth().signOut();
   }
 

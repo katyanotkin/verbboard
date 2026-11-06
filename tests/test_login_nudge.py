@@ -64,6 +64,7 @@ global.localStorage = {
 
 let __anonymous = true;
 global.window = {
+  firebase: {},
   VerbBoardAuth: {
     currentUser: function () {
       return __anonymous ? null : { uid: 'test-uid' };
@@ -100,6 +101,9 @@ for (const op of ops) {
     results.push(null);
   } else if (kind === 'reload') {
     NUDGE = loadModule();
+    results.push(null);
+  } else if (kind === 'setSdk') {
+    if (op[1]) { global.window.firebase = {}; } else { delete global.window.firebase; }
     results.push(null);
   } else if (kind === 'setAnonymous') {
     __anonymous = !!op[1];
@@ -390,3 +394,41 @@ def test_anonymous_user_is_unaffected_by_isAnonymous_check() -> None:
         ]
     )
     assert results[2] is True
+
+
+# ---------------------------------------------------------------------------
+# 7. Firebase SDK blocked (issue #94): no surface may offer a sign-in that cannot work.
+# ---------------------------------------------------------------------------
+
+
+def test_blocked_sdk_hides_badge_and_card_but_still_accrues_score() -> None:
+    results = _run_ops(
+        [
+            ["reset"],
+            ["setSdk", False],
+            ["setItem", "login_nudge_score", "100"],
+            ["call", "canSignIn"],
+            ["call", "recordBadgeEarned"],
+            ["call", "shouldShowThresholdCard"],
+            ["getItem", "login_nudge_score"],
+        ]
+    )
+    assert results[3] is False
+    assert results[4] is False
+    assert results[5] is False
+    assert results[6] == "110", "score keeps accruing so the nudge works if the SDK loads on a later visit"
+
+
+def test_loaded_sdk_keeps_existing_nudge_behaviour() -> None:
+    results = _run_ops(
+        [
+            ["reset"],
+            ["setItem", "login_nudge_score", "100"],
+            ["call", "canSignIn"],
+            ["call", "recordBadgeEarned"],
+            ["call", "shouldShowThresholdCard"],
+        ]
+    )
+    assert results[2] is True
+    assert results[3] is True
+    assert results[4] is True

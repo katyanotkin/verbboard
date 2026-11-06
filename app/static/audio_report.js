@@ -122,7 +122,7 @@
     toast(UI["audio_report.sign_in"] || "Sign in to report an audio problem.");
     var auth = window.VerbBoardAuth;
     if (auth && auth.signIn) {
-      try { auth.signIn(); } catch (_) {}
+      try { Promise.resolve(auth.signIn()).catch(function (err) { console.warn('VB: sign-in failed', err); }); } catch (_) {}
     }
   }
 
