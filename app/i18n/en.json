@@ -238,5 +238,8 @@
   "board.fill_check": "Check",
   "board.fill_show": "Show answer",
   "board.fill_gate": "Signing in with Google is free and required for this mode.",
-  "board.fill_gate_btn": "Sign in with Google"
+  "board.fill_gate_btn": "Sign in with Google",
+  "about.rate_line": "If you find VerbBoard useful, you can leave a rating on Google Play.",
+  "feedback.rate_line": "You can also rate VerbBoard on Google Play.",
+  "rate.link_label": "Rate on Google Play"
 }

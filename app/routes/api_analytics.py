@@ -17,6 +17,7 @@ from core.analytics.session_tracker import (
     record_practice_completed,
     record_practice_gate_shown,
     record_practice_started,
+    record_rate_clicked,
     record_sign_in_tap,
     record_ui_lang_selected,
     record_votd_clicked,
@@ -115,6 +116,17 @@ async def record_votd_click(request: Request) -> JSONResponse:
     date = datetime.now(UTC).strftime("%Y-%m-%d")
     fingerprint = get_fingerprint_sid(request, date)
     await record_votd_clicked(fingerprint, date)
+    return JSONResponse({"ok": True})
+
+
+@router.post("/api/analytics/rate_clicked")
+async def record_rate_click(request: Request) -> JSONResponse:
+    """Diagnostic-only: an Android visitor tapped the "rate us on Google Play"
+    link (About / Feedback). No auth and no body -- same unauthenticated,
+    fail-open shape as /votd_clicked."""
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
+    fingerprint = get_fingerprint_sid(request, date)
+    await record_rate_clicked(fingerprint, date)
     return JSONResponse({"ok": True})
 
 

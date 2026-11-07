@@ -145,6 +145,8 @@
     {{ plus_body }}</p>
     <p><a href="/feedback?page=plus&amp;language={{ plus_request_language | urlencode }}&amp;return_to={{ ('/about?ui_language=' ~ lang) | urlencode }}&amp;ui_language={{ lang | urlencode }}" class="plus-request-link" id="about-plus-request">{{ plus_request_label }}</a></p>
     {% endif %}
+
+    {% set rate_line_text = rate_line %}{% set rate_link_label = rate_label %}{% include '_rate_line.html' %}
   </div>
 
   <div class="back">

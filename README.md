@@ -112,6 +112,7 @@ Visual indicators:
 - 4-tab icon-only bottom nav on mobile: Back / Verbs / Search / Home
 - "New version available" banner (en/ru/es/he) with an Update button when the service worker finds a newer release; never reloads on its own
 - Google Play link on Android browsers (`pwa.js` shows `#play-link`; hidden in the app, on iOS and on desktop)
+- Voluntary "Rate on Google Play" line on the About and Feedback pages: Android only (browser and the installed app), hidden on iOS, desktop and in-app WebViews, never a popup or prompt; taps are counted on the Reports page
 - Three-branch sign-in: standalone PWA → new tab, mobile browser → `/auth/signin`, desktop → popup
 - `/privacy` page for Google Play OAuth consent screen
 - Digital Asset Links at `/.well-known/assetlinks.json` (TWA fingerprint required for Play)
@@ -188,6 +189,7 @@ AI model routing: Haiku (`claude-haiku-4-5-20251001`) for English, Sonnet (`clau
 - Audio cache audit tooling
 - Deterministic verb ID validation and collision audits
 - Production telemetry and usage analytics; the admin Reports page (`/admin/reports`, date-ranged) shows a usage summary (bots counted separately), engagement (Verb of the Day clicks, practice, sign-in gate), UI-language picks and top searched verbs
+- `/robots.txt` and `/sitemap.xml` for search engines: prod disallows `/admin`, `/audio`, `/api`, `/auth` and `/feedback` and lists the sitemap (every free-language verb page); stage and local disallow everything
 - Admin Reports page (`/admin/reports`): pick a from/to date range (or "since invite"), see registered-user and Google Play app (TWA) session counts and percentages, a daily trend, and compare against the previous period
 
 ---

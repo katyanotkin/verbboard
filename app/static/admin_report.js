@@ -96,7 +96,8 @@
     practice_gate_shown: "Practice gate shown",
     plus_notice_shown: "Plus notice shown",
     practice_gate_then_signed_in: "Gate shown, then signed in",
-    fill_started: "Fill practice started"
+    fill_started: "Fill practice started",
+    rate_clicked: "Rate link tapped (Android)"
   };
 
   function engagementLabel(flag) {

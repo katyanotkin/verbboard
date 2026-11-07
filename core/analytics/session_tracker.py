@@ -283,6 +283,29 @@ async def record_votd_clicked(fingerprint: str, date: str) -> None:
     task.add_done_callback(_pending.discard)
 
 
+def _record_rate_clicked(fingerprint: str, date: str) -> None:
+    """Record that the Android "rate us on Google Play" link was tapped this
+    session-day. Set-once; a tap with no existing session doc is dropped rather
+    than creating a stub doc (same as votd_clicked)."""
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        if not snapshot.exists or snapshot.to_dict().get("rate_clicked"):
+            return
+        doc_ref.set({"rate_clicked": True}, merge=True)
+    except Exception:
+        logger.exception("Failed to record rate click")
+
+
+async def record_rate_clicked(fingerprint: str, date: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_rate_clicked, fingerprint, date))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
 def _record_app_launch(fingerprint: str, date: str) -> None:
     """Record that this session-day came from the installed Play (TWA) app.
     Client-side signal (standalone display mode on an Android browser UA) that

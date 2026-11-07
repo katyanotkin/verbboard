@@ -166,6 +166,7 @@ _ENGAGEMENT_FLAGS = (
     "practice_gate_shown",
     "plus_notice_shown",
     "fill_started",
+    "rate_clicked",
 )
 
 _TOP_SEARCH_HITS = 10

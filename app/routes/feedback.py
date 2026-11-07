@@ -99,6 +99,8 @@ def feedback_form(
             "success": success == "1",
             "success_msg": ui["feedback.success"],
             "plus_mode": plus_mode,
+            "rate_line": ui["feedback.rate_line"],
+            "rate_label": ui["rate.link_label"],
             "plus_btn_label": ui["plus.request_btn"],
             "plus_account_tpl": ui["plus.req_account"],
             "plus_lang_label": ui["plus.req_lang"].format(language=language_label),

@@ -113,3 +113,23 @@ if ("serviceWorker" in navigator) {
 
   if (isAndroidBrowser && !isStandalone) link.removeAttribute("hidden");
 })();
+
+// "Rate us on Google Play" line (About / Feedback). Shown on Android browsers
+// AND the installed Android app (TWA, standalone), but not in WebViews
+// ("; wv)"). Nothing for iOS/desktop. A tap sends a set-once beacon; keepalive
+// because the link navigates away immediately.
+function vbShowRateLink(doc, nav) {
+  var line = doc.getElementById("rate-line");
+  if (!line) return;
+  var ua = nav.userAgent || "";
+  if (!(/Android/i.test(ua) && !/; wv\)/.test(ua))) return;
+  line.removeAttribute("hidden");
+  var link = doc.getElementById("rate-link");
+  if (!link) return;
+  link.addEventListener("click", function () {
+    try {
+      fetch("/api/analytics/rate_clicked", { method: "POST", keepalive: true }).catch(function () {});
+    } catch (_) {}
+  });
+}
+vbShowRateLink(document, navigator);

@@ -238,5 +238,8 @@
   "board.fill_check": "Проверить",
   "board.fill_show": "Показать ответ",
   "board.fill_gate": "Для этого режима нужен вход через Google, это бесплатно.",
-  "board.fill_gate_btn": "Войти через Google"
+  "board.fill_gate_btn": "Войти через Google",
+  "about.rate_line": "Если VerbBoard вам полезен, можно оставить оценку в Google Play.",
+  "feedback.rate_line": "Оценить VerbBoard можно и в Google Play.",
+  "rate.link_label": "Оценить в Google Play"
 }

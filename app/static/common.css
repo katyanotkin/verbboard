@@ -836,3 +836,14 @@ body {
   line-height: 1;
   cursor: pointer;
 }
+
+/* Android-only "rate us on Google Play" line (About / Feedback); pwa.js unhides it. */
+.rate-line {
+  margin: 16px 0 0;
+  font-size: 0.9rem;
+  text-align: start;
+}
+.rate-link {
+  font-weight: 600;
+  text-decoration: underline;
+}

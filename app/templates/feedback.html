@@ -73,6 +73,10 @@
       </div>
     </form>
     {% endif %}
+
+    {% if not plus_mode %}
+    {% set rate_line_text = rate_line %}{% set rate_link_label = rate_label %}{% include '_rate_line.html' %}
+    {% endif %}
   </div>
 
 {% set bnav_lang = language %}{% set bnav_active = '' %}{% set bnav_back_href = return_to %}{% include '_bottom_nav.html' %}

@@ -35,6 +35,8 @@ def about_page(request: Request) -> HTMLResponse:
             "plus_title": ui["plus.about_title"],
             "plus_body": ui["plus.about_body"],
             "plus_request_language": PLUS_EXTRA_STUDY_LANGUAGES[0] if PLUS_EXTRA_STUDY_LANGUAGES else "",
+            "rate_line": ui["about.rate_line"],
+            "rate_label": ui["rate.link_label"],
             "feedback_label": ui.get("about.feedback", "Feedback"),
             "privacy_label": ui.get("about.privacy", "Privacy Policy"),
             "terms_label": ui.get("about.terms", "Terms of Use"),
