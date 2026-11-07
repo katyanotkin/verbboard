@@ -56,6 +56,13 @@ h1 {
   letter-spacing: -0.03em;
 }
 
+.trademark {
+  font-size: 0.4em;
+  font-weight: 400;
+  opacity: 0.7;
+  margin-inline-start: 2px;
+}
+
 .copyright {
   font-size: 0.8rem;
   opacity: 0.6;

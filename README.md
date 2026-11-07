@@ -230,3 +230,9 @@ Runtime stage/prod environments read directly from Firestore.
 ## Planned work
 
 `PRODUCT_BACKLOG.md` and `PRODUCT_ROADMAP.md` are frozen historical records as of 2026-09-01. New work is tracked as GitHub Issues on the repo (labeled `free` / `plus` / `engineering` / `needs-scoping`), not in either file.
+
+---
+
+## License
+
+Copyright (c) 2026 Katya Notkin. All rights reserved. This is proprietary software; the source is visible for reference only. See `LICENSE`.
