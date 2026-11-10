@@ -100,21 +100,31 @@ does not go stale):
 Verb conjugation tables, audio, examples and fill-in-the-blank practice.
 ```
 
-Full description (updated 2026-11-09: fill-in-the-blank, regular practice and
-Anki export added, explicit language list and "works offline" removed -- the
-app only shows an offline page without a connection):
+Full description (updated 2026-11-09: fill-in-the-blank and regular practice
+added, explicit study-language list and "jump to an example" removed -- that
+button is switched off in every deployment; missing-verb wording softened to
+match the About page. The UI-language sentence is kept: it lists interface
+languages, so update it if a UI language is added or removed):
 ```
-VerbBoard is a verb-first language learning app. Look up a verb and get
-its full conjugation table, audio for every form and example sentence
-(text-to-speech), and real usage examples with translations.
+VerbBoard is a verb-first language app. Look up a verb and see its full conjugation table, audio for every form, and real example sentences with translations in your language. If a form sounds wrong, flag it in the app and I will look at it.
 
-Practice regularly: short sessions of the verbs you are learning, and
-spaced review that brings back the verbs you marked as known, so they
-stick. A fill-in-the-blank mode turns example sentences into a typing
-drill. Export your known verbs as a CSV to import into Anki.
+What you can do
+- Browse verbs and conjugations in many languages.
+- Tap any form to hear it.
+- See the personal pronouns for each language, with translations.
+- Get a Verb of the Day on the home page.
+- Search for a verb. If it is missing, VerbBoard may be able to add it automatically.
+- Practice regularly in short sessions of 3, 6 or 9 verbs. Verbs you marked as known come back for review at spaced intervals, and verbs you are still learning keep returning until you know them.
+- Try fill-in-the-blank: turn example sentences into a typing drill and type the missing verb form.
+- Earn a badge for each finished session.
+- Export the verbs you know as a file you can import into Anki.
 
-If a form sounds wrong, flag it in the app and I will look at it.
-Clean interface, no ads, no pressure to log in daily.
+The app itself is available in English, Russian, Hebrew and Spanish, including right-to-left layout for Hebrew.
+
+Accounts and privacy
+Browsing verbs, audio and search need no account. A free Google sign-in is needed to start practice, use fill-in-the-blank and save your progress across devices. We use only your name and email from Google. You can delete your account and all your data yourself from the privacy page inside the app.
+
+No ads.
 ```
 
 How to change it: Play Console > your app > Grow users > Store presence >
