@@ -13,6 +13,7 @@ _PLUGIN_TENSE_KEYS = {
     "fr": ("conditionnel_present", "subjonctif_present"),
     "es": ("conditional", "subjunctive_present", "subjunctive_imperfect"),
     "it": ("condizionale_presente", "congiuntivo_presente", "congiuntivo_imperfetto"),
+    "pt": ("conditional", "subjunctive_present", "subjunctive_imperfect"),
 }
 
 
@@ -24,7 +25,7 @@ def test_prompt_requests_every_optional_tense(language):
 
 
 # Number of required example categories per language prompt (the stated sentence count must cover them).
-_REQUIRED_EXAMPLE_CATEGORIES = {"en": 6, "ru": 7, "es": 7, "it": 7, "fr": 7, "he": 6}
+_REQUIRED_EXAMPLE_CATEGORIES = {"en": 6, "ru": 7, "es": 7, "it": 7, "fr": 7, "pt": 7, "he": 6}
 
 
 @pytest.mark.parametrize("language", sorted(_REQUIRED_EXAMPLE_CATEGORIES))

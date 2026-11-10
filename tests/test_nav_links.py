@@ -67,12 +67,21 @@ def test_home_language_picker_lists_all_study_languages_on_free_edition(client: 
     """Picker lists every registered study language (registry order), including
     Plus-only "tr", so free-edition visitors can see (and be told about) Plus."""
     options = _language_picker_options(client.get("/?language=en").text)
-    assert options == ["en", "es", "fr", "he", "it", "ru", "tr"]
+    assert options == ["en", "es", "fr", "he", "it", "pt", "ru", "tr"]
 
 
 def test_home_language_picker_same_on_plus_edition(client: TestClient, monkeypatch) -> None:
     monkeypatch.setenv("EDITION", "plus")
-    assert _language_picker_options(client.get("/?language=en").text) == ["en", "es", "fr", "he", "it", "ru", "tr"]
+    assert _language_picker_options(client.get("/?language=en").text) == [
+        "en",
+        "es",
+        "fr",
+        "he",
+        "it",
+        "pt",
+        "ru",
+        "tr",
+    ]
 
 
 # ── verbs ──────────────────────────────────────────────────────────────────

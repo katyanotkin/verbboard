@@ -143,7 +143,7 @@ def test_default_languages_include_hebrew(monkeypatch) -> None:
     from core.settings import load_settings
 
     monkeypatch.delenv("FILL_PRACTICE_LANGUAGES", raising=False)
-    assert set(load_settings().fill_practice_languages) == {"en", "es", "it", "fr", "ru", "he", "tr"}
+    assert set(load_settings().fill_practice_languages) == {"en", "es", "it", "fr", "pt", "ru", "he", "tr"}
     monkeypatch.setenv("FILL_PRACTICE_LANGUAGES", "he,es,xx")
     assert load_settings().fill_practice_languages == ("he", "es")
 
@@ -312,7 +312,7 @@ def test_toggle_absent_without_targets_candidate_disabled_or_plus_gate(monkeypat
 def test_inline_languages_setting_parses(monkeypatch) -> None:
     from core.settings import _parse_fill_inline_languages
 
-    assert _parse_fill_inline_languages("") == ("en", "es", "it", "fr", "ru", "he")
+    assert _parse_fill_inline_languages("") == ("en", "es", "it", "fr", "pt", "ru", "he")
     assert _parse_fill_inline_languages(" ES , xx, fr ") == ("es", "fr")
     monkeypatch.setenv("FILL_INLINE_LANGUAGES", "it")
     assert service.fill_inline_available("it") and not service.fill_inline_available("es")

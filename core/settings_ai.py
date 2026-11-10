@@ -319,6 +319,39 @@ TURKISH (tr)
   examples: 4 to 6 sentences in Turkish: at least one present continuous, one aorist, one past, one future, and one
     imperative where it is natural; use at least four persons including onlar."""
 
+_PROMPT_PT = """\
+────────────────────────────────────────
+BRAZILIAN PORTUGUESE (pt)
+  Use Brazilian Portuguese (pt-BR) only: Brazilian spelling and usage ("você" for singular "you"),
+  never European forms (no "tu"/"vós" slots, no "estou a fazer", no clitic-after-verb "dá-me").
+  lemma: infinitive form, e.g. "falar".
+  morph: {}
+  forms (all nested). Slots are eu, ele, nos, eles, with NO pronoun in the stored text (the row label
+    shows it); "ele" also stands for ela/você and "eles" for elas/vocês, which take the third-person forms:
+    present:              { eu, ele, nos, eles }  ← presente do indicativo, e.g. "falo", "fala", "falamos", "falam"
+    preterite:            { eu, ele, nos, eles }  ← pretérito perfeito simples, e.g. "falei", "falou", "falamos", "falaram"
+      (note: nós is the same as the present for regular -ar verbs; that is correct)
+    imperfect:            { eu, ele, nos, eles }  ← pretérito imperfeito, e.g. "falava", "falava", "falávamos", "falavam"
+    future:               { eu, ele, nos, eles }  ← futuro do presente (simple form), e.g. "falarei", "falará", "falaremos", "falarão"
+    conditional:          { eu, ele, nos, eles }  ← futuro do pretérito, e.g. "falaria", "falaria", "falaríamos", "falariam"
+    subjunctive_present:  { eu, ele, nos, eles }  ← presente do subjuntivo, bare forms without "que",
+      e.g. "fale", "fale", "falemos", "falem"; ser (seja), ter (tenha), ir (vá), estar (esteja), dar (dê).
+    subjunctive_imperfect:{ eu, ele, nos, eles }  ← pretérito imperfeito do subjuntivo, bare forms without "se",
+      e.g. "falasse", "falasse", "falássemos", "falassem"; built from the preterite eles stem
+      (fazer: fizesse, ter: tivesse, ir/ser: fosse, ver: visse).
+    imperative:           { voce, nos, voces }  ← e.g. "fale", "falemos", "falem" (the imperative of você/vocês
+      is the subjunctive present). If a verb has no natural command form, return {}.
+    gerund: "<gerúndio, e.g. 'falando'>"        (string)
+    participle: "<past participle, masculine singular>"  (string)
+  Accents are required (é, ê, á, â, ã, õ, ç, í, ó, ú). Reflexive verbs (levantar-se, chamar-se): use the
+    Brazilian proclitic pronoun before the finite form ("me levanto", "se levanta", "nos levantamos", "se levantam"),
+    and keep the lemma as "levantar-se".
+  examples: 7 sentences in Brazilian Portuguese, one each of presente, pretérito perfeito, imperfeito, futuro,
+    condicional, subjuntivo presente (after a real trigger such as "quero que", "talvez" or "é importante que")
+    and imperativo (a different form instead if the verb has no natural command); at least three persons
+    including nós and eles/vocês. Use "você" for the singular "you" and never "tu". Vary the sentence frames and
+    situations for each verb."""
+
 _LANG_PROMPTS: dict[str, str] = {
     "en": f"{_PROMPT_INTRO}\n\n{_PROMPT_EN}\n",
     "ru": f"{_PROMPT_INTRO}\n\n{_PROMPT_RU}\n",
@@ -326,12 +359,15 @@ _LANG_PROMPTS: dict[str, str] = {
     "he": f"{_PROMPT_INTRO}\n\n{_PROMPT_HE}\n",
     "it": f"{_PROMPT_INTRO}\n\n{_PROMPT_IT}\n",
     "fr": f"{_PROMPT_INTRO}\n\n{_PROMPT_FR}\n",
+    "pt": f"{_PROMPT_INTRO}\n\n{_PROMPT_PT}\n",
     "tr": f"{_PROMPT_INTRO}\n\n{_PROMPT_TR}\n",
 }
 
 # Full prompt — all languages combined. Used by verb_service and as fallback.
 _GENERATION_SYSTEM_PROMPT = (
-    "\n\n".join([_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE, _PROMPT_IT, _PROMPT_FR, _PROMPT_TR])
+    "\n\n".join(
+        [_PROMPT_INTRO, _PROMPT_EN, _PROMPT_RU, _PROMPT_ES, _PROMPT_HE, _PROMPT_IT, _PROMPT_FR, _PROMPT_PT, _PROMPT_TR]
+    )
     + "\n"
 )
 
@@ -342,7 +378,16 @@ _GENERATION_SYSTEM_PROMPT = (
 _MODEL: dict[str, str] = {"en": "claude-haiku-4-5-20251001"}
 _MODEL_DEFAULT = "claude-sonnet-4-6"
 
-_MAX_TOKENS: dict[str, int] = {"he": 4096, "ru": 3072, "fr": 3072, "es": 3072, "it": 3072, "en": 3072, "tr": 3072}
+_MAX_TOKENS: dict[str, int] = {
+    "he": 4096,
+    "ru": 3072,
+    "fr": 3072,
+    "es": 3072,
+    "it": 3072,
+    "en": 3072,
+    "pt": 3072,
+    "tr": 3072,
+}
 _MAX_TOKENS_DEFAULT = 2048
 
 # ---------------------------------------------------------------------------

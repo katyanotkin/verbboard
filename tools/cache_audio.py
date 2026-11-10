@@ -40,6 +40,7 @@ import core.languages.es.plugin  # noqa: E402, F401
 import core.languages.fr.plugin  # noqa: E402, F401
 import core.languages.he.plugin  # noqa: E402, F401
 import core.languages.it.plugin  # noqa: E402, F401
+import core.languages.pt.plugin  # noqa: E402, F401
 import core.languages.ru.plugin  # noqa: E402, F401
 import core.languages.tr.plugin  # noqa: E402, F401
 from core.audio_backend.gcs import GCSAudioBackend  # noqa: E402

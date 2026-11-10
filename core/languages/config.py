@@ -37,12 +37,13 @@ UI_LANGUAGES: tuple[str, ...] = tuple(LANGUAGE.keys())
 # something, which would have made Italian a UI language too and crashed
 # every page calling get_strings("it") -- there is no app/i18n/it.json.
 #
-# Free ships all six languages (the original four plus Italian, moved to free
-# 2026-09-07, and French, moved to free 2026-09-30 -- owner product calls to
-# increase engagement, not content-readiness changes). Turkish (added
+# Free ships all seven languages (the original four plus Italian, moved to free
+# 2026-09-07, French, moved to free 2026-09-30 -- owner product calls to
+# increase engagement, not content-readiness changes -- and Brazilian Portuguese,
+# free from its 2026-11-09 launch). Turkish (added
 # 2026-09-30) is the one Plus-only language, there to exercise the entitlement
 # machinery end to end; a future Plus-only language is just another entry here.
-FREE_STUDY_LANGUAGES: tuple[str, ...] = ("en", "ru", "he", "es", "it", "fr")
+FREE_STUDY_LANGUAGES: tuple[str, ...] = ("en", "ru", "he", "es", "it", "fr", "pt")
 PLUS_EXTRA_STUDY_LANGUAGES: tuple[str, ...] = ("tr",)
 
 # Every study language regardless of tier -- for tooling that must cover all
@@ -75,6 +76,7 @@ STUDY_LANGUAGE_SCRIPTS: dict[str, ScriptConfig] = {
     "es": ScriptConfig(ascii_ok=True, extra_letters="ñ"),
     "it": ScriptConfig(ascii_ok=True, extra_letters="àèéìíîòóùú"),
     "fr": ScriptConfig(ascii_ok=True, extra_letters="àâäéèêëïîôöùûüÿçœæ"),
+    "pt": ScriptConfig(ascii_ok=True, extra_letters="áàâãéêíóôõúüç"),
     "tr": ScriptConfig(ascii_ok=True, extra_letters="çğıöşüâîû"),
     "ru": ScriptConfig(ascii_ok=False, extra_letters="абвгдеёжзийклмнопрстуфхцчшщъыьэюя"),
     "he": ScriptConfig(ascii_ok=False, extra_letters="אבגדהוזחטיכלמנסעפצקרשת"),

@@ -48,7 +48,7 @@ from core.translation_service import translate_examples, translate_lemma
 
 logger = logging.getLogger(__name__)
 
-AUTOGEN_LANGUAGES: frozenset[str] = frozenset({"en", "es", "it", "fr", "ru"})
+AUTOGEN_LANGUAGES: frozenset[str] = frozenset({"en", "es", "it", "fr", "pt", "ru"})
 
 # Russian goes through Claude/Sonnet (this project's convention for all
 # non-English languages -- see core/verb_service.py's pair-completion

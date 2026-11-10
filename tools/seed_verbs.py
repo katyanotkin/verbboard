@@ -11,6 +11,7 @@ Usage:
     AUDIO_BUCKET=verbboard-audio-prod .venv/bin/python -m tools.seed_verbs --language tr
     AUDIO_BUCKET=verbboard-audio-prod .venv/bin/python -m tools.seed_verbs --language fr
     AUDIO_BUCKET=verbboard-audio-prod .venv/bin/python -m tools.seed_verbs --language es
+    AUDIO_BUCKET=verbboard-audio-prod .venv/bin/python -m tools.seed_verbs --language pt
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import core.languages.es.plugin  # noqa: E402,F401  -- self-registers "es"
 import core.languages.fr.plugin  # noqa: E402,F401  -- self-registers "fr"
 import core.languages.it.plugin  # noqa: E402,F401  -- self-registers "it"
+import core.languages.pt.plugin  # noqa: E402,F401  -- self-registers "pt"
 import core.languages.tr.plugin  # noqa: E402,F401  -- self-registers "tr"
 from core import verb_autogen  # noqa: E402
 from core.audio_backend.factory import create_audio_backend  # noqa: E402
@@ -46,6 +48,38 @@ LEMMAS: dict[str, list[str]] = {
         "istemek",  # to want
         "vermek",  # to give
         "almak",  # to take / get
+    ],
+    "pt": [
+        "ser",  # to be (permanent)
+        "estar",  # to be (state)
+        "ter",  # to have
+        "ir",  # to go
+        "fazer",  # to do / make
+        "poder",  # can
+        "querer",  # to want
+        "saber",  # to know
+        "dizer",  # to say
+        "ver",  # to see
+        "dar",  # to give
+        "vir",  # to come
+        "falar",  # regular -ar
+        "comer",  # regular -er
+        "partir",  # regular -ir
+        "levantar-se",  # reflexive
+        "trazer",  # irregular
+        "pôr",  # irregular, circumflex
+        "ler",  # to read
+        "ouvir",  # to hear (eu ouço)
+        "pedir",  # to ask for (eu peço)
+        "dormir",  # stem change (eu durmo)
+        "conhecer",  # eu conheço
+        "começar",  # eu começo, c -> ç / qu
+        "pagar",  # eu paguei
+        "gostar",  # gostar de
+        "precisar",  # precisar de
+        "morar",  # to live (reside)
+        "esperar",  # to wait / hope
+        "chegar",  # eu cheguei
     ],
     "es": [
         "haber",
@@ -93,10 +127,12 @@ LEMMAS: dict[str, list[str]] = {
 }
 
 
-async def main(language: str) -> None:
+async def main(language: str, provider: str) -> None:
     settings = load_settings()
     audio_backend = create_audio_backend(settings)
-    verb_autogen._CLAUDE_AUTOGEN_LANGUAGES = verb_autogen._CLAUDE_AUTOGEN_LANGUAGES | {language}
+    if provider == "claude":
+        verb_autogen._CLAUDE_AUTOGEN_LANGUAGES = verb_autogen._CLAUDE_AUTOGEN_LANGUAGES | {language}
+    print(f"Provider: {provider}")
     lemmas = LEMMAS[language]
     print(f"Generating {len(lemmas)} {language} verbs (audio bucket {settings.audio_bucket!r})...")
 
@@ -118,4 +154,11 @@ async def main(language: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--language", required=True, choices=sorted(LEMMAS))
-    asyncio.run(main(parser.parse_args().language))
+    parser.add_argument(
+        "--provider",
+        choices=("claude", "gemini"),
+        default="claude",
+        help="claude (default, Anthropic API) or gemini (Vertex AI gemini-2.5-flash, the search-miss provider for en/es/it/fr/pt)",
+    )
+    args = parser.parse_args()
+    asyncio.run(main(args.language, args.provider))

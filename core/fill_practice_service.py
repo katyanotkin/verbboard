@@ -67,6 +67,23 @@ _FORM_SHAPES: dict[str, dict[str, tuple[str, ...] | None]] = {
         "gerondif": None,
         "participe_passe": None,
     },
+    "pt": {
+        **{
+            tense: ("eu", "ele", "nos", "eles")
+            for tense in (
+                "present",
+                "preterite",
+                "imperfect",
+                "future",
+                "conditional",
+                "subjunctive_present",
+                "subjunctive_imperfect",
+            )
+        },
+        "imperative": ("voce", "nos", "voces"),
+        "gerund": None,
+        "participle": None,
+    },
     "it": {
         **{
             tense: ("io", "tu", "lui", "noi", "voi", "loro")

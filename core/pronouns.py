@@ -68,6 +68,14 @@ PRONOUNS: dict[str, dict[str, str]] = {
         "2pl": "vous",
         "3pl": "ils / elles",
     },
+    "pt": {
+        "1sg": "eu",
+        "2sg": "você",
+        "3sg": "ele / ela",
+        "1pl": "nós",
+        "2pl": "vocês",
+        "3pl": "eles / elas",
+    },
     "tr": {
         "1sg": "ben",
         "2sg": "sen",

@@ -70,7 +70,7 @@ def test_zero_env_edition_baseline():
     most important property of the env-driven edition config feature."""
     settings = load_settings()
     assert settings.edition == "free"
-    assert settings.study_languages == ("en", "ru", "he", "es", "it", "fr")
+    assert settings.study_languages == ("en", "ru", "he", "es", "it", "fr", "pt")
     assert settings.android_package_name == "com.verbboard.app"
     assert len(settings.android_cert_fingerprints) == 1
     assert settings.on_demand_examples_enabled is False

@@ -74,6 +74,12 @@ _SUBJECT_WORDS: dict[str, dict[str, tuple[str, ...]]] = {
         "vosotros": ("vosotros", "vosotras"),
         "ellos": ("ellos", "ellas", "ustedes"),
     },
+    "pt": {
+        "eu": ("eu",),
+        "ele": ("ele", "ela", "você", "voce"),
+        "nos": ("nós", "nos"),
+        "eles": ("eles", "elas", "vocês", "voces"),
+    },
     "tr": {"ben": ("ben",), "sen": ("sen",), "o": ("o",), "biz": ("biz",), "siz": ("siz",), "onlar": ("onlar",)},
     "ru": {"1sg": ("я",), "2sg": ("ты",), "3sg": ("он", "она", "оно"), "1pl": ("мы",), "2pl": ("вы",), "3pl": ("они",)},
 }
@@ -339,7 +345,7 @@ def _prefer_by_subject(language: str, sentence: str, start: int, cells: list[For
 _EN_PARTICIPLE_AUXILIARIES = frozenset(
     {"have", "has", "had", "having", "be", "am", "is", "are", "was", "were", "been", "being", "s", "ve", "d"}
 )
-_IMPERATIVE_TENSES = {"es": "imperative", "it": "imperativo", "fr": "imperatif"}
+_IMPERATIVE_TENSES = {"es": "imperative", "it": "imperativo", "fr": "imperatif", "pt": "imperative"}
 
 
 def _words_before(language: str, sentence: str, start: int, limit: int = _SUBJECT_WINDOW_WORDS) -> list[str]:

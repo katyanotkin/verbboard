@@ -135,10 +135,10 @@ def _parse_csv_tuple(raw: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in raw.split(",") if item.strip())
 
 
-_DEFAULT_FILL_PRACTICE_LANGUAGES = "en,es,it,fr,ru,he,tr"
+_DEFAULT_FILL_PRACTICE_LANGUAGES = "en,es,it,fr,pt,ru,he,tr"
 
 
-_DEFAULT_FILL_INLINE_LANGUAGES = "en,es,it,fr,ru,he"
+_DEFAULT_FILL_INLINE_LANGUAGES = "en,es,it,fr,pt,ru,he"
 
 
 def _parse_fill_inline_languages(raw: str) -> tuple[str, ...]:

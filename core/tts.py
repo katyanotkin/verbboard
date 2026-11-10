@@ -40,6 +40,10 @@ VOICES = {
         "female": Voice("female", "Female", "fr-FR-DeniseNeural"),
         "male": Voice("male", "Male", "fr-FR-HenriNeural"),
     },
+    "pt": {
+        "female": Voice("female", "Female", "pt-BR-FranciscaNeural"),
+        "male": Voice("male", "Male", "pt-BR-AntonioNeural"),
+    },
     "tr": {
         "female": Voice("female", "Female", "tr-TR-EmelNeural"),
         "male": Voice("male", "Male", "tr-TR-AhmetNeural"),
