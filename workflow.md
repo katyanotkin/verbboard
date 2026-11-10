@@ -67,6 +67,18 @@ If tests fail:
 
 Never treat a failing test as a completed task.
 
+## Phase 5b -- Linguistic audit (conditional)
+
+Trigger: the change adds or alters learner-facing language content or the logic that produces it: a new or changed language plugin, generation prompts (`core/settings_ai.py`), conjugation forms, example sentences or their tagging rules, translations, or any seed/backfill/regeneration run that writes verbs to Firestore.
+
+Action:
+- Invoke the `linguist` agent on the real generated content (read from Firestore or the output file), not just on the code. It checks tense/mood coverage, form accuracy, example naturalness and that each example matches its labeled form.
+- Seed and backfill runs write to the shared live Firestore, so the audit starts as soon as the first batch lands; fix wrong data before audio is backfilled (audio is content-addressed, so audio for wrong text is wasted).
+- Fix findings in the data or prompt, re-run the affected part, and have the linguist re-check. Do not call the content done, or write "audited" in docs, until the linguist has approved.
+- Order: after Phase 5 (tests), before Phase 7 (docs), so docs only claim what was audited.
+
+Skip when: the change touches no learner-facing language content (routing, CSS, infra, admin tooling).
+
 ## Phase 6 -- Verify (UI changes)
 
 Use `/verify` to confirm the feature works in the live app.
