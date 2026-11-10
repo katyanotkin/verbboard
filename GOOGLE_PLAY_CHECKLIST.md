@@ -144,7 +144,7 @@ Assets:
 - Feature graphic: 1024x500 PNG -- app name on clean background
 - Phone screenshots (min 2): Chrome DevTools > Pixel 7 (412px wide) > verbboard.com; capture verb list page + learn page (Ctrl+Shift+P > "Capture screenshot")
 - Category: Education
-- Tag "Language learning": Play Console > Grow users > Store presence > Store settings > Tags (up to 5; search "Language learning"), Save, Send for review. The category stays Education.
+- Tags: already fine as set (owner confirmed 2026-11-09); no "Language learning" tag change needed. Where to edit if ever required: Play Console > Grow users > Store presence > Store settings > Tags (up to 5), then Send for review. The category stays Education.
 
 - Ratings and reviews: not a developer switch. Stars appear once a public Production listing is live and the app is installed from Play. Ratings left on a closed/internal test track are private feedback, not public. If the "Rate this app" stars are missing, check: (1) the Production release is actually rolled out (Test and release > Production), (2) you are viewing the listing from the Play Store app on a phone, signed in with the account that installed the app, not a test opt-in link or a signed-out desktop browser, (3) a brand-new listing can take about a day. The in-app "Rate on Google Play" link (#101) only opens the listing.
 
