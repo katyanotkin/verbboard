@@ -126,3 +126,6 @@ textarea {
     padding-bottom: calc(56px + env(safe-area-inset-bottom) + 16px);
   }
 }
+
+/* Spam honeypot: off-screen, never shown to real users */
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }

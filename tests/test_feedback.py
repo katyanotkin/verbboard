@@ -234,3 +234,71 @@ def test_success_card_neutralises_hostile_query(client) -> None:
     assert "evil.example" not in html
     hostile = client.get("/feedback?success=1&return_to=//evil.example&language=%22%3E%3Cb%3E").text
     assert "evil.example" not in hostile and "<b>" not in hostile
+
+
+# ---------------------------------------------------------------------------
+# Spam filtering
+# ---------------------------------------------------------------------------
+
+
+def _capture_saves(monkeypatch) -> list[dict]:
+    saved: list[dict] = []
+
+    def _fake_save(**kw) -> str:
+        saved.append(kw)
+        return "id"
+
+    monkeypatch.setattr("app.routes.feedback.save_feedback", _fake_save)
+    return saved
+
+
+def test_feedback_blocked_email_domain_is_not_saved(client: TestClient, monkeypatch) -> None:
+    saved = _capture_saves(monkeypatch)
+    for email in ("bot@formtests.info", "Bot@FormTests.Info", "x@mail.formtests.info"):
+        resp = client.post(
+            "/feedback", data={"comment": "garbage", "contact_email": email, "return_to": "/"}, follow_redirects=False
+        )
+        assert resp.status_code == 303
+    assert saved == []
+
+
+def test_feedback_filled_honeypot_is_not_saved(client: TestClient, monkeypatch) -> None:
+    saved = _capture_saves(monkeypatch)
+    resp = client.post(
+        "/feedback", data={"comment": "hi", "hp_url": "http://spam", "return_to": "/"}, follow_redirects=False
+    )
+    assert resp.status_code == 303
+    assert saved == []
+
+
+def test_feedback_similar_domain_and_normal_submit_still_saved(client: TestClient, monkeypatch) -> None:
+    saved = _capture_saves(monkeypatch)
+    client.post(
+        "/feedback",
+        data={"comment": "real", "contact_email": "a@notformtests.info", "return_to": "/"},
+        follow_redirects=False,
+    )
+    client.post("/feedback", data={"comment": "real2", "return_to": "/"}, follow_redirects=False)
+    assert len(saved) == 2
+
+
+def test_feedback_form_has_honeypot_input(client: TestClient) -> None:
+    assert 'name="hp_url"' in client.get("/feedback").text
+
+
+def test_feedback_spam_redirect_matches_real_success_redirect(client: TestClient, monkeypatch) -> None:
+    _capture_saves(monkeypatch)
+    data = {"comment": "x", "return_to": "/", "page": "about"}
+    real = client.post("/feedback", data=data, follow_redirects=False)
+    spam = client.post("/feedback", data={**data, "hp_url": "bot"}, follow_redirects=False)
+    assert spam.headers["location"] == real.headers["location"]
+
+
+def test_feedback_blocked_email_in_angle_brackets(client: TestClient, monkeypatch) -> None:
+    saved = _capture_saves(monkeypatch)
+    client.post(
+        "/feedback",
+        data={"comment": "x", "contact_email": "Bot <a@formtests.info>", "return_to": "/"},
+        follow_redirects=False,
+    )
+    assert saved == []

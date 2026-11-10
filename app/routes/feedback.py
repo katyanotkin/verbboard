@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from core.analytics.client_context import detect_device_type
+from core.feedback_spam import is_spam_submission
 from core.feedback_store import save_feedback
 from core.i18n import get_strings, resolve_ui_language
 from core.plus_request_service import is_requestable_language
@@ -134,8 +135,14 @@ def submit_feedback(
     return_to: str = Form("/"),
     ui_language: str = Form(""),
     contact_email: str = Form(""),
+    hp_url: str = Form(""),
 ):
     return_to = safe_return_to(return_to, fallback="/")
+    if is_spam_submission(honeypot=hp_url, contact_email=contact_email):
+        # Pretend success so a bot gets no signal; nothing is saved.
+        return _feedback_redirect(
+            page=page, language=language, verb_id=verb_id, return_to=return_to, ui_language=ui_language, success="1"
+        )
     if not _FEEDBACK_RATE_LIMITER.allow(client_ip(request)):
         return RedirectResponse(url=return_to, status_code=303)
     clean_comment = comment.strip()[:_MAX_COMMENT_LENGTH]
