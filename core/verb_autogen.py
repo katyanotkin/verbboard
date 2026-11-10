@@ -140,7 +140,28 @@ def is_plausible_verb_query(query: str, language: str) -> bool:
     if len(stripped.split()) > 2:
         return False
     _STOP_WORDS = frozenset(
-        {"the", "a", "an", "and", "or", "el", "la", "los", "las", "un", "una", "не", "это", "как", "что", "или"}
+        {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "el",
+            "la",
+            "los",
+            "las",
+            "un",
+            "una",
+            "um",
+            "uma",
+            "os",
+            "as",
+            "не",
+            "это",
+            "как",
+            "что",
+            "или",
+        }
     )
     if stripped.lower() in _STOP_WORDS:
         return False

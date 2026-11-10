@@ -390,6 +390,12 @@ def _rank_by_context(language: str, sentence: str, start: int, cells: list[FormC
         clause = re.split(r"[,;:.!?¿¡]", sentence[:start])[-1]
         if re.search(r"\w", clause):  # words precede the form in its clause: not a command
             demote |= {c.path for c in cells if c.tense == _IMPERATIVE_TENSES[language]}
+    if language == "pt":
+        # pt-BR imperative == subjunctive present: a form that opens its clause ("Fale mais alto!") is the command.
+        clause_start = re.split(r"[,;:.!?¿¡]", sentence[:start])[-1]
+        if not re.search(r"\w", clause_start):
+            promote |= {c.path for c in cells if c.tense == "imperative"}
+            demote -= promote
     if language == "es":
         has_first_person_cue = any(w == "yo" for w in words)
         if not has_first_person_cue and any(c.path == "imperfect.el" for c in cells):

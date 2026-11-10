@@ -62,7 +62,7 @@ class ScriptConfig:
     """Valid-letter definition for a study language's script, used by the
     garbage-query filter (core/verb_autogen.py's is_plausible_verb_query).
     Deliberately keyed by ALL_STUDY_LANGUAGES, not LANGUAGE -- that gate runs
-    per study language regardless of UI-language status, so it needs it/fr
+    per study language regardless of UI-language status, so it needs it/fr/pt
     too, which have no LANGUAGE/UI entry (see the comment on FREE_STUDY_
     LANGUAGES above for why LANGUAGE must not be extended to cover them)."""
 

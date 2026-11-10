@@ -341,6 +341,7 @@ BRAZILIAN PORTUGUESE (pt)
       (fazer: fizesse, ter: tivesse, ir/ser: fosse, ver: visse).
     imperative:           { voce, nos, voces }  ← e.g. "fale", "falemos", "falem" (the imperative of você/vocês
       is the subjunctive present). If a verb has no natural command form, return {}.
+      Reflexive imperatives follow written pt-BR: "levante-se", "levantemo-nos", "levantem-se".
     gerund: "<gerúndio, e.g. 'falando'>"        (string)
     participle: "<past participle, masculine singular>"  (string)
   Accents are required (é, ê, á, â, ã, õ, ç, í, ó, ú). Reflexive verbs (levantar-se, chamar-se): use the

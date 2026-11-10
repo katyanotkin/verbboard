@@ -6,7 +6,7 @@ from __future__ import annotations
 # language so a study-language word's "translation" is just the same-person
 # lookup in PRONOUNS[ui_lang] -- no per-language-pair translation data needed.
 #
-# Covers both roles a language can play: study language (en/ru/he/es/it/fr,
+# Covers both roles a language can play: study language (en/ru/he/es/it/fr/pt,
 # per core/registry.py's plugins) and UI language (en/ru/he/es, per
 # core/languages/config.py's LANGUAGE dict). en/ru/he/es appear once and
 # serve both roles.
