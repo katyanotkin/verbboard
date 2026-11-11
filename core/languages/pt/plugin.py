@@ -32,6 +32,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
     conditional = forms.get("conditional", {}) or {}
     subjunctive_present = forms.get("subjunctive_present", {}) or {}
     subjunctive_imperfect = forms.get("subjunctive_imperfect", {}) or {}
+    subjunctive_future = forms.get("subjunctive_future", {}) or {}
     imperative = forms.get("imperative", {}) or {}
 
     sections: list[dict[str, object]] = [
@@ -46,6 +47,7 @@ def build_board(verb: VerbEntry, voice_key: str, voice_label: str) -> Board:
         (conditional, "board.tense_conditional", "cond"),
         (subjunctive_present, "board.tense_subjunctive_present", "subjpres"),
         (subjunctive_imperfect, "board.tense_subjunctive_imperfect", "subjimp"),
+        (subjunctive_future, "board.tense_subjunctive_future", "subjfut"),
     )
     for tense, title, prefix in optional_tenses:
         if any(tense.get(slot) for slot in _SLOTS):

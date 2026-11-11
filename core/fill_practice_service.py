@@ -78,6 +78,7 @@ _FORM_SHAPES: dict[str, dict[str, tuple[str, ...] | None]] = {
                 "conditional",
                 "subjunctive_present",
                 "subjunctive_imperfect",
+                "subjunctive_future",
             )
         },
         "imperative": ("voce", "nos", "voces"),

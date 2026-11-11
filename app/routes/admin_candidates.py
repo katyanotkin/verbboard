@@ -18,6 +18,7 @@ from app.routes.admin_utils import (
 from core.admin_logging import resolve_signal_label
 from core.example_targets import tag_examples, tag_generated_payload
 from core.languages.fr.forms import normalize_subjonctif
+from core.languages.pt.forms import normalize_pt_payload
 from core.languages.ru.stress import strip_stress_marks
 from core.provider_health import ACTION_HINT, ProviderUnavailable
 from core.provider_health import ANTHROPIC as ANTHROPIC_BREAKER
@@ -304,6 +305,8 @@ async def _call_claude(language: str, query: str) -> dict[str, Any]:
             generated = strip_stress_marks(generated)
         elif language == "fr":
             generated = normalize_subjonctif(generated)
+        elif language == "pt":
+            generated = normalize_pt_payload(generated)
         return tag_generated_payload(language, generated)
     except json.JSONDecodeError as exc:
         logger.warning(

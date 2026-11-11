@@ -131,3 +131,167 @@ def test_seed_provider_claude_adds_language(monkeypatch):
     claude_languages, calls = _run_seed(monkeypatch, "claude")
     assert "pt" in claude_languages
     assert calls
+
+
+def test_future_subjunctive_section_renders_when_present():
+    full = {
+        "present": _SLOTS,
+        "subjunctive_future": {"eu": "falar", "ele": "falar", "nos": "falarmos", "eles": "falarem"},
+    }
+    titles = [s["title"] for s in _board(full).sections if s.get("title")]
+    assert "board.tense_subjunctive_future" in titles
+    assert "board.tense_subjunctive_future" not in [
+        s["title"] for s in _board({"present": _SLOTS}).sections if s.get("title")
+    ]
+
+
+def test_infinitive_shaped_future_subjunctive_never_tags_a_plain_infinitive():
+    forms = {"present": {"eu": "quero"}, "subjunctive_future": {"eu": "falar", "ele": "falar"}}
+    target = tag_sentence("pt", "Eu quero falar com você.", forms)
+    assert target is not None
+    assert target["tense"] == "present"
+
+
+def test_hint_can_tag_future_subjunctive():
+    from core.example_targets import tag_from_hint
+
+    forms = {"subjunctive_future": {"eu": "puder", "ele": "puder"}}
+    target = tag_from_hint("pt", "Quando eu puder, ligo para você.", forms, "subjunctive_future.eu", "puder")
+    assert target is not None and target["tense"] == "subjunctive_future"
+
+
+def test_normalizer_rewrites_accented_imperative_keys_and_hints():
+    from core.languages.pt.forms import normalize_pt_payload
+
+    payload = {
+        "forms": {"imperative": {"você": "durma", "nós": "durmamos", "vocês": "durmam"}, "present": {"eu": "durmo"}},
+        "examples": [{"dst": "Durma bem.", "form": "imperative.você", "answer": "Durma"}],
+    }
+    result = normalize_pt_payload(payload)
+    assert set(result["forms"]["imperative"]) == {"voce", "nos", "voces"}
+    assert result["examples"][0]["form"] == "imperative.voce"
+    assert result["forms"]["present"] == {"eu": "durmo"}
+
+
+def test_normalizer_is_wired_into_autogen():
+    from core.verb_autogen import _normalize_generated
+
+    payload = {"forms": {"imperative": {"você": "fale"}}, "examples": []}
+    assert "voce" in _normalize_generated("pt", payload)["forms"]["imperative"]
+
+
+def test_normalizer_tolerates_garbage():
+    from core.languages.pt.forms import normalize_pt_payload
+
+    assert normalize_pt_payload(None) is None
+    assert normalize_pt_payload({"forms": "x"}) == {"forms": "x"}
+
+
+def test_normalizer_maps_voce_to_ele_outside_the_imperative():
+    from core.languages.pt.forms import normalize_pt_payload
+
+    payload = {"forms": {"present": {"eu": "falo", "você": "fala", "vocês": "falam", "nós": "falamos"}}, "examples": []}
+    assert normalize_pt_payload(payload)["forms"]["present"] == {
+        "eu": "falo",
+        "ele": "fala",
+        "eles": "falam",
+        "nos": "falamos",
+    }
+
+
+def test_normalizer_prefers_explicit_canonical_key_over_alias():
+    from core.languages.pt.forms import normalize_pt_payload
+
+    payload = {"forms": {"present": {"ela": "y", "ele": "z"}}}
+    assert normalize_pt_payload(payload)["forms"]["present"] == {"ele": "z"}
+
+
+def test_retag_keeps_valid_hint_only_future_subjunctive_target():
+    from core.example_targets import tag_examples, tag_from_hint
+
+    forms = {"subjunctive_future": {"eu": "puder", "ele": "puder"}}
+    sentence = "Quando eu puder, ligo para você."
+    target = tag_from_hint("pt", sentence, forms, "subjunctive_future.eu", "puder")
+    result = tag_examples("pt", forms, [{"dst": sentence, "target": target}], retag=True)
+    assert result[0]["target"]["tense"] == "subjunctive_future"
+
+
+def test_backfill_derives_forms_from_preterite_eles():
+    from tools.backfill_pt_subjunctive_future import derive_forms
+
+    assert derive_forms("falaram") == {"eu": "falar", "ele": "falar", "nos": "falarmos", "eles": "falarem"}
+    assert derive_forms("foram")["nos"] == "formos"
+    assert derive_forms("se levantaram")["eu"] == "me levantar"
+    assert derive_forms("se levantaram")["eles"] == "se levantarem"
+    assert derive_forms("") is None
+
+
+def test_admin_call_claude_normalizes_pt_only(monkeypatch):
+    import asyncio
+    import json
+    from concurrent.futures import ThreadPoolExecutor
+    from types import SimpleNamespace
+
+    from app.routes import admin_candidates
+
+    payload = {"lemma": "dormir", "forms": {"imperative": {"você": "durma"}}, "examples": []}
+
+    class _Messages:
+        async def create(self, **_kwargs):
+            return SimpleNamespace(content=[SimpleNamespace(text=json.dumps(payload))])
+
+    monkeypatch.setattr(admin_candidates, "get_anthropic_client", lambda: SimpleNamespace(messages=_Messages()))
+    monkeypatch.setattr(admin_candidates, "get_cached_system", lambda _language: "")
+
+    def run(language):
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(asyncio.run, admin_candidates._call_claude(language, "dormir")).result()
+
+    assert run("pt")["forms"]["imperative"] == {"voce": "durma"}
+    assert "você" in run("es")["forms"]["imperative"]
+
+
+def test_subjunctive_future_title_in_all_locales():
+    import json
+    from pathlib import Path
+
+    for locale in ("en", "es", "ru", "he"):
+        data = json.loads(Path(f"app/i18n/{locale}.json").read_text(encoding="utf-8"))
+        assert data.get("board.tense_subjunctive_future"), locale
+
+
+def test_backfill_skips_doc_changed_since_read(monkeypatch, fake_db):
+    from google.api_core.exceptions import FailedPrecondition
+
+    from tools import backfill_pt_subjunctive_future as tool
+
+    class _Ref:
+        def update(self, *_a, **_k):
+            raise FailedPrecondition("changed")
+
+    class _Snap:
+        id = "pt_falar"
+        update_time = None
+        reference = _Ref()
+
+        def to_dict(self):
+            return {"lemma": "falar", "rank": 1, "forms": {"preterite": {"eles": "falaram"}}, "examples": []}
+
+    class _Query:
+        def stream(self):
+            return [_Snap()]
+
+        def where(self, *_a, **_k):
+            return self
+
+    class _Db:
+        def collection(self, _name):
+            return _Query()
+
+        def write_option(self, **_k):
+            return None
+
+    monkeypatch.setattr(tool, "get_db", lambda: _Db())
+    monkeypatch.setattr(tool, "build_example", lambda *_a: {"dst": "x", "translations": {}, "target": {}})
+    monkeypatch.setattr("sys.argv", ["tool", "--execute"])
+    tool.main()  # must not raise

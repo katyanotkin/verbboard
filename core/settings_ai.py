@@ -339,6 +339,11 @@ BRAZILIAN PORTUGUESE (pt)
     subjunctive_imperfect:{ eu, ele, nos, eles }  ← pretérito imperfeito do subjuntivo, bare forms without "se",
       e.g. "falasse", "falasse", "falássemos", "falassem"; built from the preterite eles stem
       (fazer: fizesse, ter: tivesse, ir/ser: fosse, ver: visse).
+    subjunctive_future:   { eu, ele, nos, eles }  ← futuro do subjuntivo, bare forms without "quando"/"se":
+      take the preterite "eles" form, drop -am, and add nothing, nothing, -mos, -em: falar (falar, falar, falarmos, falarem),
+      fazer (fizer, fizer, fizermos, fizerem), ser/ir (for, for, formos, forem), ter (tiver), poder (puder),
+      querer (quiser), saber (souber), dizer (disser), ver (vir), vir (vier), dar (der), pôr (puser).
+      Regular verbs are identical to the infinitive in eu/ele; that is correct.
     imperative:           { voce, nos, voces }  ← e.g. "fale", "falemos", "falem" (the imperative of você/vocês
       is the subjunctive present). If a verb has no natural command form, return {}.
       Reflexive imperatives follow written pt-BR: "levante-se", "levantemo-nos", "levantem-se".
@@ -347,8 +352,8 @@ BRAZILIAN PORTUGUESE (pt)
   Accents are required (é, ê, á, â, ã, õ, ç, í, ó, ú). Reflexive verbs (levantar-se, chamar-se): use the
     Brazilian proclitic pronoun before the finite form ("me levanto", "se levanta", "nos levantamos", "se levantam"),
     and keep the lemma as "levantar-se".
-  examples: 7 sentences in Brazilian Portuguese, one each of presente, pretérito perfeito, imperfeito, futuro,
-    condicional, subjuntivo presente (after a real trigger such as "quero que", "talvez" or "é importante que")
+  examples: 8 sentences in Brazilian Portuguese, one each of presente, pretérito perfeito, imperfeito, futuro,
+    condicional, futuro do subjuntivo (after "quando", "se" or "assim que": "Quando eu puder, ligo"), subjuntivo presente (after a real trigger such as "quero que", "talvez" or "é importante que")
     and imperativo (a different form instead if the verb has no natural command); at least three persons
     including nós and eles/vocês. Use "você" for the singular "you" and never "tu". Vary the sentence frames and
     situations for each verb."""
@@ -386,7 +391,7 @@ _MAX_TOKENS: dict[str, int] = {
     "es": 3072,
     "it": 3072,
     "en": 3072,
-    "pt": 3072,
+    "pt": 4096,
     "tr": 3072,
 }
 _MAX_TOKENS_DEFAULT = 2048

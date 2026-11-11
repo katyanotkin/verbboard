@@ -32,6 +32,11 @@ _VOWELS = "aeiouáéíóú"
 # practice label for them would point at a row the learner cannot find.
 _UNPRACTICED_CELLS = {("he", "imperative", "fp")}
 
+# Tenses never matched deterministically, only through a generator/hint-named cell: the pt-BR futuro do
+# subjuntivo is the infinitive (falar) for regular verbs, so a plain "quero falar" would otherwise be
+# tagged as a subjunctive blank.
+_HINT_ONLY_TENSES = {("pt", "subjunctive_future")}
+
 # Subject pronouns per person key, used to pick the label when several cells share a surface form
 # ("הם נתנו" is 3pl, not 1pl). Keys are the person keys stored in `forms`.
 _SUBJECT_WORDS: dict[str, dict[str, tuple[str, ...]]] = {
@@ -283,7 +288,11 @@ def _find_spans(language: str, sentence: str, answer_text: str, tier: int = 1) -
 def _find_matches_at_tier(language: str, sentence: str, forms: Any, tier: int) -> list[Match]:
     matches: list[Match] = []
     for cell in iter_form_cells(forms):
-        if cell.tense == "pronoun_forms" or (language, cell.tense, cell.person) in _UNPRACTICED_CELLS:
+        if (
+            cell.tense == "pronoun_forms"
+            or (language, cell.tense, cell.person) in _UNPRACTICED_CELLS
+            or (language, cell.tense) in _HINT_ONLY_TENSES
+        ):
             continue
         for variant in variants_for(language, cell):
             for start, end, kind in _find_spans(language, sentence, variant, tier):
@@ -557,8 +566,13 @@ def tag_examples(language: str, forms: Any, examples: list[Any], *, retag: bool 
         result = {k: v for k, v in example.items() if k not in ("form", "answer")}
         sentence = native_sentence(result)
         target = None
-        if not retag and result.get("target") is not None:
-            target = parse_example_target(language, sentence, forms, result.get("target"))
+        existing = result.get("target")
+        keep_existing = existing is not None and (
+            not retag or (isinstance(existing, dict) and (language, existing.get("tense")) in _HINT_ONLY_TENSES)
+        )
+        if keep_existing:
+            # A retag recomputes from rules, which cannot see hint-only tenses; keep those if still valid.
+            target = parse_example_target(language, sentence, forms, existing)
         if target is None:
             hint_path, hint_answer = example.get("form"), example.get("answer")
             if hint_path and hint_answer:

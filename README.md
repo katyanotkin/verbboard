@@ -52,7 +52,7 @@ Visual indicators:
 - Switch between female and male voices
 - Inline translations when UI language differs from the verb's language
 - Focus filter: hide conjugation rows by gender (masculine / feminine) and number (singular / plural) — Hebrew, Russian, Spanish
-- Brazilian Portuguese (pt-BR, free) boards show presente, pretérito perfeito, imperfeito, futuro, condicional, subjuntivo presente and imperfeito, imperativo (você/nós/vocês), gerúndio and particípio; four slots per tense (eu, ele/ela/você, nós, eles/elas/vocês), no tu/vós
+- Brazilian Portuguese (pt-BR, free) boards show presente, pretérito perfeito, imperfeito, futuro, condicional, subjuntivo presente, imperfeito and futuro, imperativo (você/nós/vocês), gerúndio and particípio; four slots per tense (eu, ele/ela/você, nós, eles/elas/vocês), no tu/vós
 - Italian boards also show the condizionale presente, congiuntivo presente and congiuntivo imperfetto, as bare forms like the other tenses
 - Spanish boards also show the conditional, present subjunctive and imperfect subjunctive (-ra form), as bare forms like the other tenses
 - Hebrew boards show the imperative (masculine and feminine singular, masculine plural) for verbs that have a natural command form

@@ -26,6 +26,7 @@ from vertexai.generative_models import GenerationConfig, GenerativeModel
 from core.example_targets import tag_generated_payload
 from core.languages.config import STUDY_LANGUAGE_SCRIPTS
 from core.languages.fr.forms import normalize_subjonctif
+from core.languages.pt.forms import normalize_pt_payload
 from core.languages.ru.stress import strip_stress_marks
 from core.languages.ru.validation import validate_ru_payload
 from core.provider_health import ANTHROPIC as ANTHROPIC_BREAKER
@@ -179,6 +180,8 @@ def _normalize_generated(language: str, generated: Any) -> Any:
         generated = strip_stress_marks(generated)
     elif language == "fr":
         generated = normalize_subjonctif(generated)
+    elif language == "pt":
+        generated = normalize_pt_payload(generated)
     return tag_generated_payload(language, generated)
 
 
