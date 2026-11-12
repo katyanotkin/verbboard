@@ -101,7 +101,7 @@ def test_resolve_signal_label_normalizes_casing_to_match_stored_query(monkeypatc
     _patch_label_settings(monkeypatch)
     doc_ref = _FakeDocRef(exists=True)
     fake_db = _FakeDb(doc_ref)
-    monkeypatch.setattr("core.storage.firestore_db.get_db", lambda: fake_db)
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", lambda: fake_db)
 
     resolve_signal_label(language="en", query="  Speak  ")
 
@@ -113,7 +113,7 @@ def test_resolve_signal_label_is_noop_when_no_label_exists(monkeypatch) -> None:
     _patch_label_settings(monkeypatch)
     doc_ref = _FakeDocRef(exists=False)
     fake_db = _FakeDb(doc_ref)
-    monkeypatch.setattr("core.storage.firestore_db.get_db", lambda: fake_db)
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", lambda: fake_db)
 
     resolve_signal_label(language="en", query="ghost")
 
@@ -128,14 +128,14 @@ def test_resolve_signal_label_never_raises_on_concurrent_delete(monkeypatch) -> 
 
     doc_ref = _FakeDocRef(exists=True, on_update=_boom)
     fake_db = _FakeDb(doc_ref)
-    monkeypatch.setattr("core.storage.firestore_db.get_db", lambda: fake_db)
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", lambda: fake_db)
 
     resolve_signal_label(language="en", query="speak")  # must not raise
 
 
 def test_resolve_signal_label_skips_empty_input_without_touching_firestore(monkeypatch) -> None:
     calls: list[str] = []
-    monkeypatch.setattr("core.storage.firestore_db.get_db", lambda: calls.append("called"))
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", lambda: calls.append("called"))
 
     resolve_signal_label(language="", query="speak")
     resolve_signal_label(language="en", query="   ")
