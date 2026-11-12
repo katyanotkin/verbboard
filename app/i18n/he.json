@@ -243,5 +243,7 @@
   "board.fill_gate_btn": "התחברות עם Google",
   "about.rate_line": "אם VerbBoard עוזר לכם, אפשר להשאיר דירוג ב-Google Play.",
   "feedback.rate_line": "אפשר גם לדרג את VerbBoard ב-Google Play.",
-  "rate.link_label": "דירוג ב-Google Play"
+  "rate.link_label": "דירוג ב-Google Play",
+  "rate_nudge.text": "נהנים מ-VerbBoard? דירוג ב-Google Play עוזר ללומדים אחרים למצוא אותו.",
+  "rate_nudge.cta": "דירוג ב-Google Play"
 }

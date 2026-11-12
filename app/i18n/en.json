@@ -243,5 +243,7 @@
   "board.fill_gate_btn": "Sign in with Google",
   "about.rate_line": "If you find VerbBoard useful, you can leave a rating on Google Play.",
   "feedback.rate_line": "You can also rate VerbBoard on Google Play.",
-  "rate.link_label": "Rate on Google Play"
+  "rate.link_label": "Rate on Google Play",
+  "rate_nudge.text": "Enjoying VerbBoard? A rating on Google Play helps other learners find it.",
+  "rate_nudge.cta": "Rate on Google Play"
 }

@@ -108,6 +108,9 @@ def verb_browser(
         # surface actually shows; both need the strings present regardless.
         "login_nudge.badge": ui["login_nudge.badge"],
         "login_nudge.progress": ui["login_nudge.progress"],
+        # Rate-nudge copy (practice wrap-up modal, Android only, decided client-side).
+        "rate_nudge.text": ui["rate_nudge.text"],
+        "rate_nudge.cta": ui["rate_nudge.cta"],
         "home.install_hint_dismiss": ui["home.install_hint_dismiss"],
     }
 

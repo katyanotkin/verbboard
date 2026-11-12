@@ -311,6 +311,14 @@ document.addEventListener("DOMContentLoaded", function () {
         showLoginNudge = window.VerbBoardLoginNudge.recordBadgeEarned();
       }
 
+      // Rate nudge (issue #24): counts every completed practice; true only on
+      // Android after the 2nd, once per device. Never shares a modal with the
+      // login nudge, which has priority.
+      let showRateNudge = false;
+      if (window.VerbBoardRateNudge) {
+        showRateNudge = window.VerbBoardRateNudge.recordCompleted() && !showLoginNudge;
+      }
+
       const practicePostBody = { language: language, badges: badges };
 
       if (window.VerbBoardAuth && window.VerbBoardAuth.getIdToken) {
@@ -335,6 +343,7 @@ document.addEventListener("DOMContentLoaded", function () {
           ids: session.ids,
           lemmas: session.lemmas || {},
           loginNudge: showLoginNudge,
+          rateNudge: showRateNudge,
         })
       );
     } else if (capsuleEl) {

@@ -243,5 +243,7 @@
   "board.fill_gate_btn": "Войти через Google",
   "about.rate_line": "Если VerbBoard вам полезен, можно оставить оценку в Google Play.",
   "feedback.rate_line": "Оценить VerbBoard можно и в Google Play.",
-  "rate.link_label": "Оценить в Google Play"
+  "rate.link_label": "Оценить в Google Play",
+  "rate_nudge.text": "Нравится VerbBoard? Оценка в Google Play помогает другим ученикам его найти.",
+  "rate_nudge.cta": "Оценить в Google Play"
 }

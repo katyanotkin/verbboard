@@ -806,6 +806,17 @@
         });
       }
 
+      // Rate nudge (issue #24): Android only, once per device, never together
+      // with the login nudge. Re-checked live because the payload can be stale.
+      if (wrapupData.rateNudge && !wrapupData.loginNudge && window.VerbBoardRateNudge &&
+          window.VerbBoardRateNudge.canShow()) {
+        card.appendChild(window.VerbBoardRateNudge.buildCta(
+          ui['rate_nudge.text'] || 'Enjoying VerbBoard? A rating on Google Play helps other learners find it.',
+          ui['rate_nudge.cta'] || 'Rate on Google Play'
+        ));
+        window.VerbBoardRateNudge.markShown();
+      }
+
       card.appendChild(actions);
 
       overlay.appendChild(card);
