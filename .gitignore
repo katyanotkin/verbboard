@@ -56,3 +56,7 @@ certificates.zip
 # Personal manual QA plans (automated tests live in tests/)
 QATP*.txt
 REVIEW*.txt
+
+# Personal planning docs (marketing etc.): name them *.private.md or MARKETING*.md to keep them local
+*.private.md
+MARKETING*.md
