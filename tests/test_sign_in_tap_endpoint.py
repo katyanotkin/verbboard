@@ -7,9 +7,11 @@ Unauthenticated, fail-open shape -- same as /api/analytics/enrich.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
+
+from tests.conftest import patch_everywhere
 
 
 def test_sign_in_tapped_requires_no_auth(client: TestClient) -> None:
@@ -72,11 +74,12 @@ def test_sign_in_tapped_missing_branch_field(client: TestClient) -> None:
     assert mock_record.call_args.args[2] == ""
 
 
-def test_sign_in_tapped_invalid_branch_still_returns_ok(client: TestClient) -> None:
+def test_sign_in_tapped_invalid_branch_still_returns_ok(client: TestClient, monkeypatch) -> None:
     """End-to-end (no mocking of record_sign_in_tap): an invalid branch value
     is silently rejected by the tracker layer, not surfaced as an error."""
-    with patch("core.storage.firestore_db.get_db") as mock_get_db:
-        resp = client.post("/api/analytics/sign_in_tapped", json={"branch": "tablet"})
+    mock_get_db = MagicMock()
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", mock_get_db)
+    resp = client.post("/api/analytics/sign_in_tapped", json={"branch": "tablet"})
 
     assert resp.status_code == 200
     assert resp.json() == {"ok": True}

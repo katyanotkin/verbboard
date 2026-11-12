@@ -10,12 +10,13 @@ the spot (verb_search_hits).
 from __future__ import annotations
 
 from datetime import date
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from core.analytics import search_hits, session_tracker
+from tests.conftest import patch_everywhere
 
 DATE = "2026-09-24"
 SESSION_PATH = f"analytics_sessions/{DATE}_fp1"
@@ -111,9 +112,9 @@ def test_record_search_hit_tracks_source_separately(fake_db) -> None:
     assert "hits_search" not in doc
 
 
-def test_record_search_hit_swallows_firestore_errors() -> None:
-    with patch("core.storage.firestore_db.get_db", side_effect=RuntimeError("boom")):
-        search_hits._record_search_hit("it", "it_parlare", "search")  # must not raise
+def test_record_search_hit_swallows_firestore_errors(monkeypatch) -> None:
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", MagicMock(side_effect=RuntimeError("boom")))
+    search_hits._record_search_hit("it", "it_parlare", "search")  # must not raise
 
 
 @pytest.mark.parametrize(

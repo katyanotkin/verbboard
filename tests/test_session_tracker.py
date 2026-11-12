@@ -18,12 +18,13 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from starlette.requests import Request
 
 from core.analytics import session_tracker
 from core.analytics.session_tracker import get_fingerprint_sid
+from tests.conftest import patch_everywhere
 
 
 def _run_async(coro):
@@ -217,9 +218,9 @@ def test_second_hit_with_blank_language_keeps_existing_language(fake_db) -> None
     assert (fake_db._docs[DOC]["language"], fake_db._docs[DOC]["ui_lang"]) == ("es", "en")
 
 
-def test_create_session_swallows_firestore_errors() -> None:
-    with patch("core.storage.firestore_db.get_db", side_effect=RuntimeError("boom")):
-        session_tracker._create_session("fp1", DATE, "mobile", "es", "en")  # must not raise
+def test_create_session_swallows_firestore_errors(monkeypatch) -> None:
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", MagicMock(side_effect=RuntimeError("boom")))
+    session_tracker._create_session("fp1", DATE, "mobile", "es", "en")  # must not raise
 
 
 # ── _enrich_lang / _attach_uid: merge semantics ─────────────────────────────
