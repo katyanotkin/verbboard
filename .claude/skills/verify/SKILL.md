@@ -7,7 +7,7 @@ description: How to launch and drive VerbBoard locally for runtime verification 
 
 ## Launch
 
-`make local-run` fails in agent shells (`python: not found` — Makefile uses bare `python`). Use the venv directly:
+The Makefile now picks `.venv/bin/python` automatically (falls back to bare `python`), so `make local-run` and the `make test*`/`smoke*` targets work in agent shells, but `local-run` uses `--reload` and runs in the foreground. For a background server, use the venv directly:
 
 ```bash
 set -a && . ./.env && set +a && ./.venv/bin/python -m uvicorn app.main:app --port 8001 > /tmp/server.log 2>&1 &

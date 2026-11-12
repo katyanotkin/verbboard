@@ -1,4 +1,4 @@
-PYTHON=python
+PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python)
 IMAGE_NAME=verbboard
 CONTAINER_NAME=verbboard
 HOST_PORT?=8001
@@ -74,42 +74,42 @@ lint: ## QA: run ruff check, ruff format --check, and mypy
 
 ## QA: run all tests (unit + browser e2e)
 test: ## QA: run all tests — unit + Playwright e2e
-	PYTHONPATH=. pytest
+	PYTHONPATH=. $(PYTHON) -m pytest
 
 ## QA: run unit tests only (fast, no browser)
 test-unit: ## QA: run unit tests only (excludes tests/e2e/ and tests/integration/)
-	PYTHONPATH=. pytest --ignore=tests/e2e --ignore=tests/integration
+	PYTHONPATH=. $(PYTHON) -m pytest --ignore=tests/e2e --ignore=tests/integration
 
 ## QA: run unit tests in parallel (requires pytest-xdist: uv add --dev pytest-xdist)
 test-unit-fast: ## QA: run unit tests in parallel across all CPUs
-	PYTHONPATH=. pytest --ignore=tests/e2e --ignore=tests/integration -n auto
+	PYTHONPATH=. $(PYTHON) -m pytest --ignore=tests/e2e --ignore=tests/integration -n auto
 
 ## QA: run Playwright browser e2e tests only
 test-e2e-local: ## QA: run Playwright browser flow tests locally
-	PYTHONPATH=. pytest tests/e2e -v
+	PYTHONPATH=. $(PYTHON) -m pytest tests/e2e -v
 
 ## QA: run e2e tests in parallel with 2 workers (each gets its own browser + server)
 test-e2e-parallel: ## QA: run Playwright e2e tests with 2 parallel workers
-	PYTHONPATH=. pytest tests/e2e -n 2 -v
+	PYTHONPATH=. $(PYTHON) -m pytest tests/e2e -n 2 -v
 
 test-e2e-stage: ## QA: run Playwright browser flow tests against stage
-	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e -n 2 -v
+	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. $(PYTHON) -m pytest tests/e2e -n 2 -v
 
 ## QA: run QATP security + practice regression tests against stage
 test-qatp-stage: ## QA: QATP (XSS, practice ui_language, voice banner) vs stage
-	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. pytest tests/e2e/test_qatp.py -n 2 -v
+	E2E_BASE_URL=$(STAGE_URL) PYTHONPATH=. $(PYTHON) -m pytest tests/e2e/test_qatp.py -n 2 -v
 
 ## QA: progress API integration tests against stage. NOTE: stage no longer sets ALLOW_LOCAL_DEV_AUTH (issue #76, it shares prod data), so the user-stage token is rejected unless you temporarily enable it.
 test-progress-stage: ## QA: progress API integration tests vs stage
-	PROGRESS_TEST_BASE_URL=$(STAGE_URL) PROGRESS_TEST_TOKEN=user-stage PYTHONPATH=. pytest tests/integration -v
+	PROGRESS_TEST_BASE_URL=$(STAGE_URL) PROGRESS_TEST_TOKEN=user-stage PYTHONPATH=. $(PYTHON) -m pytest tests/integration -v
 
 ## QA: run progress API integration tests against prod (mock user, requires ALLOW_LOCAL_DEV_AUTH=true)
 test-progress-prod: ## QA: progress API integration tests vs prod
-	PROGRESS_TEST_BASE_URL=$(PROD_URL) PROGRESS_TEST_TOKEN=user-prod PYTHONPATH=. pytest tests/integration -v
+	PROGRESS_TEST_BASE_URL=$(PROD_URL) PROGRESS_TEST_TOKEN=user-prod PYTHONPATH=. $(PYTHON) -m pytest tests/integration -v
 
 ## QA: run demand regression tests
 test-demand: ## QA: run demand regression tests
-	PYTHONPATH=. pytest -q tests/test_recommendation_regression.py
+	PYTHONPATH=. $(PYTHON) -m pytest -q tests/test_recommendation_regression.py
 
 ## LOCAL: run app without Docker
 local-run: ## LOCAL: run uvicorn with reload
@@ -361,11 +361,11 @@ gcp-unmap-preview: gcp-check ## GCP: delete preview domain mapping
 
 ## QA: run nav smoke tests against local server (must be running on HOST_PORT)
 smoke-nav-local: ## QA: nav smoke test against http://localhost:$(HOST_PORT)
-	python scripts/smoke_nav.py "http://localhost:$(HOST_PORT)"
+	$(PYTHON) scripts/smoke_nav.py "http://localhost:$(HOST_PORT)"
 
 ## QA: run nav smoke tests against stage
 smoke-nav-stage: ## QA: nav smoke test against stage.verbboard.com
-	python scripts/smoke_nav.py $(STAGE_URL)
+	$(PYTHON) scripts/smoke_nav.py $(STAGE_URL)
 
 validate-stage: smoke-stage smoke-nav-stage test-e2e-stage test-qatp-stage ## QA: full stage validation (smoke + nav + Playwright + QATP)
 
@@ -373,13 +373,13 @@ validate-stage: smoke-stage smoke-nav-stage test-e2e-stage test-qatp-stage ## QA
 smoke-prod: gcp-check ## GCP: smoke test prod service
 	@BASE_URL=${PROD_URL}; \
 	test -n "$$BASE_URL" || (echo "ERROR: could not resolve prod service URL" && exit 1); \
-	python scripts/smoke.py "$$BASE_URL"
+	$(PYTHON) scripts/smoke.py "$$BASE_URL"
 
 ## GCP: smoke test stage
 smoke-stage: gcp-check ## GCP: smoke test stage service
 	@BASE_URL="${STAGE_URL}"; \
 	test -n "$$BASE_URL" || (echo "ERROR: could not resolve stage service URL" && exit 1); \
-	python scripts/smoke.py "$$BASE_URL"
+	$(PYTHON) scripts/smoke.py "$$BASE_URL"
 
 smoke-preview: smoke-prod ## alias (preview == prod)
 
