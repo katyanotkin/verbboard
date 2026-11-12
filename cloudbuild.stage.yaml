@@ -32,6 +32,17 @@ steps:
       - '-c'
       - 'npx -y firebase-tools deploy --only hosting --project $PROJECT_ID --non-interactive'
 
+  # Deploy Firestore security rules + composite indexes (firestore.rules, firestore.indexes.json).
+  # Stage and prod share this one Firestore project, so ONLY this pipeline deploys them (never the
+  # prod promotion). Without --force, indexes that exist live but are not in the file are left alone.
+  # Requires cloudbuild-deployer SA to have roles/firebaserules.admin and roles/datastore.indexAdmin
+  # (make gcp-grant-firestore-deploy). Drift is checked read-only by `make firestore-drift`.
+  - name: node:20-slim
+    entrypoint: sh
+    args:
+      - '-c'
+      - 'npx -y firebase-tools deploy --only firestore --project $PROJECT_ID --non-interactive'
+
 images:
   - us-east1-docker.pkg.dev/$PROJECT_ID/verbboard/verbboard:$COMMIT_SHA
 

@@ -43,7 +43,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	test-qatp-stage \
 	smoke-nav-local smoke-nav-stage validate-stage \
 	gcp-map-preview gcp-preview-domain-status gcp-unmap-preview \
-	firebase-deploy-hosting firestore-drift gcp-grant-firebase-hosting-admin \
+	firebase-deploy-hosting firebase-deploy-firestore firestore-drift gcp-grant-firebase-hosting-admin gcp-grant-firestore-deploy \
 	gcp-update-secrets-stage gcp-update-secrets-prod \
 	cache-audio-prod \
 	audit-audio-prod \
@@ -219,6 +219,7 @@ gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branc
 		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD),JUMP_TO_EXAMPLE_ENABLED=false,AUTOGEN_ENABLED=false \
 		--set-secrets=$(STAGE_SECRETS)
 	$(MAKE) firebase-deploy-hosting
+	$(MAKE) firebase-deploy-firestore
 
 ## Firebase: deploy Hosting static files (public/) to both prod + stage sites
 firestore-drift: ## Firestore: read-only check that live rules + composite indexes match firestore.rules / firestore.indexes.json (exit 1 on drift)
@@ -226,6 +227,9 @@ firestore-drift: ## Firestore: read-only check that live rules + composite index
 
 firebase-deploy-hosting: ## Firebase: push public/ to Firebase Hosting (both verbboard.com + stage.verbboard.com)
 	firebase deploy --only hosting --project $(GCP_PROJECT)
+
+firebase-deploy-firestore: ## Firebase: deploy firestore.rules + firestore.indexes.json (shared prod/stage project; stage pipeline only, never the prod promotion)
+	firebase deploy --only firestore --project $(GCP_PROJECT)
 
 ## GCP: promote currently deployed stage image to prod
 gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod (TAG=label, default: YYYYMMDD)
@@ -339,6 +343,15 @@ gcp-grant-firebase-hosting-admin: gcp-check
 	gcloud projects add-iam-policy-binding $(GCP_PROJECT) \
 		--member="serviceAccount:cloudbuild-deployer@$(GCP_PROJECT).iam.gserviceaccount.com" \
 		--role="roles/firebasehosting.admin"
+
+## GCP: let the Cloud Build deployer SA deploy Firestore rules + indexes (needed by the stage build's firestore step)
+gcp-grant-firestore-deploy: gcp-check
+	gcloud projects add-iam-policy-binding $(GCP_PROJECT) \
+		--member="serviceAccount:cloudbuild-deployer@$(GCP_PROJECT).iam.gserviceaccount.com" \
+		--role="roles/firebaserules.admin"
+	gcloud projects add-iam-policy-binding $(GCP_PROJECT) \
+		--member="serviceAccount:cloudbuild-deployer@$(GCP_PROJECT).iam.gserviceaccount.com" \
+		--role="roles/datastore.indexAdmin"
 
 ## GCP: map preview domain to prod service
 gcp-map-preview: gcp-check ## GCP: create domain mapping for preview.verbboard.com -> prod service
