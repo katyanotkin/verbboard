@@ -36,7 +36,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	gcp-release-prod gcp-deploy-stage gcp-promote-stage-to-prod \
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
-	audit-examples audit-en audit-ru audit-he audit-es audit-verb-ids \
+	audit-examples audit-en audit-ru audit-he audit-es audit-verb-ids retention \
 	lint test test-unit test-unit-fast \
 	test-e2e-local test-e2e-stage test-e2e-parallel \
 	test-demand test-progress-stage test-progress-prod \
@@ -399,6 +399,9 @@ smoke-preview: smoke-prod ## alias (preview == prod)
 ## QA: audit examples for all languages
 audit-examples: ## QA: read-only Firestore example audit, all languages (see tools/audit_examples.py; add ARGS="--strict --report out.csv")
 	$(PYTHON) -m tools.audit_examples $(ARGS)
+
+retention: ## Read-only signed-in retention cohorts (day 1/7/30), see tools/retention_cohort.py; add ARGS="--since 2026-10-01 --json"
+	$(PYTHON) -m tools.retention_cohort $(ARGS)
 
 ## QA: audit English examples
 audit-en: ## QA: run example audit for English
