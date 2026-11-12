@@ -22,6 +22,7 @@ def save_feedback(
     user_agent: str | None = None,
     device_type: str = "unknown",
     contact_email: str | None = None,
+    hidden: bool = False,
 ) -> str:
     cleaned_comment = (comment or "").strip()
     cleaned_poll_answer = (poll_answer or "").strip()
@@ -46,7 +47,7 @@ def save_feedback(
         "device_type": device_type or "unknown",
         "contact_email": (contact_email or "").strip(),
         "created_at": datetime.now(UTC),
-        "hidden": False,
+        "hidden": hidden,
     }
 
     doc_ref.set(payload)

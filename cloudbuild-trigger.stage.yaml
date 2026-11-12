@@ -12,7 +12,9 @@ github:
 
 ignoredFiles:
   - "*.md"
+  - "**/*.md"
   - "*.txt"
   - ".gitignore"
   - "LICENSE"
   - "docs/**"
+  - ".claude/**"

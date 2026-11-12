@@ -302,3 +302,30 @@ def test_feedback_blocked_email_in_angle_brackets(client: TestClient, monkeypatc
         follow_redirects=False,
     )
     assert saved == []
+
+
+def test_feedback_with_two_links_is_saved_hidden(client: TestClient, monkeypatch) -> None:
+    saved = _capture_saves(monkeypatch)
+    comment = "Boost your SEO https://spam.example and www.spam2.example today"
+    resp = client.post("/feedback", data={"comment": comment, "return_to": "/"}, follow_redirects=False)
+    assert resp.status_code == 303
+    assert len(saved) == 1
+    assert saved[0]["hidden"] is True
+
+
+def test_feedback_genuine_comments_are_not_hidden(client: TestClient, monkeypatch) -> None:
+    saved = _capture_saves(monkeypatch)
+    for comment in (
+        "Great app. The audio for the Spanish past tense is sometimes cut off. Please check it again soon.",
+        "See https://example.com for the rule I mean.",
+    ):
+        client.post("/feedback", data={"comment": comment, "return_to": "/"}, follow_redirects=False)
+    assert [kwargs["hidden"] for kwargs in saved] == [False, False]
+
+
+def test_link_spam_counts_each_url_once() -> None:
+    from core.feedback_spam import looks_like_link_spam
+
+    assert not looks_like_link_spam("see https://www.example.com for the rule")
+    assert not looks_like_link_spam("awww. nice, www.example.com")
+    assert looks_like_link_spam("https://www.a.example and https://www.b.example")
