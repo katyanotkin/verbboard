@@ -302,3 +302,87 @@ def test_feedback_blocked_email_in_angle_brackets(client: TestClient, monkeypatc
         follow_redirects=False,
     )
     assert saved == []
+
+
+def _secret() -> str:
+    from core.settings import load_settings
+
+    return load_settings().admin_session_secret
+
+
+def test_feedback_form_renders_signed_token(client: TestClient) -> None:
+    import re
+
+    html = client.get("/feedback").text
+    token = re.search(r'name="form_token" value="([^"]+)"', html)
+    assert token is not None
+    assert "." in token.group(1)
+
+
+def test_feedback_submitted_too_fast_is_not_saved(client: TestClient, monkeypatch) -> None:
+    from core.feedback_spam import make_form_token
+
+    saved = _capture_saves(monkeypatch)
+    resp = client.post(
+        "/feedback",
+        data={"comment": "buy my leads", "form_token": make_form_token(_secret()), "return_to": "/"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+    assert saved == []
+
+
+def test_feedback_submitted_after_minimum_time_is_saved(client: TestClient, monkeypatch) -> None:
+    import time
+
+    from core.feedback_spam import make_form_token
+
+    saved = _capture_saves(monkeypatch)
+    token = make_form_token(_secret(), now=time.time() - 10)
+    client.post(
+        "/feedback", data={"comment": "real feedback", "form_token": token, "return_to": "/"}, follow_redirects=False
+    )
+    assert len(saved) == 1
+
+
+def test_feedback_missing_or_forged_token_fails_open(client: TestClient, monkeypatch) -> None:
+    import time
+
+    saved = _capture_saves(monkeypatch)
+    forged = f"{int(time.time())}.{'0' * 32}"
+    for token in ("", "garbage", forged, "abc.def", "1.é", "².abc", "1" * 5000 + ".a"):
+        client.post(
+            "/feedback", data={"comment": "hello", "form_token": token, "return_to": "/"}, follow_redirects=False
+        )
+    assert len(saved) == 7
+
+
+def test_submitted_too_fast_unit() -> None:
+    from core.feedback_spam import make_form_token, submitted_too_fast
+
+    token = make_form_token("k", now=1000)
+    assert submitted_too_fast("k", token, now=1001)
+    assert not submitted_too_fast("k", token, now=1004)
+    assert not submitted_too_fast("other-key", token, now=1001)
+
+
+def test_feedback_poll_only_submit_is_not_dropped_by_timing_check(client: TestClient, monkeypatch) -> None:
+    from app.routes import feedback as feedback_routes
+    from core.feedback_spam import make_form_token
+
+    saved = _capture_saves(monkeypatch)
+    monkeypatch.setattr(feedback_routes, "get_poll_valid_answers", lambda poll_id: {"yes"})
+    monkeypatch.setattr(feedback_routes, "ACTIVE_POLL_ID", "poll-1")
+    monkeypatch.setattr(feedback_routes, "get_poll_question", lambda poll_id, lang: "q")
+    client.post(
+        "/feedback",
+        data={"poll_answer": "yes", "form_token": make_form_token(_secret()), "return_to": "/"},
+        follow_redirects=False,
+    )
+    assert len(saved) == 1
+
+
+def test_submitted_too_fast_ignores_future_timestamps() -> None:
+    from core.feedback_spam import make_form_token, submitted_too_fast
+
+    assert not submitted_too_fast("k", make_form_token("k", now=5000), now=1000)

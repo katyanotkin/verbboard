@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from core.analytics.client_context import detect_device_type
-from core.feedback_spam import is_spam_submission
+from core.feedback_spam import is_spam_submission, make_form_token, submitted_too_fast
 from core.feedback_store import save_feedback
 from core.i18n import get_strings, resolve_ui_language
 from core.plus_request_service import is_requestable_language
@@ -97,6 +97,7 @@ def feedback_form(
             "language": language,
             "verb_id": verb_id,
             "return_to": return_to,
+            "form_token": make_form_token(settings.admin_session_secret),
             "success": success == "1",
             "success_msg": ui["feedback.success"],
             "plus_mode": plus_mode,
@@ -136,9 +137,13 @@ def submit_feedback(
     ui_language: str = Form(""),
     contact_email: str = Form(""),
     hp_url: str = Form(""),
+    form_token: str = Form(""),
 ):
     return_to = safe_return_to(return_to, fallback="/")
-    if is_spam_submission(honeypot=hp_url, contact_email=contact_email):
+    # A poll-only tap (no comment) can legitimately be fast, so the timing check applies to comments only.
+    if is_spam_submission(honeypot=hp_url, contact_email=contact_email) or (
+        comment.strip() and submitted_too_fast(load_settings().admin_session_secret, form_token)
+    ):
         # Pretend success so a bot gets no signal; nothing is saved.
         return _feedback_redirect(
             page=page, language=language, verb_id=verb_id, return_to=return_to, ui_language=ui_language, success="1"
