@@ -215,3 +215,23 @@ For pre-commit, parallelization is not used — the hook runs `pytest` directly 
   default, present and populated when requested) and on `/verbs`'s export
   button/script markup, including that the page's embedded `VB_VERBS` blob
   does not carry the extra field for ordinary (non-exporting) visitors.
+
+- **Signed-in retention cohorts (#112)** — `tests/test_retention_service.py`: unit tests
+  for `core/retention_service.py` and `tools/retention_cohort.py` (maturity boundary,
+  exact day-7 vs rolling 1-7 / 8-30, bad rows, weekly cohorts, bot / no-uid / excluded-uid
+  filtering, `since`, text and JSON output, exit codes).
+
+  **Manual check (live Firestore, needs GCP auth; read-only):** automated tests use the
+  in-memory fake, so confirm once against real data.
+  - [ ] `make retention` prints a table (ALL row plus one row per cohort week) and exits 0.
+  - [ ] Pick one signed-in uid in the Firestore console (`analytics_sessions`, filter by `uid`),
+    list its session dates, and confirm it falls in the cohort week of its earliest date and
+    that day 1 / 7 / 30 / 1-7 / 8-30 returns match what you see.
+  - [ ] Sanity: `users` in the ALL row is not larger than the number of distinct uids in
+    `analytics_sessions`, and none of your own or tester accounts listed in
+    `ANALYTICS_EXCLUDED_EMAILS` appears.
+  - [ ] `make retention ARGS="--json"` prints valid JSON (pipe it to `python -m json.tool`).
+  - [ ] `make retention ARGS="--since 2026-10-01"`: users active before that date show up as
+    new on their first in-window day (documented in the caveat line, not a bug).
+  - [ ] `make retention ARGS="--since nonsense"` prints `could not run: ...` and exits 2.
+  - [ ] A cohort younger than 7 days shows `-` for day 7 (not 0%).
