@@ -16,12 +16,13 @@ tests/test_nav_links.py.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from google.api_core.exceptions import AlreadyExists
 
 from core.models import VerbEntry
 from core.verb_loader import get_verb_of_the_day, pick_verb_of_the_day
+from tests.conftest import patch_everywhere
 
 LANGUAGE = "en"
 DATE_STR = "2026-09-16"
@@ -64,9 +65,10 @@ def _make_fake_db(get_results: list[_FakeSnapshot]) -> tuple[MagicMock, MagicMoc
 # ---------------------------------------------------------------------------
 
 
-def test_empty_entries_returns_none_without_touching_firestore() -> None:
-    with patch("core.storage.firestore_db.get_db") as mock_get_db:
-        result = get_verb_of_the_day([], language=LANGUAGE, date_str=DATE_STR)
+def test_empty_entries_returns_none_without_touching_firestore(monkeypatch) -> None:
+    mock_get_db = MagicMock()
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", mock_get_db)
+    result = get_verb_of_the_day([], language=LANGUAGE, date_str=DATE_STR)
 
     assert result is None
     mock_get_db.assert_not_called()
@@ -77,15 +79,15 @@ def test_empty_entries_returns_none_without_touching_firestore() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_first_pick_of_day_creates_doc_with_deterministic_pick() -> None:
+def test_first_pick_of_day_creates_doc_with_deterministic_pick(monkeypatch) -> None:
     entries = _make_entries()
     expected = pick_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
     assert expected is not None
 
     db, doc_ref = _make_fake_db([_FakeSnapshot(exists=False)])
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        result = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", MagicMock(return_value=db))
+    result = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
 
     assert result is expected
 
@@ -100,14 +102,14 @@ def test_first_pick_of_day_creates_doc_with_deterministic_pick() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_existing_valid_doc_is_returned_without_any_write() -> None:
+def test_existing_valid_doc_is_returned_without_any_write(monkeypatch) -> None:
     entries = _make_entries()
     stored = entries[1]  # en_be -- not necessarily the deterministic pick
 
     db, doc_ref = _make_fake_db([_FakeSnapshot(exists=True, data={"verb_id": stored.id})])
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        result = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", MagicMock(return_value=db))
+    result = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
 
     assert result is stored
     doc_ref.create.assert_not_called()
@@ -119,7 +121,7 @@ def test_existing_valid_doc_is_returned_without_any_write() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_create_race_loser_defers_to_winners_stored_pick() -> None:
+def test_create_race_loser_defers_to_winners_stored_pick(monkeypatch) -> None:
     entries = _make_entries()
     winner_verb_id = entries[2].id  # en_do -- the "winning" request's pick
 
@@ -131,8 +133,8 @@ def test_create_race_loser_defers_to_winners_stored_pick() -> None:
     )
     doc_ref.create.side_effect = AlreadyExists("already exists")
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        result = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", MagicMock(return_value=db))
+    result = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
 
     assert result is entries[2]
     doc_ref.create.assert_called_once()
@@ -148,15 +150,15 @@ def test_create_race_loser_defers_to_winners_stored_pick() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_stale_doc_is_corrected_via_set_not_create() -> None:
+def test_stale_doc_is_corrected_via_set_not_create(monkeypatch) -> None:
     entries = _make_entries()
     expected = pick_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
     assert expected is not None
 
     db, doc_ref = _make_fake_db([_FakeSnapshot(exists=True, data={"verb_id": "en_no_longer_exists"})])
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        result = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", MagicMock(return_value=db))
+    result = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
 
     assert result is expected
 
@@ -167,13 +169,13 @@ def test_stale_doc_is_corrected_via_set_not_create() -> None:
     doc_ref.create.assert_not_called()
 
 
-def test_confirmed_pick_is_served_from_process_cache_without_a_second_firestore_read() -> None:
+def test_confirmed_pick_is_served_from_process_cache_without_a_second_firestore_read(monkeypatch) -> None:
     entries = _make_entries()
     db, doc_ref = _make_fake_db([_FakeSnapshot(exists=True, data={"verb_id": entries[1].id})])
 
-    with patch("core.storage.firestore_db.get_db", return_value=db):
-        first = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
-        second = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
+    patch_everywhere(monkeypatch, "core.storage.firestore_db.get_db", MagicMock(return_value=db))
+    first = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
+    second = get_verb_of_the_day(entries, language=LANGUAGE, date_str=DATE_STR)
 
     assert first is second is entries[1]
     assert doc_ref.get.call_count == 1

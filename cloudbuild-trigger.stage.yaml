@@ -10,11 +10,32 @@ github:
   push:
     branch: ^main$
 
+# Skip the stage build for pushes that touch only files the image and the
+# Hosting deploy never use. The image copies only pyproject.toml, uv.lock,
+# app/ and core/ (Dockerfile); Hosting deploys public/ and firebase.json.
+# Anything not listed here (Dockerfile, app/, core/, public/, pyproject.toml,
+# uv.lock, firebase.json, cloudbuild*.yaml) still triggers a build.
 ignoredFiles:
   - "*.md"
   - "**/*.md"
   - "*.txt"
+  - "**/*.txt"
+  - "*.log"
   - ".gitignore"
   - "LICENSE"
   - "docs/**"
   - ".claude/**"
+  - "tests/**"
+  - "tools/**"
+  - "scripts/**"
+  - "data_src/**"
+  - "experiments/**"
+  - "drafts/**"
+  - "runtime/**"
+  - "Makefile"
+  - "pytest.ini"
+  - ".pre-commit-config.yaml"
+  - ".env.sample"
+  - "firestore.rules"
+  - "firestore.indexes.json"
+  - "cloudbuild-trigger.stage.yaml"
