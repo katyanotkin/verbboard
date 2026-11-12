@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from core.analytics.client_context import detect_device_type
-from core.feedback_spam import is_spam_submission, looks_like_link_spam
+from core.feedback_spam import is_spam_submission
 from core.feedback_store import save_feedback
 from core.i18n import get_strings, resolve_ui_language
 from core.plus_request_service import is_requestable_language
@@ -186,7 +186,6 @@ def submit_feedback(
             device_type=device_type,
             source="preview",
             contact_email=clean_contact_email or None,
-            hidden=looks_like_link_spam(clean_comment),
         )
     except ValueError:
         params = urlencode(
