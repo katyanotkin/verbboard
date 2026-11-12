@@ -397,24 +397,24 @@ smoke-stage: gcp-check ## GCP: smoke test stage service
 smoke-preview: smoke-prod ## alias (preview == prod)
 
 ## QA: audit examples for all languages
-audit-examples: ## QA: run example audit for all languages
-	$(PYTHON) -m tools.audit_examples --language all
+audit-examples: ## QA: read-only Firestore example audit, all languages (see tools/audit_examples.py; add ARGS="--strict --report out.csv")
+	$(PYTHON) -m tools.audit_examples $(ARGS)
 
 ## QA: audit English examples
 audit-en: ## QA: run example audit for English
-	$(PYTHON) -m tools.audit_examples --language en
+	$(PYTHON) -m tools.audit_examples --language en $(ARGS)
 
 ## QA: audit Russian examples
 audit-ru: ## QA: run example audit for Russian
-	$(PYTHON) -m tools.audit_examples --language ru
+	$(PYTHON) -m tools.audit_examples --language ru $(ARGS)
 
 ## QA: audit Hebrew examples
 audit-he: ## QA: run example audit for Hebrew
-	$(PYTHON) -m tools.audit_examples --language he
+	$(PYTHON) -m tools.audit_examples --language he $(ARGS)
 
 ## QA: audit Spanish examples
 audit-es: ## QA: run example audit for Spanish
-	$(PYTHON) -m tools.audit_examples --language es
+	$(PYTHON) -m tools.audit_examples --language es $(ARGS)
 
 ## QA: audit generated verb ID collisions
 audit-verb-ids: ## QA: audit generated verb ID collisions
