@@ -25,13 +25,7 @@ TESTS_DIR = Path(__file__).parent
 
 # Targets that are deliberately patched at their defining module.
 # "module.attr" -> justification.
-ALLOWLIST: dict[str, str] = {
-    # get_db: the autouse `_no_real_firestore` fixture in conftest seeds
-    # core.storage.firestore_db._db with a per-test FakeFirestore, so every
-    # module's get_db() resolves to the fake regardless of import style.
-    # Migrating these sites is step 3 of issue #58.
-    "core.storage.firestore_db.get_db": "covered by autouse _no_real_firestore guard",
-}
+ALLOWLIST: dict[str, str] = {}
 
 _PATCH_FUNCTION_NAMES = {"setattr", "patch"}
 
