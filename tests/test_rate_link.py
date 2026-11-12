@@ -34,6 +34,22 @@ def test_record_rate_clicked_sets_flag_once(fake_db) -> None:
     assert fake_db._docs[PATH] == {"sid": "fp1", "rate_clicked": True}
 
 
+def test_record_rate_clicked_source_flags(fake_db) -> None:
+    fake_db._docs[PATH] = {"sid": "fp1"}
+    session_tracker._record_rate_clicked("fp1", DATE, "bogus")
+    session_tracker._record_rate_clicked("fp1", DATE, None)
+    assert fake_db._docs[PATH] == {"sid": "fp1", "rate_clicked": True}
+    # A new source is recorded even though rate_clicked is already set.
+    session_tracker._record_rate_clicked("fp1", DATE, "practice")
+    session_tracker._record_rate_clicked("fp1", DATE, "known")
+    assert fake_db._docs[PATH] == {
+        "sid": "fp1",
+        "rate_clicked": True,
+        "rate_clicked_practice": True,
+        "rate_clicked_known": True,
+    }
+
+
 def test_record_rate_clicked_drops_without_session(fake_db) -> None:
     session_tracker._record_rate_clicked("fp1", DATE)
     assert fake_db._docs == {}
@@ -44,6 +60,14 @@ def test_rate_clicked_endpoint(client: TestClient) -> None:
         resp = client.post("/api/analytics/rate_clicked")
     assert resp.json() == {"ok": True}
     rec.assert_awaited_once()
+    assert rec.call_args.args[2] is None
+
+
+def test_rate_clicked_endpoint_passes_source(client: TestClient) -> None:
+    with patch("app.routes.api_analytics.record_rate_clicked", new_callable=AsyncMock) as rec:
+        resp = client.post("/api/analytics/rate_clicked", json={"source": "known"})
+    assert resp.json() == {"ok": True}
+    assert rec.call_args.args[2] == "known"
 
 
 def test_reports_engagement_counts_rate_clicked(fake_db) -> None:
@@ -52,6 +76,20 @@ def test_reports_engagement_counts_rate_clicked(fake_db) -> None:
     fake_db._docs["analytics_sessions/2026-10-02_b"] = dict(base)  # pre-flag session
     report = build_report("2026-10-02", "2026-10-02")
     assert report["engagement"]["rate_clicked"] == 1
+    assert report["engagement"]["rate_clicked_practice"] == 0
+    assert report["engagement"]["rate_clicked_known"] == 0
+
+
+def test_reports_engagement_counts_rate_clicked_by_source(fake_db) -> None:
+    base = {"date": "2026-10-02", "device_type": "mobile", "verb_viewed": True}
+    fake_db._docs["analytics_sessions/2026-10-02_a"] = {
+        **base,
+        "rate_clicked": True,
+        "rate_clicked_practice": True,
+    }
+    report = build_report("2026-10-02", "2026-10-02")
+    assert report["engagement"]["rate_clicked_practice"] == 1
+    assert report["engagement"]["rate_clicked_known"] == 0
 
 
 @pytest.mark.parametrize("lang", ["en", "ru", "he", "es"])

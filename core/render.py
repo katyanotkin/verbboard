@@ -436,6 +436,8 @@ def render_board_html(
             "audio_report.already": ui.get("audio_report.already", "Already reported"),
             "audio_report.error": ui.get("audio_report.error", "Could not send. Try again later."),
             "audio_report.sign_in": ui.get("audio_report.sign_in", "Sign in to report an audio problem."),
+            "rate_nudge.text": ui.get("rate_nudge.text", ""),
+            "rate_nudge.cta": ui.get("rate_nudge.cta", ""),
             "board.fill_check": ui.get("board.fill_check", "Check"),
             "board.fill_show": ui.get("board.fill_show", "Show answer"),
             "board.fill_gate": ui.get("board.fill_gate", "Signing in with Google is free and required for this mode."),

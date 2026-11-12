@@ -6,7 +6,8 @@ against window.VerbBoardRateNudge. buildCta's DOM wiring is not covered.
 
 Ops: {"ua": str} sets navigator.userAgent; {"call": name, "args": [...]};
 {"reload": true} re-requires the module (localStorage persists); {"get": key}
-reads a localStorage value. Every op appends one result to the output list.
+reads a localStorage value; {"set": key, "value": v} writes one; {"now": ms}
+fakes Date.now(). Every op appends one result to the output list.
 """
 
 from __future__ import annotations
@@ -51,6 +52,10 @@ Object.defineProperty(global, 'navigator', {
   value: { userAgent: '' }, writable: true, configurable: true,
 });
 
+let fakeNow = null;
+const realNow = Date.now;
+Date.now = function () { return fakeNow === null ? realNow() : fakeNow; };
+
 const modulePath = process.argv[1];
 function loadModule() {
   delete require.cache[require.resolve(modulePath)];
@@ -63,6 +68,8 @@ const ops = JSON.parse(process.argv[2]);
 const out = [];
 for (const op of ops) {
   if ('ua' in op) { global.navigator.userAgent = op.ua; out.push(null); }
+  else if ('set' in op) { global.localStorage.setItem(op.set, op.value); out.push(null); }
+  else if ('now' in op) { fakeNow = op.now; out.push(null); }
   else if (op.reload) { NUDGE = loadModule(); out.push(null); }
   else if ('get' in op) { out.push(global.localStorage.getItem(op.get)); }
   else { out.push(NUDGE[op.call].apply(null, op.args || [])); }
@@ -162,3 +169,81 @@ def test_counter_persists_across_module_reload():
     )
     assert out[2 + 1] is True
     assert out[4] == "2"
+
+
+DAY_MS = 24 * 60 * 60 * 1000
+T0 = 1_800_000_000_000
+
+
+@pytest.mark.parametrize("known,expected", [(4, False), (5, True), (9, True), (None, False)])
+def test_record_known_marked_threshold(known, expected):
+    out = _run([{"ua": ANDROID_CHROME}, {"call": "recordKnownMarked", "args": [known]}])
+    assert out[1] is expected
+
+
+def test_record_known_marked_false_when_not_android():
+    out = _run([{"ua": IPHONE}, {"call": "recordKnownMarked", "args": [10]}])
+    assert out[1] is False
+
+
+def test_mark_shown_increments_asks_and_sets_last_at():
+    out = _run(
+        [
+            {"ua": ANDROID_CHROME},
+            {"now": T0},
+            {"call": "markShown"},
+            {"get": "rate_nudge_asks"},
+            {"get": "rate_nudge_last_at"},
+        ]
+    )
+    assert out[3:] == ["1", str(T0)]
+
+
+def test_second_ask_needs_30_days_and_cap_is_two():
+    out = _run(
+        [
+            {"ua": ANDROID_CHROME},
+            {"now": T0},
+            {"call": "markShown"},
+            {"now": T0 + 29 * DAY_MS},
+            {"call": "canShow"},
+            {"now": T0 + 30 * DAY_MS},
+            {"call": "canShow"},
+            {"call": "markShown"},
+            {"now": T0 + 90 * DAY_MS},
+            {"call": "canShow"},
+        ]
+    )
+    assert out[4] is False
+    assert out[6] is True
+    assert out[9] is False
+
+
+def test_tapped_blocks_forever():
+    out = _run(
+        [
+            {"ua": ANDROID_CHROME},
+            {"set": "rate_nudge_tapped", "value": "1"},
+            {"call": "canShow"},
+            {"call": "recordKnownMarked", "args": [10]},
+        ]
+    )
+    assert out[2:] == [False, False]
+
+
+def test_legacy_done_flag_migrates_to_one_ask_now():
+    out = _run(
+        [
+            {"ua": ANDROID_CHROME},
+            {"now": T0},
+            {"set": "rate_nudge_done", "value": "1"},
+            {"call": "canShow"},
+            {"get": "rate_nudge_asks"},
+            {"get": "rate_nudge_last_at"},
+            {"now": T0 + 31 * DAY_MS},
+            {"call": "canShow"},
+        ]
+    )
+    assert out[3] is False
+    assert out[4:6] == ["1", str(T0)]
+    assert out[7] is True

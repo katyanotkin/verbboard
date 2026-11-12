@@ -122,11 +122,19 @@ async def record_votd_click(request: Request) -> JSONResponse:
 @router.post("/api/analytics/rate_clicked")
 async def record_rate_click(request: Request) -> JSONResponse:
     """Diagnostic-only: an Android visitor tapped the "rate us on Google Play"
-    link (About / Feedback). No auth and no body -- same unauthenticated,
+    link (About / Feedback, or a rate nudge row). No auth; optional JSON body
+    {source: practice|known} sets a per-source flag -- same unauthenticated,
     fail-open shape as /votd_clicked."""
     date = datetime.now(UTC).strftime("%Y-%m-%d")
     fingerprint = get_fingerprint_sid(request, date)
-    await record_rate_clicked(fingerprint, date)
+    source: str | None = None
+    try:
+        body = await request.json()
+        if isinstance(body, dict) and isinstance(body.get("source"), str):
+            source = body["source"]
+    except Exception:
+        pass  # no/invalid body (About/Feedback link sends none)
+    await record_rate_clicked(fingerprint, date, source)
     return JSONResponse({"ok": True})
 
 

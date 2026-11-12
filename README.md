@@ -114,7 +114,7 @@ Visual indicators:
 - "New version available" banner (en/ru/es/he) with an Update button when the service worker finds a newer release; never reloads on its own
 - Google Play link on Android browsers (`pwa.js` shows `#play-link`; hidden in the app, on iOS and on desktop)
 - Voluntary "Rate on Google Play" line on the About and Feedback pages: Android only (browser and the installed app), hidden on iOS, desktop and in-app WebViews, never a popup or prompt; taps are counted on the Reports page
-- One-time "Rate on Google Play" row in the practice wrap-up after the second completed practice: Android only, shown once per device, never incentivized
+- "Rate on Google Play" row after the second completed practice and again when the fifth verb is starred: Android only, at most twice per device (30 days apart), never again after a tap, never incentivized
 - Three-branch sign-in: standalone PWA → new tab, mobile browser → `/auth/signin`, desktop → popup
 - `/privacy` page for Google Play OAuth consent screen
 - Digital Asset Links at `/.well-known/assetlinks.json` (TWA fingerprint required for Play)

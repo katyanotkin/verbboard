@@ -167,6 +167,8 @@ _ENGAGEMENT_FLAGS = (
     "plus_notice_shown",
     "fill_started",
     "rate_clicked",
+    "rate_clicked_practice",
+    "rate_clicked_known",
 )
 
 _TOP_SEARCH_HITS = 10

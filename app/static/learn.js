@@ -58,6 +58,23 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       window.VerbBoardLoginNudge.recordKnownMarked();
     }
+
+    // Rate nudge (issue #24): the 5th starred verb on this device, Android
+    // only, capped and spaced in rate_nudge.js. A one-line row in the empty
+    // #rate-nudge-slot, never a modal.
+    // Skipped mid-practice (a practice_session exists) so it never interrupts
+    // a session or spends an ask before the wrap-up.
+    let knownCount = 0;
+    let inPractice = false;
+    try {
+      knownCount = window.VerbBoardStorage.readSet('known:' + language).size;
+      inPractice = !!localStorage.getItem('practice_session:' + language);
+    } catch (_) {}
+    if (nextKnown && !inPractice && window.VerbBoardRateNudge &&
+        window.VerbBoardRateNudge.recordKnownMarked(knownCount)) {
+      const slot = document.getElementById('rate-nudge-slot');
+      if (slot && !slot.firstChild) window.VerbBoardRateNudge.show(slot, 'known');
+    }
   }
 
   knownButton.addEventListener("click", function (event) {

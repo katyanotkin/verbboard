@@ -283,7 +283,10 @@ async def record_votd_clicked(fingerprint: str, date: str) -> None:
     task.add_done_callback(_pending.discard)
 
 
-def _record_rate_clicked(fingerprint: str, date: str) -> None:
+_RATE_SOURCES = ("practice", "known")
+
+
+def _record_rate_clicked(fingerprint: str, date: str, source: str | None = None) -> None:
     """Record that the Android "rate us on Google Play" link was tapped this
     session-day. Set-once; a tap with no existing session doc is dropped rather
     than creating a stub doc (same as votd_clicked)."""
@@ -293,15 +296,23 @@ def _record_rate_clicked(fingerprint: str, date: str) -> None:
     try:
         doc_ref = get_db().collection(COLLECTION).document(doc_id)
         snapshot = doc_ref.get()
-        if not snapshot.exists or snapshot.to_dict().get("rate_clicked"):
+        if not snapshot.exists:
             return
-        doc_ref.set({"rate_clicked": True}, merge=True)
+        existing = snapshot.to_dict()
+        updates: dict[str, bool] = {}
+        if not existing.get("rate_clicked"):
+            updates["rate_clicked"] = True
+        # Optional per-source flag (set-once); unknown sources are ignored.
+        if source in _RATE_SOURCES and not existing.get(f"rate_clicked_{source}"):
+            updates[f"rate_clicked_{source}"] = True
+        if updates:
+            doc_ref.set(updates, merge=True)
     except Exception:
         logger.exception("Failed to record rate click")
 
 
-async def record_rate_clicked(fingerprint: str, date: str) -> None:
-    task = asyncio.create_task(asyncio.to_thread(_record_rate_clicked, fingerprint, date))
+async def record_rate_clicked(fingerprint: str, date: str, source: str | None = None) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_rate_clicked, fingerprint, date, source))
     _pending.add(task)
     task.add_done_callback(_pending.discard)
 

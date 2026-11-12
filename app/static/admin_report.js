@@ -97,7 +97,9 @@
     plus_notice_shown: "Plus notice shown",
     practice_gate_then_signed_in: "Gate shown, then signed in",
     fill_started: "Fill practice started",
-    rate_clicked: "Rate link tapped (Android)"
+    rate_clicked: "Rate link tapped (Android, any source)",
+    rate_clicked_practice: "Rate link tapped after practice",
+    rate_clicked_known: "Rate link tapped after 5th starred verb"
   };
 
   function engagementLabel(flag) {
