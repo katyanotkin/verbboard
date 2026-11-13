@@ -18,12 +18,14 @@ from core.progress.progress_service import (
     record_seen,
 )
 from core.rate_limit import SlidingWindowRateLimiter
+from core.rate_nudge_service import MAX_COUNT, sync_rate_nudge
 
 router = APIRouter(prefix="/api/progress")
 
 _VALID_BADGE_SIZES = {3, 6, 9}
 _MAX_FILL_ANSWERS = 200
 _FILL_SESSION_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=60, window_seconds=600)
+_RATE_NUDGE_RATE_LIMITER = SlidingWindowRateLimiter(max_calls=60, window_seconds=600)
 
 
 class SeenRequest(BaseModel):
@@ -67,6 +69,16 @@ class PracticeProgressRequest(BaseModel):
         if invalid:
             raise ValueError(f"badges contains invalid sizes {invalid}; allowed: {sorted(_VALID_BADGE_SIZES)}")
         return v
+
+
+class RateNudgeRequest(BaseModel):
+    # Absolute values (never increments). Range checks live in the handler so bad bodies answer 400.
+    votd_opens: int
+    votd_opens_at_last_ask: int
+    completed: int
+    asks: int
+    last_at: int
+    tapped: bool
 
 
 class FillSessionRequest(BaseModel):
@@ -247,3 +259,21 @@ def post_fill_session(
     )
 
     return {"ok": True}
+
+
+@router.post("/rate_nudge")
+def post_rate_nudge(
+    request: Request,
+    payload: RateNudgeRequest,
+):
+    user = _require_user(request)
+
+    counts = (payload.votd_opens, payload.votd_opens_at_last_ask, payload.completed, payload.asks)
+    if not all(0 <= value <= MAX_COUNT for value in counts):
+        raise HTTPException(status_code=400, detail="Invalid rate nudge counts")
+    if payload.last_at < 0:
+        raise HTTPException(status_code=400, detail="Invalid rate nudge timestamp")
+    if not _RATE_NUDGE_RATE_LIMITER.allow(user.uid):
+        raise HTTPException(status_code=429, detail="Too many requests")
+
+    return sync_rate_nudge(user.uid, payload.model_dump())

@@ -485,6 +485,14 @@
 
     if (!token) return;
 
+    // Rate-nudge state follows the account; runs before the language early
+    // return below so pages without a language (home) still sync, on the pages
+    // that load rate_nudge.js (home, verbs, learn); elsewhere the guard makes
+    // it a no-op. Never throws and gives up after a few seconds.
+    try {
+      if (window.VerbBoardRateNudge) await window.VerbBoardRateNudge.syncWithServer(token);
+    } catch (_) {}
+
     const languageSelect = document.querySelector(
       'select[name="language"]'
     );

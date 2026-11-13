@@ -40,6 +40,7 @@ type is added/removed before you re-submit this form.
 - Purposes: Analytics, App functionality
 - Description: "We log which pages are visited (home, verb list, learn, feedback) and device type to understand app usage and improve performance. This is anonymous unless you're signed in, in which case your account ID may be attached to that day's session."
 - Source: `app/main.py` `_PageViewMiddleware`, `core/analytics/session_tracker.py` -- writes to Firestore `analytics_sessions`.
+- Signed-in users also have a small counter set for the optional "Rate on Google Play" prompt (Verb of the Day opens, completed practices, times the prompt was shown and when, whether it was tapped), stored on the account. Purpose: App functionality (not Personalization). Source: `users/{uid}.rate_nudge`, `core/rate_nudge_service.py`, `POST /api/progress/rate_nudge`.
 
 **In-app search history** -- Yes
 - Collected: Yes / Shared: No / Ephemeral: No / Required: Yes (automatic on a failed search)

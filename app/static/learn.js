@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // one-line row in the empty #rate-nudge-slot, never a modal. Skipped
   // mid-practice (a practice_session exists) so it never interrupts a session
   // or spends an ask before the wrap-up.
-  (function maybeShowRateNudge() {
+  function maybeShowRateNudge() {
     const nudge = window.VerbBoardRateNudge;
     const slot = document.getElementById('rate-nudge-slot');
     if (!nudge || !slot || slot.firstChild) return;
@@ -100,7 +100,11 @@ document.addEventListener("DOMContentLoaded", function () {
       inPractice = !!localStorage.getItem('practice_session:' + language);
     } catch (_) {}
     if (!inPractice && nudge.votdNudgeDue()) nudge.show(slot, 'votd');
-  })();
+  }
+  maybeShowRateNudge();
+  // Signed-in: the server-synced counters may arrive after first paint.
+  // Re-run once; the slot guard keeps it from showing twice.
+  window.addEventListener('vb:progress-hydrated', maybeShowRateNudge, { once: true });
 
   initializeProgress();
 

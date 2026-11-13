@@ -218,7 +218,7 @@ def test_votd_counter_resets_after_show():
             {"call": "votdNudgeDue"},
         ]
     )
-    assert out[-2:] == ["0", False]
+    assert out[-2:] == ["5", False]  # counter is kept; a baseline makes it not due
 
 
 def test_votd_second_ask_needs_30_days_and_cap_is_two():
