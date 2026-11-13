@@ -230,3 +230,58 @@ def test_all_time_section_ignores_range_and_excluded_uids(fake_db, monkeypatch) 
 
     assert report["all_time"]["practice"] == {"practice_users_total": 1, "practice_by_language": {"es": 1}}
     assert report["all_time"]["search_hits"]["top"][0]["verb_id"] == "es_correr"
+
+
+def test_retention_block_counts_users_and_day7_return(fake_db) -> None:
+    _session(fake_db, "a1", "2026-10-01", uid="u1")
+    _session(fake_db, "a2", "2026-10-08", uid="u1")  # exactly 7 days later
+    _session(fake_db, "b1", "2026-10-01", uid="u2")  # never returned
+
+    retention = build_report("2026-10-01", "2026-10-01")["all_time"]["retention"]
+
+    assert retention["overall"]["users"] == 2
+    assert retention["overall"]["d7"] == {"n": 2, "returned": 1, "pct": 50.0}
+    assert retention["weekly"][0]["cohort_week"] == "2026-09-28"
+    assert retention["weekly"][0]["users"] == 2
+
+
+def test_retention_ignores_report_date_range(fake_db) -> None:
+    _session(fake_db, "a1", "2026-10-01", uid="u1")
+    _session(fake_db, "a2", "2026-10-08", uid="u1")
+
+    report = build_report("2000-01-01", "2000-01-02")
+
+    assert report["non_bot_sessions"] == 0
+    assert report["all_time"]["retention"]["overall"]["users"] == 1
+    assert report["all_time"]["retention"]["overall"]["d7"]["returned"] == 1
+
+
+def test_retention_skips_excluded_uids_bots_and_anonymous(fake_db, monkeypatch) -> None:
+    monkeypatch.setattr(admin_report_service, "_excluded_uids", lambda: {"me"})
+    _session(fake_db, "owner", "2026-10-01", uid="me")
+    _session(fake_db, "bot", "2026-10-01", uid="botuid", device_type="bot")
+    _session(fake_db, "anon", "2026-10-01")
+    _session(fake_db, "real", "2026-10-01", uid="u1")
+
+    retention = build_report("2026-10-01", "2026-10-01")["all_time"]["retention"]
+
+    assert retention["overall"]["users"] == 1
+
+
+def test_retention_with_no_sessions_is_empty_not_missing(fake_db) -> None:
+    retention = build_report("2026-10-01", "2026-10-01")["all_time"]["retention"]
+
+    assert retention["overall"]["users"] == 0
+    assert retention["overall"]["d7"]["pct"] is None
+    assert retention["weekly"] == []
+
+
+def test_compare_keeps_retention_on_current_report_only(fake_db) -> None:
+    _session(fake_db, "a1", "2026-10-02", uid="u1")
+    _session(fake_db, "p1", "2026-10-01", uid="u2")
+
+    report = build_report("2026-10-02", "2026-10-03", compare=True)
+
+    assert report["all_time"]["retention"]["overall"]["users"] == 2
+    assert "all_time" not in report["previous"]
+    assert not any("retention" in key for key in report["deltas"])

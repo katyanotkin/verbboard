@@ -18,6 +18,7 @@ from core.admin_feedback_service import (
     _read_practice_summary,
     _read_search_hits_summary,
 )
+from core.retention_service import compute_retention, read_uid_session_rows
 from core.storage.firestore_db import get_db
 
 MAX_RANGE_DAYS = 366
@@ -197,6 +198,8 @@ def build_report(date_from: str, date_to: str, compare: bool = False) -> dict[st
     report["all_time"] = {
         "practice": _read_practice_summary(excluded_uids=excluded_uids),
         "search_hits": _read_search_hits_summary(),
+        # Signed-in users only (uid-bearing sessions), weekly cohorts of the whole collection.
+        "retention": compute_retention(read_uid_session_rows(None, excluded_uids), datetime.now(UTC).date()),
     }
 
     if compare:

@@ -235,3 +235,13 @@ For pre-commit, parallelization is not used — the hook runs `pytest` directly 
     new on their first in-window day (documented in the caveat line, not a bug).
   - [ ] `make retention ARGS="--since nonsense"` prints `could not run: ...` and exits 2.
   - [ ] A cohort younger than 7 days shows `-` for day 7 (not 0%).
+
+  **Manual check on stage (admin Reports page):**
+  - [ ] Open `/admin/reports` on stage: a "Signed-in retention" card shows above "All time" with an
+    "All" row and one row per cohort week; the page still loads without console errors.
+  - [ ] The "All" user count matches `make retention` (same data) and the cohort table matches the
+    Firestore spot check above.
+  - [ ] Change the date range and toggle compare: the card does not change (it ignores the range) and
+    the rest of the report still works.
+  - [ ] Fresh cohorts (under 7 or 30 days old) show `-`, not `0%`.
+  - [ ] No horizontal scroll at 375px (the table is wide), and the retention caveat text is readable.

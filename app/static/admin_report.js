@@ -116,6 +116,28 @@
     });
   }
 
+  function retentionCell(entry) {
+    return entry.pct === null ? "-" : entry.pct + "% (" + entry.returned + "/" + entry.n + ")";
+  }
+
+  function retentionRow(label, block) {
+    return [label, block.users, retentionCell(block.d1), retentionCell(block.d7), retentionCell(block.d30),
+      retentionCell(block.d1_7), retentionCell(block.d8_30)];
+  }
+
+  function retentionHtml(retention) {
+    if (!retention || !retention.overall) return "";
+    var rows = [retentionRow("All", retention.overall)].concat((retention.weekly || []).map(function (week) {
+      return retentionRow("Week of " + week.cohort_week, week);
+    }));
+    return '<div class="card card-body"><h2>Signed-in retention</h2>' +
+      '<p class="cell-meta">Share of signed-in users who came back, by the week of their first signed-in session. ' +
+      "Day 1/7/30 = a session exactly that many days later; 1-7 and 8-30 = at least one session in that window. " +
+      "Format: % (returned/eligible); \"-\" = no cohort old enough yet. Ignores the date range above. " +
+      escapeHtml(retention.caveat || "") + "</p>" +
+      table(["Cohort", "Users", "Day 1", "Day 7", "Day 30", "Days 1-7", "Days 8-30"], rows) + "</div>";
+  }
+
   function allTimeHtml(allTime) {
     var practice = allTime.practice || {};
     var hits = allTime.search_hits || {};
@@ -132,7 +154,7 @@
     var topRows = (hits.top || []).map(function (row) {
       return [row.verb_id + (row.autogen ? " (generated)" : ""), row.hits];
     });
-    return '<div class="card card-body"><h2>All time</h2>' +
+    return retentionHtml(allTime.retention) + '<div class="card card-body"><h2>All time</h2>' +
       '<p class="cell-meta">Whole-collection numbers; they ignore the date range above.</p>' +
       table(["Practice", "Count"], practiceRows) +
       table(["Generated verbs", "Count"], generatedRows) +
