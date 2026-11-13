@@ -168,7 +168,7 @@ _ENGAGEMENT_FLAGS = (
     "fill_started",
     "rate_clicked",
     "rate_clicked_practice",
-    "rate_clicked_known",
+    "rate_clicked_votd",
 )
 
 _TOP_SEARCH_HITS = 10

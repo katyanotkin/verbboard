@@ -5,13 +5,14 @@
 // on Android (browser or installed app, never a WebView). Two occasions, both
 // value-neutral (Play policy: no incentive, not gated on sentiment):
 //   - practice: the wrap-up modal after the 2nd completed practice
-//   - known:    a one-line row on /learn once 5 verbs are starred (the real
-//               known-verb count, so star/unstar cannot game it)
+//   - votd:     a one-line row on /learn once the Verb of the Day chip on home
+//               has been opened 5 times on this device (any language)
 // Shared cap per device: at most 2 asks, at least 30 days apart, and never
 // again after a tap.
 //
 // localStorage keys:
 //   rate_nudge_completed -- completed practice sessions counted on this device
+//   rate_nudge_votd_opens -- Verb of the Day chip opens counted on this device
 //   rate_nudge_asks      -- how many times a row was shown
 //   rate_nudge_last_at   -- ms timestamp of the last show
 //   rate_nudge_tapped    -- '1' once the link was tapped (stop asking)
@@ -23,7 +24,8 @@
   var TAPPED_KEY = 'rate_nudge_tapped';
   var LEGACY_DONE_KEY = 'rate_nudge_done';
   var MIN_COMPLETED = 2;
-  var MIN_KNOWN = 5;
+  var VOTD_KEY = 'rate_nudge_votd_opens';
+  var MIN_VOTD_OPENS = 5;
   var MAX_ASKS = 2;
   var MIN_GAP_MS = 30 * 24 * 60 * 60 * 1000;
   var PLAY_URL_BASE =
@@ -70,10 +72,15 @@
     return count >= MIN_COMPLETED && canAsk();
   }
 
-  // Call after a verb is marked known (not un-marked), with the number of
-  // known verbs in that language. True when the row should show now.
-  function recordKnownMarked(knownCount) {
-    return (knownCount || 0) >= MIN_KNOWN && canAsk();
+  // Call on each click of the Verb of the Day chip on home. Counted across
+  // languages; the row itself shows on the /learn page that click opens.
+  function recordVotdOpened() {
+    write(VOTD_KEY, String(readInt(VOTD_KEY) + 1));
+  }
+
+  // True when enough Verb of the Day opens have accrued and an ask is allowed.
+  function votdNudgeDue() {
+    return readInt(VOTD_KEY) >= MIN_VOTD_OPENS && canAsk();
   }
 
   // Live check at render time (the wrap-up payload can outlive its page).
@@ -84,11 +91,12 @@
   function markShown() {
     write(ASKS_KEY, String(readInt(ASKS_KEY) + 1));
     write(LAST_AT_KEY, String(Date.now()));
+    write(VOTD_KEY, '0');
   }
 
-  // source: 'practice' | 'known' (utm_medium and the click beacon's source).
+  // source: 'practice' | 'votd' (utm_medium and the click beacon's source).
   function buildCta(copyText, linkLabel, source) {
-    source = source === 'known' ? 'known' : 'practice';
+    source = source === 'votd' ? 'votd' : 'practice';
     var wrap = document.createElement('div');
     wrap.className = 'vb-login-nudge vb-rate-nudge';
 
@@ -151,7 +159,8 @@
   window.VerbBoardRateNudge = {
     show: show,
     recordCompleted: recordCompleted,
-    recordKnownMarked: recordKnownMarked,
+    recordVotdOpened: recordVotdOpened,
+    votdNudgeDue: votdNudgeDue,
     canShow: canShow,
     markShown: markShown,
     isAndroidBrowser: isAndroidBrowser,

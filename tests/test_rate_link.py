@@ -41,12 +41,12 @@ def test_record_rate_clicked_source_flags(fake_db) -> None:
     assert fake_db._docs[PATH] == {"sid": "fp1", "rate_clicked": True}
     # A new source is recorded even though rate_clicked is already set.
     session_tracker._record_rate_clicked("fp1", DATE, "practice")
-    session_tracker._record_rate_clicked("fp1", DATE, "known")
+    session_tracker._record_rate_clicked("fp1", DATE, "votd")
     assert fake_db._docs[PATH] == {
         "sid": "fp1",
         "rate_clicked": True,
         "rate_clicked_practice": True,
-        "rate_clicked_known": True,
+        "rate_clicked_votd": True,
     }
 
 
@@ -65,9 +65,9 @@ def test_rate_clicked_endpoint(client: TestClient) -> None:
 
 def test_rate_clicked_endpoint_passes_source(client: TestClient) -> None:
     with patch("app.routes.api_analytics.record_rate_clicked", new_callable=AsyncMock) as rec:
-        resp = client.post("/api/analytics/rate_clicked", json={"source": "known"})
+        resp = client.post("/api/analytics/rate_clicked", json={"source": "votd"})
     assert resp.json() == {"ok": True}
-    assert rec.call_args.args[2] == "known"
+    assert rec.call_args.args[2] == "votd"
 
 
 def test_reports_engagement_counts_rate_clicked(fake_db) -> None:
@@ -77,7 +77,7 @@ def test_reports_engagement_counts_rate_clicked(fake_db) -> None:
     report = build_report("2026-10-02", "2026-10-02")
     assert report["engagement"]["rate_clicked"] == 1
     assert report["engagement"]["rate_clicked_practice"] == 0
-    assert report["engagement"]["rate_clicked_known"] == 0
+    assert report["engagement"]["rate_clicked_votd"] == 0
 
 
 def test_reports_engagement_counts_rate_clicked_by_source(fake_db) -> None:
@@ -89,7 +89,7 @@ def test_reports_engagement_counts_rate_clicked_by_source(fake_db) -> None:
     }
     report = build_report("2026-10-02", "2026-10-02")
     assert report["engagement"]["rate_clicked_practice"] == 1
-    assert report["engagement"]["rate_clicked_known"] == 0
+    assert report["engagement"]["rate_clicked_votd"] == 0
 
 
 @pytest.mark.parametrize("lang", ["en", "ru", "he", "es"])

@@ -99,7 +99,7 @@
     fill_started: "Fill practice started",
     rate_clicked: "Rate link tapped (Android, any source)",
     rate_clicked_practice: "Rate link tapped after practice",
-    rate_clicked_known: "Rate link tapped after 5th starred verb"
+    rate_clicked_votd: "Rate link tapped after 5th Verb of the Day"
   };
 
   function engagementLabel(flag) {

@@ -25,6 +25,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const votdHero = document.querySelector(".votd-hero");
   if (votdHero) {
     votdHero.addEventListener("click", function () {
+      // Count toward the Play rating nudge (shown later on /learn).
+      try {
+        if (window.VerbBoardRateNudge) window.VerbBoardRateNudge.recordVotdOpened();
+      } catch (_) {}
       try {
         fetch("/api/analytics/votd_clicked", { method: "POST", keepalive: true }).catch(function () {});
       } catch (_) {}

@@ -283,7 +283,7 @@ async def record_votd_clicked(fingerprint: str, date: str) -> None:
     task.add_done_callback(_pending.discard)
 
 
-_RATE_SOURCES = ("practice", "known")
+_RATE_SOURCES = ("practice", "votd")
 
 
 def _record_rate_clicked(fingerprint: str, date: str, source: str | None = None) -> None:

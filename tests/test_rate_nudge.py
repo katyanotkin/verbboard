@@ -175,15 +175,85 @@ DAY_MS = 24 * 60 * 60 * 1000
 T0 = 1_800_000_000_000
 
 
-@pytest.mark.parametrize("known,expected", [(4, False), (5, True), (9, True), (None, False)])
-def test_record_known_marked_threshold(known, expected):
-    out = _run([{"ua": ANDROID_CHROME}, {"call": "recordKnownMarked", "args": [known]}])
-    assert out[1] is expected
+def _votd_opens(n):
+    return [{"call": "recordVotdOpened"}] * n
 
 
-def test_record_known_marked_false_when_not_android():
-    out = _run([{"ua": IPHONE}, {"call": "recordKnownMarked", "args": [10]}])
-    assert out[1] is False
+def test_votd_four_opens_not_due_fifth_due_on_android():
+    out = _run(
+        [{"ua": ANDROID_CHROME}, *_votd_opens(4), {"call": "votdNudgeDue"}, *_votd_opens(1), {"call": "votdNudgeDue"}]
+    )
+    assert out[5] is False
+    assert out[7] is True
+
+
+@pytest.mark.parametrize("ua", [IPHONE, ANDROID_WEBVIEW, DESKTOP])
+def test_votd_never_due_when_not_android_browser(ua):
+    out = _run([{"ua": ua}, *_votd_opens(6), {"call": "votdNudgeDue"}])
+    assert out[-1] is False
+
+
+def test_votd_counter_persists_across_reload():
+    out = _run(
+        [
+            {"ua": ANDROID_CHROME},
+            *_votd_opens(3),
+            {"reload": True},
+            *_votd_opens(2),
+            {"get": "rate_nudge_votd_opens"},
+            {"call": "votdNudgeDue"},
+        ]
+    )
+    assert out[-2:] == ["5", True]
+
+
+def test_votd_counter_resets_after_show():
+    out = _run(
+        [
+            {"ua": ANDROID_CHROME},
+            {"now": T0},
+            *_votd_opens(5),
+            {"call": "markShown"},
+            {"get": "rate_nudge_votd_opens"},
+            {"call": "votdNudgeDue"},
+        ]
+    )
+    assert out[-2:] == ["0", False]
+
+
+def test_votd_second_ask_needs_30_days_and_cap_is_two():
+    out = _run(
+        [
+            {"ua": ANDROID_CHROME},
+            {"now": T0},
+            *_votd_opens(5),
+            {"call": "markShown"},
+            *_votd_opens(5),
+            {"now": T0 + 29 * DAY_MS},
+            {"call": "votdNudgeDue"},
+            {"now": T0 + 30 * DAY_MS},
+            {"call": "votdNudgeDue"},
+            {"call": "markShown"},
+            *_votd_opens(5),
+            {"now": T0 + 90 * DAY_MS},
+            {"call": "votdNudgeDue"},
+        ]
+    )
+    assert out[14] is False
+    assert out[16] is True
+    assert out[-1] is False
+
+
+def test_votd_tapped_stops_it():
+    out = _run(
+        [
+            {"ua": ANDROID_CHROME},
+            *_votd_opens(5),
+            {"set": "rate_nudge_tapped", "value": "1"},
+            {"call": "votdNudgeDue"},
+        ]
+    )
+    assert out[-1] is False
 
 
 def test_mark_shown_increments_asks_and_sets_last_at():
@@ -225,10 +295,12 @@ def test_tapped_blocks_forever():
             {"ua": ANDROID_CHROME},
             {"set": "rate_nudge_tapped", "value": "1"},
             {"call": "canShow"},
-            {"call": "recordKnownMarked", "args": [10]},
+            *_votd_opens(5),
+            {"call": "votdNudgeDue"},
         ]
     )
-    assert out[2:] == [False, False]
+    assert out[2] is False
+    assert out[-1] is False
 
 
 def test_legacy_done_flag_migrates_to_one_ask_now():
@@ -247,3 +319,9 @@ def test_legacy_done_flag_migrates_to_one_ask_now():
     assert out[3] is False
     assert out[4:6] == ["1", str(T0)]
     assert out[7] is True
+
+
+def test_home_loads_rate_nudge_before_home_js(client) -> None:
+    html = client.get("/").text
+    assert "/static/rate_nudge.js" in html
+    assert html.index("/static/rate_nudge.js") < html.index("/static/home.js")
