@@ -32,11 +32,15 @@ def test_home_verb_of_the_day_links_to_learn(client: TestClient, fake_db) -> Non
     seed_spanish_verb(fake_db)
     html = client.get("/?language=es&ui_language=en").text
     assert 'class="votd-hero"' in html
-    match = re.search(r'href="(/learn\?language=es&verb_id=es_[^"&]+&ui_language=en)"', html)
+    match = re.search(r'href="(/learn\?language=es&verb_id=es_[^"&]+&ui_language=en&return_to=[^"]+)"', html)
     assert match, html
 
     learn_response = client.get(match.group(1))
     assert learn_response.status_code == 200
+    # Issue #113: the bottom-nav Back on /learn returns to home, not /verbs.
+    back = re.search(r'<a href="([^"]+)" class="bnav-tab bnav-back"', learn_response.text)
+    assert back, "bottom-nav Back link not found"
+    assert back.group(1).replace("&amp;", "&") == "/?language=es&ui_language=en"
 
 
 def test_home_verb_of_the_day_absent_renders_no_hero(client: TestClient, monkeypatch) -> None:

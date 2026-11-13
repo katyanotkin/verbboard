@@ -105,7 +105,7 @@
 {% endif %}
 
 {% if votd %}
-    <a href="/learn?language={{ learning_lang | urlencode }}&verb_id={{ votd.id | urlencode }}&ui_language={{ lang | urlencode }}" class="votd-hero">
+    <a href="/learn?language={{ learning_lang | urlencode }}&verb_id={{ votd.id | urlencode }}&ui_language={{ lang | urlencode }}&return_to={{ ('/?language=' ~ learning_lang ~ '&ui_language=' ~ lang) | urlencode }}" class="votd-hero">
       <span class="votd-hero-text">
         <span class="votd-hero-label">{{ ui['home.verb_of_the_day'] }}</span>
         <span class="votd-hero-verb">{{ votd.label }}</span>
