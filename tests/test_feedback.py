@@ -162,12 +162,18 @@ def test_feedback_eleventh_submit_in_window_is_not_saved(client: TestClient, mon
 # ---------------------------------------------------------------------------
 
 
-def test_plus_page_renders_card_and_ordinary_form(client) -> None:
+def test_plus_page_renders_card_only(client) -> None:
     html = client.get("/feedback?page=plus&language=tr&ui_language=en").text
     assert 'id="plus-request"' in html and "plus_request.js" in html
     assert 'data-plus-act="request"' in html
-    assert 'id="feedback-form"' in html
+    assert 'data-plus-act="signin"' in html
+    assert 'id="feedback-form"' not in html
+    assert 'name="comment"' not in html and 'name="contact_email"' not in html
     assert "plus-id-token" not in html
+
+
+def test_normal_page_still_renders_feedback_form(client) -> None:
+    assert 'id="feedback-form"' in client.get("/feedback?ui_language=en").text
 
 
 def test_plus_page_invalid_language_falls_back_to_normal(client) -> None:

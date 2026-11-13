@@ -42,7 +42,7 @@
     {% include '_plus_request.html' %}
     {% endif %}
 
-    {% if not success %}
+    {% if not success and not plus_mode %}
     <form method="post" action="/feedback" id="feedback-form">
       <input type="hidden" name="page" value="{{ page }}">
       <input type="hidden" name="language" value="{{ language }}">
