@@ -12,11 +12,57 @@ def test_feedback_get_returns_form(client: TestClient) -> None:
     assert "Feedback" in response.text
 
 
-def test_feedback_get_shows_poll_question(client: TestClient) -> None:
+def _activate_poll(monkeypatch) -> None:
+    # Patch each consumer's own imported name; patch_everywhere matches by object identity,
+    # which is unreliable for the interned empty string.
+    monkeypatch.setattr("app.routes.feedback.ACTIVE_POLL_ID", "feature_priority")
+    monkeypatch.setattr("core.polls.ACTIVE_POLL_ID", "feature_priority")
+
+
+def test_feedback_get_shows_poll_question_when_poll_active(client: TestClient, monkeypatch) -> None:
+    _activate_poll(monkeypatch)
     response = client.get("/feedback?language=en")
     assert response.status_code == 200
-    # ACTIVE_POLL_ID is set, so a poll block should appear
     assert "poll_answer" in response.text
+
+
+def test_feedback_get_renders_no_poll_by_default(client: TestClient) -> None:
+    from core.polls import POLL_QUESTIONS
+
+    response = client.get("/feedback?language=en")
+    assert response.status_code == 200
+    assert "<form" in response.text
+    assert "poll_answer" not in response.text
+    assert POLL_QUESTIONS["feature_priority"]["en"] not in response.text
+
+
+def test_feedback_submit_stale_poll_answer_discarded_by_default(client: TestClient, monkeypatch) -> None:
+    saved: list[dict] = []
+
+    def fake_save(**kwargs):
+        saved.append(kwargs)
+        return "doc-stale"
+
+    monkeypatch.setattr("app.routes.feedback.save_feedback", fake_save)
+    response = client.post(
+        "/feedback",
+        data={"comment": "hello there", "poll_answer": "more_languages", "return_to": "/"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert len(saved) == 1
+    assert not saved[0]["poll_answer"]
+    assert not saved[0].get("poll_id")
+
+
+def test_feedback_submit_stale_poll_answer_only_is_empty_error(client: TestClient) -> None:
+    response = client.post(
+        "/feedback",
+        data={"comment": "", "poll_answer": "more_languages", "return_to": "/"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert "error=empty" in response.headers["location"]
 
 
 def test_feedback_get_success_flag_shows_confirmation(client: TestClient) -> None:
@@ -49,6 +95,7 @@ def test_feedback_submit_comment_calls_save_and_redirects(client: TestClient, mo
 
 
 def test_feedback_submit_poll_answer_saved(client: TestClient, monkeypatch) -> None:
+    _activate_poll(monkeypatch)
     saved: list[dict] = []
 
     def fake_save(**kwargs):
@@ -79,6 +126,7 @@ def test_feedback_submit_empty_redirects_with_error(client: TestClient) -> None:
 
 def test_feedback_submit_invalid_poll_answer_treated_as_empty(client: TestClient, monkeypatch) -> None:
     """An unrecognized poll_answer value is discarded; without a comment it errors."""
+    _activate_poll(monkeypatch)
     response = client.post(
         "/feedback",
         data={"comment": "", "poll_answer": "maybe"},

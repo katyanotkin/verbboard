@@ -311,12 +311,20 @@ def test_get_active_poll_meta_unset_returns_empty_dict(monkeypatch) -> None:
     assert admin_feedback_service.get_active_poll_meta() == {}
 
 
-def test_get_active_poll_meta_reflects_current_polls_config() -> None:
+def test_get_active_poll_meta_default_is_empty_dict() -> None:
+    """The poll is retired by default (ACTIVE_POLL_ID == "")."""
+    assert admin_feedback_service.get_active_poll_meta() == {}
+
+
+def test_get_active_poll_meta_reflects_current_polls_config(monkeypatch) -> None:
     """Documents current core.polls behavior: get_active_poll_meta() reads
     POLL_OPTIONS directly (not get_poll_options()), so it does NOT filter out
     POLL_HIDDEN_OPTIONS entries the way the public-facing poll rendering does.
     """
-    from core.polls import ACTIVE_POLL_ID, POLL_OPTIONS, POLL_QUESTIONS
+    from core.polls import POLL_OPTIONS, POLL_QUESTIONS
+
+    ACTIVE_POLL_ID = "feature_priority"
+    monkeypatch.setattr(admin_feedback_service, "ACTIVE_POLL_ID", ACTIVE_POLL_ID)
 
     meta = admin_feedback_service.get_active_poll_meta()
 

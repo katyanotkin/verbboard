@@ -138,7 +138,7 @@
   "feedback.contact_email_placeholder": "you@example.com",
   "feedback.submit_button": "Send feedback",
   "feedback.success": "Thanks — feedback received.",
-  "feedback.error_empty": "Please write a comment or answer Yes/No.",
+  "feedback.error_empty": "Please write a comment.",
   "feedback.back": "⟵ Back",
   "lang.en": "English",
   "lang.ru": "Russian",

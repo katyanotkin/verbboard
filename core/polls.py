@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-ACTIVE_POLL_ID = "feature_priority"
+# No poll is active (owner decision 2026-11-13: no good questions right now and polls divert
+# attention from the comment box). Set an id from POLL_QUESTIONS to bring one back: the feedback
+# page, the POST validation and the admin summary all key off this value. Past answers stay in
+# Firestore.
+ACTIVE_POLL_ID = ""
 
 POLL_QUESTIONS: dict[str, dict[str, str]] = {
     "feature_priority": {
