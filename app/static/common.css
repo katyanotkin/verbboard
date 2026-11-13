@@ -572,6 +572,11 @@ body {
   .nav-btn--ghost {
     display: none;
   }
+
+  /* Feedback and About use .feedback-link for their Back: same rule, same block. */
+  .page-back-link {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

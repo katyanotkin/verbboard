@@ -67,3 +67,10 @@ def test_nav_btn_ghost_hidden_rule_appears_exactly_once_in_the_stylesheet() -> N
     css_text = _read_common_css()
     occurrences = len(re.findall(r"\.nav-btn--ghost\s*{\s*display:\s*none;\s*}", css_text))
     assert occurrences == 1, f"expected exactly one .nav-btn--ghost display:none rule, found {occurrences}"
+
+
+def test_page_back_link_hidden_rule_is_nested_inside_standalone_media_block() -> None:
+    """Feedback/About's own Back (.page-back-link) is hidden in the same standalone block
+    that shows the bottom nav, so the bottom-nav Back is the only one there."""
+    block_body = _extract_block(_read_common_css(), _STANDALONE_MEDIA_QUERY)
+    assert re.search(r"\.page-back-link\s*{\s*display:\s*none;\s*}", block_body)

@@ -189,3 +189,11 @@ def test_feedback_submit_rejects_external_return_to(client: TestClient, monkeypa
     )
     assert response.status_code == 303
     assert "evil.com" not in response.headers["location"]
+
+
+def test_feedback_and_about_back_links_are_hideable_in_standalone(client: TestClient) -> None:
+    """The bottom-nav Back takes over in the installed app; the page's own Back carries
+    .page-back-link, which common.css hides in the same standalone block as .nav-btn--ghost."""
+    for path in ("/feedback?language=es&ui_language=en", "/about?ui_language=en"):
+        html = client.get(path).text
+        assert re.search(r'class="feedback-link page-back-link"', html), path
