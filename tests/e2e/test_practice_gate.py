@@ -176,3 +176,99 @@ def test_embedded_in_app_browsers_fail_open(browser, live_server_url, user_agent
     with page.expect_navigation(url="**/learn?*"):
         page.click("#practice-start")
     ctx.close()
+
+
+# ---- Resume after redirect sign-in (issue #28) ---------------------------
+
+_PENDING_KEY = "practice_start_pending:en"
+
+
+def _open_with_pending(browser, live_server_url, *, age_ms=0, user=_FAKE_USER, session=False):
+    """New page load as after a redirect sign-in: marker (and maybe a session)
+    present in localStorage before the page scripts run."""
+    ctx = browser.new_context()
+    ctx.route("**/api/analytics/**", lambda r: r.fulfill(status=204))
+    ctx.route("**/api/progress/**", lambda r: r.fulfill(status=200, content_type="application/json", body="{}"))
+    ctx.route("**/api/preferences**", lambda r: r.fulfill(status=200, content_type="application/json", body="{}"))
+    page = ctx.new_page()
+    page.set_default_timeout(60_000)
+    page.route("https://www.gstatic.com/firebasejs/**", lambda route: route.abort())
+    page.add_init_script(_CONFIG_STUB)
+    page.add_init_script(_FIREBASE_STUB.replace("__USER__", user or "null"))
+    seed = (
+        "if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded','1');"
+        f" localStorage.setItem('{_PENDING_KEY}', JSON.stringify({{ts: Date.now() - {age_ms}, size: 3}}));"
+    )
+    if session:
+        seed += " localStorage.setItem('practice_session:en', JSON.stringify({ids:['en_go'],lemmas:{en_go:'go'},modes:{},size:3}));"
+    seed += " }"
+    page.add_init_script(seed)
+    return ctx, page
+
+
+def test_gate_cta_stores_pending_intent_and_dismiss_clears_it(browser, live_server_url):
+    ctx, page, _ = _open(browser, live_server_url)
+    page.click("#practice-start")
+    page.click(".practice-gate-cta")
+    raw = page.evaluate(f"localStorage.getItem('{_PENDING_KEY}')")
+    assert raw and '"ts"' in raw and '"size":3' in raw
+    page.keyboard.press("Escape")
+    page.wait_for_selector("[role=dialog]", state="detached")
+    assert page.evaluate(f"localStorage.getItem('{_PENDING_KEY}')") is None
+    ctx.close()
+
+
+def test_popup_sign_in_clears_pending_intent(browser, live_server_url):
+    ctx, page, _ = _open(browser, live_server_url)
+    page.click("#practice-start")
+    page.click(".practice-gate-cta")
+    assert page.evaluate(f"localStorage.getItem('{_PENDING_KEY}')") is not None
+    with page.expect_navigation(url="**/learn?*"):
+        page.evaluate("window.dispatchEvent(new CustomEvent('vb:progress-hydrated'))")
+    assert page.evaluate(f"localStorage.getItem('{_PENDING_KEY}')") is None
+    # Going back to /verbs must not start a second session.
+    page.evaluate("localStorage.removeItem('practice_session:en')")
+    page.goto(f"{live_server_url}/verbs?language=en&ui_language=en")
+    page.wait_for_selector("#practice-start")
+    page.wait_for_timeout(800)
+    assert "/learn" not in page.url
+    ctx.close()
+
+
+def test_redirect_return_starts_practice_once(browser, live_server_url):
+    ctx, page = _open_with_pending(browser, live_server_url)
+    page.goto(f"{live_server_url}/verbs?language=en&ui_language=en")
+    page.wait_for_url("**/learn?*")
+    assert page.evaluate(f"localStorage.getItem('{_PENDING_KEY}')") is None
+    assert _session_keys(page) == ["practice_session:en"]
+    ctx.close()
+
+
+def test_stale_pending_intent_does_not_start(browser, live_server_url):
+    ctx, page = _open_with_pending(browser, live_server_url, age_ms=11 * 60 * 1000)
+    page.goto(f"{live_server_url}/verbs?language=en&ui_language=en")
+    page.wait_for_selector("#practice-start")
+    page.wait_for_timeout(1000)
+    assert "/learn" not in page.url
+    assert page.evaluate(f"localStorage.getItem('{_PENDING_KEY}')") is None
+    ctx.close()
+
+
+def test_pending_intent_anonymous_does_not_start(browser, live_server_url):
+    ctx, page = _open_with_pending(browser, live_server_url, user=None)
+    page.goto(f"{live_server_url}/verbs?language=en&ui_language=en")
+    page.wait_for_selector("#practice-start")
+    page.wait_for_timeout(1000)
+    assert "/learn" not in page.url
+    assert page.evaluate(f"localStorage.getItem('{_PENDING_KEY}')") is None
+    ctx.close()
+
+
+def test_pending_intent_with_existing_session_does_not_start(browser, live_server_url):
+    ctx, page = _open_with_pending(browser, live_server_url, session=True)
+    page.goto(f"{live_server_url}/verbs?language=en&ui_language=en")
+    page.wait_for_selector("#practice-start, .practice-continue, #practice-panel", state="attached")
+    page.wait_for_timeout(1000)
+    assert "/learn" not in page.url
+    assert page.evaluate(f"localStorage.getItem('{_PENDING_KEY}')") is None
+    ctx.close()

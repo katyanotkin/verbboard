@@ -272,6 +272,8 @@
 
       const session = readPracticeSession();
       const badges = readPracticeBadges();
+      // Once per page load; runs for the Continue view too so the marker is consumed.
+      maybeResumePendingStart();
 
       const ghostBadge = '<span class="practice-badge practice-badge--ghost"><span class="practice-badge-ribbon"></span></span>';
       let badgesHtml;
@@ -510,6 +512,77 @@
       }).catch(function () { return false; });
     }
 
+    // ---- Resume after redirect sign-in (issue #28) -------------------------
+    // Popup sign-in finishes in the same page (onSignedIn below); redirect
+    // sign-in (Android one-tap, TWA, iOS) reloads /verbs and would lose the
+    // visitor's intent. The gate CTA stores a short-lived marker first; the
+    // next page load consumes it once and starts the practice if signed in.
+    const pendingStartKey = `practice_start_pending:${lang}`;
+    const PENDING_START_MAX_AGE_MS = 10 * 60 * 1000;
+    const RESUME_AUTH_TIMEOUT_MS = 8000;
+    let resumeAttempted = false;
+
+    function _storePendingStart() {
+      try {
+        localStorage.setItem(
+          pendingStartKey,
+          JSON.stringify({ ts: Date.now(), size: activePracticeSize })
+        );
+      } catch (_) {}
+    }
+
+    function _clearPendingStart() {
+      try { localStorage.removeItem(pendingStartKey); } catch (_) {}
+    }
+
+    function maybeResumePendingStart() {
+      if (resumeAttempted) return;
+      resumeAttempted = true;
+      let intent = null;
+      try {
+        const raw = localStorage.getItem(pendingStartKey);
+        if (raw === null) return;
+        // Remove first so the marker can never fire twice.
+        localStorage.removeItem(pendingStartKey);
+        intent = JSON.parse(raw);
+      } catch (_) {
+        return;
+      }
+      if (!intent || typeof intent.ts !== 'number') return;
+      const age = Date.now() - intent.ts;
+      if (age < 0 || age > PENDING_START_MAX_AGE_MS) return;
+      // auth.js is deferred: wait for it before looking for VerbBoardAuth.
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+          _resumeStart(intent);
+        }, { once: true });
+      } else {
+        _resumeStart(intent);
+      }
+    }
+
+    function _resumeStart(intent) {
+      if (!_authAvailable() || _inEmbeddedBrowser()) return;
+      if (storage.readJson(practiceSessionKey, null)) return;
+      if (startRequestInFlight || gateOverlay) return;
+
+      if (PRACTICE_SIZES.includes(intent.size)) {
+        activePracticeSize = intent.size;
+      }
+      const auth = window.VerbBoardAuth;
+      startRequestInFlight = true;
+      const timeout = new Promise(function (resolve) {
+        setTimeout(resolve, RESUME_AUTH_TIMEOUT_MS);
+      });
+      Promise.race([auth.ready(), timeout]).then(function () {
+        startRequestInFlight = false;
+        if (!auth.currentUser()) return;
+        // Re-check: the visitor may have tapped Start / Continue meanwhile.
+        if (gateOverlay || storage.readJson(practiceSessionKey, null)) return;
+        startPractice();
+      }).catch(function () { startRequestInFlight = false; });
+    }
+
     function requestStartPractice() {
       if (startRequestInFlight || gateOverlay) return;
       startRequestInFlight = true;
@@ -570,6 +643,7 @@
       function close() {
         document.removeEventListener('keydown', onKeydown, true);
         window.removeEventListener('vb:progress-hydrated', onSignedIn);
+        _clearPendingStart();
         overlay.remove();
         gateOverlay = null;
         if (previouslyFocused && previouslyFocused.isConnected && previouslyFocused.focus) {
@@ -579,7 +653,7 @@
 
       // Popup sign-in (desktop) completes without a page load: when auth hydrates
       // while the gate is open, close it and start the practice the visitor asked
-      // for. Redirect sign-in reloads the page instead, so they tap Start again.
+      // for. Redirect sign-in reloads the page; maybeResumePendingStart() handles that.
       function onSignedIn() {
         close();
         startPractice();
@@ -614,7 +688,9 @@
       dismiss.addEventListener('click', close);
       cta.addEventListener('click', function () {
         if (window.VerbBoardAuth && window.VerbBoardAuth.signIn) {
+          _storePendingStart();
           window.VerbBoardAuth.signIn().catch(function (err) {
+            _clearPendingStart();
             console.warn('VB: practice gate sign-in failed', (err && err.code) || err);
           });
         }
