@@ -759,14 +759,11 @@ button {
   transform: scale(0.97);
 }
 
-/* ── example row highlight (jump target) ──────────────────────────────────── */
-@keyframes example-jump-flash {
-  0%   { background-color: #fef3c7; }
-  100% { background-color: transparent; }
-}
-
-.example-jump-highlight {
-  animation: example-jump-flash 1.6s ease-out;
+/* ── example row highlight (jump target) ──────────────────────────────────────
+   Stays until the learner's next move (next jump or any tap), see vbJumpToExample (issue #126). */
+.example-jump-highlight,
+.example-jump-highlight > td {
+  background-color: #fef3c7;
 }
 
 /* ── toast (no-match feedback) ────────────────────────────────────────────── */
@@ -1153,4 +1150,45 @@ button {
 
 .form-value--aux {
   font-size: var(--fs-form-aux);
+}
+
+/* Mobile: play, flag and magnifier stay on the same row as the verb form (issue #125);
+   the form text wraps/shrinks instead of pushing the buttons to a second row. */
+@media (max-width: 639px) {
+  .conj-form {
+    flex-wrap: nowrap;
+    gap: 2px;
+  }
+
+  .conj-form > .form-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 1.05rem;
+    margin-inline-end: 4px;
+  }
+
+  .conj-form > .form-value--aux {
+    font-size: 0.9rem;
+  }
+
+  .conj-form .btn,
+  .conj-form .jump-example-btn {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+  }
+
+  .conj-form .jump-example-btn {
+    margin-left: 0;
+    margin-right: 0;
+    font-size: 15px;
+  }
+
+  .conj-form .audio-report-btn,
+  .conj-form .audio-issue {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 38px;
+  }
 }

@@ -244,6 +244,14 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     void matchRow.offsetWidth;
     matchRow.classList.add("example-jump-highlight");
+    // Keep the highlight until the learner's next move: the next tap anywhere clears it.
+    document.addEventListener("pointerdown", clearJumpHighlight, { once: true, capture: true });
   };
+
+  function clearJumpHighlight() {
+    document.querySelectorAll(".example-jump-highlight").forEach(function (row) {
+      row.classList.remove("example-jump-highlight");
+    });
+  }
 
 });

@@ -58,6 +58,19 @@ def test_jump_highlights_and_cycles_and_unmatched_rows_have_no_button(browser, l
         ctx.close()
 
 
+def test_highlight_stays_until_next_tap(browser, live_server_url):
+    """Issue #126: the highlight is not a short flash; it stays until the learner's next move."""
+    ctx, page = _open(browser, live_server_url)
+    try:
+        page.locator(".jump-example-btn").first.click()
+        page.wait_for_timeout(2000)
+        assert page.locator("tr.example-jump-highlight").count() == 1
+        page.mouse.click(5, 5)
+        assert page.locator("tr.example-jump-highlight").count() == 0
+    finally:
+        ctx.close()
+
+
 def test_buttons_hidden_in_fill_mode(browser, live_server_url):
     ctx, page = _open(browser, live_server_url)
     try:
