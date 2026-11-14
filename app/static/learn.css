@@ -1152,16 +1152,18 @@ button {
   font-size: var(--fs-form-aux);
 }
 
-/* Mobile: play, flag and magnifier stay on the same row as the verb form (issue #125);
-   the form text wraps/shrinks instead of pushing the buttons to a second row. */
+/* Mobile: play, flag and magnifier stay on the same row as the verb form (issue #125).
+   Fixed columns (text, play, flag, magnifier) so the play button lines up in every row,
+   with or without a magnifier; the grid follows the page direction, so RTL mirrors. */
 @media (max-width: 639px) {
   .conj-form {
-    flex-wrap: nowrap;
-    gap: 2px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 38px 34px 38px;
+    align-items: center;
+    column-gap: 2px;
   }
 
   .conj-form > .form-value {
-    flex: 1 1 auto;
     min-width: 0;
     overflow-wrap: anywhere;
     font-size: 1.05rem;
@@ -1174,7 +1176,6 @@ button {
 
   .conj-form .btn,
   .conj-form .jump-example-btn {
-    flex: 0 0 auto;
     width: 38px;
     height: 38px;
   }
@@ -1187,7 +1188,6 @@ button {
 
   .conj-form .audio-report-btn,
   .conj-form .audio-issue {
-    flex: 0 0 auto;
     width: 34px;
     height: 38px;
   }

@@ -30,8 +30,8 @@ def stub_verb(monkeypatch):
     monkeypatch.setattr(render_module, "confirmed_form_keys", lambda *a, **k: set())
 
 
-def _open(browser, base):
-    ctx = browser.new_context()
+def _open(browser, base, viewport=None):
+    ctx = browser.new_context(viewport=viewport) if viewport else browser.new_context()
     ctx.route("**/api/**", lambda r: r.fulfill(status=200, content_type="application/json", body="{}"))
     ctx.route("**/audio/**", lambda r: r.fulfill(status=200, content_type="audio/mpeg", body=b""))
     page = ctx.new_page()
@@ -67,6 +67,23 @@ def test_highlight_stays_until_next_tap(browser, live_server_url):
         assert page.locator("tr.example-jump-highlight").count() == 1
         page.mouse.click(5, 5)
         assert page.locator("tr.example-jump-highlight").count() == 0
+    finally:
+        ctx.close()
+
+
+def test_mobile_play_buttons_share_one_column(browser, live_server_url):
+    """Issue #125: at phone width play stays in the same column whether or not a row has a magnifier."""
+    ctx, page = _open(browser, live_server_url, viewport={"width": 375, "height": 700})
+    try:
+        assert page.locator(".jump-example-btn").count() > 0
+        lefts = page.evaluate(
+            """() => [...document.querySelectorAll('.conj-form')]
+                .map(c => c.querySelector('.btn'))
+                .filter(Boolean)
+                .map(b => Math.round(b.getBoundingClientRect().left))"""
+        )
+        assert len(lefts) > 3
+        assert len(set(lefts)) == 1
     finally:
         ctx.close()
 
