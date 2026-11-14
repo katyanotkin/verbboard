@@ -245,5 +245,17 @@
   "feedback.rate_line": "También puede valorar VerbBoard en Google Play.",
   "rate.link_label": "Valorar en Google Play",
   "rate_nudge.text": "¿Le gusta VerbBoard? Una valoración en Google Play ayuda a otros estudiantes a encontrarlo.",
-  "rate_nudge.cta": "Valorar en Google Play"
+  "rate_nudge.cta": "Valorar en Google Play",
+  "seo.learn_title": "Conjugación de {lemma}: tiempos y audio | VerbBoard",
+  "seo.learn_title_short": "{lemma}: conjugación y audio | VerbBoard",
+  "seo.learn_title_min": "{lemma} | VerbBoard",
+  "seo.learn_desc": "{lemma} ({translation}): conjugación en todos los tiempos, con ejemplos y audio. Idioma: {language}.",
+  "seo.learn_desc_plain": "{lemma}: conjugación en todos los tiempos, con ejemplos y audio. Idioma: {language}.",
+  "seo.learn_desc_short": "{lemma}: conjugación con audio. Idioma: {language}.",
+  "seo.home_title": "VerbBoard: aprende la conjugación de verbos con audio",
+  "seo.home_desc": "Tablas de conjugación, ejemplos reales y audio de los verbos que de verdad usas. Practica y sigue tu progreso.",
+  "seo.verbs_title": "Verbos para aprender | VerbBoard",
+  "seo.verbs_desc": "Explora y busca verbos por idioma. Abre cualquier verbo: todos los tiempos, ejemplos y audio.",
+  "seo.about_title": "Sobre la app VerbBoard",
+  "seo.about_desc": "VerbBoard es una app para aprender idiomas a través de los verbos: tablas de conjugación, ejemplos reales, audio y práctica."
 }

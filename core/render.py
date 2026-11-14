@@ -22,6 +22,7 @@ from core.models import Board
 from core.paths import TEMPLATES_DIR
 from core.pronouns import PRONOUN_PERSONS, PRONOUNS
 from core.safe_return import safe_return_to as _safe_return_to
+from core.seo_meta import learn_meta
 
 NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}
 
@@ -476,8 +477,19 @@ def render_board_html(
         fill_toggle_html = ""
         fill_banner_html = ""
 
+    seo = learn_meta(
+        ui,
+        language=board.language,
+        verb_id=board.verb.id,
+        lemma=title,
+        translation=lemma_translation_text,
+        language_name=ui.get(f"lang.{board.language}") or language_display,
+        is_candidate=bool(candidate_verb_id),
+    )
+
     template = _jinja_env.get_template("board.html")
     return template.render(
+        **seo,
         fill_toggle=fill_toggle_html,
         fill_banner=fill_banner_html,
         translated_from_banner=translated_from_banner,

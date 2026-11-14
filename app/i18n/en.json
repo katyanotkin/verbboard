@@ -245,5 +245,17 @@
   "feedback.rate_line": "You can also rate VerbBoard on Google Play.",
   "rate.link_label": "Rate on Google Play",
   "rate_nudge.text": "Enjoying VerbBoard? A rating on Google Play helps other learners find it.",
-  "rate_nudge.cta": "Rate on Google Play"
+  "rate_nudge.cta": "Rate on Google Play",
+  "seo.learn_title": "Conjugation of {lemma}: all tenses with audio | VerbBoard",
+  "seo.learn_title_short": "{lemma}: conjugation and audio | VerbBoard",
+  "seo.learn_title_min": "{lemma} | VerbBoard",
+  "seo.learn_desc": "{lemma} ({translation}): {language} verb conjugation in all tenses, with example sentences and audio.",
+  "seo.learn_desc_plain": "{lemma}: {language} verb conjugation in all tenses, with example sentences and audio.",
+  "seo.learn_desc_short": "{lemma}: {language} verb conjugation with audio.",
+  "seo.home_title": "VerbBoard: learn verb conjugation with audio",
+  "seo.home_desc": "Conjugation tables, real example sentences and audio for the verbs you actually use. Practice and track the verbs you know.",
+  "seo.verbs_title": "Verbs to learn | VerbBoard",
+  "seo.verbs_desc": "Browse and search verbs by language. Open any verb for all its tenses, example sentences and audio.",
+  "seo.about_title": "About VerbBoard",
+  "seo.about_desc": "VerbBoard is a verb-focused language learning app: conjugation tables, real examples, audio and practice."
 }

@@ -13,6 +13,7 @@ from core.editions import picker_study_plugins, resolve_study_language, study_la
 from core.entitlements import can_study
 from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import UI_LANGUAGES
+from core.seo_meta import NOINDEX_STATE_PARAMS, static_page_meta
 from core.settings import load_settings
 from core.storage.verb_repository import list_verbs_recent
 from core.verb_loader import load_entries_for_language
@@ -157,6 +158,12 @@ def verb_browser(
         "verbs.html",
         context={
             "request": request,
+            **static_page_meta(
+                ui,
+                "seo.verbs",
+                f"/verbs?language={quote(selected_language, safe='')}&ui_language=en",
+                noindex=bool(set(request.query_params) & NOINDEX_STATE_PARAMS) or not entitled,
+            ),
             "ui": ui,
             "ui_json": json.dumps(ui_strings, ensure_ascii=False),
             "ui_lang": ui_lang,

@@ -245,5 +245,17 @@
   "feedback.rate_line": "Оценить VerbBoard можно и в Google Play.",
   "rate.link_label": "Оценить в Google Play",
   "rate_nudge.text": "Нравится VerbBoard? Оценка в Google Play помогает другим ученикам его найти.",
-  "rate_nudge.cta": "Оценить в Google Play"
+  "rate_nudge.cta": "Оценить в Google Play",
+  "seo.learn_title": "Спряжение {lemma}: все времена с озвучкой | VerbBoard",
+  "seo.learn_title_short": "{lemma}: спряжение и озвучка | VerbBoard",
+  "seo.learn_title_min": "{lemma} | VerbBoard",
+  "seo.learn_desc": "{lemma} ({translation}): спряжение во всех временах, примеры и озвучка. Язык: {language}.",
+  "seo.learn_desc_plain": "{lemma}: спряжение во всех временах, примеры и озвучка. Язык: {language}.",
+  "seo.learn_desc_short": "{lemma}: спряжение с озвучкой. Язык: {language}.",
+  "seo.home_title": "VerbBoard: спряжение глаголов с озвучкой",
+  "seo.home_desc": "Таблицы спряжения, живые примеры и озвучка для глаголов, которые вы действительно используете. Тренируйтесь и отмечайте выученные глаголы.",
+  "seo.verbs_title": "Глаголы для изучения | VerbBoard",
+  "seo.verbs_desc": "Просматривайте и ищите глаголы по языкам. Откройте любой глагол: все времена, примеры и озвучка.",
+  "seo.about_title": "О приложении VerbBoard",
+  "seo.about_desc": "VerbBoard: приложение для изучения языков через глаголы. Таблицы спряжения, реальные примеры, озвучка и практика."
 }

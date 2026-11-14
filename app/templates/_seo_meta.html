@@ -1,0 +1,13 @@
+{# Shared SEO head tags (issues #102, #104). Values come from core/seo_meta.py; autoescape applies.
+   No hreflang: ui_language variants are query-param variants, not real localized pages. #}
+{% if noindex %}<meta name="robots" content="noindex"/>{% endif %}
+{% if meta_description %}<meta name="description" content="{{ meta_description }}"/>{% endif %}
+{% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}"/>{% endif %}
+<meta property="og:site_name" content="VerbBoard"/>
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="{{ meta_title }}"/>
+{% if meta_description %}<meta property="og:description" content="{{ meta_description }}"/>{% endif %}
+{% if og_url %}<meta property="og:url" content="{{ og_url }}"/>{% endif %}
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="{{ meta_title }}"/>
+{% if meta_description %}<meta name="twitter:description" content="{{ meta_description }}"/>{% endif %}

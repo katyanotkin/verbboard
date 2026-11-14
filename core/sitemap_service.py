@@ -25,6 +25,11 @@ def public_base_url() -> str:
     return (os.getenv("PUBLIC_BASE_URL", "").strip() or _DEFAULT_PROD_BASE_URL).rstrip("/")
 
 
+def canonical_learn_url(language: str, verb_id: str) -> str:
+    """The single canonical /learn URL for a verb (issue #102); shared by the sitemap and <link rel=canonical>."""
+    return f"{public_base_url()}/learn?language={quote(language, safe='')}&verb_id={quote(verb_id, safe='')}&ui_language=en"
+
+
 def build_robots_txt() -> str:
     if _resolve_environment() != "prod":
         return "User-agent: *\nDisallow: /\n"
@@ -41,12 +46,11 @@ def free_sitemap_languages() -> list[str]:
 def build_sitemap_xml() -> str:
     """Raises on loader failure (caller turns it into a 503)."""
     base = public_base_url()
-    # NOTE: URL form must follow the canonical-URL decision in issue #102.
     locs: list[str] = [f"{base}/"]
     for language in free_sitemap_languages():
         locs.append(f"{base}/verbs?language={quote(language)}&ui_language=en")
         for entry in load_entries_for_language(language=language):
-            locs.append(f"{base}/learn?language={quote(language)}&verb_id={quote(entry.id, safe='')}&ui_language=en")
+            locs.append(canonical_learn_url(language, entry.id))
     if len(locs) > MAX_SITEMAP_URLS:
         logger.error("SITEMAP_TRUNCATED urls=%d limit=%d", len(locs), MAX_SITEMAP_URLS)
         locs = locs[:MAX_SITEMAP_URLS]

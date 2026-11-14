@@ -245,5 +245,17 @@
   "feedback.rate_line": "אפשר גם לדרג את VerbBoard ב-Google Play.",
   "rate.link_label": "דירוג ב-Google Play",
   "rate_nudge.text": "נהנים מ-VerbBoard? דירוג ב-Google Play עוזר ללומדים אחרים למצוא אותו.",
-  "rate_nudge.cta": "דירוג ב-Google Play"
+  "rate_nudge.cta": "דירוג ב-Google Play",
+  "seo.learn_title": "הטיית {lemma}: כל הזמנים עם הקראה | VerbBoard",
+  "seo.learn_title_short": "{lemma}: הטיה והקראה | VerbBoard",
+  "seo.learn_title_min": "{lemma} | VerbBoard",
+  "seo.learn_desc": "{lemma} ({translation}): הטיית הפועל ב{language} בכל הזמנים, עם משפטי דוגמה והקראה.",
+  "seo.learn_desc_plain": "{lemma}: הטיית הפועל ב{language} בכל הזמנים, עם משפטי דוגמה והקראה.",
+  "seo.learn_desc_short": "{lemma}: הטיית הפועל ב{language} עם הקראה.",
+  "seo.home_title": "VerbBoard: לומדים הטיית פעלים עם הקראה",
+  "seo.home_desc": "טבלאות הטיה, משפטי דוגמה אמיתיים והקראה לפעלים שבאמת משתמשים בהם. תרגול ומעקב אחרי הפעלים שאתם מכירים.",
+  "seo.verbs_title": "פעלים ללמידה | VerbBoard",
+  "seo.verbs_desc": "עיינו בפעלים וחפשו אותם לפי שפה. בכל פועל: כל הזמנים, משפטי דוגמה והקראה.",
+  "seo.about_title": "אודות VerbBoard",
+  "seo.about_desc": "VerbBoard היא אפליקציה ללימוד שפות דרך פעלים: טבלאות הטיה, דוגמאות אמיתיות, הקראה ותרגול."
 }
