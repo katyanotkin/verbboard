@@ -206,27 +206,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ── jump to example from a conjugation form ─────────────────────────────────
-  function vbNormalizeFormText(text) {
-    return (text || "")
-      .normalize("NFKD")
-      .replace(/\p{Mn}/gu, "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .toLowerCase();
-  }
-
-  function vbFormMatchesText(needle, haystackText) {
-    const haystack = vbNormalizeFormText(haystackText);
-    if (!haystack || !needle) return false;
-    // Word-boundary match, not raw substring: a short form (e.g. a single
-    // pronoun-like token) must not false-positive match inside an unrelated
-    // longer word that merely shares those letters.
-    const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = new RegExp("(^|[^\\p{L}\\p{N}])" + escaped + "($|[^\\p{L}\\p{N}])", "u");
-    return pattern.test(" " + haystack + " ");
-  }
-
   function vbShowToast(message) {
     if (!message) return;
     let toast = document.getElementById("vb-toast");
@@ -248,46 +227,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
   window.vbShowToast = vbShowToast;
 
+  // Form -> example (issue #123): the server lists the 1-based indexes of the examples that
+  // illustrate this row in data-jump-examples; each click goes to the next one (wraps around).
   window.vbJumpToExample = function (btn) {
-    const tr = btn.closest("tr");
-    const formText = tr && tr.dataset.form;
-    if (!formText) return;
-
-    const needle = vbNormalizeFormText(formText);
-    if (!needle) return;
-
-    const exampleRows = document.querySelectorAll(".examples-table tr");
-    let matchRow = null;
-
-    for (const row of exampleRows) {
-      const srcEl = row.querySelector(".example-src");
-      if (!srcEl) continue;
-      if (vbFormMatchesText(needle, srcEl.textContent)) {
-        matchRow = row;
-        break;
-      }
-    }
-
-    if (matchRow) {
-      matchRow.scrollIntoView({ behavior: "smooth", block: "center" });
-      matchRow.classList.remove("example-jump-highlight");
-      void matchRow.offsetWidth;
-      matchRow.classList.add("example-jump-highlight");
-      return;
-    }
-
-    const UI = window.UI || {};
-    vbShowToast(UI["board.no_example_for_form"] || "No example yet for this form");
-
-    fetch("/api/learn/form_signal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        language: language,
-        verb_id: verbId,
-        form_text: formText,
-      }),
-    }).catch(function () {});
+    const indexes = (btn.dataset.jumpExamples || "").split(",").filter(Boolean);
+    if (!indexes.length) return;
+    const step = Number(btn.dataset.jumpStep || "0") % indexes.length;
+    const matchRow = document.querySelector(
+      '.examples-table tr[data-example-index="' + indexes[step] + '"]'
+    );
+    btn.dataset.jumpStep = String((step + 1) % indexes.length);
+    if (!matchRow) return;
+    matchRow.scrollIntoView({ behavior: "smooth", block: "center" });
+    document.querySelectorAll(".example-jump-highlight").forEach(function (row) {
+      row.classList.remove("example-jump-highlight");
+    });
+    void matchRow.offsetWidth;
+    matchRow.classList.add("example-jump-highlight");
   };
 
 });

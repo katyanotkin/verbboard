@@ -44,20 +44,29 @@ def test_learn_board_has_feedback_link(mock_verb: VerbEntry) -> None:
     assert "en_go" in html
 
 
+def _tag_mock_verb(verb: VerbEntry) -> VerbEntry:
+    import dataclasses
+
+    target: dict = {"tense": "present_3sg", "person": None, "start": 0, "end": 1, "answer": "I", "alternatives": []}
+    example = dataclasses.replace(verb.examples[0], target=target)
+    return dataclasses.replace(verb, examples=[example])
+
+
 def test_jump_to_example_button_renders_by_default(mock_verb: VerbEntry) -> None:
     """Default (no explicit flag passed) must match today's shipped behavior --
     the kill switch defaults on, so this is a no-op guard, not a new gate."""
     from core.render import render_board_html
 
-    html = render_board_html(_make_board(mock_verb), return_to="/?language=en")
+    html = render_board_html(_make_board(_tag_mock_verb(mock_verb)), return_to="/?language=en")
     assert "jump-example-btn" in html
+    assert "data-jump-examples='1'" in html
 
 
 def test_jump_to_example_button_hidden_when_disabled(mock_verb: VerbEntry) -> None:
     from core.render import render_board_html
 
     html = render_board_html(
-        _make_board(mock_verb),
+        _make_board(_tag_mock_verb(mock_verb)),
         return_to="/?language=en",
         jump_to_example_enabled=False,
     )

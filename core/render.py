@@ -8,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from core.audio_report_service import confirmed_form_keys
 from core.audio_service import build_hashed_audio_key
+from core.example_jump import examples_by_row_key
 from core.fill_practice_service import (
     fill_inline_available,
     target_alternatives,
@@ -89,6 +90,9 @@ def render_board_html(
     label_dir = ' dir="rtl"' if board.language == "he" and ui_lang != "he" else ""
 
     has_examples = bool(board.verb.examples)
+    jump_matches = (
+        examples_by_row_key(board.language, board.verb.examples) if jump_to_example_enabled and has_examples else {}
+    )
     jump_title = escape(ui.get("board.jump_to_example", "Jump to example"))
 
     # ── help hints (tap-to-reveal micro explanations) ───────────────────────
@@ -167,9 +171,12 @@ def render_board_html(
                     f'audio.pause(); audio.currentTime=0; audio.playbackRate=1.0; audio.play()">▶</button>'
                     f"{clip_flag_html(hashed_key)}"
                 )
-                if jump_to_example_enabled and has_examples and is_conjugated_form and key not in LEMMA_ROW_KEYS:
+                jump_indexes = jump_matches.get(key) if is_conjugated_form and key not in LEMMA_ROW_KEYS else None
+                if jump_indexes:
+                    jump_attr = escape(",".join(str(i) for i in jump_indexes), quote=True)
                     audio_html += (
                         f"<button type='button' class='jump-example-btn' title='{jump_title}' "
+                        f"aria-label='{jump_title}' data-jump-examples='{jump_attr}' "
                         f'onclick="window.vbJumpToExample && vbJumpToExample(this)">🔎</button>'
                     )
             else:
@@ -316,6 +323,10 @@ def render_board_html(
                 f" data-fill-alts='{escape(json.dumps(fill_alts, ensure_ascii=False), quote=True)}'"
             )
 
+        if not fill_attrs:
+            fill_attrs = f" data-example-index='{index}'"
+        else:
+            fill_attrs += f" data-example-index='{index}'"
         examples_rows.append(
             f"<tr{fill_attrs}>"
             f"<td dir='{example_direction}' style='text-align:{example_align}'>"

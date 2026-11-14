@@ -129,13 +129,13 @@ def _humanize(key: str) -> str:
 
 
 @lru_cache(maxsize=None)
-def _board_labels(language: str) -> dict[str, tuple[str, str]]:
-    """Map "tense" / "tense.person" -> (section title i18n key, row label) from the language's own board."""
+def _placeholder_board(language: str) -> Any:
+    """Board of a placeholder verb whose every form cell reads "tense" / "tense.person" (None if no shape)."""
     from core.registry import get as get_plugin
 
     shape = _FORM_SHAPES.get(language)
     if not shape:
-        return {}
+        return None
     forms: dict[str, Any] = {}
     for tense, persons in shape.items():
         forms[tense] = tense if persons is None else {person: f"{tense}.{person}" for person in persons}
@@ -143,7 +143,15 @@ def _board_labels(language: str) -> dict[str, tuple[str, str]]:
     placeholder = VerbEntry(
         id=f"{language}_placeholder", rank=0, lemma="placeholder", forms=forms, examples=[], morph=morph
     )
-    board = get_plugin(language).build_board(placeholder, AUDIO_VOICE, "")
+    return get_plugin(language).build_board(placeholder, AUDIO_VOICE, "")
+
+
+@lru_cache(maxsize=None)
+def _board_labels(language: str) -> dict[str, tuple[str, str]]:
+    """Map "tense" / "tense.person" -> (section title i18n key, row label) from the language's own board."""
+    board = _placeholder_board(language)
+    if board is None:
+        return {}
     labels: dict[str, tuple[str, str]] = {}
     for section in board.sections:
         title = section.get("title")

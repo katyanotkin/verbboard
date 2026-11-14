@@ -216,7 +216,7 @@ gcp-deploy-stage: gcp-check gcp-auth ## GCP: build + push + deploy current branc
 		--platform=managed \
 		--allow-unauthenticated \
 		--project=$(GCP_PROJECT) \
-		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD),JUMP_TO_EXAMPLE_ENABLED=false,AUTOGEN_ENABLED=false \
+		--set-env-vars=$(COMMON_ENV_VARS),ENVIRONMENT=stage,EDITION=plus,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD),AUTOGEN_ENABLED=false \
 		--set-secrets=$(STAGE_SECRETS)
 	$(MAKE) firebase-deploy-hosting
 	$(MAKE) firebase-deploy-firestore

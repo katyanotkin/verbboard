@@ -739,6 +739,11 @@ button {
   touch-action: manipulation;
 }
 
+/* Fill mode dims unanswered example rows, so a jump target would be inert: hide the buttons. */
+#learn-page.fill-mode .jump-example-btn {
+  display: none;
+}
+
 [dir="rtl"] .jump-example-btn {
   margin-left: 0;
   margin-right: 6px;
