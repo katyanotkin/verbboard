@@ -215,3 +215,73 @@ def test_verbs_page_noindex_only_for_state_params() -> None:
     assert "noindex" not in client.get("/verbs?language=es&ui_language=en").text
     miss = client.get("/verbs?language=es&ui_language=en&not_available=1&search=zzz").text
     assert '<meta name="robots" content="noindex"/>' in miss
+
+
+def _canonical(page: str) -> str:
+    m = re.search(r'<link rel="canonical" href="([^"]*)"', page)
+    return html.unescape(m.group(1)) if m else ""
+
+
+def test_static_page_canonicals_drop_variant_params() -> None:
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    client = TestClient(app)
+    for url in ("/", "/?ui_language=he&language=es"):
+        page = client.get(url).text
+        assert _canonical(page) == "https://verbboard.com/"
+        assert _meta(page, "property", "og:url") == "https://verbboard.com/"
+    about = client.get("/about?ui_language=he").text
+    assert _canonical(about) == "https://verbboard.com/about"
+    assert _meta(about, "property", "og:url") == "https://verbboard.com/about"
+    for url in (
+        "/verbs?language=es&ui_language=en&focus_search=1",
+        "/verbs?language=es&ui_language=he&return_to=%2Fx",
+    ):
+        page = client.get(url).text
+        assert _canonical(page) == "https://verbboard.com/verbs?language=es&ui_language=en"
+        assert _meta(page, "property", "og:url") == _canonical(page)
+        assert "noindex" not in page
+
+
+def test_canonical_follows_public_base_url_not_request_host(monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    monkeypatch.setenv("PUBLIC_BASE_URL", "https://example.test")
+    page = TestClient(app, base_url="http://evil.test").get("/about").text
+    assert _canonical(page) == "https://example.test/about"
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/verbs?language=&ui_language=he",
+        "/verbs?language=zz&ui_language=en",
+        "/verbs?ui_language=en",
+        "/verbs?language=es&ui_language=en&not_available=1&search=zzz",
+        "/?ui_language=en&not_available=1&search=zzz",
+    ],
+)
+def test_noindex_pages_have_no_canonical(url: str) -> None:
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    page = TestClient(app).get(url).text
+    assert '<meta name="robots" content="noindex"/>' in page
+    assert 'rel="canonical"' not in page
+    assert "og:url" not in page
+
+
+def test_sitemap_verbs_urls_equal_canonical_verbs_url(monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+    from core.sitemap_service import canonical_verbs_url, free_sitemap_languages
+
+    locs = TestClient(app).get("/sitemap.xml").text
+    for language in free_sitemap_languages():
+        assert html.escape(canonical_verbs_url(language), quote=False) in locs

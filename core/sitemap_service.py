@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # via PUBLIC_BASE_URL (never derived from the request: stage must not emit it).
 _DEFAULT_PROD_BASE_URL = "https://verbboard.com"
 MAX_SITEMAP_URLS = 50_000
-_DISALLOWED_PREFIXES = ("/admin", "/audio", "/api", "/auth", "/feedback")
+_DISALLOWED_PREFIXES = ("/admin", "/audio", "/api", "/auth", "/feedback", "/__/")
 
 
 def public_base_url() -> str:
@@ -28,6 +28,19 @@ def public_base_url() -> str:
 def canonical_learn_url(language: str, verb_id: str) -> str:
     """The single canonical /learn URL for a verb (issue #102); shared by the sitemap and <link rel=canonical>."""
     return f"{public_base_url()}/learn?language={quote(language, safe='')}&verb_id={quote(verb_id, safe='')}&ui_language=en"
+
+
+def canonical_verbs_url(language: str) -> str:
+    """The single canonical /verbs URL for a study language (issue #119); shared by the sitemap and the page head."""
+    return f"{public_base_url()}/verbs?language={quote(language, safe='')}&ui_language=en"
+
+
+def canonical_home_url() -> str:
+    return f"{public_base_url()}/"
+
+
+def canonical_about_url() -> str:
+    return f"{public_base_url()}/about"
 
 
 def build_robots_txt() -> str:
@@ -48,7 +61,7 @@ def build_sitemap_xml() -> str:
     base = public_base_url()
     locs: list[str] = [f"{base}/"]
     for language in free_sitemap_languages():
-        locs.append(f"{base}/verbs?language={quote(language)}&ui_language=en")
+        locs.append(canonical_verbs_url(language))
         for entry in load_entries_for_language(language=language):
             locs.append(canonical_learn_url(language, entry.id))
     if len(locs) > MAX_SITEMAP_URLS:

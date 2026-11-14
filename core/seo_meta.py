@@ -94,14 +94,24 @@ def learn_meta(
 
 
 def static_page_meta(
-    ui: dict[str, str], key_prefix: str, path: str, *, noindex: bool = False, default_title: str = SITE_NAME
+    ui: dict[str, str],
+    key_prefix: str,
+    canonical: str,
+    *,
+    noindex: bool = False,
+    default_title: str = SITE_NAME,
 ) -> dict[str, object]:
-    """Home / verbs / about: title and description from `{key_prefix}_title` / `{key_prefix}_desc` i18n keys."""
+    """Home / verbs / about: title and description from `{key_prefix}_title` / `{key_prefix}_desc` i18n keys.
+
+    `canonical` is the absolute canonical URL ("" for none). A noindex page never gets a canonical or og:url
+    (issue #119: do not mix noindex with canonical).
+    """
+    url = "" if noindex else canonical
     return {
         "meta_title": ui.get(f"{key_prefix}_title") or default_title,
         "meta_description": ui.get(f"{key_prefix}_desc", ""),
-        "canonical_url": "",
-        "og_url": f"{public_base_url()}{path}",
+        "canonical_url": url,
+        "og_url": url,
         "noindex": noindex,
     }
 

@@ -192,8 +192,8 @@ AI model routing: Haiku (`claude-haiku-4-5-20251001`) for English, Sonnet (`clau
 - Deterministic verb ID validation and collision audits
 - Production telemetry and usage analytics; the admin Reports page (`/admin/reports`, date-ranged) shows a usage summary (bots counted separately), engagement (Verb of the Day clicks, practice, sign-in gate), UI-language picks and top searched verbs
 - Feedback form spam filter: a hidden honeypot field and a small blocklist of spam email domains (starting with `formtests.info`); matching submissions are dropped silently
-- `/robots.txt` and `/sitemap.xml` for search engines: prod disallows `/admin`, `/audio`, `/api`, `/auth` and `/feedback` and lists the sitemap (every free-language verb page); stage and local disallow everything
-- Search snippets and link previews: every verb page has a descriptive title ("Conjugation of {verb}: all tenses with audio"), a meta description, Open Graph/Twitter tags and one canonical URL per verb (UI-language and navigation variants are folded into it); home, Verbs and About have localized titles and descriptions
+- `/robots.txt` and `/sitemap.xml` for search engines: prod disallows `/admin`, `/audio`, `/api`, `/auth`, `/feedback` and `/__/` and lists the sitemap (every free-language verb page); stage and local disallow everything
+- Search snippets and link previews: every verb page has a descriptive title ("Conjugation of {verb}: all tenses with audio"), a meta description, Open Graph/Twitter tags and one canonical URL per verb (UI-language and navigation variants are folded into it); home, Verbs and About have localized titles and descriptions and one canonical URL each (Verbs per study language; empty or unknown language is noindex)
 - Admin Reports page (`/admin/reports`): pick a from/to date range (or "since invite"), see registered-user and Google Play app (TWA) session counts and percentages, a daily trend, and compare against the previous period, plus signed-in retention by weekly cohort (came back after 1, 7 and 30 days)
 
 ---

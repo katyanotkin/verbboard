@@ -29,6 +29,9 @@ def test_robots_prod(client, monkeypatch):
     assert r.headers["content-type"].startswith("text/plain")
     for prefix in ("/admin", "/audio", "/api", "/auth", "/feedback"):
         assert f"Disallow: {prefix}\n" in r.text
+    assert "Disallow: /__/\n" in r.text
+    for allowed in ("/static", "/learn", "/verbs", "/about", "/terms"):
+        assert f"Disallow: {allowed}" not in r.text
     assert "Disallow: /\n" not in r.text
     assert "Sitemap: https://verbboard.com/sitemap.xml" in r.text
 
@@ -38,6 +41,7 @@ def test_robots_non_prod_blocks_all(client, monkeypatch, env):
     monkeypatch.setenv("ENVIRONMENT", env)
     r = client.get("/robots.txt")
     assert r.text == "User-agent: *\nDisallow: /\n"
+    assert "/__/" not in r.text
     assert "Sitemap" not in r.text
 
 

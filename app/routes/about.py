@@ -9,6 +9,7 @@ from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import PLUS_EXTRA_STUDY_LANGUAGES
 from core.seo_meta import static_page_meta
 from core.settings import load_settings
+from core.sitemap_service import canonical_about_url
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -31,7 +32,9 @@ def about_page(request: Request) -> HTMLResponse:
             "html_dir": "rtl" if lang == "he" else "ltr",
             "study_languages": study_languages,
             "title": ui.get("about.title", "About VerbBoard"),
-            **static_page_meta(ui, "seo.about", "/about", default_title=ui.get("about.title", "About VerbBoard")),
+            **static_page_meta(
+                ui, "seo.about", canonical_about_url(), default_title=ui.get("about.title", "About VerbBoard")
+            ),
             "back_label": ui.get("about.back", "Back"),
             "plus_request_label": ui["plus.request_btn"],
             "plus_title": ui["plus.about_title"],

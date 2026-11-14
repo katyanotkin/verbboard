@@ -15,6 +15,7 @@ from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import UI_LANGUAGES
 from core.seo_meta import NOINDEX_STATE_PARAMS, static_page_meta
 from core.settings import load_settings
+from core.sitemap_service import canonical_verbs_url
 from core.storage.verb_repository import list_verbs_recent
 from core.verb_loader import load_entries_for_language
 
@@ -161,8 +162,13 @@ def verb_browser(
             **static_page_meta(
                 ui,
                 "seo.verbs",
-                f"/verbs?language={quote(selected_language, safe='')}&ui_language=en",
-                noindex=bool(set(request.query_params) & NOINDEX_STATE_PARAMS) or not entitled,
+                canonical_verbs_url(selected_language),
+                # Empty/unknown ?language= silently falls back to a default: noindex it rather than
+                # canonicalizing a duplicate of that default's page (issue #119).
+                noindex=bool(set(request.query_params) & NOINDEX_STATE_PARAMS)
+                or not entitled
+                or not language
+                or language not in plugins,
             ),
             "ui": ui,
             "ui_json": json.dumps(ui_strings, ensure_ascii=False),
