@@ -21,12 +21,10 @@ import re
 from datetime import UTC, datetime
 from typing import Any
 
-import vertexai
 from dotenv import load_dotenv
 from google.cloud import firestore
-from vertexai.generative_models import GenerationConfig, GenerativeModel
 
-from core.settings import load_settings
+from core.gemini_client import generate_gemini_text
 
 load_dotenv(override=True)
 
@@ -91,8 +89,6 @@ def run(project: str, dry_run: bool) -> None:
         logger.info("DRY RUN -- no API calls or Firestore writes.")
         return
 
-    vertexai.init(project=project, location=load_settings().gcp_region)
-    model = GenerativeModel(MODEL)
     saved = failed = 0
     for doc in todo:
         data = doc.to_dict()
@@ -105,11 +101,8 @@ def run(project: str, dry_run: bool) -> None:
             f"Generate: {', '.join(missing)}"
         )
         try:
-            reply = model.generate_content(
-                f"{SYSTEM}\n\n{prompt}",
-                generation_config=GenerationConfig(response_mime_type="application/json", temperature=0),
-            )
-            generated = _parse_json(reply.text)
+            reply_text = generate_gemini_text(MODEL, f"{SYSTEM}\n\n{prompt}", json_output=True, project=project)
+            generated = _parse_json(reply_text)
         except Exception as exc:
             logger.warning("FAIL %-24s %s", doc.id, exc)
             failed += 1

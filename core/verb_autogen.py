@@ -18,12 +18,11 @@ import os
 from datetime import UTC, datetime
 from typing import Any
 
-import vertexai
 from google.api_core.exceptions import AlreadyExists
 from pydantic import BaseModel, ValidationError
-from vertexai.generative_models import GenerationConfig, GenerativeModel
 
 from core.example_targets import tag_generated_payload
+from core.gemini_client import generate_gemini_text
 from core.languages.config import STUDY_LANGUAGE_SCRIPTS
 from core.languages.fr.forms import normalize_subjonctif
 from core.languages.pt.forms import normalize_pt_payload
@@ -64,7 +63,6 @@ _GEMINI_VERB_MODEL = "gemini-2.5-flash"
 # guaranteed correct regardless of module import order -- Settings' own
 # load_dotenv(override=True) is guaranteed to have already run by the time
 # this import completes, unlike a direct os.getenv() call in this module.
-_GCP_LOCATION = load_settings().gcp_region
 _GCP_PROJECT = load_settings().google_cloud_project
 
 # Upper bound on translating a new verb before publishing it anyway.
@@ -187,13 +185,13 @@ def _normalize_generated(language: str, generated: Any) -> Any:
 
 def _generate_verb_gemini(language: str, query: str) -> dict[str, Any] | None:
     try:
-        vertexai.init(project=_GCP_PROJECT, location=_GCP_LOCATION)
-        model = GenerativeModel(_GEMINI_VERB_MODEL)
-        response = model.generate_content(
+        text = generate_gemini_text(
+            _GEMINI_VERB_MODEL,
             _build_verb_prompt(language, query),
-            generation_config=GenerationConfig(response_mime_type="application/json", temperature=0),
+            json_output=True,
+            project=_GCP_PROJECT,
         )
-        return _normalize_generated(language, json.loads(response.text))
+        return _normalize_generated(language, json.loads(text))
     except Exception:
         logger.exception("Gemini verb generation failed for %s/%s", language, query)
         return None

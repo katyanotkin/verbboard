@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-import vertexai
 from fastapi import FastAPI, Request
 from starlette.staticfiles import StaticFiles
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -45,7 +44,6 @@ from core.settings import _resolve_environment, load_settings
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = load_settings()
     audio_backend = create_audio_backend(settings)
-    vertexai.init(project=settings.google_cloud_project, location=settings.gcp_region)
 
     app.state.settings = settings
     app.state.audio_backend = audio_backend

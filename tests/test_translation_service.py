@@ -7,10 +7,10 @@ def _gemini_returning(monkeypatch, texts):
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
-    model = MagicMock()
-    model.generate_content.side_effect = [SimpleNamespace(text=t) for t in texts]
-    monkeypatch.setattr("core.translation_service.GenerativeModel", lambda *_: model)
-    return model
+    client = MagicMock()
+    client.models.generate_content.side_effect = [SimpleNamespace(text=t) for t in texts]
+    monkeypatch.setattr("core.gemini_client.get_gemini_client", lambda *_a, **_k: client)
+    return client.models
 
 
 def test_translate_search_query_second_call_uses_cache(monkeypatch) -> None:

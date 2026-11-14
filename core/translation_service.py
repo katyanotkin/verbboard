@@ -12,20 +12,17 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 
 import anthropic
-import vertexai
-from vertexai.generative_models import GenerationConfig, GenerativeModel
 
+from core.gemini_client import generate_gemini_text
 from core.languages.config import UI_LANGUAGES
 from core.provider_health import ANTHROPIC as ANTHROPIC_BREAKER
 from core.provider_health import ProviderUnavailable
 
 logger = logging.getLogger(__name__)
 
-_GCP_LOCATION = os.getenv("GCP_REGION", "us-east1")
 
 SUPPORTED_LANGUAGES = list(UI_LANGUAGES)  # translation targets = the UI languages
 HEBREW = "he"
@@ -89,14 +86,8 @@ def _call_gemini(
     sentences: list[str],
     project: str,
 ) -> list[dict[str, str]]:
-    vertexai.init(project=project, location=_GCP_LOCATION)
-    model = GenerativeModel(GEMINI_MODEL)
     prompt = _translation_prompt(verb_lang, lemma, target_langs, sentences)
-    response = model.generate_content(
-        prompt,
-        generation_config=GenerationConfig(response_mime_type="application/json", temperature=0),
-    )
-    return json.loads(response.text)
+    return json.loads(generate_gemini_text(GEMINI_MODEL, prompt, json_output=True, project=project))
 
 
 def _call_claude(
@@ -146,14 +137,8 @@ def _call_gemini_lemma(
     target_langs: list[str],
     project: str,
 ) -> dict[str, str]:
-    vertexai.init(project=project, location=_GCP_LOCATION)
-    model = GenerativeModel(GEMINI_MODEL)
     prompt = _lemma_prompt(verb_lang, lemma, target_langs)
-    response = model.generate_content(
-        prompt,
-        generation_config=GenerationConfig(response_mime_type="application/json", temperature=0),
-    )
-    return json.loads(response.text)
+    return json.loads(generate_gemini_text(GEMINI_MODEL, prompt, json_output=True, project=project))
 
 
 def _call_claude_lemma(
@@ -276,9 +261,7 @@ def _translate_search_query_uncached(
         f"Rules: reply with exactly one word in {tgt_name} script, no punctuation, no explanation."
     )
     try:
-        model = GenerativeModel(GEMINI_MODEL)
-        response = model.generate_content(prompt, generation_config=GenerationConfig(temperature=0))
-        text = (response.text or "").strip()
+        text = generate_gemini_text(GEMINI_MODEL, prompt).strip()
         return text or None
     except Exception:
         logger.exception(

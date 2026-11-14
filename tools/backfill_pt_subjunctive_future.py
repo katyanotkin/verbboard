@@ -24,12 +24,10 @@ import time
 from datetime import UTC, datetime
 from typing import Any
 
-import vertexai
 from google.api_core.exceptions import FailedPrecondition
-from vertexai.generative_models import GenerationConfig, GenerativeModel
 
 from core.example_targets import tag_from_hint
-from core.settings import load_settings
+from core.gemini_client import generate_gemini_text
 from core.storage.firestore_db import get_db
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -73,26 +71,11 @@ def derive_forms(preterite_eles: str) -> dict[str, str] | None:
     }
 
 
-_MODEL_CACHE: list[GenerativeModel] = []
-
-
-def _model() -> GenerativeModel:
-    if not _MODEL_CACHE:
-        settings = load_settings()
-        vertexai.init(project=settings.google_cloud_project, location=settings.gcp_region)
-        _MODEL_CACHE.append(GenerativeModel(MODEL))
-    return _MODEL_CACHE[0]
-
-
 def _generate_example(lemma: str, forms: dict[str, str]) -> dict[str, Any] | None:
-    model = _model()
     prompt = _PROMPT.format(lemma=lemma, **forms)
     for _attempt in range(2):
         try:
-            response = model.generate_content(
-                prompt, generation_config=GenerationConfig(response_mime_type="application/json", temperature=0)
-            )
-            data = json.loads(response.text)
+            data = json.loads(generate_gemini_text(MODEL, prompt, json_output=True))
         except Exception:
             logger.exception("generation failed for %s", lemma)
             time.sleep(2)

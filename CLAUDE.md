@@ -17,7 +17,7 @@ VerbBoard is a verb-focused language learning app: conjugation tables, real usag
 - **Auth:** Firebase Auth (Google sign-in); server validates ID tokens on `/api/progress/*`
 - **Secrets:** GCP Secret Manager (prod/stage) or `.env` (local)
 - **Infrastructure:** GCP -- Cloud Run + Firestore + GCS
-- **Cross-language search:** Vertex AI Gemini (`gemini-2.5-flash-lite`) translates EN query to target language lemma; `translate_search_query()` in `core/translation_service.py`
+- **Cross-language search:** Vertex AI Gemini (`gemini-2.5-flash-lite`) translates EN query to target language lemma; `translate_search_query()` in `core/translation_service.py`. Every Gemini call (search translation, example/lemma translation, autogen, the backfill tools) uses the `google-genai` SDK on the Vertex backend through `core/gemini_client.py`'s cached client and `generate_gemini_text()`; the deprecated `vertexai.generative_models` SDK is no longer used or installed, and `app/main.py` no longer calls `vertexai.init` (issue #111)
 - **App entry point:** `app.main:app`
 
 ---
@@ -73,6 +73,7 @@ core/
   storage/              # firestore_db, verb_repository, verb_document
   progress/             # models.py, progress_repository.py, progress_service.py
   tts.py                # VOICES dict, TTS integration
+  gemini_client.py      # cached google-genai Vertex client + generate_gemini_text()
   translation_service.py # translate_search_query() + translate_examples(); Gemini for non-HE, Claude for HE
   safe_return.py        # safe_return_to() -- validates redirect URLs to prevent open redirect
 
