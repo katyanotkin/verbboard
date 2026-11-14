@@ -2,6 +2,12 @@
 
 Standard agent invocation order for VerbBoard feature work. Each phase gates the next.
 
+## Phase 0 -- Track the report
+
+Trigger: the owner reports a bug, an inaccurate text or an idea, pastes feedback, or I find a defect myself.
+
+Action: open (or reuse) a GitHub issue before any fix, one issue per topic, and carry its number through the commit message to Phase 8. Every commit names its issue(s) as `#n` in the message (or states "no issue" for pure refactor/docs/tooling), and Phase 8 closes the issue with that commit's SHA. Details in the `issue-for-every-report` skill. Skip only for questions answered in chat and edits to in-progress work.
+
 ## Phase 1 -- Explore (always first)
 
 Use `Explore` agent before touching any code.
@@ -114,7 +120,7 @@ Action:
 - If stage verification finds a problem, do not close the issue -- return to implementation and repeat the review/test/verify cycle.
 - For a multi-issue push (several commits in one push), verify and close each issue independently -- one commit's stage behavior confirms only that commit's issue, not siblings in the same push.
 
-Skip when: no GitHub issue is associated with the change (e.g. a purely exploratory or user-directed one-off edit with nothing tracked).
+Skip when: the change is purely exploratory or answers no report. A reported bug, wrong text or idea is never "nothing tracked": open the issue first (see the `issue-for-every-report` skill), even for a one-line fix shipped in the same turn.
 
 This phase exists so a shipped, verified fix doesn't sit open in the tracker waiting for the user to notice and close it themselves.
 
