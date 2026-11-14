@@ -49,6 +49,7 @@ Visual indicators:
 
 ### Learn page
 - Conjugation table with TTS audio for every form and example sentence
+- 🔎 Jump to example: a form that has a tagged example sentence shows a magnifier; tap it to scroll to and highlight that example (tap again to cycle when there are several). Forms without an example show no button; hidden in fill-in mode
 - Switch between female and male voices
 - Inline translations when UI language differs from the verb's language
 - Focus filter: hide conjugation rows by gender (masculine / feminine) and number (singular / plural) — Hebrew, Russian, Spanish
