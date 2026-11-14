@@ -56,6 +56,15 @@ PLUS_EXTRA_STUDY_LANGUAGES: tuple[str, ...] = ("tr",)
 # it had its own FREE_STUDY_LANGUAGES-independent free/Plus union).
 ALL_STUDY_LANGUAGES: tuple[str, ...] = FREE_STUDY_LANGUAGES + PLUS_EXTRA_STUDY_LANGUAGES
 
+# BCP-47 tag for the HTML `lang` attribute when it differs from our language code
+# (issue #116). Only exceptions are listed; everything else uses its own code.
+_HTML_LANG_OVERRIDES: dict[str, str] = {"pt": "pt-BR"}
+
+
+def html_lang_for(language: str) -> str:
+    """BCP-47 tag for study-language text (e.g. 'pt' -> 'pt-BR')."""
+    return _HTML_LANG_OVERRIDES.get(language, language)
+
 
 @dataclass(frozen=True)
 class ScriptConfig:

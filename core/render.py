@@ -17,12 +17,13 @@ from core.fill_practice_service import (
 )
 from core.i18n import get_strings
 from core.languages.config import LANGUAGE as LANG_CONFIG
+from core.languages.config import html_lang_for
 from core.languages.ru.homographs import HOMOGRAPH_MARKS, mark_text
 from core.models import Board
 from core.paths import TEMPLATES_DIR
 from core.pronouns import PRONOUN_PERSONS, PRONOUNS
 from core.safe_return import safe_return_to as _safe_return_to
-from core.seo_meta import learn_meta
+from core.seo_meta import breadcrumb_jsonld, jsonld_script_json, learn_meta
 
 NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}
 
@@ -80,6 +81,7 @@ def render_board_html(
     else:
         title = str(lemma)
 
+    study_lang_attr = escape(html_lang_for(board.language))
     button_class = "btn"
 
     # When studying Hebrew with a non-Hebrew UI, label cells need explicit RTL
@@ -174,7 +176,7 @@ def render_board_html(
                 audio_html = ""
 
             value_class = "form-value form-value--aux" if key in ("pair", "aspect") else "form-value"
-            form_cell = f"<span class='{value_class}'>{value_html}</span>{audio_html}"
+            form_cell = f"<span class='{value_class}' lang='{study_lang_attr}'>{value_html}</span>{audio_html}"
 
             gender = str(row.get("gender", ""))
             number_val = str(row.get("number", ""))
@@ -317,7 +319,7 @@ def render_board_html(
         examples_rows.append(
             f"<tr{fill_attrs}>"
             f"<td dir='{example_direction}' style='text-align:{example_align}'>"
-            f"<span class='example-src'>{escape(display_text)}</span>"
+            f"<span class='example-src' lang='{study_lang_attr}'>{escape(display_text)}</span>"
             f"{translation_span}"
             f"</td>"
             f"<td>"
@@ -487,6 +489,19 @@ def render_board_html(
         is_candidate=bool(candidate_verb_id),
     )
 
+    jsonld = (
+        ""
+        if candidate_verb_id
+        else jsonld_script_json(
+            breadcrumb_jsonld(
+                language=board.language,
+                verb_id=board.verb.id,
+                lemma=title,
+                language_name=ui.get(f"lang.{board.language}") or language_display,
+            )
+        )
+    )
+
     template = _jinja_env.get_template("board.html")
     return template.render(
         **seo,
@@ -496,6 +511,8 @@ def render_board_html(
         html_lang=ui_lang,
         html_dir=html_dir,
         title=title,
+        study_lang=study_lang_attr,
+        jsonld=jsonld,
         lemma_translation=lemma_translation_html,
         candidate_banner_assets=candidate_banner_assets,
         board_ui_json=board_ui_json,

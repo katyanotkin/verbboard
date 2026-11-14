@@ -8,6 +8,7 @@
   <link rel="manifest" href="/static/manifest.json"/>
   <title>{{ meta_title }}</title>
   {% include '_seo_meta.html' %}
+  {% if jsonld %}<script type="application/ld+json">{{ jsonld | safe }}</script>{% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600&display=swap"/>

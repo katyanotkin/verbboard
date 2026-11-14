@@ -22,7 +22,7 @@ from core.provider_health import provider_unavailable_reason
 from core.rate_limit import SlidingWindowRateLimiter, client_ip
 from core.safe_return import safe_return_to
 from core.search_utils import find_best_entry, tokenize_text
-from core.seo_meta import NOINDEX_STATE_PARAMS, static_page_meta
+from core.seo_meta import NOINDEX_STATE_PARAMS, jsonld_script_json, static_page_meta, website_jsonld
 from core.settings import load_settings
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 from core.task_tracking import track
@@ -401,6 +401,7 @@ def home(
             "lang": ui_lang,
             "html_dir": html_dir,
             **static_page_meta(ui, "seo.home", "/", noindex=bool(set(request.query_params) & NOINDEX_STATE_PARAMS)),
+            "jsonld": jsonld_script_json(website_jsonld()),
             "ui": ui,
             "ui_lang_codes": list(LANGUAGE.keys()),
             "ui_lang_native": {code: cfg.native for code, cfg in LANGUAGE.items()},

@@ -537,7 +537,7 @@ def test_russian_render_offsets_slice_displayed_text_including_stress_mark() -> 
     html = _render(verb, language="ru")
     assert "id='fill-toggle'" in html
     rows = re.findall(
-        r"<tr class='fill-row'[^>]*data-fill-start='(\d+)' data-fill-end='(\d+)'[^>]*>.*?<span class='example-src'>(.*?)</span>",
+        r"<tr class='fill-row'[^>]*data-fill-start='(\d+)' data-fill-end='(\d+)'[^>]*>.*?<span class='example-src'[^>]*>(.*?)</span>",
         html,
     )
     assert len(rows) == 2

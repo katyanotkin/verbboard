@@ -8,6 +8,7 @@
 <link rel="manifest" href="/static/manifest.json"/>
 <title>{{ meta_title }}</title>
 {% include '_seo_meta.html' %}
+{% if jsonld %}<script type="application/ld+json">{{ jsonld | safe }}</script>{% endif %}
 <link rel="stylesheet" href="/static/common.css"/>
 <link rel="stylesheet" href="/static/learn.css"/>
 {% if fill_toggle %}<link rel="stylesheet" href="/static/fill_inline.css"/>{% endif %}
@@ -58,7 +59,7 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
 
     <div class="topbar-body">
       <div>
-        <h1>{{ title }}</h1>
+        <h1 lang="{{ study_lang }}">{{ title }}</h1>
         {{ lemma_translation | safe }}
         <div class="meta">
           {{ board_language_label }} <b>{{ language_display }}</b>

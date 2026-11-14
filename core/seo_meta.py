@@ -8,6 +8,9 @@ No hreflang on purpose: the ui_language variants of a page are the same URL with
 
 from __future__ import annotations
 
+import json
+from urllib.parse import quote
+
 from core.sitemap_service import canonical_learn_url, public_base_url
 
 TITLE_MAX = 60
@@ -105,3 +108,37 @@ def static_page_meta(
 
 # Search-miss / error signal params: a home or /verbs page rendered for one of these is a transient state.
 NOINDEX_STATE_PARAMS = frozenset({"not_available", "generating", "not_a_verb", "garbage", "queued", "plus_required"})
+
+
+def website_jsonld() -> dict[str, object]:
+    """schema.org WebSite for the home page (no SearchAction: the site search is not a crawlable URL template)."""
+    return {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "url": f"{public_base_url()}/"}
+
+
+def breadcrumb_jsonld(*, language: str, verb_id: str, lemma: str, language_name: str) -> dict[str, object]:
+    """BreadcrumbList: home -> the language's verbs page -> this verb (absolute URLs, canonical verb URL)."""
+    base = public_base_url()
+    items = [
+        (SITE_NAME, f"{base}/"),
+        (language_name, f"{base}/verbs?language={quote(language, safe='')}&ui_language=en"),
+        (lemma, canonical_learn_url(language, verb_id)),
+    ]
+    return {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": position, "name": name, "item": url}
+            for position, (name, url) in enumerate(items, start=1)
+        ],
+    }
+
+
+_JSONLD_ESCAPES = {"<": "\\u003c", ">": "\\u003e", "&": "\\u0026", "\u2028": "\\u2028", "\u2029": "\\u2029"}
+
+
+def jsonld_script_json(data: dict[str, object]) -> str:
+    """JSON safe to place inside <script type=application/ld+json>: no raw <, >, & or line separators."""
+    text = json.dumps(data, ensure_ascii=False)
+    for char, escaped in _JSONLD_ESCAPES.items():
+        text = text.replace(char, escaped)
+    return text
