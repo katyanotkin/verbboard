@@ -110,7 +110,6 @@
   border-color: #1d4ed8;
 }
 
-
 /* search form */
 .vb-toolbar {
   margin-bottom: 8px;
@@ -380,16 +379,6 @@
   align-items: center;
   gap: 10px;
   margin: 8px 0 4px;
-}
-
-.vb-share-btn {
-  padding: 6px 16px;
-  font-size: 13px;
-}
-
-.vb-share-status {
-  font-size: 13px;
-  color: #166534;
 }
 
 /* ── practice panel ──────────────────────────────────────────────────────── */

@@ -13,9 +13,18 @@
 }
 
 .fill-toggle-btn {
-  border-color: #94a3b8;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-color: #1e3a8a;
+  color: #1e3a8a;
+  font-size: 13.5px;
+  font-weight: 600;
 }
+
+.fill-toggle-icon { flex: none; }
 
 .fill-toggle-btn[aria-pressed="true"] {
   background: var(--fill-ok-bg);

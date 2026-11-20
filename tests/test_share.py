@@ -359,3 +359,13 @@ class TestShareJs:
         r = _run_share_js("no_share", button_id, status_id)
         assert r["status"] == "COPIED"
         assert r["decoy"] == ""
+
+
+# ── visibility polish (issues #131, #132) ────────────────────────────────────
+
+
+def test_learn_share_button_has_decorative_icon_and_a_text_label() -> None:
+    html = _learn_html("en", "en_go", "go")
+    block = html.split('id="learn-share-btn"', 1)[1].split("</button>", 1)[0]
+    assert 'class="share-icon"' in block and 'alt=""' in block
+    assert "<span>" in block  # the text name stays in the button

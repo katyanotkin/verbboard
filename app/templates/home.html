@@ -160,7 +160,7 @@
           data-share-title="VerbBoard"
           data-share-status="home-share-status"
           data-copied-label="{{ ui['share.copied'] }}"
-        >{{ ui['share.button'] }}</button>
+        >{% include '_share_icon.html' %}<span>{{ ui['share.button'] }}</span></button>
         <span id="home-share-status" class="share-status" role="status" aria-live="polite"></span>
       </div>
       {% endif %}

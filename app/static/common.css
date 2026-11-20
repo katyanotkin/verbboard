@@ -940,7 +940,7 @@ body {
   }
 }
 
-/* Share with a friend on home and /learn (issue #128); /verbs has its own .vb-share-* styles. */
+/* Share with a friend on /verbs, home and /learn (issues #128, #131): one look everywhere. */
 .share-row {
   display: flex;
   align-items: center;
@@ -949,17 +949,30 @@ body {
 }
 
 .share-btn {
-  padding: 6px 16px;
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 18px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--button-primary-bg, #1e3a8a);
+  color: var(--button-primary-bg, #2563eb);
   background: #fff;
-  border: 1px solid #d6dbe6;
+  border: 1px solid #c7d7f9;
   border-radius: 999px;
   cursor: pointer;
 }
 
-.share-btn:hover { background: #f0f4ff; border-color: #c7d7f9; }
+@media (hover: hover) {
+  .share-btn:hover { background: #f0f4ff; border-color: var(--button-primary-bg, #2563eb); }
+}
+
+.share-btn:focus-visible {
+  outline: 2px solid var(--button-primary-bg, #2563eb);
+  outline-offset: 2px;
+}
+
+.share-icon { flex: none; }
 
 .share-status {
   font-size: 13px;

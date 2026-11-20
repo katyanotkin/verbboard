@@ -176,13 +176,13 @@
         <button
           type="button"
           id="vb-share-btn"
-          class="vb-load-more-btn vb-share-btn"
+          class="share-btn"
           data-share-url="{{ share_url }}"
           data-share-text="{{ share_text }}"
           data-share-title="VerbBoard"
           data-copied-label="{{ ui['share.copied'] }}"
-        >{{ ui['share.button'] }}</button>
-        <span id="vb-share-status" class="vb-share-status" role="status" aria-live="polite"></span>
+        >{% include '_share_icon.html' %}<span>{{ ui['share.button'] }}</span></button>
+        <span id="vb-share-status" class="share-status" role="status" aria-live="polite"></span>
       </div>
       {% endif %}
 

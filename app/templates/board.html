@@ -76,7 +76,7 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
             data-share-title="VerbBoard"
             data-share-status="learn-share-status"
             data-copied-label="{{ share_copied }}"
-          >{{ share_button }}</button>
+          >{% include '_share_icon.html' %}<span>{{ share_button }}</span></button>
           <span id="learn-share-status" class="share-status" role="status" aria-live="polite"></span>
         </div>
         {% endif %}

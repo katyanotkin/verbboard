@@ -259,6 +259,15 @@ def _render(verb: VerbEntry, language: str = "es", ui_lang: str = "en", **kwargs
     return render_board_html(board, ui_lang=ui_lang, **kwargs)
 
 
+def test_fill_toggle_has_decorative_icon_and_label_span() -> None:
+    """Issue #132: the toggle got a pencil icon; the label stays real text and the id/aria-pressed contract holds."""
+    html = _render(_es_verb())
+    toggle = html.split("id='fill-toggle'", 1)[1].split("</button>", 1)[0]
+    assert "fill-toggle-icon" in toggle and "aria-hidden='true'" in toggle
+    assert "aria-pressed='false'" in html.split("id='fill-toggle'", 1)[1][:200]
+    assert "<span>Fill in the blank</span>" in toggle
+
+
 def test_no_entry_pill_rendered() -> None:
     html = _render(_es_verb())
     assert "fill-entry-link" not in html and "/practice/fill" not in html
