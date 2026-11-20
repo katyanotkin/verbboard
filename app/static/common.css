@@ -939,3 +939,30 @@ body {
     justify-content: flex-end;
   }
 }
+
+/* Share with a friend on home and /learn (issue #128); /verbs has its own .vb-share-* styles. */
+.share-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.share-btn {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--button-primary-bg, #1e3a8a);
+  background: #fff;
+  border: 1px solid #d6dbe6;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.share-btn:hover { background: #f0f4ff; border-color: #c7d7f9; }
+
+.share-status {
+  font-size: 13px;
+  color: #166534;
+  overflow-wrap: anywhere;
+}

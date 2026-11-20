@@ -69,6 +69,7 @@
   "share.button": "Share with a friend",
   "share.copied": "Link copied",
   "share.text": "Learn {language} verbs with audio on VerbBoard",
+  "share.text_verb": "{language}: {lemma}, conjugations and audio on VerbBoard",
   "verbs.export_known": "Export known (CSV)",
   "verbs.plus_required": "{language} is available in the Plus version only.",
   "practice.label": "Practice",

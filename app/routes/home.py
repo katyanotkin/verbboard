@@ -24,6 +24,7 @@ from core.safe_return import safe_return_to
 from core.search_utils import find_best_entry, tokenize_text
 from core.seo_meta import NOINDEX_STATE_PARAMS, jsonld_script_json, static_page_meta, website_jsonld
 from core.settings import load_settings
+from core.share_service import is_shareable_language, share_verbs_url
 from core.sitemap_service import canonical_home_url
 from core.storage.verb_repository import find_verb_by_search_extract, list_verbs_recent
 from core.task_tracking import track
@@ -422,6 +423,12 @@ def home(
             "queued_query": queued_query,
             "firebase_web_config_json": settings.firebase_web_config_json,
             "votd": votd,
+            "share_url": share_verbs_url(selected_language),
+            "share_text": (
+                ui["share.text"].format(language=ui.get(f"lang.{selected_language}", selected_language))
+                if is_shareable_language(selected_language)
+                else ""
+            ),
         },
     )
     return response

@@ -42,6 +42,7 @@ The product focuses on:
 - Search verbs: studied language selected by default; select English to cross-search in your studied language (translated via Gemini)
 - Voice selection (`female`, `male`)
 - "Get it on Google Play" link (Android browsers only) in place of the old install button
+- Share with a friend: a button shares a link to the selected language's verb list (not offered for Plus-only languages)
 
 Visual indicators:
 - ★ learned verbs
@@ -51,6 +52,7 @@ Visual indicators:
 - Conjugation table with TTS audio for every form and example sentence
 - 🔎 Jump to example: a form that has a tagged example sentence shows a magnifier; tap it to scroll to and highlight that example (tap again to cycle when there are several). Forms without an example show no button; hidden in fill-in mode
 - Switch between female and male voices
+- Share with a friend: a button under the language line shares a link to this verb (native share sheet on phones, copy link elsewhere); the link preview shows the language's card
 - Inline translations when UI language differs from the verb's language
 - Focus filter: hide conjugation rows by gender (masculine / feminine) and number (singular / plural) — Hebrew, Russian, Spanish
 - Brazilian Portuguese (pt-BR, free) boards show presente, pretérito perfeito, imperfeito, futuro, condicional, subjuntivo presente, imperfeito and futuro, imperativo (você/nós/vocês), gerúndio and particípio; four slots per tense (eu, ele/ela/você, nós, eles/elas/vocês), no tu/vós

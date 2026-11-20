@@ -31,6 +31,16 @@ def share_verbs_url(language: str) -> str:
     return f"{public_base_url()}/verbs?language={quote(language, safe='')}&utm_source={SHARE_UTM_SOURCE}"
 
 
+def share_learn_url(language: str, verb_id: str) -> str:
+    """Link to one verb's page. Like the language link it carries no `ui_language`."""
+    if not is_shareable_language(language) or not verb_id:
+        return ""
+    return (
+        f"{public_base_url()}/learn?language={quote(language, safe='')}"
+        f"&verb_id={quote(verb_id, safe='')}&utm_source={SHARE_UTM_SOURCE}"
+    )
+
+
 def share_og_image_url(language: str) -> str:
     if not is_shareable_language(language):
         return ""

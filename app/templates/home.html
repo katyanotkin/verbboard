@@ -148,6 +148,22 @@
           <span>{{ ui['practice.label'] }}</span>
         </a>
       </div>
+
+      {% if share_url %}
+      <div class="share-row">
+        <button
+          type="button"
+          id="home-share-btn"
+          class="share-btn"
+          data-share-url="{{ share_url }}"
+          data-share-text="{{ share_text }}"
+          data-share-title="VerbBoard"
+          data-share-status="home-share-status"
+          data-copied-label="{{ ui['share.copied'] }}"
+        >{{ ui['share.button'] }}</button>
+        <span id="home-share-status" class="share-status" role="status" aria-live="polite"></span>
+      </div>
+      {% endif %}
     </div>
 
     <a id="play-link" hidden class="play-link" rel="noopener"
@@ -163,6 +179,7 @@
   {% set bnav_lang = learning_lang %}{% set bnav_ui_lang = lang %}{% set bnav_active = 'home' %}{% set bnav_back_href = '' %}{% include '_bottom_nav.html' %}
 
   <script src="/static/rate_nudge.js"></script>
+  <script src="/static/share.js" defer></script>
   <script src="/static/home.js"></script>
   <script src="/static/pwa.js"></script>
 </body>

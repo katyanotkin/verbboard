@@ -38,8 +38,8 @@
     });
   }
 
-  function showStatus(message) {
-    var status = document.getElementById('vb-share-status');
+  function showStatus(message, statusId) {
+    var status = document.getElementById(statusId || 'vb-share-status');
     if (!status) return;
     status.textContent = message;
     if (statusTimer) clearTimeout(statusTimer);
@@ -47,8 +47,10 @@
   }
 
   // When even copying fails (insecure context, some in-app browsers) show the link itself so it can be copied by hand.
-  function copyOrShow(url, copiedLabel) {
-    copyText(url).then(function () { showStatus(copiedLabel); }).catch(function () { showStatus(url); });
+  function copyOrShow(url, copiedLabel, statusId) {
+    copyText(url)
+      .then(function () { showStatus(copiedLabel, statusId); })
+      .catch(function () { showStatus(url, statusId); });
   }
 
   function onShareClick(event) {
@@ -57,6 +59,7 @@
     var text = btn.getAttribute('data-share-text') || '';
     var title = btn.getAttribute('data-share-title') || '';
     var copiedLabel = btn.getAttribute('data-copied-label') || '';
+    var statusId = btn.getAttribute('data-share-status') || 'vb-share-status';
     if (!url) return;
     beacon();
 
@@ -64,16 +67,21 @@
       // AbortError = the user closed the sheet; anything else falls back to copying.
       navigator.share({ title: title, text: text, url: url }).catch(function (err) {
         if (err && err.name === 'AbortError') return;
-        copyOrShow(url, copiedLabel);
+        copyOrShow(url, copiedLabel, statusId);
       });
       return;
     }
-    copyOrShow(url, copiedLabel);
+    copyOrShow(url, copiedLabel, statusId);
   }
 
+  // One script for every page that offers sharing: /verbs, home and /learn each have their own button id.
+  var BUTTON_IDS = ['vb-share-btn', 'home-share-btn', 'learn-share-btn'];
+
   function init() {
-    var btn = document.getElementById('vb-share-btn');
-    if (btn) btn.addEventListener('click', onShareClick);
+    BUTTON_IDS.forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', onShareClick);
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

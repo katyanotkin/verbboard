@@ -81,8 +81,9 @@ def test_all_ui_locales_have_tags_within_limits(ui_lang: str) -> None:
     assert _meta(page, "property", "og:description") == desc
     assert _meta(page, "property", "og:type") == "website"
     assert _meta(page, "property", "og:site_name") == "VerbBoard"
-    assert _meta(page, "name", "twitter:card") == "summary"
-    assert "og:image" not in page
+    # Issue #128: a shared verb link previews with the language card.
+    assert _meta(page, "name", "twitter:card") == "summary_large_image"
+    assert _meta(page, "property", "og:image").endswith("/static/og/verbs-en.png")
     assert '<h1 lang="en">go</h1>' in page
 
 

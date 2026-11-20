@@ -69,6 +69,7 @@
   "share.button": "Поделиться с другом",
   "share.copied": "Ссылка скопирована",
   "share.text": "{language}: учи глаголы с аудио в VerbBoard",
+  "share.text_verb": "{language}: {lemma} — формы и аудио в VerbBoard",
   "verbs.export_known": "Экспорт известных (CSV)",
   "verbs.plus_required": "{language} доступен только в версии Plus.",
   "practice.label": "Тренировка",

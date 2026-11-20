@@ -20,11 +20,18 @@ from core.i18n import get_strings
 from core.languages.config import LANGUAGE as LANG_CONFIG
 from core.languages.config import html_lang_for
 from core.languages.ru.homographs import HOMOGRAPH_MARKS, mark_text
+from core.languages.ru.stress import strip_stress_marks
 from core.models import Board
 from core.paths import TEMPLATES_DIR
 from core.pronouns import PRONOUN_PERSONS, PRONOUNS
 from core.safe_return import safe_return_to as _safe_return_to
 from core.seo_meta import breadcrumb_jsonld, jsonld_script_json, learn_meta
+from core.share_service import (
+    OG_IMAGE_HEIGHT,
+    OG_IMAGE_WIDTH,
+    share_learn_url,
+    share_og_image_url,
+)
 
 NO_AUDIO_ROW_KEYS = {"aspect", "pair", "binyan", "root"}
 
@@ -500,6 +507,30 @@ def render_board_html(
         is_candidate=bool(candidate_verb_id),
     )
 
+    # Share one verb with a friend (issue #128). Candidate previews are admin-only and never shared.
+    share_language_name = ui.get(f"lang.{board.language}") or language_display
+    # A chat message gets the plain lemma: no Russian stress marks, and an aspect pair without an empty side.
+    if isinstance(lemma, dict):
+        share_lemma = " / ".join(part for part in (lemma.get("imperfective"), lemma.get("perfective")) if part)
+    else:
+        share_lemma = title
+    if board.language == "ru":
+        share_lemma = strip_stress_marks(share_lemma)
+    share_url = "" if candidate_verb_id else share_learn_url(board.language, board.verb.id)
+    share_fields = {
+        "share_url": share_url,
+        "share_text": (
+            ui.get("share.text_verb", "{language}: {lemma}").format(language=share_language_name, lemma=share_lemma)
+            if share_url
+            else ""
+        ),
+        "share_button": ui.get("share.button", "Share with a friend"),
+        "share_copied": ui.get("share.copied", "Link copied"),
+        "og_image": "" if candidate_verb_id else share_og_image_url(board.language),
+        "og_image_width": OG_IMAGE_WIDTH,
+        "og_image_height": OG_IMAGE_HEIGHT,
+    }
+
     jsonld = (
         ""
         if candidate_verb_id
@@ -516,6 +547,7 @@ def render_board_html(
     template = _jinja_env.get_template("board.html")
     return template.render(
         **seo,
+        **share_fields,
         fill_toggle=fill_toggle_html,
         fill_banner=fill_banner_html,
         translated_from_banner=translated_from_banner,

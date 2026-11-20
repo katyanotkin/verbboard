@@ -69,6 +69,7 @@
   "share.button": "שיתוף עם חבר",
   "share.copied": "הקישור הועתק",
   "share.text": "לומדים פעלים ב{language} עם אודיו ב-VerbBoard",
+  "share.text_verb": "{language}: {lemma} – הטיות ואודיו ב-VerbBoard",
   "verbs.export_known": "ייצוא ידועים (CSV)",
   "verbs.plus_required": "{language} זמינה בגרסת Plus בלבד.",
   "practice.label": "תרגול",

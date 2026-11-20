@@ -23,6 +23,7 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
 <script defer src="/static/srs.js"></script>
 <script defer src="/static/progress.js"></script>
 <script defer src="/static/help_hint.js"></script>
+<script defer src="/static/share.js"></script>
 <script defer src="/static/audio_report.js"></script>
 <script defer src="/static/login_nudge.js"></script>
 <script defer src="/static/rate_nudge.js"></script>
@@ -64,6 +65,21 @@ window.VB_UI_LANG = {{ html_lang | tojson }};</script>
         <div class="meta">
           {{ board_language_label }} <b>{{ language_display }}</b>
         </div>
+        {% if share_url %}
+        <div class="share-row">
+          <button
+            type="button"
+            id="learn-share-btn"
+            class="share-btn"
+            data-share-url="{{ share_url }}"
+            data-share-text="{{ share_text }}"
+            data-share-title="VerbBoard"
+            data-share-status="learn-share-status"
+            data-copied-label="{{ share_copied }}"
+          >{{ share_button }}</button>
+          <span id="learn-share-status" class="share-status" role="status" aria-live="polite"></span>
+        </div>
+        {% endif %}
       </div>
 
       <div class="func-panel">
