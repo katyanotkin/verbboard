@@ -105,6 +105,13 @@
     model.source.parentNode.insertBefore(node, model.source.nextSibling);
   }
 
+  // Feedback and the label chip are UI-language text, but they sit inside an example row whose
+  // direction follows the study language. Without their own dir, English text in a Hebrew row
+  // renders "!Correct" and "answer :Answer" (issue #134).
+  function uiDirection() {
+    return document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr';
+  }
+
   // ---- answered view -----------------------------------------------------
   function showAnswered(model) {
     clearExtras(model);
@@ -116,6 +123,7 @@
 
     var feedback = el('span', 'fill-feedback fill-feedback--' + state);
     feedback.tabIndex = -1;
+    feedback.dir = uiDirection();
     if (state === 'correct') {
       feedback.textContent = t('fill.correct');
     } else if (state === 'accent') {
@@ -155,6 +163,7 @@
     model.source.appendChild(document.createTextNode(model.suffix));
 
     var controls = el('div', 'fill-controls');
+    controls.dir = uiDirection();
     if (model.label) controls.appendChild(el('span', 'fill-chip', model.label));
     var check = el('button', 'btn-secondary fill-check-btn', t('board.fill_check'));
     check.type = 'button';

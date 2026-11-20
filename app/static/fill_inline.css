@@ -180,6 +180,7 @@
 
 .fill-feedback {
   display: block;
+  text-align: start;
   margin-block-start: 6px;
   padding: 6px 10px;
   border: 1px solid;

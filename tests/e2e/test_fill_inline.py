@@ -403,3 +403,18 @@ def test_help_hint_does_not_mention_translations(browser, live_server_url):
         assert "translation" not in text
     finally:
         ctx.close()
+
+
+@pytest.mark.parametrize("ui,expected", [("he", "rtl"), ("en", "ltr")])
+def test_feedback_and_controls_follow_ui_language_direction(browser, live_server_url, ui, expected):
+    """Issue #134: UI-language feedback/controls must not inherit the study-language row direction."""
+    ctx, page, _, _ = _open(browser, live_server_url, ui=ui)
+    try:
+        page.click("#fill-toggle")
+        row = _row(page, 0)
+        assert row.locator(".fill-controls").get_attribute("dir") == expected
+        row.locator(".fill-inline-input").fill("abrió")
+        row.locator(".fill-check-btn").click()
+        assert row.locator(".fill-feedback").get_attribute("dir") == expected
+    finally:
+        ctx.close()
