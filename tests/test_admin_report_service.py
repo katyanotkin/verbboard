@@ -198,6 +198,8 @@ def test_language_breakdowns_ui_picks_and_engagement_flags(fake_db) -> None:
         "fill_started": 0,
         "rate_clicked": 0,
         "rate_clicked_practice": 0,
+        "share_tapped": 0,
+        "share_landed": 0,
         "rate_clicked_votd": 0,
         "practice_gate_then_signed_in": 0,
     }

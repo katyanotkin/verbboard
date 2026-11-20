@@ -69,6 +69,7 @@ Visual indicators:
 - Practice session entry point
 - Export known verbs as a CSV (Anki-importable) — appears once you've learned at least one verb in that language
 - Login nudge: a dismissible sign-in prompt appears for anonymous users who browse and star verbs but never start a practice session
+- Share with a friend: a button shares a link to this language's verb list (native share sheet on phones, copy link elsewhere); the friend's browser language picks their UI language, and the link preview shows a card for the language. Not offered for Plus-only languages
 
 ---
 

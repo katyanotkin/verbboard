@@ -97,6 +97,8 @@
     plus_notice_shown: "Plus notice shown",
     practice_gate_then_signed_in: "Gate shown, then signed in",
     fill_started: "Fill practice started",
+    share_tapped: "Share button tapped",
+    share_landed: "Opened a shared link",
     rate_clicked: "Rate link tapped (Android, any source)",
     rate_clicked_practice: "Rate link tapped after practice",
     rate_clicked_votd: "Rate link tapped after 5th Verb of the Day"

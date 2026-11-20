@@ -15,6 +15,13 @@ from core.i18n import get_strings, resolve_ui_language
 from core.languages.config import UI_LANGUAGES
 from core.seo_meta import NOINDEX_STATE_PARAMS, static_page_meta
 from core.settings import load_settings
+from core.share_service import (
+    OG_IMAGE_HEIGHT,
+    OG_IMAGE_WIDTH,
+    is_shareable_language,
+    share_og_image_url,
+    share_verbs_url,
+)
 from core.sitemap_service import canonical_verbs_url
 from core.storage.verb_repository import list_verbs_recent
 from core.verb_loader import load_entries_for_language
@@ -171,6 +178,15 @@ def verb_browser(
                 or language not in plugins,
             ),
             "ui": ui,
+            "og_image": share_og_image_url(selected_language) if entitled else "",
+            "og_image_width": OG_IMAGE_WIDTH,
+            "og_image_height": OG_IMAGE_HEIGHT,
+            "share_url": share_verbs_url(selected_language) if entitled else "",
+            "share_text": (
+                ui["share.text"].format(language=study_language_label(selected_language, plugins, ui))
+                if entitled and is_shareable_language(selected_language)
+                else ""
+            ),
             "ui_json": json.dumps(ui_strings, ensure_ascii=False),
             "ui_lang": ui_lang,
             "html_dir": html_dir,

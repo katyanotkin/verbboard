@@ -171,6 +171,21 @@
         </div>
       </div>
 
+      {% if share_url %}
+      <div class="vb-share-wrap">
+        <button
+          type="button"
+          id="vb-share-btn"
+          class="vb-load-more-btn vb-share-btn"
+          data-share-url="{{ share_url }}"
+          data-share-text="{{ share_text }}"
+          data-share-title="VerbBoard"
+          data-copied-label="{{ ui['share.copied'] }}"
+        >{{ ui['share.button'] }}</button>
+        <span id="vb-share-status" class="vb-share-status" role="status" aria-live="polite"></span>
+      </div>
+      {% endif %}
+
       <div id="vb-list" class="vb-list"></div>
 
       <div id="vb-load-more-wrap" class="vb-load-more-wrap" style="display:none">
@@ -194,6 +209,7 @@
   <script src="/static/storage.js"></script>
   <script src="/static/srs.js"></script>
   <script src="/static/help_hint.js"></script>
+  <script src="/static/share.js" defer></script>
   <script src="/static/login_nudge.js"></script>
   <script src="/static/rate_nudge.js"></script>
   <script src="/static/nav_urls.js"></script>

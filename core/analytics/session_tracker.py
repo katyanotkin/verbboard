@@ -49,6 +49,7 @@ def _create_session(
     referrer: str = "",
     home_viewed: bool = False,
     twa: bool = False,
+    share_landed: bool = False,
 ) -> None:
     from google.api_core.exceptions import AlreadyExists
 
@@ -70,6 +71,7 @@ def _create_session(
                 "verb_viewed": verb_viewed,
                 "home_viewed": home_viewed,
                 "twa": twa,
+                "share_landed": share_landed,
                 "referrer": clean_referrer,
                 "created_at": datetime.now(UTC),
             }
@@ -92,6 +94,8 @@ def _create_session(
             update["home_viewed"] = True
         if twa:
             update["twa"] = True
+        if share_landed:
+            update["share_landed"] = True
         if update:
             try:
                 get_db().collection(COLLECTION).document(doc_id).set(update, merge=True)
@@ -111,10 +115,21 @@ async def start_session(
     referrer: str = "",
     home_viewed: bool = False,
     twa: bool = False,
+    share_landed: bool = False,
 ) -> None:
     task = asyncio.create_task(
         asyncio.to_thread(
-            _create_session, fingerprint, date, device_type, language, ui_lang, verb_viewed, referrer, home_viewed, twa
+            _create_session,
+            fingerprint,
+            date,
+            device_type,
+            language,
+            ui_lang,
+            verb_viewed,
+            referrer,
+            home_viewed,
+            twa,
+            share_landed,
         )
     )
     _pending.add(task)
@@ -453,3 +468,25 @@ def delete_sessions_for_uid(uid: str) -> None:
     docs = get_db().collection(COLLECTION).where("uid", "==", uid).stream()
     for doc in docs:
         doc.reference.delete()
+
+
+def _record_share_tapped(fingerprint: str, date: str) -> None:
+    """Record that this session-day tapped the share button (issue #128).
+    Set-once; dropped (no stub doc) when the session doc does not exist."""
+    from core.storage.firestore_db import get_db
+
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        snapshot = doc_ref.get()
+        if not snapshot.exists or snapshot.to_dict().get("share_tapped"):
+            return
+        doc_ref.set({"share_tapped": True}, merge=True)
+    except Exception:
+        logger.exception("Failed to record share tapped")
+
+
+async def record_share_tapped(fingerprint: str, date: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_share_tapped, fingerprint, date))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)

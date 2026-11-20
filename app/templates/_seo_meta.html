@@ -8,6 +8,11 @@
 <meta property="og:title" content="{{ meta_title }}"/>
 {% if meta_description %}<meta property="og:description" content="{{ meta_description }}"/>{% endif %}
 {% if og_url %}<meta property="og:url" content="{{ og_url }}"/>{% endif %}
-<meta name="twitter:card" content="summary"/>
+{% if og_image %}<meta property="og:image" content="{{ og_image }}"/>
+<meta property="og:image:width" content="{{ og_image_width }}"/>
+<meta property="og:image:height" content="{{ og_image_height }}"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="{{ og_image }}"/>
+{% else %}<meta name="twitter:card" content="summary"/>{% endif %}
 <meta name="twitter:title" content="{{ meta_title }}"/>
 {% if meta_description %}<meta name="twitter:description" content="{{ meta_description }}"/>{% endif %}

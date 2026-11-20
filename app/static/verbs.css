@@ -374,6 +374,24 @@
   font-size: 13px;
 }
 
+/* Share this language with a friend (issue #128). */
+.vb-share-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 4px;
+}
+
+.vb-share-btn {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.vb-share-status {
+  font-size: 13px;
+  color: #166534;
+}
+
 /* ── practice panel ──────────────────────────────────────────────────────── */
 /* Size toggle reuses .vb-filter-toggle + .vb-ftbtn (same segmented control). */
 /* Action button reuses .btn-pill-navy from common.css.                        */

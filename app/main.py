@@ -113,6 +113,7 @@ class _PageViewMiddleware:
         from core.analytics.client_context import detect_device_type
         from core.analytics.session_tracker import get_fingerprint_sid, start_session
         from core.i18n import resolve_ui_language
+        from core.share_service import is_share_landing
 
         if request.url.path not in {"/", "/verbs", "/learn", "/feedback"}:
             await self._app(scope, receive, send)
@@ -141,6 +142,7 @@ class _PageViewMiddleware:
             referrer,
             home_viewed,
             twa,
+            share_landed=is_share_landing(request.query_params),
         )
 
         await self._app(scope, receive, send)
