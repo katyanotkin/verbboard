@@ -1,0 +1,163 @@
+<title>VerbBoard Sign-in Walkthrough</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: one reading column; numbers up top, then the path by entry point, then findings, then the recording gap. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #1c2330; --muted: #5a6577; --line: #dde2ea;
+  --accent: #1f4e8c; --accent-soft: #e6eef8; --bad: #9b2c2c; --bad-soft: #fbe9e9;
+  --warn: #8a5a00; --warn-soft: #fbf1dc;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --surface: #1a202a; --fg: #e8ecf3; --muted: #9aa5b8; --line: #2a3342;
+    --accent: #8db7ee; --accent-soft: #1f2d42; --bad: #f0a0a0; --bad-soft: #3a1f1f;
+    --warn: #e5b765; --warn-soft: #2c2412; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --surface: #1a202a; --fg: #e8ecf3; --muted: #9aa5b8; --line: #2a3342;
+  --accent: #8db7ee; --accent-soft: #1f2d42; --bad: #f0a0a0; --bad-soft: #3a1f1f;
+  --warn: #e5b765; --warn-soft: #2c2412; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: 2rem; } h2 { font-size: 1.35rem; margin-bottom: 12px; } h3 { font-size: 1.05rem; }
+p { margin: 0 0 12px; max-width: 68ch; }
+code { font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+.lede { color: var(--muted); font-size: 1.05rem; }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.note { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 12px 16px; border-radius: 6px; max-width: 68ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.stat b { display: block; font-family: var(--font-display); font-size: 1.6rem; }
+.stat span { color: var(--muted); font-size: 0.85rem; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 600px; font-size: 0.92rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+tr:last-child td { border-bottom: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; }
+.card h3 { margin-bottom: 6px; }
+.card p { margin: 0 0 6px; font-size: 0.95rem; }
+.sev { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 1px 8px; border-radius: 999px; margin-right: 6px; }
+.sev.high { background: var(--bad-soft); color: var(--bad); }
+.sev.med { background: var(--warn-soft); color: var(--warn); }
+.sev.low { background: var(--accent-soft); color: var(--accent); }
+ol, ul { margin: 0 0 12px; padding-left: 1.2rem; max-width: 68ch; }
+li { margin-bottom: 6px; }
+</style>
+
+<main>
+  <header>
+    <div class="eyebrow">Issue #139 · sign-in for a first-time visitor</div>
+    <h1>The sign-in path, step by step</h1>
+    <p class="lede">What a visitor sees on the way to signing in, where it can go wrong, what we record today, and what we do not record yet.</p>
+  </header>
+
+  <div class="note">Written from the code and from analytics read on 2026-11-23. Findings marked "from the code" have not been reproduced on a device. The counts are small, so treat them as direction, not proof.</div>
+
+  <section>
+    <h2>Who tapped sign-in and did not get in</h2>
+    <p>Last 60 days, non-bot sessions. "Tapped" means the visitor pressed a sign-in button. "Signed in" means that same day's session later got an account attached. "Not signed in" is our only measure of a failed attempt today.</p>
+    <div class="grid">
+      <div class="stat"><b>59</b><span>sessions tapped sign-in (of 3,144, about 2%)</span></div>
+      <div class="stat"><b>44</b><span>of those signed in</span></div>
+      <div class="stat"><b>15</b><span>did not (about 25%)</span></div>
+      <div class="stat"><b>8 of 26</b><span>saw the practice gate and did not sign in</span></div>
+    </div>
+    <div class="table-wrap" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Entry point</th><th>Tapped</th><th>Signed in</th><th>Not signed in</th></tr></thead>
+        <tbody>
+          <tr><td>Desktop (popup)</td><td>21</td><td>12</td><td><strong>9 (43%)</strong></td></tr>
+          <tr><td>Google Play app (TWA)</td><td>22</td><td>18</td><td>4 (18%)</td></tr>
+          <tr><td>Mobile browser</td><td>14</td><td>12</td><td>2 (14%)</td></tr>
+          <tr><td>Standalone (installed web app)</td><td>2</td><td>2</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px;color:var(--muted);font-size:0.9rem">A visitor who tapped, left, and signed in on another day or device counts as "not signed in" here, so this overstates failure a little. Desktop stands out, and its popup flow is the first thing to look at.</p>
+  </section>
+
+  <section>
+    <h2>The path, by entry point</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Where they start</th><th>What they see</th><th>What happens on tap</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Practice gate</strong><br>(tap Start practice, signed out)</td><td>"Sign in to start practice". "A free account saves your progress across devices and schedules your reviews." Button "Continue with Google". Note: "Free. We use your name and email only to save your progress." Link "Keep browsing".</td><td>Same branch as below. After a redirect sign-in the page reloads and practice starts by itself if it is under 10 minutes old.</td></tr>
+          <tr><td><strong>Login nudge</strong><br>(card on the verbs page, or after earning a badge)</td><td>"You just earned a badge! Sign in with Google so it's still here next time." Or the same for marked verbs.</td><td>Same sign-in call.</td></tr>
+          <tr><td><strong>Fill-in-the-blank</strong></td><td>"Signing in with Google is free and required for this mode."</td><td>Same sign-in call.</td></tr>
+          <tr><td><strong>Desktop</strong></td><td>A Google popup with the account chooser.</td><td>Popup sign-in. If the popup is blocked or closed, see finding 1.</td></tr>
+          <tr><td><strong>Mobile browser</strong></td><td>Android: the page goes straight to Google and comes back. iPhone: a separate "Sign in to VerbBoard" page with one button.</td><td>Android uses a one-tap redirect. iPhone keeps the two-tap page because the redirect is untested there.</td></tr>
+          <tr><td><strong>Google Play app</strong></td><td>The Google account prompt, then back into the app.</td><td>Google Identity Services first, and the redirect if the prompt cannot be shown.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where it can go wrong</h2>
+
+    <div class="card">
+      <h3><span class="sev high">High</span>1. A closed or blocked popup shows a technical alert</h3>
+      <p>On desktop, a failed popup ends in a browser alert that reads "Sign-in error:" followed by the raw Firebase message. Only one error, a cancelled duplicate popup, is silenced. A visitor who just closes the Google window probably gets the alert too. It is in English only and means nothing to a non-technical visitor. Desktop has the worst numbers above.</p>
+      <p style="color:var(--muted)">From the code (<code>auth.js</code>, the sign-in button handler).</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="sev high">High</span>2. Failures after a redirect are silent</h3>
+      <p>On mobile and in the Play app, if Google returns an error, the page reloads and only a console line is written. The visitor sees nothing: no message, no retry hint. From their side the button "did nothing".</p>
+      <p style="color:var(--muted)">From the code (<code>getRedirectResult</code> handler).</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="sev high">High</span>3. The practice gate hides a failure too</h3>
+      <p>If sign-in fails from the gate, the code logs a console warning and clears the pending-start marker. The gate stays open with no message, and the visitor does not know whether to try again.</p>
+      <p style="color:var(--muted)">From the code (<code>practice_loop.js</code>, gate CTA).</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="sev med">Medium</span>4. Google is the only way in</h3>
+      <p>Every prompt says "Google". A visitor with no Google account, or one who does not remember it, has no alternative and no explanation of what to do. The gate reassures about cost and privacy but not about this.</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="sev med">Medium</span>5. The gate does not say what happens next</h3>
+      <p>"Continue with Google" gives no hint that a Google window or page will open, or that they will return to the same place. For a first-time or older visitor, leaving the page is a point of doubt.</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="sev low">Low</span>6. Blocked scripts have a message, but only on the sign-in page</h3>
+      <p>The separate sign-in page explains a content blocker or a bad connection. The same failure from the gate or nudge only logs to the console.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What we record today, and what is missing</h2>
+    <ul>
+      <li><strong>Recorded:</strong> the entry branch of the first sign-in tap of the day, with its time, and whether the session later got an account. That is what the table above is made from.</li>
+      <li><strong>Recorded:</strong> that the practice gate was shown.</li>
+      <li><strong>Not recorded:</strong> whether the attempt failed, and why. Errors go only to the visitor's own console or a browser alert.</li>
+      <li><strong>Not recorded:</strong> a second tap. The first tap of the day wins, so a visitor who failed twice looks the same as one who failed once.</li>
+    </ul>
+    <h3 style="margin:16px 0 8px">Proposal: record each failed attempt, by error code only</h3>
+    <ol>
+      <li>When any sign-in call fails, send a small beacon with the branch and a short error code from a fixed list (popup closed, popup blocked, network error, unauthorized domain, redirect failed, Google prompt unavailable, other). No messages, no emails, no free text.</li>
+      <li>Store it on the day's session next to the tap, as a count per code, so repeats are visible.</li>
+      <li>Show it on the Reports page beside the practice gate numbers: tapped, signed in, failed by code.</li>
+      <li>Fix findings 1 to 3 by showing a short, localized message and a retry button wherever the attempt fails, using the same codes.</li>
+    </ol>
+    <p>This is code, so it needs an issue, a review, tests and a docs update before it ships. I have not changed anything yet.</p>
+  </section>
+</main>

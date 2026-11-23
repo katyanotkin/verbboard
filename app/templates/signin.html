@@ -21,12 +21,28 @@
   <script>
     window.FIREBASE_WEB_CONFIG = {{ firebase_cfg_json | safe }};
     const S = {{ strings_json | safe }};
+    // Failed-attempt count (issue #140): short code only, never the error message.
+    function reportSignInFailure(code) {
+      try {
+        fetch('/api/analytics/sign_in_failed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ branch: 'signin_page', code: code }),
+          keepalive: true,
+        }).catch(function () {});
+      } catch (e) {}
+    }
     // If the Firebase CDN scripts fail to load (ad-blocker, corporate firewall,
     // flaky mobile connection -- exactly the population most likely to land on
     // this bounce page), fail visibly instead of leaving the button permanently
     // hidden behind "Checking sign-in status...". The button stays disabled
     // since firebase is genuinely unavailable; a reload is the only real retry.
+    var sdkFailureReported = false;
     function handleSdkLoadFailure() {
+      if (!sdkFailureReported) {
+        sdkFailureReported = true;
+        reportSignInFailure('sdk_unavailable');
+      }
       var statusEl = document.getElementById('status');
       var btnEl = document.getElementById('signin-btn');
       var hintEl = document.getElementById('hint');
@@ -93,6 +109,13 @@
         await establishSessionCookie(cred.user);
         proceedAfterSignIn();
       } catch (err) {
+        var failureCode = 'other';
+        var errorCode = (err && err.code) || '';
+        if (errorCode === 'auth/popup-closed-by-user') failureCode = 'popup_closed';
+        else if (errorCode === 'auth/popup-blocked') failureCode = 'popup_blocked';
+        else if (errorCode === 'auth/network-request-failed') failureCode = 'network';
+        else if (errorCode === 'auth/unauthorized-domain') failureCode = 'unauthorized_domain';
+        if (errorCode !== 'auth/cancelled-popup-request') reportSignInFailure(failureCode);
         status.textContent = S['signin.failed'];
         hint.textContent = err.message || String(err);
         btn.disabled = false;

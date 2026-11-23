@@ -215,6 +215,66 @@ async def record_sign_in_tap(fingerprint: str, date: str, branch: str) -> None:
     task.add_done_callback(_pending.discard)
 
 
+# Failed sign-in attempts (issue #140). The client sends a short code, never an
+# error message, email or free text; anything not in this set is stored as "other".
+SIGN_IN_FAILURE_CODES = frozenset(
+    {
+        "popup_closed",
+        "popup_blocked",
+        "network",
+        "unauthorized_domain",
+        "redirect_failed",
+        "sdk_unavailable",
+        "other",
+    }
+)
+# The four tap branches plus the standalone /auth/signin page, which has no tap beacon of its own.
+SIGN_IN_FAILURE_BRANCHES = frozenset(_VALID_SIGN_IN_BRANCHES | {"signin_page"})
+
+
+def normalize_sign_in_failure(branch: str, code: str) -> tuple[str, str]:
+    """Clamp client-supplied values to the allowlists so the stored map keys stay bounded."""
+    clean_branch = branch if branch in SIGN_IN_FAILURE_BRANCHES else "unknown"
+    clean_code = code if code in SIGN_IN_FAILURE_CODES else "other"
+    return clean_branch, clean_code
+
+
+def _record_sign_in_failure(fingerprint: str, date: str, branch: str, code: str) -> None:
+    """Count one failed sign-in attempt on today's session (issue #140).
+
+    Unlike sign_in_tapped_branch this is NOT set-once: each failure increments
+    `sign_in_failures.<code>` and `sign_in_failure_branches.<branch>`, so a visitor
+    who failed twice looks different from one who failed once. Dropped (no stub
+    doc) when the session doc does not exist, like the other engagement beacons.
+    """
+    from google.cloud import firestore
+
+    from core.storage.firestore_db import get_db
+
+    clean_branch, clean_code = normalize_sign_in_failure(branch, code)
+    doc_id = f"{date}_{fingerprint}"
+    try:
+        doc_ref = get_db().collection(COLLECTION).document(doc_id)
+        if not doc_ref.get().exists:
+            return
+        doc_ref.set(
+            {
+                "sign_in_failures": {clean_code: firestore.Increment(1)},
+                "sign_in_failure_branches": {clean_branch: firestore.Increment(1)},
+                "sign_in_failed_at": datetime.now(UTC),
+            },
+            merge=True,
+        )
+    except Exception:
+        logger.exception("Failed to record sign-in failure")
+
+
+async def record_sign_in_failure(fingerprint: str, date: str, branch: str, code: str) -> None:
+    task = asyncio.create_task(asyncio.to_thread(_record_sign_in_failure, fingerprint, date, branch, code))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
+
+
 def _record_practice_started(fingerprint: str, date: str) -> None:
     """Record that a practice session was started this session-day (issue #48).
 

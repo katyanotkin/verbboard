@@ -140,6 +140,32 @@
       table(["Cohort", "Users", "Day 1", "Day 7", "Day 30", "Days 1-7", "Days 8-30"], rows) + "</div>";
   }
 
+  function signInHtml(signIn) {
+    if (!signIn) return "";
+    var byBranch = signIn.by_branch || {};
+    var failuresByBranch = signIn.failures_by_branch || {};
+    var branchNames = Object.keys(byBranch);
+    Object.keys(failuresByBranch).forEach(function (name) {
+      if (branchNames.indexOf(name) === -1) branchNames.push(name);
+    });
+    var branchRows = branchNames.sort().map(function (name) {
+      var tapped = byBranch[name] ? byBranch[name].tapped : 0;
+      var signedIn = byBranch[name] ? byBranch[name].signed_in : 0;
+      return [name, tapped, signedIn, tapped - signedIn, failuresByBranch[name] || 0];
+    });
+    var codeRows = Object.keys(signIn.failures_by_code || {}).sort(function (a, b) {
+      return signIn.failures_by_code[b] - signIn.failures_by_code[a];
+    }).map(function (code) { return [code.replace(/_/g, " "), signIn.failures_by_code[code]]; });
+    return '<div class="card card-body"><h2>Sign-in attempts</h2>' +
+      '<p class="cell-meta">Tapped = first sign-in tap of the session-day. "Not signed in" = no account on that session yet, so ' +
+      "it overstates failure when someone signs in later or on another device. Failed attempts are counted by error code since the " +
+      "failure beacon shipped (issue #140); the standalone sign-in page is listed as signin_page. " +
+      "\"popup closed\" includes visitors who closed the window on purpose, and counts are a lower bound (the beacon is rate limited). " +
+      escapeHtml(signIn.failed_sessions) + " sessions had at least one failed attempt.</p>" +
+      table(["Entry point", "Tapped", "Signed in", "Not signed in", "Failed attempts"], branchRows) +
+      table(["Failure code", "Attempts"], codeRows) + "</div>";
+  }
+
   function allTimeHtml(allTime) {
     var practice = allTime.practice || {};
     var hits = allTime.search_hits || {};
@@ -207,6 +233,7 @@
       return [name, report.by_device[name]];
     });
     html += '<div class="card card-body"><h2>Engagement (sessions)</h2>' + table(["Signal", "Sessions"], engagementRows) + "</div>";
+    html += signInHtml(report.sign_in);
     html += '<div class="card card-body"><h2>Devices</h2>' + table(["Device", "Sessions"], deviceRows) + "</div>";
     html += '<div class="card card-body"><h2>Language studied</h2>' +
       table(["Language", "Sessions", "% of non-bot"], breakdownRows(report.by_language, total)) + "</div>";

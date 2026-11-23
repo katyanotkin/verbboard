@@ -42,6 +42,14 @@ def _parse_date(value: str, label: str) -> date:
         raise ValueError(f"{label} is not a valid date") from exc
 
 
+def _safe_int(value: Any) -> int:
+    """Counter values come from Firestore; a hand-edited or malformed one must not fail the whole report."""
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def _pct(part: int, whole: int) -> float:
     return round(100.0 * part / whole, 1) if whole else 0.0
 
@@ -71,6 +79,11 @@ def _read_window(start: date, end: date, excluded_uids: set[str]) -> dict[str, A
     by_language: Counter[str] = Counter()
     by_ui_lang: Counter[str] = Counter()
     ui_lang_selected: Counter[str] = Counter()
+    sign_in_tapped: Counter[str] = Counter()
+    sign_in_tapped_signed_in: Counter[str] = Counter()
+    sign_in_failure_codes: Counter[str] = Counter()
+    sign_in_failure_branches: Counter[str] = Counter()
+    sign_in_failed_sessions = 0
     daily: dict[str, dict[str, int]] = {}
     day = start
     while day <= end:
@@ -114,6 +127,18 @@ def _read_window(start: date, end: date, excluded_uids: set[str]) -> dict[str, A
                 flags[flag] += 1
         if data.get("practice_gate_shown") and uid:
             flags[_GATE_SIGNED_IN] += 1
+        tap_branch = data.get("sign_in_tapped_branch")
+        if tap_branch:
+            sign_in_tapped[str(tap_branch)] += 1
+            if uid:
+                sign_in_tapped_signed_in[str(tap_branch)] += 1
+        failures = data.get("sign_in_failures")
+        if isinstance(failures, dict) and failures:
+            sign_in_failed_sessions += 1
+            for code, count in failures.items():
+                sign_in_failure_codes[str(code)] += _safe_int(count)
+            for branch_name, count in (data.get("sign_in_failure_branches") or {}).items():
+                sign_in_failure_branches[str(branch_name)] += _safe_int(count)
 
     new_registrations = 0
     total_registered = 0
@@ -156,6 +181,17 @@ def _read_window(start: date, end: date, excluded_uids: set[str]) -> dict[str, A
         },
         "users": {"total_registered": total_registered, "active_in_range": active_in_range},
         "engagement": {flag: flags[flag] for flag in (*_REPORT_FLAGS, _GATE_SIGNED_IN)},
+        "sign_in": {
+            "tapped": sum(sign_in_tapped.values()),
+            "tapped_signed_in": sum(sign_in_tapped_signed_in.values()),
+            "by_branch": {
+                branch_name: {"tapped": count, "signed_in": sign_in_tapped_signed_in[branch_name]}
+                for branch_name, count in sign_in_tapped.items()
+            },
+            "failed_sessions": sign_in_failed_sessions,
+            "failures_by_code": dict(sign_in_failure_codes),
+            "failures_by_branch": dict(sign_in_failure_branches),
+        },
         "ui_lang_selected": dict(ui_lang_selected),
         "by_language": dict(by_language),
         "by_ui_lang": dict(by_ui_lang),
@@ -177,6 +213,8 @@ def _flat_metrics(report: dict[str, Any]) -> dict[str, float]:
     metrics["users.active_in_range"] = report["users"]["active_in_range"]
     for key, value in report["engagement"].items():
         metrics[f"engagement.{key}"] = value
+    for key in ("tapped", "tapped_signed_in", "failed_sessions"):
+        metrics[f"sign_in.{key}"] = report["sign_in"][key]
     home_viewed = report["engagement"].get("home_viewed", 0)
     metrics["engagement.votd_rate"] = (
         round(report["engagement"].get("votd_clicked", 0) / home_viewed * 100, 1) if home_viewed else 0.0

@@ -1,0 +1,194 @@
+<title>VerbBoard Personas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: single reading column; persona cards in a wrapping grid; check-in cadence as a plain table. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1c2330;
+  --muted: #5a6577;
+  --line: #dde2ea;
+  --accent: #1f4e8c;
+  --accent-soft: #e6eef8;
+  --warn: #8a5a00;
+  --warn-soft: #fbf1dc;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --surface: #1a202a; --fg: #e8ecf3; --muted: #9aa5b8;
+    --line: #2a3342; --accent: #8db7ee; --accent-soft: #1f2d42;
+    --warn: #e5b765; --warn-soft: #2c2412; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --surface: #1a202a; --fg: #e8ecf3; --muted: #9aa5b8;
+  --line: #2a3342; --accent: #8db7ee; --accent-soft: #1f2d42;
+  --warn: #e5b765; --warn-soft: #2c2412; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.35rem; margin-bottom: 12px; }
+h3 { font-size: 1.1rem; }
+p { margin: 0 0 12px; max-width: 68ch; }
+.lede { color: var(--muted); font-size: 1.05rem; }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.note { background: var(--warn-soft); color: var(--fg); border-left: 3px solid var(--warn); padding: 12px 16px; border-radius: 6px; max-width: 68ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.card .tag { align-self: flex-start; background: var(--accent-soft); color: var(--accent); font-size: 0.78rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
+dl { margin: 0; display: grid; grid-template-columns: 7.5rem 1fr; gap: 6px 12px; font-size: 0.92rem; }
+dt { color: var(--muted); font-weight: 600; }
+dd { margin: 0; min-width: 0; }
+ol, ul { margin: 0 0 12px; padding-left: 1.2rem; max-width: 68ch; }
+li { margin-bottom: 6px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.92rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+tr:last-child td { border-bottom: 0; }
+@media (max-width: 480px) { dl { grid-template-columns: 1fr; gap: 0; } dt { margin-top: 8px; } }
+</style>
+
+<main>
+  <header>
+    <div class="eyebrow">VerbBoard marketing</div>
+    <h1>Who we are trying to attract, and how we keep them</h1>
+    <p class="lede">Five personas, each defined by where they search, what makes them land on VerbBoard, and what makes them come back. This page also sets out how we use them and when we check in.</p>
+  </header>
+
+  <div class="note">All four are hypotheses built from what the product does and what our analytics already show. Nothing here comes from interviews yet. Each persona gets marked "observed" only when a number or a user message supports it.</div>
+
+  <section>
+    <h2>Abstract</h2>
+    <p>VerbBoard is a verb-first reference with audio, real example sentences and a practice loop. It is free to browse with no sign-in. That shapes who we can win: people with a specific verb problem, who want the answer in seconds and decide in the first visit whether to stay.</p>
+    <p>The personas differ on three axes that change what we do: the channel they arrive from (web search, a community post, a link from someone else), their study language and interface language, and their age and comfort with technology.</p>
+  </section>
+
+  <section>
+    <h2>The five personas</h2>
+    <div class="grid">
+
+      <article class="card">
+        <span class="tag">Primary: web search</span>
+        <h3>Dana, the stuck intermediate</h3>
+        <p>32, phone-first, learning Spanish, Italian or French. Finished an app course, reads fine, freezes when she has to conjugate aloud.</p>
+        <dl>
+          <dt>Trigger</dt><dd>Says the wrong form in conversation or a message.</dd>
+          <dt>Searches</dt><dd>Web: "conjugate hablar", "preterite vs imperfect". Play: "verb conjugation".</dd>
+          <dt>Lands on</dt><dd>A verb page (<code>/learn</code>) with the full table, audio and examples, no login.</dd>
+          <dt>Keeps because</dt><dd>She hears the form in a sentence, stars it, then returns for the Verb of the Day.</dd>
+          <dt>Leaves if</dt><dd>Her verb is missing, or a sign-in wall appears before value.</dd>
+          <dt>Signal</dt><dd>Verb page views per session, starred verbs, practice started.</dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <span class="tag">Community channel</span>
+        <h3>Misha, learning English in his own language</h3>
+        <p>27, Russian or Hebrew speaker, Android, learning English for work. Needs irregular verbs and a translation next to every example.</p>
+        <dl>
+          <dt>Trigger</dt><dd>A work email or interview where verb forms matter.</dd>
+          <dt>Finds us</dt><dd>Local communities (Reddit and similar, in his language), plus web search: "English irregular verbs", "past tense of go".</dd>
+          <dt>Lands on</dt><dd>An English verb page, with the interface and translations in his language.</dd>
+          <dt>Keeps because</dt><dd>It feels built for him, not translated for him. Practice gives him a routine.</dd>
+          <dt>Leaves if</dt><dd>Translations are missing in his language, or the post reads like an ad.</dd>
+          <dt>Signal</dt><dd>Sessions with a reddit.com referrer, UI language selected, rate-link taps.</dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <span class="tag">Referral channel</span>
+        <h3>Ana, the teacher who sends links</h3>
+        <p>41, tutors Spanish and Portuguese online. Wants one clean page per verb to send a student, in the student's language.</p>
+        <dl>
+          <dt>Trigger</dt><dd>A student asks about a verb in the middle of a lesson.</dd>
+          <dt>Searches</dt><dd>Web: "verb conjugation table with audio", "portuguese verbs examples".</dd>
+          <dt>Lands on</dt><dd>A single verb page with a share button and a link preview.</dd>
+          <dt>Keeps because</dt><dd>The link opens instantly for the student, with no account.</dd>
+          <dt>Leaves if</dt><dd>The page looks cluttered, or the share link breaks.</dd>
+          <dt>Signal</dt><dd>Share tapped, share landed, and sessions that arrive with <code>utm_source=share</code>.</dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <span class="tag">Power user</span>
+        <h3>Leo, the deck builder</h3>
+        <p>36, desktop, studies two or three languages, already uses Anki. Wants his known verbs in a deck, not another streak game.</p>
+        <dl>
+          <dt>Trigger</dt><dd>His flashcard deck has no good verb coverage.</dd>
+          <dt>Searches</dt><dd>Web: "verb list for anki", "most common italian verbs".</dd>
+          <dt>Lands on</dt><dd>The <code>/verbs</code> list for his language.</dd>
+          <dt>Keeps because</dt><dd>Starring verbs builds a CSV he can import. Sign-in syncs it across devices.</dd>
+          <dt>Leaves if</dt><dd>The catalog is thin in his language.</dd>
+          <dt>Signal</dt><dd>Signed-in share of sessions, 30-day return in the retention card, export use.</dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <span class="tag">Accessibility and family channel</span>
+        <h3>Rosa, 82, learning for the pleasure of it</h3>
+        <p>Retired, curious, wants to learn some Italian or Spanish before a family trip or just to keep her mind busy. Uses a phone or tablet, often one a grandchild set up. Not in a hurry, easily put off by anything that looks like a test.</p>
+        <dl>
+          <dt>Trigger</dt><dd>A trip, a family member from another country, or a wish to keep learning.</dd>
+          <dt>Finds us</dt><dd>Mostly a link from a grandchild or friend. Occasionally a web search such as "learn Italian verbs", often by voice.</dd>
+          <dt>Lands on</dt><dd>One verb page, with large readable text, clear audio, and nothing she has to sign into.</dd>
+          <dt>Keeps because</dt><dd>She can listen as many times as she likes, at her own pace, with no score and no pressure.</dd>
+          <dt>Leaves if</dt><dd>Text is small, buttons are close together, a sign-in appears, or the page behaves unexpectedly.</dd>
+          <dt>Signal</dt><dd>Plays per verb page, return visits, sessions that arrive from a share link. Weak: we cannot see age.</dd>
+        </dl>
+        <p style="margin:0;color:var(--muted);font-size:0.88rem">Assumed, not verified: starting practice asks for a free Google sign-in, which may be a wall for her. The experiment for her is making sign-in easier, not accessibility testing.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>How we work with them</h2>
+    <ol>
+      <li><strong>One page per persona.</strong> Trigger, searches, landing page, keep hook, leave risk and signal, as above. Each line is tagged "assumed" or "observed".</li>
+      <li><strong>Map each persona to an entry point we own.</strong> Dana and Ana: verb pages. Leo: the verbs list. Misha: community posts in his language and the interface language. Rosa: a share link from family and a readable verb page. If a persona has no entry point, that is the first thing to fix.</li>
+      <li><strong>Run one experiment per persona per cycle.</strong> Each is a single GitHub issue with a stated number it should move. Examples: a community post for Misha, share-preview wording for Ana, an easier sign-in for Rosa.</li>
+      <li><strong>Community posts are honest and by hand.</strong> We read each community's rules first, post as a person who built the tool, say what it is, answer replies, and never post the same text in several places. No Play Store localization: the listing stays in one language.</li>
+      <li><strong>Read the signal, then change the persona or the product.</strong> A persona that never shows up in the numbers gets merged or dropped. A line that turns out wrong gets corrected, not defended.</li>
+      <li><strong>Copy goes through the writer.</strong> The product manager sets the positioning and the brief. Public text is written once per persona and reviewed against that persona's trigger and search words.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Check-ins</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>When</th><th>What we look at</th><th>Decision</th></tr></thead>
+        <tbody>
+          <tr><td>Weekly, 15 min</td><td>Reports page: sessions, practice started, Verb of the Day click-through, share taps, rate-link taps. Play Console installs and listing views.</td><td>Keep or stop the running experiment.</td></tr>
+          <tr><td>One week after each community post</td><td>Sessions with a reddit.com referrer, replies and complaints in the thread, what those visitors did next.</td><td>Post again, change the wording, or skip that community.</td></tr>
+          <tr><td>Monthly</td><td>Each persona's signal against its last value. Assumed lines still not observed.</td><td>Keep, rewrite, merge or drop a persona.</td></tr>
+          <tr><td>30 days after launch of a channel</td><td>Share: under about 10 landed sessions means sharing is not driving growth. Rate nudge: under about 10 Play taps means stop adding triggers.</td><td>Invest more or stop.</td></tr>
+          <tr><td>Around 25 Dec 2026</td><td>How many users pick the Hebrew interface, which tests Misha's Hebrew-speaking variant.</td><td>Keep Hebrew fully maintained or remove it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>What we cannot see yet</h2>
+    <ul>
+      <li><strong>Search queries.</strong> The search terms above are guesses until Search Console is verified and the sitemap is submitted (open owner task, issue #117).</li>
+      <li><strong>Persona identity.</strong> Sessions are keyed by IP, browser and day, so we cannot tell Dana from Leo directly. We infer from study language, interface language, device, referrer and what they do.</li>
+      <li><strong>Referrers from communities.</strong> We record the referrer when a session starts, but some apps and browsers strip it, so a reddit.com count is a lower bound.</li>
+      <li><strong>Age.</strong> We cannot see it. Rosa is inferred from share-link arrivals and behavior, so treat her signal as weak.</li>
+    </ul>
+  </section>
+</main>

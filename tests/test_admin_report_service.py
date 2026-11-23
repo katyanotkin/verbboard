@@ -287,3 +287,71 @@ def test_compare_keeps_retention_on_current_report_only(fake_db) -> None:
     assert report["all_time"]["retention"]["overall"]["users"] == 2
     assert "all_time" not in report["previous"]
     assert not any("retention" in key for key in report["deltas"])
+
+
+# ── sign-in diagnostics (issue #140) ────────────────────────────────────────
+
+
+def test_sign_in_block_aggregates_taps_and_failures(fake_db) -> None:
+    _session(fake_db, "a", "2026-10-01", sign_in_tapped_branch="mobile", uid="u1")
+    _session(
+        fake_db,
+        "b",
+        "2026-10-01",
+        sign_in_tapped_branch="mobile",
+        sign_in_failures={"popup_closed": 2, "network": 1},
+        sign_in_failure_branches={"mobile": 3},
+    )
+    _session(fake_db, "c", "2026-10-01", sign_in_tapped_branch="desktop")
+    _session(fake_db, "d", "2026-10-01")
+
+    sign_in = build_report("2026-10-01", "2026-10-01")["sign_in"]
+
+    assert sign_in["tapped"] == 3
+    assert sign_in["tapped_signed_in"] == 1
+    assert sign_in["by_branch"] == {
+        "mobile": {"tapped": 2, "signed_in": 1},
+        "desktop": {"tapped": 1, "signed_in": 0},
+    }
+    assert sign_in["failed_sessions"] == 1
+    assert sign_in["failures_by_code"] == {"popup_closed": 2, "network": 1}
+    assert sign_in["failures_by_branch"] == {"mobile": 3}
+
+
+def test_sign_in_block_empty_for_old_sessions(fake_db) -> None:
+    _session(fake_db, "old", "2026-10-01")
+
+    sign_in = build_report("2026-10-01", "2026-10-01")["sign_in"]
+
+    assert sign_in["tapped"] == 0
+    assert sign_in["failed_sessions"] == 0
+    assert sign_in["by_branch"] == {}
+    assert sign_in["failures_by_code"] == {}
+
+
+def test_malformed_failure_counter_does_not_fail_report(fake_db) -> None:
+    _session(
+        fake_db,
+        "bad",
+        "2026-10-01",
+        sign_in_failures={"network": "lots", "other": None, "popup_closed": 2},
+        sign_in_failure_branches={"mobile": "x"},
+    )
+
+    sign_in = build_report("2026-10-01", "2026-10-01")["sign_in"]
+
+    assert sign_in["failed_sessions"] == 1
+    assert sign_in["failures_by_code"]["popup_closed"] == 2
+    assert sign_in["failures_by_code"]["network"] == 0
+    assert sign_in["failures_by_branch"] == {"mobile": 0}
+
+
+def test_compare_deltas_include_sign_in_metrics(fake_db) -> None:
+    _session(fake_db, "cur", "2026-10-02", sign_in_tapped_branch="mobile")
+    _session(fake_db, "prev", "2026-10-01")
+
+    report = build_report("2026-10-02", "2026-10-02", compare=True)
+
+    assert report["deltas"]["sign_in.tapped"] == {"current": 1, "previous": 0, "delta": 1}
+    assert "sign_in.failed_sessions" in report["deltas"]
+    assert "sign_in.tapped_signed_in" in report["deltas"]

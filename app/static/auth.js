@@ -259,6 +259,39 @@
     } catch (_) {}
   }
 
+  // Which signIn() branch this page takes; shared by the tap and failure beacons.
+  function _signInBranch() {
+    if (isStandalone() && isAndroidBrowser()) return 'twa';
+    if (isStandalone()) return 'standalone';
+    return isMobile() ? 'mobile' : 'desktop';
+  }
+
+  // Maps a Firebase error to one of the short codes the server accepts (issue #140).
+  // null = not a real failure (a duplicate popup request superseded by a newer one).
+  function _signInFailureCode(err) {
+    var code = (err && err.code) || '';
+    if (code === 'auth/cancelled-popup-request') return null;
+    if (code === 'auth/popup-closed-by-user') return 'popup_closed';
+    if (code === 'auth/popup-blocked') return 'popup_blocked';
+    if (code === 'auth/network-request-failed') return 'network';
+    if (code === 'auth/unauthorized-domain') return 'unauthorized_domain';
+    return 'other';
+  }
+
+  // Fire-and-forget count of a failed sign-in attempt: branch and a short code only,
+  // never the error message. Must not block or break the flow it reports on.
+  function _trackSignInFailed(branch, code) {
+    if (!code) return;
+    try {
+      fetch('/api/analytics/sign_in_failed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ branch: branch, code: code }),
+        keepalive: true,
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
   // Once per page load: tell the server this session runs in the installed Play
   // (TWA) app, so the admin report can count Play testers. Android browser UA
   // plus standalone display mode is the same TWA test signIn() uses.
@@ -275,13 +308,15 @@
     // signInInProgress is set so a later retry is not locked out, and so callers never see a ReferenceError rejection.
     if (typeof firebase === 'undefined') {
       console.warn('VB: sign-in unavailable, Firebase SDK not loaded');
+      _trackSignInFailed(_signInBranch(), 'sdk_unavailable');
       return;
     }
     if (signInInProgress) return;
     signInInProgress = true;
+    var branch = _signInBranch();
     try {
       var isTwa = isStandalone() && isAndroidBrowser();
-      _trackSignInTapped(isTwa ? 'twa' : (isStandalone() ? 'standalone' : (isMobile() ? 'mobile' : 'desktop')));
+      _trackSignInTapped(branch);
       const provider = new firebase.auth.GoogleAuthProvider();
       // Always show the account chooser, even when the browser has a cached
       // Google session -- prevents silent single-account auto-sign-in.
@@ -332,6 +367,9 @@
         provider.setCustomParameters(uiCode ? { prompt: 'select_account', hl: uiCode } : { prompt: 'select_account' });
         await firebase.auth().signInWithPopup(provider);
       }
+    } catch (err) {
+      _trackSignInFailed(branch, _signInFailureCode(err));
+      throw err;
     } finally {
       signInInProgress = false;
     }
@@ -694,10 +732,12 @@
       if (redirectResult && redirectResult.catch) {
         redirectResult.catch(function (err) {
           console.warn('VB: getRedirectResult failed', (err && err.code) || err);
+          _trackSignInFailed(_signInBranch(), 'redirect_failed');
         });
       }
     } catch (err) {
       console.warn('VB: getRedirectResult failed', (err && err.code) || err);
+      _trackSignInFailed(_signInBranch(), 'redirect_failed');
     }
 
     setInterval(refreshSessionCookie, SESSION_COOKIE_REFRESH_INTERVAL_MS);

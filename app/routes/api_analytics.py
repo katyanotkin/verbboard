@@ -19,13 +19,20 @@ from core.analytics.session_tracker import (
     record_practice_started,
     record_rate_clicked,
     record_share_tapped,
+    record_sign_in_failure,
     record_sign_in_tap,
     record_ui_lang_selected,
     record_votd_clicked,
 )
 from core.auth.firebase_auth import get_optional_auth_user
+from core.rate_limit import SlidingWindowRateLimiter
 
 router = APIRouter()
+
+# Failed sign-in beacons are unauthenticated and each one writes to Firestore, so cap them:
+# per session fingerprint, plus a global ceiling. Over the cap the beacon is dropped silently.
+_SIGN_IN_FAILED_SESSION_LIMITER = SlidingWindowRateLimiter(max_calls=10, window_seconds=600)
+_SIGN_IN_FAILED_GLOBAL_LIMITER = SlidingWindowRateLimiter(max_calls=200, window_seconds=600)
 
 _VALID_PRACTICE_EVENTS = {"started", "completed", "gate_shown", "fill_started", "plus_notice_shown", "share_tapped"}
 
@@ -75,6 +82,26 @@ async def record_sign_in_tapped(request: Request) -> JSONResponse:
     date = datetime.now(UTC).strftime("%Y-%m-%d")
     fingerprint = get_fingerprint_sid(request, date)
     await record_sign_in_tap(fingerprint, date, branch)
+    return JSONResponse({"ok": True})
+
+
+@router.post("/api/analytics/sign_in_failed")
+async def record_sign_in_failed(request: Request) -> JSONResponse:
+    """Diagnostic-only (issue #140): counts a failed sign-in attempt by branch and a
+    short error code. No auth (the visitor has no credential yet), fail-open, and the
+    client sends only allowlisted codes: anything else is stored as "other"."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    branch = str(body.get("branch") or "")[:32]
+    code = str(body.get("code") or "")[:32]
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
+    fingerprint = get_fingerprint_sid(request, date)
+    if _SIGN_IN_FAILED_SESSION_LIMITER.allow(fingerprint) and _SIGN_IN_FAILED_GLOBAL_LIMITER.allow("global"):
+        await record_sign_in_failure(fingerprint, date, branch, code)
     return JSONResponse({"ok": True})
 
 

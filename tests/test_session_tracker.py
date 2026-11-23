@@ -413,3 +413,51 @@ def test_async_wrappers_actually_run_their_sync_helpers(fake_db) -> None:
     assert doc["practice_completed"] is True
     assert doc["votd_clicked"] is True
     assert (doc["language"], doc["ui_lang"], doc["uid"]) == ("es", "en", "u1")
+
+
+# ── sign-in failures (issue #140) ───────────────────────────────────────────
+
+
+def test_normalize_sign_in_failure_clamps_unknown_values() -> None:
+    assert session_tracker.normalize_sign_in_failure("mobile", "popup_closed") == ("mobile", "popup_closed")
+    assert session_tracker.normalize_sign_in_failure("signin_page", "network") == ("signin_page", "network")
+    assert session_tracker.normalize_sign_in_failure("tablet", "boom") == ("unknown", "other")
+    assert session_tracker.normalize_sign_in_failure("", "") == ("unknown", "other")
+
+
+def test_record_sign_in_failure_dropped_without_session_doc(fake_db) -> None:
+    session_tracker._record_sign_in_failure("fp1", DATE, "mobile", "network")
+
+    assert fake_db._docs == {}
+
+
+def test_record_sign_in_failure_increments_across_calls(fake_db) -> None:
+    _seed(fake_db, device_type="mobile")
+
+    session_tracker._record_sign_in_failure("fp1", DATE, "mobile", "popup_closed")
+    session_tracker._record_sign_in_failure("fp1", DATE, "mobile", "network")
+
+    doc = fake_db._docs[DOC]
+    assert doc["sign_in_failures"] == {"popup_closed": 1, "network": 1}
+    assert doc["sign_in_failure_branches"] == {"mobile": 2}
+    assert "sign_in_failed_at" in doc
+    assert doc["device_type"] == "mobile"
+
+
+def test_record_sign_in_failure_same_code_twice_counts_two(fake_db) -> None:
+    _seed(fake_db)
+
+    session_tracker._record_sign_in_failure("fp1", DATE, "desktop", "popup_blocked")
+    session_tracker._record_sign_in_failure("fp1", DATE, "desktop", "popup_blocked")
+
+    assert fake_db._docs[DOC]["sign_in_failures"] == {"popup_blocked": 2}
+
+
+def test_record_sign_in_failure_stores_clamped_values_for_hostile_input(fake_db) -> None:
+    _seed(fake_db)
+
+    session_tracker._record_sign_in_failure("fp1", DATE, "<script>" * 10, "a.b$c" * 20)
+
+    doc = fake_db._docs[DOC]
+    assert doc["sign_in_failures"] == {"other": 1}
+    assert doc["sign_in_failure_branches"] == {"unknown": 1}
