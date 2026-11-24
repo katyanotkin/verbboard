@@ -813,6 +813,12 @@ body {
   }
 }
 
+/* Sign-in failure message (issue #141): same card as the update banner, above the
+   practice sign-in gate overlay (z-index 1000) so it is visible while the gate is open. */
+.vb-signin-error {
+  z-index: 1100;
+}
+
 .vb-update-text {
   flex: 1;
   min-width: 0;

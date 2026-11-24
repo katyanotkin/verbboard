@@ -292,6 +292,14 @@
     } catch (_) {}
   }
 
+  // Visible, localized message with a retry (issue #141); safe if the module did not load.
+  function _showSignInError(code) {
+    if (!code) return;
+    try {
+      if (window.VerbBoardSignInError) window.VerbBoardSignInError.show(code, signIn);
+    } catch (_) {}
+  }
+
   // Once per page load: tell the server this session runs in the installed Play
   // (TWA) app, so the admin report can count Play testers. Android browser UA
   // plus standalone display mode is the same TWA test signIn() uses.
@@ -309,6 +317,7 @@
     if (typeof firebase === 'undefined') {
       console.warn('VB: sign-in unavailable, Firebase SDK not loaded');
       _trackSignInFailed(_signInBranch(), 'sdk_unavailable');
+      _showSignInError('sdk_unavailable');
       return;
     }
     if (signInInProgress) return;
@@ -368,7 +377,9 @@
         await firebase.auth().signInWithPopup(provider);
       }
     } catch (err) {
-      _trackSignInFailed(branch, _signInFailureCode(err));
+      var failureCode = _signInFailureCode(err);
+      _trackSignInFailed(branch, failureCode);
+      _showSignInError(failureCode);
       throw err;
     } finally {
       signInInProgress = false;
@@ -477,8 +488,8 @@
           await signIn();
         } catch (err) {
           if (err.code === 'auth/cancelled-popup-request') return;
+          // signIn() has already shown the localized message and offered a retry (issue #141).
           console.error('VB sign-in error:', err);
-          alert('Sign-in error: ' + (err.message || err.code || err));
         }
       });
     }
@@ -733,11 +744,13 @@
         redirectResult.catch(function (err) {
           console.warn('VB: getRedirectResult failed', (err && err.code) || err);
           _trackSignInFailed(_signInBranch(), 'redirect_failed');
+          _showSignInError('redirect_failed');
         });
       }
     } catch (err) {
       console.warn('VB: getRedirectResult failed', (err && err.code) || err);
       _trackSignInFailed(_signInBranch(), 'redirect_failed');
+      _showSignInError('redirect_failed');
     }
 
     setInterval(refreshSessionCookie, SESSION_COOKIE_REFRESH_INTERVAL_MS);
@@ -748,6 +761,8 @@
       mountAuthButton();
 
       if (currentUser) {
+        // A retry (or another route) succeeded: clear any failure message still on screen.
+        try { if (window.VerbBoardSignInError) window.VerbBoardSignInError.dismiss(); } catch (_) {}
         // Record that this tab has an authenticated session.
         sessionStorage.setItem(SESSION_UID_KEY, currentUser.uid);
 
@@ -819,7 +834,6 @@
     } catch (err) {
       if (err.code === 'auth/cancelled-popup-request') return;
       console.error('VB tapProfile error:', err);
-      alert('Sign-in error: ' + (err.message || err.code || err));
     }
   }
 

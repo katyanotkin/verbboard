@@ -103,7 +103,7 @@ Visual indicators:
 ---
 
 ### Login and cross-device sync
-- Google sign-in via Firebase Auth
+- Google sign-in via Firebase Auth; if a sign-in attempt fails (closed or blocked popup, no connection, blocked scripts) a short message in the visitor's language explains what happened and offers Try again
 - By default, progress stays on the current device only
 - Sign in to sync seen verbs, known verbs, practice badges, and spaced-repetition state across devices
 - Words learned and badges earned before signing in are preserved on first login
