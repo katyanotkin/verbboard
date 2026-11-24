@@ -371,3 +371,25 @@ h1 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.3px
 
 .persona-banner { background: var(--warn-light); color: var(--warn); border: 1px solid var(--warn); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 600; }
 .provider-banner { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 600; }
+
+/* ── personas page ── */
+.persona-banner a { color: inherit; text-decoration: underline; }
+.persona-section { margin-bottom: 24px; }
+.persona-section h2 { font-size: 16px; margin-bottom: 8px; }
+.persona-open-review { padding: 14px 16px; border-color: var(--warn); }
+.persona-figures { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin: 10px 0; max-height: 420px; overflow: auto; }
+.persona-done-btn { min-height: 44px; height: auto; padding: 8px 18px; font-size: 14px; white-space: normal; }
+.persona-card { padding: 14px 16px; margin-bottom: 14px; }
+.persona-card h3 { font-size: 15px; margin-bottom: 4px; }
+.persona-card p { margin-bottom: 6px; }
+.persona-table-wrap { overflow-x: auto; }
+.persona-claims td, .persona-claims th { vertical-align: top; text-align: start; }
+.persona-chip--assumed { background: var(--warn-light); color: var(--warn); }
+.persona-chip--observed { background: var(--success-light); color: var(--success); }
+.persona-chip--refuted { background: var(--danger-light); color: var(--danger); }
+.persona-chip--unknown { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+.persona-timeline { list-style: none; padding: 0; margin: 0; border-inline-start: 2px solid var(--border); }
+.persona-timeline-item { padding: 0 0 14px; padding-inline-start: 14px; }
+.persona-timeline-date { font-weight: 600; margin-bottom: 4px; }
+.persona-timeline ul { list-style: none; padding: 0; }
+.persona-timeline ul li { padding: 3px 0; overflow-wrap: anywhere; }

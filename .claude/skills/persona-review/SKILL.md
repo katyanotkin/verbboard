@@ -9,13 +9,13 @@ Owner decision (2026-11-24): personas must persist in the repo, never only in a 
 
 ## Every 3 weeks (20 minutes)
 
-Google Cloud starts it (issue #142): Cloud Scheduler records a review as due every 3 weeks, you get an email from a Cloud Monitoring alert, and `/admin` and `/admin/reports` show an amber banner. Get the figures with `make persona-review-dry-run` (or the stored body in Firestore `persona_reviews/<date>`). When the review is finished, run `python -m tools.persona_review_done <date>` to clear the banner. No email or banner after 3 weeks means the trigger is broken: check `gcloud scheduler jobs describe verbboard-persona-review --location us-east1` and the Cloud Run log for `PERSONA_REVIEW_FAILED`.
+Google Cloud starts it (issue #142): Cloud Scheduler records a review as due every 3 weeks, you get an email from a Cloud Monitoring alert, and `/admin` and `/admin/reports` show an amber banner. The banner links to `/admin/personas` (issue #143), which shows the stored figures, the personas as last published, how their claims changed between reviews, and the review history. Get the figures from there or with `make persona-review-dry-run`. When the review is finished, press **Mark done** on that page (or run `python -m tools.persona_review_done <date>`) to clear the banner. No email or banner after 3 weeks means the trigger is broken: check `gcloud scheduler jobs describe verbboard-persona-review --location us-east1` and the Cloud Run log for `PERSONA_REVIEW_FAILED`.
 
 1. Open `/admin/reports` for the last 21 days (and compare). Read each persona's signal and the Sign-in attempts card. Note n beside every number.
 2. For each claim in `personas.md`: change status only with evidence. `observed` needs a named number with date range and n (about 30 sessions or more), an issue, or a feedback item that has an issue. Otherwise it stays `assumed`.
 3. Flag any claim whose "Last checked" is over 60 days old. Refuted claims move to "Retired claims" with one line on what we learned.
 4. Update "Last review" and "Next review" (+21 days) at the top of the file, set each persona's "Next test" to its open issue.
-5. Rebuild the HTML from the markdown (writer), update the footer sha, commit with the issue numbers.
+5. Rebuild the HTML from the markdown (writer), update the footer sha, commit and push with the issue numbers. Then run `make persona-publish` (it refuses unreadable table rows, so fix a misspelled status first): this stores the snapshot that `/admin/personas` uses to show what changed since the last review. Reword a claim only when it really changed meaning: the page tracks a claim by its text, so a reworded claim shows as removed plus added and loses its history.
 6. If a persona never shows in the numbers, propose merging or dropping it to the owner.
 
 Fixed dates outside the cycle: ~2026-12-19 share check (#137), ~2026-12-25 Hebrew UI check (#60 decision).

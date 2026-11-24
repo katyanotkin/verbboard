@@ -236,11 +236,45 @@ def open_review() -> dict[str, str] | None:
         return None
 
 
+def get_open_review_detail() -> dict[str, Any] | None:
+    """The newest open review with its stored figures body, for the Personas page."""
+    review = open_review()
+    if review is None:
+        return None
+    data = get_db().collection(COLLECTION).document(review["date"]).get().to_dict() or {}
+    return {
+        "date": review["date"],
+        "window": {"date_from": review["date_from"], "date_to": review["date_to"]},
+        "body": str(data.get("body", "")),
+    }
+
+
+def list_reviews() -> list[dict[str, Any]]:
+    """All reviews, newest first, without the figures body."""
+    rows = []
+    for doc in get_db().collection(COLLECTION).stream():
+        data = doc.to_dict() or {}
+        rows.append(
+            {
+                "date": doc.id,
+                "status": data.get("status", ""),
+                "window": data.get("window") or {},
+                "issue_number": data.get("issue_number"),
+                "created_at": data.get("created_at", ""),
+                "done_at": data.get("done_at", ""),
+            }
+        )
+    return sorted(rows, key=lambda row: row["date"], reverse=True)
+
+
 def mark_done(review_date: str) -> bool:
     """Close one review (called by tools/persona_review_done.py). False when it does not exist."""
     ref = get_db().collection(COLLECTION).document(review_date)
-    if not ref.get().exists:
+    snapshot = ref.get()
+    if not snapshot.exists:
         return False
+    if (snapshot.to_dict() or {}).get("status") == STATUS_DONE:
+        return True  # a second press or a stale tab must not overwrite done_at
     ref.update({"status": STATUS_DONE, "done_at": datetime.now(UTC).isoformat()})
     return True
 
@@ -252,6 +286,5 @@ def banner_text() -> str | None:
         return None
     return (
         f"Persona review due ({review['date_from']} to {review['date_to']}, opened {review['date']}). "
-        "Run the persona-review skill, then `python -m tools.persona_review_done "
-        f"{review['date']}` to clear this."
+        "Open Personas to see the figures, then press Mark done."
     )

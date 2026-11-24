@@ -64,6 +64,13 @@
       Audio reports
     </a>
 
+    <a class="nav-item" href="{{ admin_prefix }}/personas">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="5" r="2.5" fill="currentColor" opacity="0.8"/><path d="M3 14c0-3 2.2-5 5-5s5 2 5 5z" fill="currentColor" opacity="0.8"/>
+      </svg>
+      Personas
+    </a>
+
     <form method="post" action="{{ admin_prefix }}/logout" style="margin-top:16px; border-top:1px solid var(--border); padding-top:8px;">
       <button type="submit" class="nav-item" style="border:none; background:none; width:100%; text-align:left; font:inherit; cursor:pointer;">
         <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
@@ -76,7 +83,7 @@
 
   <main class="main">
 {% include '_provider_banner.html' %}
-{% if persona_banner %}<div class="persona-banner" role="status">{{ persona_banner }}</div>{% endif %}
+{% if persona_banner %}<div class="persona-banner" role="status"><a href="{{ admin_prefix }}/personas">{{ persona_banner }}</a></div>{% endif %}
 
     <!-- SIGNALS PANEL -->
     <div id="panel-signals" class="panel">

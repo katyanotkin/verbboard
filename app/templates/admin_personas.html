@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Personas admin</title>
+  <link rel="stylesheet" href="/static/admin.css"/>
+</head>
+<body>
+  <div id="admin-personas-config" data-api-url="{{ admin_prefix }}/api/personas"></div>
+
+  <main class="admin-page">
+{% include '_provider_banner.html' %}
+{% if persona_banner %}<div class="persona-banner" role="status"><a href="{{ admin_prefix }}/personas">{{ persona_banner }}</a></div>{% endif %}
+    <div class="card card-toolbar">
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/feedback">Feedback</a>
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/#signals">Verb demand</a>
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/#candidates">Candidates</a>
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/entitlements">Entitlements</a>
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/reports">Reports</a>
+      <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/audio-reports">Audio reports</a>
+      <a class="nav-item active nav-item-tab" href="{{ admin_prefix }}/personas">Personas</a>
+      <a href="{{ admin_prefix }}" style="margin-left:auto;">Back to admin</a>
+      <form method="post" action="{{ admin_prefix }}/logout" style="display:inline;">
+        <button type="submit" style="border:none; background:none; color:inherit; font:inherit; cursor:pointer; padding:0; text-decoration:underline;">Log out</button>
+      </form>
+    </div>
+
+    <h1>Personas</h1>
+    <p class="text-muted">
+      Marketing personas and how their claims change over time. Claims start as assumed and become observed
+      or refuted only with evidence.
+    </p>
+
+    <div id="personas-error" class="error-msg" hidden></div>
+    <div id="personas-body"><p class="text-muted">Loading...</p></div>
+  </main>
+  <script src="/static/admin_personas.js"></script>
+</body>
+</html>

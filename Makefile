@@ -49,7 +49,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	gcp-release-prod gcp-deploy-stage gcp-promote-stage-to-prod \
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
-	audit-examples audit-en audit-ru audit-he audit-es audit-verb-ids retention persona-review-dry-run gcp-setup-persona-review \
+	audit-examples audit-en audit-ru audit-he audit-es audit-verb-ids retention persona-review-dry-run persona-publish gcp-setup-persona-review \
 	lint test test-unit test-unit-fast \
 	test-e2e-local test-e2e-stage test-e2e-parallel \
 	test-demand test-progress-stage test-progress-prod \
@@ -421,6 +421,9 @@ retention: ## Read-only signed-in retention cohorts (day 1/7/30), see tools/rete
 persona-review-dry-run: ## Print the 3-weekly persona review issue body without opening an issue (issue #142, read-only)
 	$(PYTHON) -m tools.persona_review_dry_run
 
+persona-publish: ## Publish the current docs/marketing/personas.md as a snapshot for /admin/personas (writes live Firestore; ARGS= passes through)
+	$(PYTHON) -m tools.persona_publish $(ARGS)
+
 ## GCP (owner runs, issue #142): service account, weekly Cloud Scheduler job and an email alert for a due review.
 ##   make gcp-setup-persona-review ALERT_EMAIL=you@example.com
 ## then `make gcp-promote-stage-to-prod` (adds the env vars the route needs), then run the job once:
@@ -430,6 +433,10 @@ gcp-setup-persona-review: gcp-check ## GCP: create persona-review service accoun
 	@test -n "$(ALERT_EMAIL)" || (echo "ERROR: pass ALERT_EMAIL=you@example.com" && exit 1)
 	gcloud iam service-accounts describe $(PERSONA_REVIEW_SA) --project $(GCP_PROJECT) >/dev/null 2>&1 || \
 		gcloud iam service-accounts create $(PERSONA_REVIEW_SA_NAME) --project $(GCP_PROJECT) --display-name "VerbBoard persona review trigger"
+	@if gcloud secrets describe $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) >/dev/null 2>&1; then \
+		gcloud secrets add-iam-policy-binding $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) \
+			--member serviceAccount:$(GCP_RUNTIME_SERVICE_ACCOUNT) --role roles/secretmanager.secretAccessor; \
+	else echo "Secret $(PERSONA_REVIEW_SECRET) not found: skipping the optional GitHub issue grant"; fi
 	gcloud scheduler jobs describe $(PERSONA_REVIEW_JOB) --location $(GCP_REGION) --project $(GCP_PROJECT) >/dev/null 2>&1 && \
 		gcloud scheduler jobs update http $(PERSONA_REVIEW_JOB) --location $(GCP_REGION) --project $(GCP_PROJECT) \
 			--schedule "$(PERSONA_REVIEW_SCHEDULE)" --time-zone UTC --uri "$(PROD_SERVICE_URL)/internal/persona-review" --http-method POST \

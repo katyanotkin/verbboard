@@ -201,7 +201,7 @@ def test_banner_text(fake_db) -> None:
     text = svc.banner_text()
     assert text is not None
     assert "2026-10-01" in text and "2026-10-21" in text and "2026-10-13" in text
-    assert "persona_review_done" in text
+    assert "Mark done" in text
 
 
 def test_banner_text_never_raises(monkeypatch) -> None:
