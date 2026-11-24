@@ -369,4 +369,5 @@ h1 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.3px
 .legend-registered::before { background: var(--accent); }
 .legend-twa::before        { background: var(--success); }
 
+.persona-banner { background: var(--warn-light); color: var(--warn); border: 1px solid var(--warn); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 600; }
 .provider-banner { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 600; }

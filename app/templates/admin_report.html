@@ -16,6 +16,7 @@
 
   <main class="admin-page">
 {% include '_provider_banner.html' %}
+{% if persona_banner %}<div class="persona-banner" role="status">{{ persona_banner }}</div>{% endif %}
     <div class="card card-toolbar">
       <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/feedback">Feedback</a>
       <a class="nav-item nav-item-tab" href="{{ admin_prefix }}/#signals">Verb demand</a>

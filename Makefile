@@ -24,17 +24,20 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 
 COMMON_ENV_VARS=GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT)
 STAGE_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config-stage:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest,ANALYTICS_EXCLUDED_EMAILS=verbboard-analytics-excluded-emails:latest
-# Persona review trigger (issue #142). The GitHub token secret is attached to prod only once it exists
-# (created by `make gcp-setup-persona-review`), so a deploy never fails on a missing secret.
-PERSONA_REVIEW_SECRET=verbboard-github-issues-token
+# Persona review trigger (issue #142): weekly Cloud Scheduler job -> /internal/persona-review on prod, a Cloud
+# Monitoring log alert emails the owner when a review is due. The optional GitHub issue needs the Secret Manager
+# secret GITHUB_ISSUES_TOKEN (fine-grained token, Issues read/write on this repo only); it is attached to prod only
+# once that secret exists, so a deploy never fails on a missing secret.
+PERSONA_REVIEW_REPO?=katyanotkin/verbboard
+PERSONA_REVIEW_SECRET=GITHUB_ISSUES_TOKEN
+COMMA:=,
 PERSONA_REVIEW_SA_NAME=verbboard-persona-review
 PERSONA_REVIEW_SA=$(PERSONA_REVIEW_SA_NAME)@$(GCP_PROJECT).iam.gserviceaccount.com
-PERSONA_REVIEW_REPO?=katyanotkin/verbboard
 PERSONA_REVIEW_JOB=verbboard-persona-review
 PERSONA_REVIEW_SCHEDULE?=0 8 * * 1
+PERSONA_REVIEW_ALERT_NAME=verbboard-persona-review-due
 PROD_SERVICE_URL=$(shell gcloud run services describe $(GCP_SERVICE) --region $(GCP_REGION) --project $(GCP_PROJECT) --format='value(status.url)' 2>/dev/null)
 PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest,ANALYTICS_EXCLUDED_EMAILS=verbboard-analytics-excluded-emails:latest$(if $(shell gcloud secrets describe $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) --format='value(name)' 2>/dev/null),$(COMMA)GITHUB_ISSUES_TOKEN=$(PERSONA_REVIEW_SECRET):latest)
-COMMA:=,
 
 .DEFAULT_GOAL := help
 
@@ -246,7 +249,7 @@ gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-pro
 	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
 	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
 	@test -n "$(PROD_SERVICE_URL)" || (echo "ERROR: could not read the prod service URL (persona review audience)" && exit 1)
-	@echo "Persona review token secret: $(if $(findstring GITHUB_ISSUES_TOKEN,$(PROD_SECRETS)),attached,NOT attached (secret $(PERSONA_REVIEW_SECRET) not found, the review route stays off))"
+	@echo "Persona review GitHub token: $(if $(findstring GITHUB_ISSUES_TOKEN,$(PROD_SECRETS)),attached (a GitHub issue is opened too),not attached (email and banner only))"
 	@echo "Promoting stage image to prod:"
 	@echo "  $(STAGE_IMAGE)"
 	gcloud run deploy $(GCP_SERVICE) \
@@ -418,17 +421,15 @@ retention: ## Read-only signed-in retention cohorts (day 1/7/30), see tools/rete
 persona-review-dry-run: ## Print the 3-weekly persona review issue body without opening an issue (issue #142, read-only)
 	$(PYTHON) -m tools.persona_review_dry_run
 
-## GCP (owner runs, issue #142): service account + weekly Cloud Scheduler job that calls /internal/persona-review.
-## First create the GitHub token secret (fine-grained token, Issues: read and write on the repo only):
-##   printf %s "$$TOKEN" | gcloud secrets create $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) --data-file=-
-## then run this, then `make gcp-promote-stage-to-prod` (attaches the secret and the env vars to prod).
-gcp-setup-persona-review: gcp-check ## GCP: create the persona-review service account, secret access and weekly Scheduler job (owner runs)
+## GCP (owner runs, issue #142): service account, weekly Cloud Scheduler job and an email alert for a due review.
+##   make gcp-setup-persona-review ALERT_EMAIL=you@example.com
+## then `make gcp-promote-stage-to-prod` (adds the env vars the route needs), then run the job once:
+##   gcloud scheduler jobs run $(PERSONA_REVIEW_JOB) --location $(GCP_REGION)   (the first review is due at once)
+gcp-setup-persona-review: gcp-check ## GCP: create persona-review service account, weekly Scheduler job and email alert (owner runs; needs ALERT_EMAIL=)
 	@test -n "$(PROD_SERVICE_URL)" || (echo "ERROR: could not read the prod service URL" && exit 1)
-	@gcloud secrets describe $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) >/dev/null || (echo "ERROR: create secret $(PERSONA_REVIEW_SECRET) first (see comment above this target)" && exit 1)
+	@test -n "$(ALERT_EMAIL)" || (echo "ERROR: pass ALERT_EMAIL=you@example.com" && exit 1)
 	gcloud iam service-accounts describe $(PERSONA_REVIEW_SA) --project $(GCP_PROJECT) >/dev/null 2>&1 || \
 		gcloud iam service-accounts create $(PERSONA_REVIEW_SA_NAME) --project $(GCP_PROJECT) --display-name "VerbBoard persona review trigger"
-	gcloud secrets add-iam-policy-binding $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) \
-		--member serviceAccount:$(GCP_RUNTIME_SERVICE_ACCOUNT) --role roles/secretmanager.secretAccessor
 	gcloud scheduler jobs describe $(PERSONA_REVIEW_JOB) --location $(GCP_REGION) --project $(GCP_PROJECT) >/dev/null 2>&1 && \
 		gcloud scheduler jobs update http $(PERSONA_REVIEW_JOB) --location $(GCP_REGION) --project $(GCP_PROJECT) \
 			--schedule "$(PERSONA_REVIEW_SCHEDULE)" --time-zone UTC --uri "$(PROD_SERVICE_URL)/internal/persona-review" --http-method POST \
@@ -436,7 +437,14 @@ gcp-setup-persona-review: gcp-check ## GCP: create the persona-review service ac
 		gcloud scheduler jobs create http $(PERSONA_REVIEW_JOB) --location $(GCP_REGION) --project $(GCP_PROJECT) \
 			--schedule "$(PERSONA_REVIEW_SCHEDULE)" --time-zone UTC --uri "$(PROD_SERVICE_URL)/internal/persona-review" --http-method POST \
 			--oidc-service-account-email $(PERSONA_REVIEW_SA) --oidc-token-audience "$(PROD_SERVICE_URL)"
-	@echo "Done. Promote prod to attach the secret and env vars, then test: gcloud scheduler jobs run $(PERSONA_REVIEW_JOB) --location $(GCP_REGION)"
+	@set -e; \
+	CH=$$(gcloud beta monitoring channels list --project $(GCP_PROJECT) --format='value(name,labels.email_address)' | awk -F'\t' -v e="$(ALERT_EMAIL)" '$$2==e {print $$1; exit}'); \
+	if [ -z "$$CH" ]; then CH=$$(gcloud beta monitoring channels create --project $(GCP_PROJECT) --type=email --display-name "VerbBoard owner email" --channel-labels=email_address=$(ALERT_EMAIL) --format='value(name)'); fi; \
+	test -n "$$CH" || (echo "ERROR: no email notification channel" && exit 1); \
+	EXISTING=$$(gcloud alpha monitoring policies list --project $(GCP_PROJECT) --filter="displayName=$(PERSONA_REVIEW_ALERT_NAME)" --format='value(name)'); \
+	if [ -n "$$EXISTING" ]; then echo "Alert policy $(PERSONA_REVIEW_ALERT_NAME) already exists (delete it first to change it)"; \
+	else sed "s|__CHANNEL__|$$CH|" tools/persona_review_alert_policy.json | gcloud alpha monitoring policies create --project $(GCP_PROJECT) --policy-from-file=/dev/stdin; fi
+	@echo "Done. Promote prod, then run the job once to open the first review and test the email."
 
 ## QA: audit English examples
 audit-en: ## QA: run example audit for English

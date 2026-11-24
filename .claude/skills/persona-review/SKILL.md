@@ -9,7 +9,7 @@ Owner decision (2026-11-24): personas must persist in the repo, never only in a 
 
 ## Every 3 weeks (20 minutes)
 
-Google Cloud starts it (issue #142): Cloud Scheduler opens a GitHub issue "Persona review YYYY-MM-DD" with the last 21 days of figures and this checklist. Work from that issue and close it with the closing-comment form below. No issue after 3 weeks means the trigger is broken: check `gcloud scheduler jobs describe verbboard-persona-review --location us-east1`.
+Google Cloud starts it (issue #142): Cloud Scheduler records a review as due every 3 weeks, you get an email from a Cloud Monitoring alert, and `/admin` and `/admin/reports` show an amber banner. Get the figures with `make persona-review-dry-run` (or the stored body in Firestore `persona_reviews/<date>`). When the review is finished, run `python -m tools.persona_review_done <date>` to clear the banner. No email or banner after 3 weeks means the trigger is broken: check `gcloud scheduler jobs describe verbboard-persona-review --location us-east1` and the Cloud Run log for `PERSONA_REVIEW_FAILED`.
 
 1. Open `/admin/reports` for the last 21 days (and compare). Read each persona's signal and the Sign-in attempts card. Note n beside every number.
 2. For each claim in `personas.md`: change status only with evidence. `observed` needs a named number with date range and n (about 30 sessions or more), an issue, or a feedback item that has an issue. Otherwise it stays `assumed`.

@@ -1,0 +1,21 @@
+{
+  "displayName": "verbboard-persona-review-due",
+  "combiner": "OR",
+  "conditions": [
+    {
+      "displayName": "Persona review due log line",
+      "conditionMatchedLog": {
+        "filter": "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"verbboard\" AND (textPayload:\"PERSONA_REVIEW_DUE\" OR jsonPayload.message:\"PERSONA_REVIEW_DUE\")"
+      }
+    }
+  ],
+  "alertStrategy": {
+    "notificationRateLimit": {"period": "3600s"},
+    "autoClose": "604800s"
+  },
+  "notificationChannels": ["__CHANNEL__"],
+  "documentation": {
+    "mimeType": "text/markdown",
+    "content": "The 3-weekly VerbBoard persona review is due (issue #142). In the verbboard repo, ask Claude Code to run the persona-review skill (figures: `make persona-review-dry-run`, also on /admin/reports). When finished run `python -m tools.persona_review_done <date>` to clear the admin banner. The log line below carries the date, window and headline figures."
+  }
+}

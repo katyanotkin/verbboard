@@ -30,12 +30,10 @@ def _verify_scheduler_token(authorization: str, audience: str, invoker_email: st
 
 @router.post("/internal/persona-review")
 async def persona_review(request: Request, dry_run: bool = False, force: bool = False) -> dict[str, object]:
-    """Called by Cloud Scheduler (issue #142). Disabled (404) unless all three settings are present."""
+    """Called by Cloud Scheduler (issue #142). Disabled (404) unless both settings are present."""
     audience = os.getenv("PERSONA_REVIEW_AUDIENCE", "")
     invoker_email = os.getenv("PERSONA_REVIEW_INVOKER_EMAIL", "")
-    repo = os.getenv("PERSONA_REVIEW_REPO", "")
-    token = os.getenv("GITHUB_ISSUES_TOKEN", "")
-    if not (audience and invoker_email and repo and (token or dry_run)):
+    if not (audience and invoker_email):
         raise HTTPException(status_code=404)
 
     await asyncio.to_thread(_verify_scheduler_token, request.headers.get("authorization", ""), audience, invoker_email)
@@ -43,8 +41,6 @@ async def persona_review(request: Request, dry_run: bool = False, force: bool = 
         return await asyncio.to_thread(
             run_review,
             today=datetime.now(UTC).date(),
-            repo=repo,
-            token=token,
             dry_run=dry_run,
             force=force,
         )
