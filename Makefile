@@ -24,7 +24,17 @@ GCP_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(GCP_REPOSITORY)/$(IMAGE_
 
 COMMON_ENV_VARS=GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT)
 STAGE_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config-stage:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest,ANALYTICS_EXCLUDED_EMAILS=verbboard-analytics-excluded-emails:latest
-PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest,ANALYTICS_EXCLUDED_EMAILS=verbboard-analytics-excluded-emails:latest
+# Persona review trigger (issue #142). The GitHub token secret is attached to prod only once it exists
+# (created by `make gcp-setup-persona-review`), so a deploy never fails on a missing secret.
+PERSONA_REVIEW_SECRET=verbboard-github-issues-token
+PERSONA_REVIEW_SA_NAME=verbboard-persona-review
+PERSONA_REVIEW_SA=$(PERSONA_REVIEW_SA_NAME)@$(GCP_PROJECT).iam.gserviceaccount.com
+PERSONA_REVIEW_REPO?=katyanotkin/verbboard
+PERSONA_REVIEW_JOB=verbboard-persona-review
+PERSONA_REVIEW_SCHEDULE?=0 8 * * 1
+PROD_SERVICE_URL=$(shell gcloud run services describe $(GCP_SERVICE) --region $(GCP_REGION) --project $(GCP_PROJECT) --format='value(status.url)' 2>/dev/null)
+PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN_SECRET=verbboard-admin-secret:latest,ANTHROPIC_API_KEY=verbboard-anthropic-api-key:latest,ANALYTICS_EXCLUDED_EMAILS=verbboard-analytics-excluded-emails:latest$(if $(shell gcloud secrets describe $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) --format='value(name)' 2>/dev/null),$(COMMA)GITHUB_ISSUES_TOKEN=$(PERSONA_REVIEW_SECRET):latest)
+COMMA:=,
 
 .DEFAULT_GOAL := help
 
@@ -36,7 +46,7 @@ PROD_SECRETS=FIREBASE_WEB_CONFIG_JSON=verbboard-firebase-web-config:latest,ADMIN
 	gcp-release-prod gcp-deploy-stage gcp-promote-stage-to-prod \
 	gcp-map-stage gcp-map-prod gcp-domain-status \
 	gcp-ensure-bucket gcp-grant-bucket-writer \
-	audit-examples audit-en audit-ru audit-he audit-es audit-verb-ids retention \
+	audit-examples audit-en audit-ru audit-he audit-es audit-verb-ids retention persona-review-dry-run gcp-setup-persona-review \
 	lint test test-unit test-unit-fast \
 	test-e2e-local test-e2e-stage test-e2e-parallel \
 	test-demand test-progress-stage test-progress-prod \
@@ -235,13 +245,15 @@ firebase-deploy-firestore: ## Firebase: deploy firestore.rules + firestore.index
 gcp-promote-stage-to-prod: audit-verb-ids gcp-check validate-stage gcp-setup-prod-audio ## GCP: promote deployed stage image to prod (TAG=label, default: YYYYMMDD)
 	$(eval STAGE_IMAGE := $(shell gcloud run services describe $(GCP_STAGE_SERVICE) --region $(GCP_REGION) --format='value(spec.template.spec.containers[0].image)'))
 	@test -n "$(STAGE_IMAGE)" || (echo "ERROR: could not determine stage image" && exit 1)
+	@test -n "$(PROD_SERVICE_URL)" || (echo "ERROR: could not read the prod service URL (persona review audience)" && exit 1)
+	@echo "Persona review token secret: $(if $(findstring GITHUB_ISSUES_TOKEN,$(PROD_SECRETS)),attached,NOT attached (secret $(PERSONA_REVIEW_SECRET) not found, the review route stays off))"
 	@echo "Promoting stage image to prod:"
 	@echo "  $(STAGE_IMAGE)"
 	gcloud run deploy $(GCP_SERVICE) \
 		--image $(STAGE_IMAGE) \
 		--region $(GCP_REGION) \
 		--platform managed \
-		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,EDITION=free,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD) \
+		--set-env-vars $(COMMON_ENV_VARS),ENVIRONMENT=prod,EDITION=free,AUDIO_BUCKET=$(AUDIO_BUCKET_PROD),PERSONA_REVIEW_REPO=$(PERSONA_REVIEW_REPO),PERSONA_REVIEW_INVOKER_EMAIL=$(PERSONA_REVIEW_SA),PERSONA_REVIEW_AUDIENCE=$(PROD_SERVICE_URL) \
                 --set-secrets $(PROD_SECRETS) \
 		--allow-unauthenticated
 	@echo "Waiting 10s for prod instance to activate (Cloud Run starts at 0 instances)..."
@@ -402,6 +414,29 @@ audit-examples: ## QA: read-only Firestore example audit, all languages (see too
 
 retention: ## Read-only signed-in retention cohorts (day 1/7/30), see tools/retention_cohort.py; add ARGS="--since 2026-10-01 --json"
 	$(PYTHON) -m tools.retention_cohort $(ARGS)
+
+persona-review-dry-run: ## Print the 3-weekly persona review issue body without opening an issue (issue #142, read-only)
+	$(PYTHON) -m tools.persona_review_dry_run
+
+## GCP (owner runs, issue #142): service account + weekly Cloud Scheduler job that calls /internal/persona-review.
+## First create the GitHub token secret (fine-grained token, Issues: read and write on the repo only):
+##   printf %s "$$TOKEN" | gcloud secrets create $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) --data-file=-
+## then run this, then `make gcp-promote-stage-to-prod` (attaches the secret and the env vars to prod).
+gcp-setup-persona-review: gcp-check ## GCP: create the persona-review service account, secret access and weekly Scheduler job (owner runs)
+	@test -n "$(PROD_SERVICE_URL)" || (echo "ERROR: could not read the prod service URL" && exit 1)
+	@gcloud secrets describe $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) >/dev/null || (echo "ERROR: create secret $(PERSONA_REVIEW_SECRET) first (see comment above this target)" && exit 1)
+	gcloud iam service-accounts describe $(PERSONA_REVIEW_SA) --project $(GCP_PROJECT) >/dev/null 2>&1 || \
+		gcloud iam service-accounts create $(PERSONA_REVIEW_SA_NAME) --project $(GCP_PROJECT) --display-name "VerbBoard persona review trigger"
+	gcloud secrets add-iam-policy-binding $(PERSONA_REVIEW_SECRET) --project $(GCP_PROJECT) \
+		--member serviceAccount:$(GCP_RUNTIME_SERVICE_ACCOUNT) --role roles/secretmanager.secretAccessor
+	gcloud scheduler jobs describe $(PERSONA_REVIEW_JOB) --location $(GCP_REGION) --project $(GCP_PROJECT) >/dev/null 2>&1 && \
+		gcloud scheduler jobs update http $(PERSONA_REVIEW_JOB) --location $(GCP_REGION) --project $(GCP_PROJECT) \
+			--schedule "$(PERSONA_REVIEW_SCHEDULE)" --time-zone UTC --uri "$(PROD_SERVICE_URL)/internal/persona-review" --http-method POST \
+			--oidc-service-account-email $(PERSONA_REVIEW_SA) --oidc-token-audience "$(PROD_SERVICE_URL)" || \
+		gcloud scheduler jobs create http $(PERSONA_REVIEW_JOB) --location $(GCP_REGION) --project $(GCP_PROJECT) \
+			--schedule "$(PERSONA_REVIEW_SCHEDULE)" --time-zone UTC --uri "$(PROD_SERVICE_URL)/internal/persona-review" --http-method POST \
+			--oidc-service-account-email $(PERSONA_REVIEW_SA) --oidc-token-audience "$(PROD_SERVICE_URL)"
+	@echo "Done. Promote prod to attach the secret and env vars, then test: gcloud scheduler jobs run $(PERSONA_REVIEW_JOB) --location $(GCP_REGION)"
 
 ## QA: audit English examples
 audit-en: ## QA: run example audit for English

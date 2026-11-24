@@ -29,6 +29,7 @@ from app.routes.auth_pages import router as auth_pages_router
 from app.routes.feedback import router as feedback_router
 from app.routes.health import router as health_router
 from app.routes.home import router as home_router
+from app.routes.internal_persona_review import router as internal_persona_review_router
 from app.routes.learn import router as learn_router
 from app.routes.practice_fill import router as practice_fill_router
 from app.routes.privacy import router as privacy_router
@@ -174,6 +175,7 @@ app.include_router(audio_router)
 app.include_router(api_audio_report_router)
 app.include_router(feedback_router)
 app.include_router(health_router)
+app.include_router(internal_persona_review_router)
 app.include_router(home_router)
 app.include_router(learn_router)
 app.include_router(practice_fill_router)

@@ -2,7 +2,7 @@
 
 This file is the source. `verbboard-personas.html` is a readable copy and is rebuilt from it at each review, never edited by hand. Process: `.claude/skills/persona-review/SKILL.md`.
 
-Review cadence: every 3 weeks. Last review: 2026-11-24. Next review: 2026-12-15.
+Review cadence: every 3 weeks, opened automatically as a GitHub issue by Cloud Scheduler (#142). Last review: 2026-11-24. Next review: 2026-12-15.
 
 ## Claim statuses
 

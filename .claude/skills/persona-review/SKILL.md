@@ -9,6 +9,8 @@ Owner decision (2026-11-24): personas must persist in the repo, never only in a 
 
 ## Every 3 weeks (20 minutes)
 
+Google Cloud starts it (issue #142): Cloud Scheduler opens a GitHub issue "Persona review YYYY-MM-DD" with the last 21 days of figures and this checklist. Work from that issue and close it with the closing-comment form below. No issue after 3 weeks means the trigger is broken: check `gcloud scheduler jobs describe verbboard-persona-review --location us-east1`.
+
 1. Open `/admin/reports` for the last 21 days (and compare). Read each persona's signal and the Sign-in attempts card. Note n beside every number.
 2. For each claim in `personas.md`: change status only with evidence. `observed` needs a named number with date range and n (about 30 sessions or more), an issue, or a feedback item that has an issue. Otherwise it stays `assumed`.
 3. Flag any claim whose "Last checked" is over 60 days old. Refuted claims move to "Retired claims" with one line on what we learned.
