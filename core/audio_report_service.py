@@ -15,7 +15,7 @@ import logging
 import time
 from datetime import UTC, datetime
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 from google.api_core.exceptions import AlreadyExists
 from google.cloud import firestore
@@ -239,6 +239,9 @@ def list_audio_reports(status: str = "open", language: str = "") -> list[dict[st
                 "confirmed_at": _iso(data.get("confirmed_at")),
                 "resolved_at": _iso(data.get("resolved_at")),
                 "reports_since_confirm": int(data.get("reports_since_confirm", 0) or 0),
+                "audio_url": "/audio/"
+                + "/".join(quote(part, safe="") for part in (language_code, verb_id, voice))
+                + f"/{quote(str(data.get('form_key', '')), safe='')}.mp3",
                 "learn_url": "/learn?"
                 + urlencode({"language": language_code, "verb_id": verb_id, "voice": voice, "ui_language": "en"}),
             }

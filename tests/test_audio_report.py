@@ -181,6 +181,8 @@ def test_admin_lists_by_count_resolves_and_new_report_reopens(client: TestClient
     rows = client.get("/admin/api/audio-reports", cookies=_admin()).json()["reports"]
     assert [row["count"] for row in rows] == [2, 1]
     assert "uid" not in rows[0] and "verb_id=es_hablar" in rows[0]["learn_url"]
+    assert rows[0]["audio_url"].startswith("/audio/es/es_hablar/") and rows[0]["audio_url"].endswith(".mp3")
+    assert "?" not in rows[0]["audio_url"] and "#" not in rows[0]["audio_url"]
 
     report_id = rows[0]["id"]
     assert client.post(f"/admin/api/audio-reports/{report_id}/resolve", cookies=_admin()).status_code == 200

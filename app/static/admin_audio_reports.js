@@ -65,7 +65,9 @@
         '<td><a href="' + escapeHtml(r.learn_url) + '" target="_blank" rel="noopener">' +
         escapeHtml(r.verb_id) + "</a></td>" +
         "<td>" + escapeHtml(r.text) + '<div class="cell-meta">' + escapeHtml(r.row_kind) + "</div>" + comments + "</td>" +
-        "<td>" + escapeHtml(r.voice) + "</td>" +
+        "<td>" + escapeHtml(r.voice) +
+        '<div><button type="button" class="btn-primary" data-play="' + escapeHtml(r.audio_url) +
+        '">&#9658; Play</button></div></td>' +
         "<td>" + reasonChips(r.reasons) + "</td>" +
         "<td>" + escapeHtml(r.count) + since + "</td>" +
         "<td>" + escapeHtml(formatTime(r.last_at)) + "</td>" +
@@ -102,7 +104,21 @@
   });
   languageSelect.addEventListener("change", load);
 
+  var player = null;
   body.addEventListener("click", function (event) {
+    var playBtn = event.target.closest("[data-play]");
+    if (playBtn) {
+      if (player) player.pause();
+      player = new Audio(playBtn.dataset.play);
+      var original = "▶ Play";
+      function failed() {
+        playBtn.textContent = "Audio failed";
+        setTimeout(function () { playBtn.textContent = original; }, 3000);
+      }
+      player.addEventListener("error", failed);
+      player.play().catch(failed);
+      return;
+    }
     var btn = event.target.closest("[data-action]");
     if (!btn) return;
     btn.disabled = true;
