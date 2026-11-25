@@ -393,3 +393,16 @@ h1 { margin: 0 0 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.3px
 .persona-timeline-date { font-weight: 600; margin-bottom: 4px; }
 .persona-timeline ul { list-style: none; padding: 0; }
 .persona-timeline ul li { padding: 3px 0; overflow-wrap: anywhere; }
+
+.ar-wrap { overflow-x: auto; }
+.ar-table { width: 100%; min-width: 760px; border-collapse: collapse; }
+.ar-table th, .ar-table td { padding: 10px 12px; text-align: left; vertical-align: top; border: 1px solid var(--border); }
+.ar-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); background: var(--bg); font-weight: 500; white-space: nowrap; }
+.ar-table tbody tr:nth-child(even) td { background: var(--bg); }
+.ar-table tbody tr:hover td { background: var(--accent-light); }
+.ar-table td:nth-child(2) { min-width: 180px; overflow-wrap: anywhere; }
+.ar-table td:nth-child(4) .cell-meta { display: inline-block; white-space: nowrap; }
+.ar-table td:nth-child(6), .ar-table td:nth-child(7) { white-space: nowrap; }
+.ar-play { margin-top: 6px; }
+.ar-actions { white-space: nowrap; }
+.ar-actions .btn-primary { margin-bottom: 4px; }

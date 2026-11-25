@@ -66,19 +66,19 @@
         escapeHtml(r.verb_id) + "</a></td>" +
         "<td>" + escapeHtml(r.text) + '<div class="cell-meta">' + escapeHtml(r.row_kind) + "</div>" + comments + "</td>" +
         "<td>" + escapeHtml(r.voice) +
-        '<div><button type="button" class="btn-primary" data-play="' + escapeHtml(r.audio_url) +
+        '<div class="ar-play"><button type="button" class="btn-primary" data-play="' + escapeHtml(r.audio_url) +
         '">&#9658; Play</button></div></td>' +
         "<td>" + reasonChips(r.reasons) + "</td>" +
         "<td>" + escapeHtml(r.count) + since + "</td>" +
         "<td>" + escapeHtml(formatTime(r.last_at)) + "</td>" +
         "<td>" + escapeHtml(formatTime(lastCol)) + "</td>" +
-        "<td>" + actionButtons(r) + "</td>" +
+        '<td class="ar-actions">' + actionButtons(r) + "</td>" +
         "</tr>";
     }).join("");
     var lastHeader = status === "confirmed" ? "Confirmed" : (status === "resolved" ? "Resolved" : "Last reported");
-    body.innerHTML = "<table><thead><tr><th>Verb</th><th>Form text</th><th>Voice</th><th>Reasons</th>" +
+    body.innerHTML = '<div class="ar-wrap"><table class="ar-table"><thead><tr><th>Verb</th><th>Form text</th><th>Voice</th><th>Reasons</th>' +
       "<th>Reports</th><th>Last reported</th><th>" + escapeHtml(lastHeader) + "</th><th></th></tr></thead><tbody>" +
-      rows + "</tbody></table>";
+      rows + "</tbody></table></div>";
   }
 
   function load() {
